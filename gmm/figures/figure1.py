@@ -1,8 +1,13 @@
 """
 This creates Figure 1.
 """
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup
-
+from ..imports import importflowDF, smallDF
 
 def makeFigure():
     """ Get a list of the axis objects and create a figure. """
@@ -14,4 +19,23 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
+    zflowDF = smallDF(100)
+
+    arr = np.arange(1,5,1)
+    totalvar = np.zeros([len(arr)])
+    celltypelist = zflowDF.CellType.values
+    totalDF = zflowDF.drop(columns=['CellType','pSTAT5'])
+
+    # Determining variance explained 
+    for a in range(len(arr)):
+        pca = PCA(n_components=arr[a])
+        pca.fit_transform(totalDF)
+        totalvar[a] = sum(pca.explained_variance_ratio_)
+
+    ax[1].scatter(arr,totalvar)
+    xlabel = "Principal Components"
+    ylabel = "Variance"
+    ax[1].set(xlabel=xlabel, ylabel=ylabel)
+
     return f
+
