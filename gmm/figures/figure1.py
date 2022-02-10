@@ -6,8 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.decomposition import PCA
+
+
 from .common import subplotLabel, getSetup
 from ..imports import importflowDF, smallDF
+from ..GMM import GMMpca
 
 def makeFigure():
     """ Get a list of the axis objects and create a figure. """
@@ -19,6 +22,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
+    #smallDF(Amount of cells wanted per experiment)
     zflowDF = smallDF(100)
 
     arr = np.arange(1,5,1)
@@ -32,10 +36,15 @@ def makeFigure():
         pca.fit_transform(totalDF)
         totalvar[a] = sum(pca.explained_variance_ratio_)
 
-    ax[1].scatter(arr,totalvar)
+    ax[0].scatter(arr,totalvar)
     xlabel = "Principal Components"
     ylabel = "Variance"
-    ax[1].set(xlabel=xlabel, ylabel=ylabel)
+    ax[0].set(xlabel=xlabel, ylabel=ylabel)
+
+    #GMMpca(ax,gmmtype,zflowDF,maxcluster,ksplit)
+
+    GMMpca(ax[1],"RandScore",zflowDF,21,20)
+    GMMpca(ax[2],"Score",zflowDF,21,20)
 
     return f
 
