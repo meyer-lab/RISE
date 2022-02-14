@@ -12,9 +12,10 @@ from sklearn.metrics.cluster import adjusted_rand_score,rand_score
 from sklearn.model_selection import KFold
 from pathlib import Path
 from sklearn.mixture import GaussianMixture
+from pomegranate import *
 
 
-def GMMpca(ax,gmmtype,zflowDF,maxcluster,ksplit):
+def GMMpca(ax,gmmtype,modeltype,zflowDF,maxcluster,ksplit):
 
     arr = np.arange(1,5,1)
     celltypelist = zflowDF.CellType.values
@@ -42,8 +43,11 @@ def GMMpca(ax,gmmtype,zflowDF,maxcluster,ksplit):
         gmm_labels = np.zeros([len(pcaDF)])
         bestguess = np.zeros([len(clusternumb)])
         for kk in range(len(clusternumb)):
-            GMM = GaussianMixture(n_components = clusternumb[kk],covariance_type = 'full',tol = .001,max_iter = 5000,
-            reg_covar = 1e-3)
+            if modeltype == 'GMM':
+                GMM = GaussianMixture(n_components = clusternumb[kk],covariance_type = 'full',tol = .001,max_iter = 5000,
+                reg_covar = 1e-3)
+            else:  #pomegranate
+                GMM = GeneralMixtureModel.from_samples(MultivariateGaussianDistribution, n_components= clusternumb[k])
 
             # Running GMM model on PCA dataset
 
@@ -56,7 +60,7 @@ def GMMpca(ax,gmmtype,zflowDF,maxcluster,ksplit):
                 bestguess = rand_score(celltypelist,gmm_labels) # Comparing the cell type with the GMM predicted 
                 pcagmmDF = pcagmmDF.append(pd.DataFrame({"Component":[arr[jj]],"Cluster":[clusternumb[kk]],"Score": [bestguess]}))
 
-            else: 
+            else: #Score
                 gmm_score = []
                 for train_index, test_index in kf.split(pcaDF):
                     trainX = pcaDF[train_index,:]

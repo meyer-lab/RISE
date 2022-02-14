@@ -41,10 +41,14 @@ def makeFigure():
     ylabel = "Variance"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    #GMMpca(ax,gmmtype,zflowDF,maxcluster,ksplit)
+    #This is genereal schematic of function GMMpca(ax,GMMcomparison,typeofGMM,zflowDF,maxcluster,ksplit)
 
-    GMMpca(ax[1],"RandScore",zflowDF,21,20)
-    GMMpca(ax[2],"Score",zflowDF,21,20)
+
+    GMMpca(ax[1],"RandScore","pomegranate",zflowDF,6,5)
+    GMMpca(ax[2],"Score","pomegranate",zflowDF,6,5)
+
+    # GMMpca(ax[1],"RandScore","GMM",zflowDF,21,20)
+    # GMMpca(ax[2],"Score","GMM",zflowDF,21,20)
 
     return f
 
