@@ -2,9 +2,11 @@
 Test the data import.
 '''
 import pytest
-from ..imports import import_func
+from ..imports import smallDF
 
 
 def test_import():
     """ Stub test. """
-    import_func()
+    data = smallDF(10)
+    dataTwo = smallDF(20)
+    assert 2 * data.shape[0] == dataTwo.shape[0]
