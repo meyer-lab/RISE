@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def smallDF(fracCells):
-    # FracCells = Amount of cells per experiment 
+    # FracCells = Amount of cells per experimen
     flowDF = importflowDF()
     gVars = ["Time", "Dose", "Date", "Ligand"]
     # Columns that should be trasformed
