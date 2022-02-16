@@ -24,7 +24,7 @@ def makeFigure():
     subplotLabel(ax)
 
     # smallDF(Amount of cells wanted per experiment)
-    zflowDF = smallDF(100)
+    zflowDF = smallDF(50)
 
     # PCA(Runs PCA on dataframe with output [PCs,VarianceExplained])
     components, vcexplained = runPCA(zflowDF)
@@ -35,34 +35,20 @@ def makeFigure():
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
     # Determining rand_score for GMM with dataframe
-
-    # GMMpca(scoretype, modeltype, zflowDF, maxcluster, ksplit)
-    gmmDF_rand = GMMpca("RandScore","GMM",zflowDF,21,5)
-    gmmDF_score = GMMpca("Score","GMM",zflowDF,21,5)
-    # gmmDF_rand = GMMpca("Score", "Pomengranate", zflowDF, 5, 5)
-
-    # print(gmmDR_rand)
+    randDF = GMMpca(zflowDF, 10, "rand_score")
+    scoreDF = GMMpca(zflowDF, 10)
 
     for i in range(len(components)):
-        randDF = gmmDF_rand.loc[gmmDF_rand.Component == components[i]]
-        scoreDF = gmmDF_score.loc[gmmDF_score.Component == components[i]]
-        ax[1].plot(randDF.Cluster.values, randDF.Score.values, label=components[i])
-        ax[2].plot(scoreDF.Cluster.values, scoreDF.Score.values, label=components[i])
+        ax[1].plot(randDF.Cluster.values, randDF.Score.values)
+        ax[2].plot(scoreDF.Cluster.values, scoreDF.Score.values)
 
     ax[1].legend(title="Component Number", loc='best')
-    
+
     xlabel = "Cluster Number"
     ylabel = "Score"
     ax[1].set(xlabel=xlabel, ylabel=ylabel)
     ax[2].legend(title="Component Number", loc='best')
     ax[2].set(xlabel=xlabel, ylabel=ylabel)
-
-    # GMMpca(ax[2],"Score","GMM",zflowDF,21,20)
-
-    # This is genereal schematic of function GMMpca(ax,Scorecomparison,typeofGMM,zflowDF,maxcluster,ksplit)
-
-    # GMMpca(ax[1],"RandScore","pomegranate",zflowDF,6,5)
-    # GMMpca(ax[2],"Score","pomegranate",zflowDF,6,5)
 
     # filepath = Path('gmm/output/figure1.csv')
     # filepath.parent.mkdir(parents=True, exist_ok=True)
