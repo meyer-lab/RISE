@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .common import subplotLabel, getSetup
 from ..imports import importflowDF, smallDF
-from ..GMM import GMMpca, runPCA
+from ..GMM import cvGMM, runPCA
 
 
 def makeFigure():
@@ -35,18 +35,15 @@ def makeFigure():
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
     # Determining rand_score for GMM with dataframe
-    scoreDF = GMMpca(zflowDF, 15)
+    scoreDF = cvGMM(zflowDF, 15)
 
     for i in range(len(components)):
         ax[1].plot(scoreDF.Cluster.values, scoreDF.rand_score.values)
         ax[2].plot(scoreDF.Cluster.values, scoreDF.ll_score.values)
 
-    ax[1].legend(title="Component Number", loc='best')
-
     xlabel = "Cluster Number"
     ylabel = "Score"
     ax[1].set(xlabel=xlabel, ylabel=ylabel)
-    ax[2].legend(title="Component Number", loc='best')
     ax[2].set(xlabel=xlabel, ylabel=ylabel)
 
     return f
