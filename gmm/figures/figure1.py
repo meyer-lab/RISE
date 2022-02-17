@@ -35,12 +35,11 @@ def makeFigure():
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
     # Determining rand_score for GMM with dataframe
-    randDF = GMMpca(zflowDF, 10, "rand_score")
-    scoreDF = GMMpca(zflowDF, 10)
+    scoreDF = GMMpca(zflowDF, 15)
 
     for i in range(len(components)):
-        ax[1].plot(randDF.Cluster.values, randDF.Score.values)
-        ax[2].plot(scoreDF.Cluster.values, scoreDF.Score.values)
+        ax[1].plot(scoreDF.Cluster.values, scoreDF.rand_score.values)
+        ax[2].plot(scoreDF.Cluster.values, scoreDF.ll_score.values)
 
     ax[1].legend(title="Component Number", loc='best')
 
@@ -49,9 +48,5 @@ def makeFigure():
     ax[1].set(xlabel=xlabel, ylabel=ylabel)
     ax[2].legend(title="Component Number", loc='best')
     ax[2].set(xlabel=xlabel, ylabel=ylabel)
-
-    # filepath = Path('gmm/output/figure1.csv')
-    # filepath.parent.mkdir(parents=True, exist_ok=True)
-    # zflowDF.to_csv(filepath)
 
     return f

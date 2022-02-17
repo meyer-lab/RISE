@@ -2,28 +2,34 @@
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
-from scipy import stats
-from sklearn.metrics.cluster import adjusted_rand_score, rand_score
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import KFold, cross_validate
 from sklearn.mixture import GaussianMixture
 
 
-def GMMpca(zflowDF, maxcluster, scoretype=None):
+def LLscorer(estimator, X, _):
+    return np.mean(estimator.score(X))
+
+
+def GMMpca(zflowDF, maxcluster):
     celltypelist = zflowDF.CellType.values
     totalDF = zflowDF.drop(columns=['CellType', 'pSTAT5'])  # Creating matrix that will be used in GMM model
     clusternumb = np.arange(1, maxcluster)  # Amount of clusters
-    scores = np.zeros_like(clusternumb, dtype=float)
+    LLscores = np.zeros_like(clusternumb, dtype=float)
+    randScores = np.zeros_like(clusternumb, dtype=float)
     zflowDF = zflowDF['CellType'].values  # Obtaining celltypes
 
     kf = KFold(n_splits=10)  # Cross validation for amount of splits
+
     for kk in range(len(clusternumb)):
         print(kk)
         GMM = GaussianMixture(n_components=clusternumb[kk], covariance_type='full', tol=1e-6, max_iter=5000)
 
-        best_rand = cross_val_score(GMM, totalDF, celltypelist, cv=kf, scoring=scoretype, n_jobs=-1)
-        scores[kk] = np.mean(best_rand)
+        scores = cross_validate(GMM, totalDF, celltypelist, cv=kf, scoring={"LL": LLscorer, "rand":"rand_score"}, n_jobs=-1)
 
-    return pd.DataFrame({"Cluster": clusternumb, "Score": scores})
+        LLscores[kk] = np.mean(scores["test_LL"])
+        randScores[kk] = np.mean(scores["test_rand"])
+
+    return pd.DataFrame({"Cluster": clusternumb, "ll_score": LLscores, "rand_score": randScores})
 
 
 def runPCA(dataDF):

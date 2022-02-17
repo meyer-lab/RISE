@@ -7,9 +7,8 @@ from ..imports import smallDF
 from ..GMM import GMMpca
 
 
-@pytest.mark.parametrize("score", [None, "rand_score"])
-def test_import(score):
+def test_import():
     """ Stub test. """
-    dataTwo = smallDF(5)
-    gmmDF = GMMpca(dataTwo, 5, score)
+    dataTwo = smallDF(50)
+    gmmDF = GMMpca(dataTwo, 5)
     assert isinstance(gmmDF, pd.DataFrame)
