@@ -13,11 +13,13 @@ def smallDF(fracCells):
     # Data was measured for CD3/CD8/CD56 was not measured for non-Tregs/Thelpers
     flowDF = flowDF.dropna(subset=['Foxp3'])
     flowDF = flowDF.rename(columns={'Cell Type': 'CellType'})
+    experimentcells = flowDF.groupby(by=gVars).size()
     flowDF[transCols] = flowDF.groupby(by=gVars)[transCols].transform(lambda x: (x - np.nanmean(x)) / np.nanstd(x))
     flowDF = flowDF.groupby(by=gVars).sample(n=fracCells).reset_index(drop=True)
     flowDF['CellType'] = flowDF['CellType'].apply(celltypetonumb)
     flowDF = flowDF.drop(columns=['CD56', 'CD3', 'CD8', 'Valency', 'index', 'Time', 'Date', 'Dose', 'Ligand'])
-    return flowDF
+
+    return flowDF, experimentcells
 
 
 def celltypetonumb(typ):
