@@ -14,7 +14,7 @@ from ..GMM import cvGMM, runPCA, probGMM
 
 
 def makeFigure():
-    """ Get a list of the axis objects and create a figure. """
+    """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
     ax, f = getSetup((8, 4), (2, 3))
 
@@ -24,14 +24,13 @@ def makeFigure():
     subplotLabel(ax)
 
     # smallDF(Amount of cells wanted per experiment); 336 conditions in total
-    cellperexp = 50
-    zflowDF, experimentalcells  = smallDF(cellperexp)
+    cellperexp = 200
+    zflowDF, experimentalcells = smallDF(cellperexp)
 
     ax[0].hist(experimentalcells, bins=20)
     xlabel = "Number of Cells per Experiment"
-    ylabel = "Events" 
+    ylabel = "Events"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
-
 
     # # PCA(Runs PCA on dataframe with output [PCs,VarianceExplained])
     components, vcexplained = runPCA(zflowDF)
@@ -42,7 +41,7 @@ def makeFigure():
     ax[1].set(xlabel=xlabel, ylabel=ylabel)
 
     # Determining rand_score for GMM with dataframe
-    scoreDF = cvGMM(zflowDF, 18)
+    scoreDF = cvGMM(zflowDF, 16)
 
     for i in range(len(components)):
         ax[2].plot(scoreDF.Cluster.values, scoreDF.rand_score.values)
@@ -58,7 +57,5 @@ def makeFigure():
     print(nk)
     print(means)
     print(covariances)
-
-
 
     return f

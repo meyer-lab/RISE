@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
@@ -12,8 +11,8 @@ def LLscorer(estimator, X, _):
 
 
 def cvGMM(zflowDF, maxcluster):
-    celltypelist = zflowDF['CellType'].values  # Obtaining celltypes
-    totalDF = zflowDF.drop(columns=['CellType', 'pSTAT5'])  # Creating matrix that will be used in GMM model
+    celltypelist = zflowDF["Cell Type"].values  # Obtaining celltypes
+    totalDF = zflowDF.drop(columns=["Cell Type", "pSTAT5"])  # Creating matrix that will be used in GMM model
     clusternumb = np.arange(1, maxcluster)  # Amount of clusters
     LLscores = np.zeros_like(clusternumb, dtype=float)
     randScores = np.zeros_like(clusternumb, dtype=float)
@@ -22,7 +21,7 @@ def cvGMM(zflowDF, maxcluster):
 
     for i in range(len(clusternumb)):
         print("Cluster Number:", clusternumb[i])
-        GMM = GaussianMixture(n_components=clusternumb[i], covariance_type='full', tol=1e-6, max_iter=5000)
+        GMM = GaussianMixture(n_components=clusternumb[i], covariance_type="full", tol=1e-6, max_iter=5000)
 
         scores = cross_validate(GMM, totalDF, celltypelist, cv=kf, scoring={"LL": LLscorer, "rand": "rand_score"}, n_jobs=-1)
 
@@ -32,28 +31,50 @@ def cvGMM(zflowDF, maxcluster):
     return pd.DataFrame({"Cluster": clusternumb, "ll_score": LLscores, "rand_score": randScores})
 
 
-def probGMM(zflowDF, maxcluster, cellperexp):
-    celltypelist = zflowDF['CellType'].values  # Obtaining celltypes
-    totalDF = zflowDF.drop(columns=['CellType', 'pSTAT5'])  # Creating matrix that will be used in GMM model
-    clusternumb = np.arange(1, maxcluster)  # Amount of clusters
-    probDF = []
-    for i in range(cellperexp):
-        indDF = totalDF.loc[i * 50:50 * (i + 1)]
+def probGMM(zflowDF, n_clusters: int, cellperexp: int):
+    """Use the GMM responsibilities matrix to develop means and covariances for each experimental condition.
 
-        for j in range(len(clusternumb)):
-            print("Cluster Number:", clusternumb[j], "Experiment Number:", i + 1)
-            GMM = GaussianMixture(n_components=clusternumb[i], covariance_type='full', tol=1e-6, max_iter=5000)
-            GMM.fit(indDF)
-            # prob = GMM.predict_proba(indDF)
-            # probDF.append(pd.DataFrame({"Cluster": clusternumb[j], "Probalities": prob.flatten(), "Experiment": i + 1}))
+    NOTE: This method currently assumes there is a constant number of samples per experiment.
 
-            log_prob_norm, log_resp = GMM._estimate_log_prob_resp(indDF)
-            nk, means, covariances = _estimate_gaussian_parameters(indDF.values,
-                                     log_resp, reg_covar=1e-6, covariance_type='full')
+    Args:
+        zflowDF (pandas.DataFrame): _description_
+        n_clusters (int): The number of clusters to run the analysis for.
+        cellperexp (int): _description_
 
-        if i == 0:
-            break    # break here
+    Returns:
+        numpy.array: Matrix of data sample numbers across each condition.
+        numpy.array: Matrix of means across each condition.
+        numpy.array: Tensor of covariance matrices across each condition.
+    """
+    celltypelist = zflowDF["Cell Type"].values  # Obtaining celltypes
+    totalDF = zflowDF.drop(columns=["Cell Type", "pSTAT5"])  # Creating matrix that will be used in GMM model
+    statDF = zflowDF.drop(columns=["Cell Type"])  # Creating matrix that includes pSTAT5
 
+    # Fit the GMM with the full dataset
+    GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", tol=1e-6, max_iter=5000)
+    GMM.fit(totalDF)
+    _, log_resp = GMM._estimate_log_prob_resp(totalDF)  # Get the responsibilities
+
+    # Setup storage
+    nk = list()
+    means = list()
+    covariances = list()
+
+    # Loop over separate conditions
+    for i in range(0, totalDF.shape[0], cellperexp):
+        indDF = statDF.loc[i : i + cellperexp - 1]
+        resp_ind = log_resp[i : i + cellperexp, :]
+        assert indDF.shape[0] == cellperexp  # Check my indexing
+        assert indDF.shape[0] == resp_ind.shape[0]  # Check my indexing
+
+        output = _estimate_gaussian_parameters(indDF.values, resp_ind, reg_covar=1e-6, covariance_type="full")
+        nk.append(output[0])
+        means.append(output[1])
+        covariances.append(output[2])
+
+    nk = np.stack(nk)
+    means = np.stack(means)
+    covariances = np.stack(covariances)
     return nk, means, covariances
 
 
@@ -61,8 +82,8 @@ def runPCA(dataDF):
 
     arr = np.arange(1, 4, 1)
     totalvar = np.zeros([len(arr)])
-    celltypelist = dataDF.CellType.values
-    totalDF = dataDF.drop(columns=['CellType', 'pSTAT5'])
+    celltypelist = dataDF["Cell Type"].values
+    totalDF = dataDF.drop(columns=["Cell Type", "pSTAT5"])
 
     # Determining variance explained
     for i in range(len(arr)):
