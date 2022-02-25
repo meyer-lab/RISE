@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters
@@ -12,7 +11,9 @@ def LLscorer(estimator, X, _):
 
 def cvGMM(zflowDF, maxcluster):
     celltypelist = zflowDF["Cell Type"].values  # Obtaining celltypes
-    totalDF = zflowDF.drop(columns=["Cell Type", "pSTAT5"])  # Creating matrix that will be used in GMM model
+    totalDF = zflowDF.drop(
+        columns=["Cell Type", "pSTAT5", "Valency", "index", "Time", "Date", "Dose", "Ligand"]
+    )  # Creating matrix that will be used in GMM model
     clusternumb = np.arange(1, maxcluster)  # Amount of clusters
     LLscores = np.zeros_like(clusternumb, dtype=float)
     randScores = np.zeros_like(clusternumb, dtype=float)
@@ -37,9 +38,9 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
     NOTE: This method currently assumes there is a constant number of samples per experiment.
 
     Args:
-        zflowDF (pandas.DataFrame): _description_
+        zflowDF (pandas.DataFrame): DF w/z-scored epitopes values w/pSTAT5 and celltypes
         n_clusters (int): The number of clusters to run the analysis for.
-        cellperexp (int): _description_
+        cellperexp (int): Amount of cells wanted for GMM for each experiment
 
     Returns:
         numpy.array: Matrix of data sample numbers across each condition.
@@ -47,11 +48,13 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
         numpy.array: Tensor of covariance matrices across each condition.
     """
     celltypelist = zflowDF["Cell Type"].values  # Obtaining celltypes
-    totalDF = zflowDF.drop(columns=["Cell Type", "pSTAT5"])  # Creating matrix that will be used in GMM model
-    statDF = zflowDF.drop(columns=["Cell Type"])  # Creating matrix that includes pSTAT5
+    totalDF = zflowDF.drop(
+        columns=["Cell Type", "pSTAT5", "Valency", "index", "Time", "Date", "Dose", "Ligand"]
+    )  # Creating matrix that will be used in GMM model
+    statDF = zflowDF.drop(columns=["Cell Type", "Valency", "index", "Time", "Date", "Dose", "Ligand"])  # Creating matrix that includes pSTAT5
 
     # Fit the GMM with the full dataset
-    GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", tol=1e-6, max_iter=5000)
+    GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", max_iter=5000, verbose=20)
     GMM.fit(totalDF)
     _, log_resp = GMM._estimate_log_prob_resp(totalDF)  # Get the responsibilities
 
@@ -76,19 +79,3 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
     means = np.stack(means)
     covariances = np.stack(covariances)
     return nk, means, covariances
-
-
-def runPCA(dataDF):
-
-    arr = np.arange(1, 4, 1)
-    totalvar = np.zeros([len(arr)])
-    celltypelist = dataDF["Cell Type"].values
-    totalDF = dataDF.drop(columns=["Cell Type", "pSTAT5"])
-
-    # Determining variance explained
-    for i in range(len(arr)):
-        pca = PCA(n_components=arr[i])
-        newform = pca.fit_transform(totalDF)
-        totalvar[i] = sum(pca.explained_variance_ratio_)
-
-    return arr, totalvar

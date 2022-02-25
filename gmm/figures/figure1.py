@@ -2,15 +2,12 @@
 This creates Figure 1.
 """
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy import stats
-from sklearn.decomposition import PCA
-from pathlib import Path
+import seaborn as sns
+
 
 from .common import subplotLabel, getSetup
-from ..imports import importflowDF, smallDF
-from ..GMM import cvGMM, runPCA, probGMM
+from ..imports import smallDF
+from ..GMM import cvGMM
 
 
 def makeFigure():
@@ -24,7 +21,7 @@ def makeFigure():
     subplotLabel(ax)
 
     # smallDF(Amount of cells wanted per experiment); 336 conditions in total
-    cellperexp = 200
+    cellperexp = 50
     zflowDF, experimentalcells = smallDF(cellperexp)
 
     ax[0].hist(experimentalcells, bins=20)
@@ -32,18 +29,11 @@ def makeFigure():
     ylabel = "Events"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    # # PCA(Runs PCA on dataframe with output [PCs,VarianceExplained])
-    components, vcexplained = runPCA(zflowDF)
+    # scoreDF(Determining rand_score and score for GMM with on DF and max cluster # with output [DF(Cluster #,Score)])
+    maxcluster = 18
+    scoreDF = cvGMM(zflowDF, maxcluster)
 
-    ax[1].scatter(components, vcexplained)
-    xlabel = "Principal Components"
-    ylabel = "Variance"
-    ax[1].set(xlabel=xlabel, ylabel=ylabel)
-
-    # Determining rand_score for GMM with dataframe
-    scoreDF = cvGMM(zflowDF, 16)
-
-    for i in range(len(components)):
+    for i in range(maxcluster):
         ax[2].plot(scoreDF.Cluster.values, scoreDF.rand_score.values)
         ax[3].plot(scoreDF.Cluster.values, scoreDF.ll_score.values)
 
@@ -51,11 +41,5 @@ def makeFigure():
     ylabel = "Score"
     ax[2].set(xlabel=xlabel, ylabel=ylabel)
     ax[3].set(xlabel=xlabel, ylabel=ylabel)
-
-    nk, means, covariances = probGMM(zflowDF, 5, cellperexp)
-
-    print(nk)
-    print(means)
-    print(covariances)
 
     return f
