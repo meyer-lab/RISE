@@ -47,7 +47,7 @@ def getSetup(figsize, gridd, multz=None, empts=None):
         if x not in empts and x not in multz.keys():  # If this is just a normal subplot
             ax.append(f.add_subplot(gs1[x]))
         elif x in multz.keys():  # If this is a subplot that spans grid elements
-            ax.append(f.add_subplot(gs1[x : x + multz[x] + 1]))
+            ax.append(f.add_subplot(gs1[x: x + multz[x] + 1]))
             x += multz[x]
         x += 1
 

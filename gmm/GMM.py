@@ -65,8 +65,8 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
 
     # Loop over separate conditions
     for i in range(0, totalDF.shape[0], cellperexp):
-        indDF = statDF.loc[i : i + cellperexp - 1]
-        resp_ind = log_resp[i : i + cellperexp, :]
+        indDF = statDF.loc[i: i + cellperexp - 1]
+        resp_ind = log_resp[i: i + cellperexp, :]
         assert indDF.shape[0] == cellperexp  # Check my indexing
         assert indDF.shape[0] == resp_ind.shape[0]  # Check my indexing
 
