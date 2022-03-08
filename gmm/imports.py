@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 
 def smallDF(fracCells):
@@ -35,4 +36,11 @@ def celltypetonumb(typ):
 def importflowDF():
     """Downloads all conditions, surface markers and cell types.
     Cells are labeled via Thelper, None, Treg, CD8 or NK"""
-    return pd.read_feather("/opt/andrew/FlowDataGMM_Mon_Labeled.ftr")
+
+    monomeric = pq.read_table("/opt/andrew/FlowDataGMM_Mon_NoSub.pq")
+    dimericwt = pq.read_table("/opt/andrew/FlowDataGMM_DimWT_NoSub.pq")
+    monomeric = monomeric.to_pandas()
+    dimericwt = dimericwt.to_pandas()
+    # pd.concat([monomeric,dimericwt])
+
+    return monomeric

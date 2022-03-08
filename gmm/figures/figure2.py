@@ -4,6 +4,7 @@ This creates Figure 2.
 import numpy as np
 import pandas as pd
 import seaborn as sns
+# import tensorly as tl
 
 
 from .common import subplotLabel, getSetup
@@ -14,25 +15,27 @@ from ..GMM import probGMM
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((20, 30), (2, 3))
+    ax, f = getSetup((20, 30), (3, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
-    # smallDF(Amount of cells wanted per experiment); 336 conditions in total
+    #smallDF(Amount of cells wanted per experiment)
     cellperexp = 6000
     zflowDF, _ = smallDF(cellperexp)
 
     maxcluster = 5
-    nk, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
-
-    statMeans = means[:, :, 4]  # Expt x cluster x pSTAT5
+    nk, means, covar = probGMM(zflowDF, maxcluster, cellperexp)
 
     meansDF = zflowDF.iloc[::cellperexp, :]  # Subset to one row per expt
     meansDF = meansDF[["Time", "Ligand", "Valency", "Dose"]]  # Only keep descriptive rows
     meansDF = pd.concat([meansDF] * maxcluster, ignore_index=True)  # Duplicate for each cluster
-    meansDF["Cluster"] = np.repeat(np.arange(1, maxcluster + 1), repeats=statMeans.shape[0])  # Track clusters
-    meansDF["pSTAT5"] = statMeans.flatten(order="F")  # Checked the ordering here
+    markerslist = ["Foxp3", "CD25", "CD45RA", "CD4","pSTAT5"]
+    for i,mark in enumerate(markerslist):
+        markers_means = means[:,:,i]
+        meansDF[mark] = markers_means.flatten(order="F") 
+
+    meansDF["Cluster"] = np.repeat(np.arange(1, maxcluster + 1), repeats= markers_means.shape[0])  # Track clusters
     meansDF["NK"] = nk.flatten(order="F")
 
     sns.scatterplot(data=meansDF, x="Dose", y="pSTAT5", hue="Cluster", ax=ax[0], style="Ligand")
@@ -53,9 +56,37 @@ def makeFigure():
                     entry = heatmap.loc[(heatmap.Ligand == ligand) & (heatmap.Dose == dose) & (heatmap.Cluster == clust) & (heatmap.Time == tim)]
                     row["Cluster:" + str(clust) + " - " + str(tim) + " hrs"] = entry.pSTAT5.to_numpy()
 
-            heatmapDF = heatmapDF.append(row)
-
+            heatmapDF = pd.concat([heatmapDF,row])
+    
     heatmapDF = heatmapDF.set_index("Ligand/Dose")
     sns.heatmap(heatmapDF, ax=ax[2])
 
+    ax[3].hist(zflowDF["pSTAT5"].values,bins=10000)
+    ax[3].set(xlim=(0, 40000))
+
+    xlabel = "Event"
+    ylabel = "pSTAT Signal"
+    ax[3].set(xlabel=xlabel, ylabel=ylabel)
+
+    wtntermDF  = meansDF.loc[meansDF["Ligand"] == "WT C-term"]
+
+    for i, mark in enumerate(markerslist):
+        sns.lineplot(data=wtntermDF, x="Dose", y=mark, hue="Cluster", ax=ax[i+4],palette='pastel',ci= None)
+        ax[i+4].set(xscale="log")
+
+    ligands = meansDF.Ligand.unique()
+    doses = meansDF.Dose.unique()
+    times = meansDF.Time.unique()
+    clusters = meansDF.Cluster.unique()
+
+    tensor = np.empty((len(ligands), len(doses), len(times), len(clusters)))
+
+    for i, ligand in enumerate(ligands):
+        for j, dose in enumerate(doses):
+            for k, time in enumerate(times):
+                for l, clust in enumerate(clusters):
+                    entry = meansDF.loc[(meansDF.Ligand == ligand) & (meansDF.Dose == dose) & (meansDF.Cluster == clust) & (meansDF.Time == time)]
+                    # Now have all  markers for a specific condition and cluster
+                    tensor[i, j, k, l] = entry["pSTAT5"].to_numpy()
+                    
     return f
