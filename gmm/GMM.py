@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold, cross_validate
 from sklearn.mixture import GaussianMixture
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import KFold
 from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters
 
 
@@ -9,27 +10,21 @@ def LLscorer(estimator, X, _):
     return np.mean(estimator.score(X))
 
 
-def cvGMM(zflowDF, maxcluster):
-    celltypelist = zflowDF["Cell Type"].values  # Obtaining celltypes
-    totalDF = zflowDF.drop(
+def cvGMM(zflowDF, maxcluster: int):
+    X = zflowDF.drop(
         columns=["Cell Type", "pSTAT5", "Valency", "index", "Time", "Date", "Dose", "Ligand"]
     )  # Creating matrix that will be used in GMM model
-    clusternumb = np.arange(1, maxcluster)  # Amount of clusters
-    LLscores = np.zeros_like(clusternumb, dtype=float)
-    randScores = np.zeros_like(clusternumb, dtype=float)
 
-    kf = KFold(n_splits=10)  # Cross validation for amount of splits
+    cv = KFold(10, shuffle=True)
+    GMM = GaussianMixture(covariance_type="full", tol=1e-6, max_iter=5000)
 
-    for i in range(len(clusternumb)):
-        print("Cluster Number:", clusternumb[i])
-        GMM = GaussianMixture(n_components=clusternumb[i], covariance_type="full", tol=1e-6, max_iter=5000)
+    scoring = {"LL": LLscorer, "rand": "rand_score"}
+    grid = {'n_components': np.arange(1, maxcluster)}
+    grid_search = GridSearchCV(GMM, param_grid=grid, scoring=scoring, cv=cv, refit=False, n_jobs=-1)
+    grid_search.fit(X, zflowDF["Cell Type"].values)
+    results = grid_search.cv_results_
 
-        scores = cross_validate(GMM, totalDF, celltypelist, cv=kf, scoring={"LL": LLscorer, "rand": "rand_score"}, n_jobs=-1)
-
-        LLscores[i] = np.mean(scores["test_LL"])
-        randScores[i] = np.mean(scores["test_rand"])
-
-    return pd.DataFrame({"Cluster": clusternumb, "ll_score": LLscores, "rand_score": randScores})
+    return pd.DataFrame({"Cluster": results["param_n_components"], "ll_score": results["mean_test_LL"], "rand_score": results["mean_test_rand"]})
 
 
 def probGMM(zflowDF, n_clusters: int, cellperexp: int):
@@ -47,16 +42,13 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
         numpy.array: Matrix of means across each condition.
         numpy.array: Tensor of covariance matrices across each condition.
     """
-    celltypelist = zflowDF["Cell Type"].values  # Obtaining celltypes
-    totalDF = zflowDF.drop(
-        columns=["Cell Type", "pSTAT5", "Valency", "index", "Time", "Date", "Dose", "Ligand"]
-    )  # Creating matrix that will be used in GMM model
     statDF = zflowDF.drop(columns=["Cell Type", "Valency", "index", "Time", "Date", "Dose", "Ligand"])  # Creating matrix that includes pSTAT5
+    markerDF = statDF.drop(columns=["pSTAT5"])  # Creating matrix that will be used in GMM model, only markers
 
     # Fit the GMM with the full dataset
     GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", max_iter=5000, verbose=20)
-    GMM.fit(totalDF)
-    _, log_resp = GMM._estimate_log_prob_resp(totalDF)  # Get the responsibilities
+    GMM.fit(markerDF)
+    _, log_resp = GMM._estimate_log_prob_resp(markerDF)  # Get the responsibilities
 
     # Setup storage
     nk = list()
@@ -64,7 +56,7 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
     covariances = list()
 
     # Loop over separate conditions
-    for i in range(0, totalDF.shape[0], cellperexp):
+    for i in range(0, markerDF.shape[0], cellperexp):
         indDF = statDF.loc[i: i + cellperexp - 1]
         resp_ind = log_resp[i: i + cellperexp, :]
         assert indDF.shape[0] == cellperexp  # Check my indexing
@@ -75,7 +67,4 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
         means.append(output[1])
         covariances.append(output[2])
 
-    nk = np.stack(nk)
-    means = np.stack(means)
-    covariances = np.stack(covariances)
-    return nk, means, covariances
+    return np.stack(nk), np.stack(means), np.stack(covariances)
