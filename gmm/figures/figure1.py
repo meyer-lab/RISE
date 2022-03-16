@@ -1,10 +1,6 @@
 """
 This creates Figure 1.
 """
-import pandas as pd
-import seaborn as sns
-
-
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import cvGMM
