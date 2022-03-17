@@ -1,11 +1,28 @@
 """
 This creates Figure 2.
 """
+import numpy as np
+import pandas as pd
 import seaborn as sns
 
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
-from ..GMM import probGMM, meanmarkerDF, heatmapmeansDF
+from ..GMM import probGMM
+
+
+def meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster):
+    meansDF = zflowDF.iloc[::cellperexp, :]  # Subset to one row per expt
+    meansDF = meansDF[["Time", "Ligand", "Valency", "Dose"]]  # Only keep descriptive rows
+    meansDF = pd.concat([meansDF] * maxcluster, ignore_index=True)  # Duplicate for each cluster
+    markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
+    for i, mark in enumerate(markerslist):
+        markers_means = means[:, :, i]
+        meansDF[mark] = markers_means.flatten(order="F")
+
+    meansDF["Cluster"] = np.repeat(np.arange(1, maxcluster + 1), repeats=markers_means.shape[0])  # Track clusters
+    meansDF["NK"] = nk.flatten(order="F")
+
+    return meansDF, markerslist
 
 
 def makeFigure():
@@ -17,10 +34,10 @@ def makeFigure():
     subplotLabel(ax)
 
     # smallDF(Amount of cells wanted per experiment)
-    cellperexp = 6000
+    cellperexp = 600
     zflowDF, _ = smallDF(cellperexp)
 
-    maxcluster = 5
+    maxcluster = 4
     nk, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
 
     meansDF, markerslist = meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster)
@@ -31,7 +48,11 @@ def makeFigure():
     sns.scatterplot(data=meansDF, x="Dose", y="NK", hue="Cluster", ax=ax[1], style="Ligand")
     ax[1].set(xscale="log")
 
-    heatmapDF = heatmapmeansDF(meansDF)
+    heatmapDF = meansDF.copy()
+    heatmapDF["Ligand/Dose"] = heatmapDF["Ligand"] + " - " + heatmapDF["Dose"].astype(str) + " (nM)"
+    heatmapDF["Clust/Time"] = heatmapDF["Cluster"].astype(str) + " - " + heatmapDF["Time"].astype(str)
+    heatmapDF = heatmapDF[["Ligand/Dose", "Clust/Time", "pSTAT5"]]
+    heatmapDF = heatmapDF.pivot(index='Ligand/Dose', columns='Clust/Time', values='pSTAT5')
     sns.heatmap(heatmapDF, ax=ax[2])
 
     ax[3].hist(zflowDF["pSTAT5"].values, bins=1000, color='r')

@@ -69,37 +69,3 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
 
     return np.stack(nk), np.stack(means), np.stack(covariances)
 
-
-def meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster):
-    meansDF = zflowDF.iloc[::cellperexp, :]  # Subset to one row per expt
-    meansDF = meansDF[["Time", "Ligand", "Valency", "Dose"]]  # Only keep descriptive rows
-    meansDF = pd.concat([meansDF] * maxcluster, ignore_index=True)  # Duplicate for each cluster
-    markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
-    for i, mark in enumerate(markerslist):
-        markers_means = means[:, :, i]
-        meansDF[mark] = markers_means.flatten(order="F")
-
-    meansDF["Cluster"] = np.repeat(np.arange(1, maxcluster + 1), repeats=markers_means.shape[0])  # Track clusters
-    meansDF["NK"] = nk.flatten(order="F")
-
-    return meansDF, markerslist
-
-
-def heatmapmeansDF(meansDF):
-    heatmap = meansDF
-    heatmapDF = pd.DataFrame()
-
-    for ligand in heatmap.Ligand.unique():
-        for dose in heatmap.Dose.unique():
-            row = pd.DataFrame()
-            row["Ligand/Dose"] = [ligand + " - " + str(dose) + " (nM)"]
-            for tim in heatmap.Time.unique():
-                for clust in heatmap.Cluster.unique():
-                    entry = heatmap.loc[(heatmap.Ligand == ligand) & (heatmap.Dose == dose) & (heatmap.Cluster == clust) & (heatmap.Time == tim)]
-                    row["Cluster:" + str(clust) + " - " + str(tim) + " hrs"] = entry.pSTAT5.to_numpy()
-
-            heatmapDF = pd.concat([heatmapDF, row])
-
-    heatmapDF = heatmapDF.set_index("Ligand/Dose")
-
-    return heatmapDF

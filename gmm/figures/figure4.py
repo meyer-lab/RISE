@@ -5,7 +5,7 @@ import seaborn as sns
 
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
-from ..GMM import probGMM, meanmarkerDF
+from ..GMM import probGMM
 from ..tensor import tensor_decomp, tensor_means
 
 
@@ -21,10 +21,9 @@ def makeFigure():
     cellperexp = 6000
     zflowDF, _ = smallDF(cellperexp)
     maxcluster = 5
-    nk, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
-    meansDF, markerslist = meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster)
+    _, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
 
-    tMeans = tensor_means(meansDF, markerslist)
+    tMeans = tensor_means(zflowDF, means)
 
     rank = 5
 
