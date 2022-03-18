@@ -9,6 +9,7 @@ markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
 
 def get_conditions(df, X):
+    """ Provides all unique conditions for a specific time, ligand, and concentration. """
     assert df.shape[0] % X.shape[0] == 0
     colNames = ["Time", "Ligand", "Dose"]
     cellsPerCondition = int(df.shape[0] / X.shape[0])
@@ -23,6 +24,7 @@ def tensor_means(meansDF: pd.DataFrame, means: np.ndarray):
     meansDF["Ligand"] = meansDF["Ligand"] + "-" + meansDF["Valency"].astype(str)
 
     conditions = get_conditions(meansDF, means)
+    print(conditions)
 
     xd = xa.DataArray(means, dims=["Conditions", "Cluster", "Marker"])
     xd = xd.assign_coords(Cluster=np.arange(1, means.shape[1] + 1))
@@ -45,7 +47,7 @@ def tensor_covar(meansDF: pd.DataFrame, covar: np.ndarray):
 
 
 def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
-    """ X """
+    """ Runs tensor decomposition on means tensor. """
 
     if tensortype == "NNparafac":
         fac = non_negative_parafac(np.nan_to_num(tensor.to_numpy()), mask=np.isfinite(tensor.to_numpy()), rank=ranknumb)
@@ -58,4 +60,21 @@ def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
     for ii, dd in enumerate(tensor.dims):
         dfs.append(pd.DataFrame(fac.factors[ii], columns=cmpCol, index=tensor.coords[dd]))
 
-    return dfs
+    return dfs,fac
+
+
+def tensor_R2X(tensor, maxrank,tensortype):
+    """ Calculates the R2X value even where NaN values are present"""
+    rank = np.arange(1,maxrank)
+    varexpl = np.empty(len(rank))
+
+    for i in range(len(rank)):
+        _,facinfo = tensor_decomp(tensor,rank[i],tensortype)
+        vTop, vBottom = 0.0, 0.0
+        tMask = np.isfinite(tensor)
+        vTop += np.sum(np.square(tl.cp_to_tensor(facinfo) * tMask - np.nan_to_num(tensor)))
+        vBottom += np.sum(np.square(np.nan_to_num(tensor)))
+        varexpl[i] = 1.0 - vTop / vBottom
+
+    return rank,varexpl
+

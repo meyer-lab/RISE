@@ -7,10 +7,12 @@ from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters
 
 
 def LLscorer(estimator, X, _):
+    """ Calculates the scores of the GMM vs. original predicted clusters"""
     return np.mean(estimator.score(X))
 
 
 def cvGMM(zflowDF, maxcluster: int):
+    """ Runs CV on GMM model with score and rand score for multiple clusters"""
     X = zflowDF.drop(
         columns=["Cell Type", "pSTAT5", "Valency", "index", "Time", "Date", "Dose", "Ligand"]
     )  # Creating matrix that will be used in GMM model

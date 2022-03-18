@@ -11,6 +11,7 @@ from ..GMM import probGMM
 
 
 def meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster):
+    """Combines NK/Mean Values into DF and correspond to different conditions per clusters"""
     meansDF = zflowDF.iloc[::cellperexp, :]  # Subset to one row per expt
     meansDF = meansDF[["Time", "Ligand", "Valency", "Dose"]]  # Only keep descriptive rows
     meansDF = pd.concat([meansDF] * maxcluster, ignore_index=True)  # Duplicate for each cluster
@@ -33,13 +34,15 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # smallDF(Amount of cells wanted per experiment)
+    # smallDF(Amount of cells wanted per experiment): [DF] with all conditions as data
     cellperexp = 600
     zflowDF, _ = smallDF(cellperexp)
 
+    # probGM(DF,maximum cluster,cellsperexperiemtn): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 4
     nk, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
 
+    # meanmarkerDF(DF,cells per experiment, mean values, nk values, maximum cluster): [DF, diff. marker list] inputs means/NK into DF
     meansDF, markerslist = meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster)
 
     sns.scatterplot(data=meansDF, x="Dose", y="pSTAT5", hue="Cluster", ax=ax[0], style="Ligand")

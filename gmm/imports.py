@@ -6,7 +6,9 @@ import pyarrow.parquet as pq
 
 
 def smallDF(fracCells):
-    # FracCells = Amount of cells per experiment
+    """Creates DF of specific # of experiments
+    Zscores all markers per experiment but pSTAT5 normalized over all experiments"""
+    # fracCells = Amount of cells per experiment
     flowDF = importflowDF()
     gVars = ["Time", "Dose", "Date", "Ligand"]
     # Columns that should be trasformed

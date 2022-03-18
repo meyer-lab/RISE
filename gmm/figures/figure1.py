@@ -14,7 +14,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # smallDF(Amount of cells wanted per experiment); 336 conditions in total
+    # smallDF(Amount of cells wanted per experiment): [DF] with all conditions as data
     cellperexp = 50
     zflowDF, experimentalcells = smallDF(cellperexp)
 
@@ -23,7 +23,7 @@ def makeFigure():
     ylabel = "Events"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    # scoreDF(Determining rand_score and score for GMM with on DF and max cluster # with output [DF(Cluster #,Score)])
+    # scoreDF(DF, maximum cluster): [DF(Cluster #,Score)] Determines rand_score/score for GMM 
     maxcluster = 18
     scoreDF = cvGMM(zflowDF, maxcluster)
 
