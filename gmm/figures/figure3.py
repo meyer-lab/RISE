@@ -15,7 +15,7 @@ from ..tensor import tensor_decomp, tensor_means, tensor_covar, tensor_R2X
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((20, 30), (3, 2))
+    ax, f = getSetup((10, 8), (3, 2))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -42,20 +42,20 @@ def makeFigure():
     xlabel = "Number of Components"
     ylabel = "R2X"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
-    ax[0].xaxis.label.set_size(22)
-    ax[0].yaxis.label.set_size(22)
+    # ax[0].xaxis.label.set_size(22)
+    # ax[0].yaxis.label.set_size(22)
 
-    for label in (ax[0].get_xticklabels() + ax[0].get_yticklabels()):
-	    label.set_fontsize(22)
+    # for label in (ax[0].get_xticklabels() + ax[0].get_yticklabels()):
+	  #   label.set_fontsize(22)
 
     # tensor_decomp(tensor means, rank, type of decomposition): [DF,tensor factors/weights] creates DF of factors for different conditions and output of decomposition 
     rank = 5
     factors_NNP,_ = tensor_decomp(tMeans,rank,"NNparafac")
 
     for i in range(0,5):
-        sns.set(font_scale=2)
+        # sns.set(font_scale=2)
         heatmap = sns.heatmap(data=factors_NNP[i],ax=ax[i+1],vmin=0, vmax=1,cmap="Blues")
-        ax[i+1].set_xticklabels(heatmap.get_xmajorticklabels(),fontsize = 22)
-        ax[i+1].set_yticklabels(heatmap.get_yticklabels(), rotation = 0, fontsize = 22)
+        # ax[i+1].set_xticklabels(heatmap.get_xmajorticklabels(),fontsize = 22)
+        # ax[i+1].set_yticklabels(heatmap.get_yticklabels(), rotation = 0, fontsize = 22)
     
     return f

@@ -4,6 +4,7 @@ import tensorly as tl
 import xarray as xa
 
 from tensorly.decomposition import non_negative_parafac, parafac
+from tensorly.cp_tensor import cp_normalize
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
@@ -55,6 +56,7 @@ def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
         fac = parafac(np.nan_to_num(tensor.to_numpy()), mask=np.isfinite(tensor.to_numpy()), rank=ranknumb)
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, ranknumb + 1)]
+    fac = cp_normalize(fac)
 
     dfs = []
     for ii, dd in enumerate(tensor.dims):
