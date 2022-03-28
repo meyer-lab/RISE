@@ -23,7 +23,7 @@ def makeFigure():
     ylabel = "Events"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    # scoreDF(DF, maximum cluster): [DF(Cluster #,Score)] Determines rand_score/score for GMM 
+    # scoreDF(DF, maximum cluster): [DF(Cluster #,Score)] Determines rand_score/score for GMM
     maxcluster = 18
     scoreDF = cvGMM(zflowDF, maxcluster)
 

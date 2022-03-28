@@ -71,3 +71,18 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
 
     return np.stack(nk), np.stack(means), np.stack(covariances)
 
+
+def meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster):
+    """Combines NK/Mean Values into DF and correspond to different conditions per clusters"""
+    meansDF = zflowDF.iloc[::cellperexp, :]  # Subset to one row per expt
+    meansDF = meansDF[["Time", "Ligand", "Valency", "Dose"]]  # Only keep descriptive rows
+    meansDF = pd.concat([meansDF] * maxcluster, ignore_index=True)  # Duplicate for each cluster
+    markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
+    for i, mark in enumerate(markerslist):
+        markers_means = means[:, :, i]
+        meansDF[mark] = markers_means.flatten(order="F")
+
+    meansDF["Cluster"] = np.repeat(np.arange(1, maxcluster + 1), repeats=markers_means.shape[0])  # Track clusters
+    meansDF["NK"] = nk.flatten(order="F")
+
+    return meansDF, markerslist
