@@ -2,12 +2,11 @@
 This creates Figure 3.
 """
 import seaborn as sns
-import numpy as np
 
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import probGMM
-from ..tensor import tensor_decomp, tensor_means, tensor_covar, tensor_R2X
+from ..tensor import tensor_decomp, tensor_means, tensor_R2X
 
 
 def makeFigure():
@@ -24,13 +23,14 @@ def makeFigure():
 
     # probGM(DF,maximum cluster,cellsperexperiment): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 5
-    _, means, covar = probGMM(zflowDF, maxcluster, cellperexp)
+    _, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
+
+    conditions = zflowDF.iloc[::cellperexp]
+    conditions = conditions[["Time", "Dose", "Ligand"]]
+    conditions = conditions.set_index(["Time", "Dose", "Ligand"])
 
     # tensor_means(DF,means of markers): [tensor form of means] converts DF into tensor
-    tMeans = tensor_means(zflowDF, means)
-
-    # tensor_covar((DF,covariance of markers): [tensor form of covarinaces] converts DF into tensor
-    _ = tensor_covar(zflowDF, covar)
+    tMeans = tensor_means(conditions, means)
 
     # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] outputs  and variance explained
     maxrank = 10
@@ -41,7 +41,9 @@ def makeFigure():
     ylabel = "R2X"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    # tensor_decomp(tensor means, rank, type of decomposition): [DF,tensor factors/weights] creates DF of factors for different conditions and output of decomposition
+    # tensor_decomp(tensor means, rank, type of decomposition): [DF,tensor
+    # factors/weights] creates DF of factors for different conditions and
+    # output of decomposition
     rank = 5
     factors_NNP, _ = tensor_decomp(tMeans, rank, "NNparafac")
 

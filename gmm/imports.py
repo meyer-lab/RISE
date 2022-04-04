@@ -10,7 +10,7 @@ def smallDF(fracCells):
     Zscores all markers per experiment but pSTAT5 normalized over all experiments"""
     # fracCells = Amount of cells per experiment
     flowDF = importflowDF()
-    gVars = ["Time", "Dose", "Date", "Ligand"]
+    gVars = ["Time", "Dose", "Ligand"]
     # Columns that should be trasformed
     transCols = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
@@ -25,6 +25,9 @@ def smallDF(fracCells):
     flowDF["Cell Type"] = flowDF["Cell Type"].apply(celltypetonumb)
 
     flowDF["pSTAT5"] /= np.std(flowDF["pSTAT5"])
+    flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].astype(int).astype(str)
+    flowDF.drop("Valency", axis=1, inplace=True)
+    flowDF.sort_values(by=gVars, inplace=True)
 
     return flowDF, experimentcells
 
@@ -44,9 +47,9 @@ def importflowDF():
     Cells are labeled via Thelper, None, Treg, CD8 or NK"""
 
     monomeric = pq.read_table("/opt/andrew/FlowDataGMM_Mon_NoSub.pq")
-    dimericwt = pq.read_table("/opt/andrew/FlowDataGMM_DimWT_NoSub.pq")
+    # dimericwt = pq.read_table("/opt/andrew/FlowDataGMM_DimWT_NoSub.pq")
     monomeric = monomeric.to_pandas()
-    dimericwt = dimericwt.to_pandas()
+    # dimericwt = dimericwt.to_pandas()
     # pd.concat([monomeric,dimericwt])
 
     return monomeric

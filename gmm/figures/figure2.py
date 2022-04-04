@@ -5,7 +5,8 @@ import seaborn as sns
 
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
-from ..GMM import probGMM, meanmarkerDF
+from ..GMM import probGMM
+from ..tensor import tensor_means
 
 
 def makeFigure():
@@ -22,18 +23,20 @@ def makeFigure():
 
     # probGM(DF,maximum cluster,cellsperexperiemtn): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 4
-    nk, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
+    _, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
 
-    # meanmarkerDF(DF,cells per experiment, mean values, nk values, maximum cluster): [DF, diff. marker list] inputs means/NK into DF
-    meansDF, markerslist = meanmarkerDF(zflowDF, cellperexp, means, nk, maxcluster)
+    conditions = zflowDF.iloc[::cellperexp]
+    conditions = conditions[["Time", "Dose", "Ligand"]]
+    conditions = conditions.set_index(["Time", "Dose", "Ligand"])
 
-    sns.scatterplot(data=meansDF, x="Dose", y="pSTAT5", hue="Cluster", ax=ax[0], style="Ligand")
+    # Tensorify data
+    tMeans = tensor_means(conditions, means)
+    tMeansDF = tMeans.loc[:, "pSTAT5", :, :].to_dataframe("pSTAT5")
+    tMeansDF = tMeansDF.reset_index()
+    sns.scatterplot(data=tMeansDF, x="Dose", y="pSTAT5", hue="Cluster", ax=ax[0], style="Ligand")
     ax[0].set(xscale="log")
 
-    sns.scatterplot(data=meansDF, x="Dose", y="NK", hue="Cluster", ax=ax[1], style="Ligand")
-    ax[1].set(xscale="log")
-
-    heatmapDF = meansDF.copy()
+    heatmapDF = tMeansDF.copy()
     heatmapDF["Ligand/Dose"] = heatmapDF["Ligand"] + " - " + heatmapDF["Dose"].astype(str) + " (nM)"
     heatmapDF["Clust/Time"] = heatmapDF["Cluster"].astype(str) + " - " + heatmapDF["Time"].astype(str)
     heatmapDF = heatmapDF[["Ligand/Dose", "Clust/Time", "pSTAT5"]]
@@ -45,10 +48,11 @@ def makeFigure():
     ylabel = "pSTAT Signal"
     ax[3].set(xlabel=xlabel, ylabel=ylabel)
 
-    wtntermDF = meansDF.loc[meansDF["Ligand"] == "WT C-term"]
+    wtntermDF = tMeans.loc[:, :, :, :, "WT C-term-1"]
 
-    for i, mark in enumerate(markerslist):
-        sns.lineplot(data=wtntermDF, x="Dose", y=mark, hue="Cluster", ax=ax[i + 4], palette='pastel', ci=None)
+    for i, mark in enumerate(["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]):
+        df = wtntermDF.loc[:, mark, :, :].to_dataframe(mark)
+        sns.lineplot(data=df, x="Dose", y=mark, hue="Cluster", ax=ax[i + 4], palette='pastel', ci=None)
         ax[i + 4].set(xscale="log")
 
     return f
