@@ -21,4 +21,4 @@ def test_GMMprob():
     """Test that we can construct a covariance matrix including pSTAT5."""
     cellperexp = 50
     dataTwo, _ = smallDF(cellperexp)
-    nk, means, covari = probGMM(dataTwo, 4, cellperexp)
+    nk, means, covari = probGMM(dataTwo, 4)

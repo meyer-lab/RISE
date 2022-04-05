@@ -11,7 +11,7 @@ from ..GMM import probGMM
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((8, 4), (3, 3))
+    ax, f = getSetup((20, 10), (3, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -22,7 +22,7 @@ def makeFigure():
 
     # probGM(DF,maximum cluster,cellsperexperiemtn): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 4
-    _, tMeans, _ = probGMM(zflowDF, maxcluster, cellperexp)
+    _, tMeans, _ = probGMM(zflowDF, maxcluster)
 
     # Tensorify data
     tMeansDF = tMeans.loc[:, "pSTAT5", :, :].to_dataframe("pSTAT5")

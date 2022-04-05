@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 import tensorly as tl
 import xarray as xa
+from sklearn.mixture import GaussianMixture
+from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky
 
 from tensorly.decomposition import non_negative_parafac, parafac
 from tensorly.cp_tensor import cp_normalize
 
-markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
+markerslist = ["Foxp3", "CD25", "CD4", "CD45RA", "pSTAT5"]
 
 
 def tensor_covar(conditions, covar: np.ndarray):
@@ -56,3 +58,34 @@ def meanCP_to_DF(factorinfo_NNP, tMeans):
     """Converts output of factor decomposition into a dataframe"""
     newTens = tl.cp_to_tensor(factorinfo_NNP)
     return xa.DataArray(newTens, dims=tMeans.dims, coords=tMeans.coords)
+
+
+def comparingGMM(zflowDF, meansDF, tCovar, nk: np.ndarray):
+    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values"""
+    assert nk.ndim == 1
+    nk /= np.sum(nk)
+    conditions = zflowDF.groupby(["Ligand", "Dose", "Time"])
+
+    loglik = 0.0
+
+    for name, cond_cells in conditions:
+        # Means of GMM
+        flow_mean = meansDF.loc[:, markerslist, name[0], name[1], name[2]]
+        #flow_covar = tCovar.loc[:, markerslist, markerslist, name[0], name[1], name[2]]
+        #assert flow_mean.shape[0] == flow_covar.shape[0] # Rows are clusters
+        assert flow_mean.size > 0
+        #assert flow_covar.size > 0
+        assert np.all(np.isfinite(flow_mean))
+        #assert np.all(np.isfinite(flow_covar))
+
+        X = cond_cells[markerslist].to_numpy()
+
+        gmm = GaussianMixture(n_components=nk.size, max_iter=1, covariance_type="full", means_init=flow_mean.to_numpy(), weights_init=nk)
+        gmm._initialize(X, np.ones((X.shape[0], nk.size)))
+        # gmm.fit(X)
+        #gmm.precisions_cholesky_ = _compute_precision_cholesky(flow_covar, "full")
+
+        loglik += np.sum(gmm.score_samples(X))
+        print(loglik)
+
+    return

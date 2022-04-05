@@ -23,7 +23,7 @@ def makeFigure():
 
     # probGM(DF,maximum cluster,cellsperexperiment): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 5
-    _, tMeans, _ = probGMM(zflowDF, maxcluster, cellperexp)
+    _, tMeans, _ = probGMM(zflowDF, maxcluster)
 
     # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] outputs  and variance explained
     maxrank = 10

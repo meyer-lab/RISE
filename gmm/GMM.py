@@ -5,6 +5,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import KFold
 from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters
+from .tensor import markerslist
 
 
 def LLscorer(estimator, X, _):
@@ -30,28 +31,22 @@ def cvGMM(zflowDF, maxcluster: int):
     return pd.DataFrame({"Cluster": results["param_n_components"], "ll_score": results["mean_test_LL"], "rand_score": results["mean_test_rand"]})
 
 
-def probGMM(zflowDF, n_clusters: int, cellperexp: int):
+def probGMM(zflowDF, n_clusters: int):
     """Use the GMM responsibilities matrix to develop means and covariances for each experimental condition.
-
-    NOTE: This method currently assumes there is a constant number of samples per experiment.
 
     Args:
         zflowDF (pandas.DataFrame): DF w/z-scored epitopes values w/pSTAT5 and celltypes
         n_clusters (int): The number of clusters to run the analysis for.
-        cellperexp (int): Amount of cells wanted for GMM for each experiment
 
     Returns:
         numpy.array: Matrix of data sample numbers across each condition.
         numpy.array: Matrix of means across each condition.
         numpy.array: Tensor of covariance matrices across each condition.
     """
-    statDF = zflowDF.drop(columns=["Cell Type", "index", "Time", "Date", "Dose", "Ligand"])  # Creating matrix that includes pSTAT5
-    markerDF = statDF.drop(columns=["pSTAT5"])  # Creating matrix that will be used in GMM model, only markers
-
     # Fit the GMM with the full dataset
     GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", max_iter=5000, verbose=20)
-    GMM.fit(markerDF)
-    _, log_resp = GMM._estimate_log_prob_resp(markerDF)  # Get the responsibilities
+    GMM.fit(zflowDF[markerslist])
+    _, log_resp = GMM._estimate_log_prob_resp(zflowDF[markerslist])  # Get the responsibilities
     assert log_resp.shape[0] == zflowDF.shape[0]  # Check shapes
 
     doses = zflowDF["Dose"].unique()
@@ -61,23 +56,17 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
     # Setup storage
     nk = xa.DataArray(np.full((n_clusters, len(ligand), len(doses), len(times)), np.nan),
                       coords={"Cluster": np.arange(n_clusters), "Ligand": ligand, "Dose": doses, "Time": times})
-    means = xa.DataArray(np.full((n_clusters, statDF.shape[1], len(ligand), len(doses), len(times)), np.nan),
-                         coords={"Cluster": np.arange(n_clusters), "Markers": statDF.columns, "Ligand": ligand, "Dose": doses, "Time": times})
+    means = xa.DataArray(np.full((n_clusters, len(markerslist), len(ligand), len(doses), len(times)), np.nan),
+                         coords={"Cluster": np.arange(n_clusters), "Markers": markerslist, "Ligand": ligand, "Dose": doses, "Time": times})
     covariances = list()
 
     # Loop over separate conditions
-    for i in range(0, markerDF.shape[0], cellperexp):
-        condition = zflowDF.iloc[i]
-        endi = i + cellperexp
-        indDF = statDF.iloc[i:endi]
-        resp_ind = log_resp[i:endi, :]
-        assert indDF.shape[0] == cellperexp  # Check my indexing
-        assert indDF.shape[0] == resp_ind.shape[0]  # Check my indexing
+    for name, cond_cells in zflowDF.groupby(["Ligand", "Dose", "Time"]):
+        idxx = (zflowDF["Ligand"] == name[0]) & (zflowDF["Dose"] == name[1]) & (zflowDF["Time"] == name[2])
+        output = _estimate_gaussian_parameters(cond_cells[markerslist].values, np.exp(log_resp[idxx, :]), 1e-6, "full")
 
-        output = _estimate_gaussian_parameters(indDF.values, np.exp(resp_ind), reg_covar=1e-6, covariance_type="full")
-
-        nk.loc[:, condition["Ligand"], condition["Dose"], condition["Time"]] = output[0]
-        means.loc[:, :, condition["Ligand"], condition["Dose"], condition["Time"]] = output[1]
+        nk.loc[:, name[0], name[1], name[2]] = output[0]
+        means.loc[:, :, name[0], name[1], name[2]] = output[1]
         covariances.append(output[2])
 
     return nk, means, np.stack(covariances)
