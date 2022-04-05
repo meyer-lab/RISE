@@ -6,7 +6,6 @@ import seaborn as sns
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import probGMM
-from ..tensor import tensor_means
 
 
 def makeFigure():
@@ -23,14 +22,9 @@ def makeFigure():
 
     # probGM(DF,maximum cluster,cellsperexperiemtn): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 4
-    _, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
-
-    conditions = zflowDF.iloc[::cellperexp]
-    conditions = conditions[["Time", "Dose", "Ligand"]]
-    conditions = conditions.set_index(["Time", "Dose", "Ligand"])
+    _, tMeans, _ = probGMM(zflowDF, maxcluster, cellperexp)
 
     # Tensorify data
-    tMeans = tensor_means(conditions, means)
     tMeansDF = tMeans.loc[:, "pSTAT5", :, :].to_dataframe("pSTAT5")
     tMeansDF = tMeansDF.reset_index()
     sns.scatterplot(data=tMeansDF, x="Dose", y="pSTAT5", hue="Cluster", ax=ax[0], style="Ligand")
@@ -48,7 +42,7 @@ def makeFigure():
     ylabel = "pSTAT Signal"
     ax[3].set(xlabel=xlabel, ylabel=ylabel)
 
-    wtntermDF = tMeans.loc[:, :, :, :, "WT C-term-1"]
+    wtntermDF = tMeans.loc[:, :, "WT C-term-1", :, :]
 
     for i, mark in enumerate(["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]):
         df = wtntermDF.loc[:, mark, :, :].to_dataframe(mark)

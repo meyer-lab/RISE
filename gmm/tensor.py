@@ -9,14 +9,6 @@ from tensorly.cp_tensor import cp_normalize
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
 
-def tensor_means(conditions, means: np.ndarray):
-    """ Turn the GMM mean results into a tensor form. """
-    xd = xa.DataArray(means, dims=["Conditions", "Cluster", "Marker"])
-    xd = xd.assign_coords(Cluster=np.arange(1, means.shape[1] + 1))
-    xd = xd.assign_coords(Marker=markerslist, Conditions=conditions.index)
-    return xd.unstack("Conditions")
-
-
 def tensor_covar(conditions, covar: np.ndarray):
     """ Turn the GMM covariance results into tensor form. """
     # covar is conditions x clusters x markers x markers

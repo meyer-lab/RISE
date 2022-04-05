@@ -6,7 +6,7 @@ import seaborn as sns
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import probGMM
-from ..tensor import tensor_decomp, tensor_means, tensor_R2X
+from ..tensor import tensor_decomp, tensor_R2X
 
 
 def makeFigure():
@@ -23,14 +23,7 @@ def makeFigure():
 
     # probGM(DF,maximum cluster,cellsperexperiment): [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 5
-    _, means, _ = probGMM(zflowDF, maxcluster, cellperexp)
-
-    conditions = zflowDF.iloc[::cellperexp]
-    conditions = conditions[["Time", "Dose", "Ligand"]]
-    conditions = conditions.set_index(["Time", "Dose", "Ligand"])
-
-    # tensor_means(DF,means of markers): [tensor form of means] converts DF into tensor
-    tMeans = tensor_means(conditions, means)
+    _, tMeans, _ = probGMM(zflowDF, maxcluster, cellperexp)
 
     # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] outputs  and variance explained
     maxrank = 10

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import xarray as xa
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import KFold
@@ -53,13 +54,20 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
     _, log_resp = GMM._estimate_log_prob_resp(markerDF)  # Get the responsibilities
     assert log_resp.shape[0] == zflowDF.shape[0]  # Check shapes
 
+    doses = zflowDF["Dose"].unique()
+    ligand = zflowDF["Ligand"].unique()
+    times = zflowDF["Time"].unique()
+
     # Setup storage
-    nk = list()
-    means = list()
+    nk = xa.DataArray(np.full((n_clusters, len(ligand), len(doses), len(times)), np.nan),
+                      coords={"Cluster": np.arange(n_clusters), "Ligand": ligand, "Dose": doses, "Time": times})
+    means = xa.DataArray(np.full((n_clusters, statDF.shape[1], len(ligand), len(doses), len(times)), np.nan),
+                         coords={"Cluster": np.arange(n_clusters), "Markers": statDF.columns, "Ligand": ligand, "Dose": doses, "Time": times})
     covariances = list()
 
     # Loop over separate conditions
     for i in range(0, markerDF.shape[0], cellperexp):
+        condition = zflowDF.iloc[i]
         endi = i + cellperexp
         indDF = statDF.iloc[i:endi]
         resp_ind = log_resp[i:endi, :]
@@ -67,8 +75,9 @@ def probGMM(zflowDF, n_clusters: int, cellperexp: int):
         assert indDF.shape[0] == resp_ind.shape[0]  # Check my indexing
 
         output = _estimate_gaussian_parameters(indDF.values, np.exp(resp_ind), reg_covar=1e-6, covariance_type="full")
-        nk.append(output[0])
-        means.append(output[1])
+
+        nk.loc[:, condition["Ligand"], condition["Dose"], condition["Time"]] = output[0]
+        means.loc[:, :, condition["Ligand"], condition["Dose"], condition["Time"]] = output[1]
         covariances.append(output[2])
 
-    return np.stack(nk), np.stack(means), np.stack(covariances)
+    return nk, means, np.stack(covariances)
