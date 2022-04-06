@@ -11,15 +11,6 @@ from tensorly.cp_tensor import cp_normalize
 markerslist = ["Foxp3", "CD25", "CD4", "CD45RA", "pSTAT5"]
 
 
-def tensor_covar(conditions, covar: np.ndarray):
-    """ Turn the GMM covariance results into tensor form. """
-    # covar is conditions x clusters x markers x markers
-    xd = xa.DataArray(covar, dims=["Conditions", "Cluster", "Marker1", "Marker2"])
-    xd = xd.assign_coords(Cluster=np.arange(1, covar.shape[1] + 1))
-    xd = xd.assign_coords(Marker1=markerslist, Marker2=markerslist, Conditions=conditions.index)
-    return xd.unstack("Conditions")
-
-
 def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
     """ Runs tensor decomposition on means tensor. """
 
@@ -54,12 +45,6 @@ def tensor_R2X(tensor, maxrank, tensortype):
     return rank, varexpl
 
 
-def meanCP_to_DF(factorinfo_NNP, tMeans):
-    """Converts output of factor decomposition into a dataframe"""
-    newTens = tl.cp_to_tensor(factorinfo_NNP)
-    return xa.DataArray(newTens, dims=tMeans.dims, coords=tMeans.coords)
-
-
 def comparingGMM(zflowDF, meansDF, tCovar, nk: np.ndarray):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values"""
     assert nk.ndim == 1
@@ -71,19 +56,19 @@ def comparingGMM(zflowDF, meansDF, tCovar, nk: np.ndarray):
     for name, cond_cells in conditions:
         # Means of GMM
         flow_mean = meansDF.loc[:, markerslist, name[0], name[1], name[2]]
-        #flow_covar = tCovar.loc[:, markerslist, markerslist, name[0], name[1], name[2]]
-        #assert flow_mean.shape[0] == flow_covar.shape[0] # Rows are clusters
+        flow_covar = tCovar.loc[:, markerslist, markerslist, name[0], name[1], name[2]]
+        assert flow_mean.shape[0] == flow_covar.shape[0]  # Rows are clusters
         assert flow_mean.size > 0
-        #assert flow_covar.size > 0
+        assert flow_covar.size > 0
         assert np.all(np.isfinite(flow_mean))
-        #assert np.all(np.isfinite(flow_covar))
+        assert np.all(np.isfinite(flow_covar))
 
         X = cond_cells[markerslist].to_numpy()
 
-        gmm = GaussianMixture(n_components=nk.size, max_iter=1, covariance_type="full", means_init=flow_mean.to_numpy(), weights_init=nk)
+        gmm = GaussianMixture(n_components=nk.size, max_iter=1000, covariance_type="full", means_init=flow_mean.to_numpy(), weights_init=nk)
         gmm._initialize(X, np.ones((X.shape[0], nk.size)))
-        # gmm.fit(X)
-        #gmm.precisions_cholesky_ = _compute_precision_cholesky(flow_covar, "full")
+        gmm.fit(X)
+        gmm.precisions_cholesky_ = _compute_precision_cholesky(flow_covar, "full")
 
         loglik += np.sum(gmm.score_samples(X))
         print(loglik)

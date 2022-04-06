@@ -24,7 +24,7 @@ def makeFigure():
     maxcluster = 4
     _, tMeans, _ = probGMM(zflowDF, maxcluster)
 
-    # Tensorify data
+    # UnTensorify data
     tMeansDF = tMeans.loc[:, "pSTAT5", :, :].to_dataframe("pSTAT5")
     tMeansDF = tMeansDF.reset_index()
     sns.scatterplot(data=tMeansDF, x="Dose", y="pSTAT5", hue="Cluster", ax=ax[0], style="Ligand")

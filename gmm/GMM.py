@@ -16,7 +16,7 @@ def LLscorer(estimator, X, _):
 def cvGMM(zflowDF, maxcluster: int):
     """ Runs CV on GMM model with score and rand score for multiple clusters"""
     X = zflowDF.drop(
-        columns=["Cell Type", "pSTAT5", "index", "Time", "Date", "Dose", "Ligand"]
+        columns=["Cell Type", "pSTAT5", "Time", "Dose", "Ligand"]
     )  # Creating matrix that will be used in GMM model
 
     cv = KFold(10, shuffle=True)
@@ -32,17 +32,7 @@ def cvGMM(zflowDF, maxcluster: int):
 
 
 def probGMM(zflowDF, n_clusters: int):
-    """Use the GMM responsibilities matrix to develop means and covariances for each experimental condition.
-
-    Args:
-        zflowDF (pandas.DataFrame): DF w/z-scored epitopes values w/pSTAT5 and celltypes
-        n_clusters (int): The number of clusters to run the analysis for.
-
-    Returns:
-        numpy.array: Matrix of data sample numbers across each condition.
-        numpy.array: Matrix of means across each condition.
-        numpy.array: Tensor of covariance matrices across each condition.
-    """
+    """Use the GMM responsibilities matrix to develop means and covariances for each experimental condition."""
     # Fit the GMM with the full dataset
     GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", max_iter=5000, verbose=20)
     GMM.fit(zflowDF[markerslist])
@@ -55,10 +45,11 @@ def probGMM(zflowDF, n_clusters: int):
 
     # Setup storage
     nk = xa.DataArray(np.full((n_clusters, len(ligand), len(doses), len(times)), np.nan),
-                      coords={"Cluster": np.arange(n_clusters), "Ligand": ligand, "Dose": doses, "Time": times})
+                      coords={"Cluster": np.arange(1, n_clusters + 1), "Ligand": ligand, "Dose": doses, "Time": times})
     means = xa.DataArray(np.full((n_clusters, len(markerslist), len(ligand), len(doses), len(times)), np.nan),
-                         coords={"Cluster": np.arange(n_clusters), "Markers": markerslist, "Ligand": ligand, "Dose": doses, "Time": times})
-    covariances = list()
+                         coords={"Cluster": np.arange(1, n_clusters + 1), "Markers": markerslist, "Ligand": ligand, "Dose": doses, "Time": times})
+    covariances = xa.DataArray(np.full((n_clusters, len(markerslist), len(markerslist), len(ligand), len(doses), len(times)), np.nan),
+                               coords={"Cluster": np.arange(1, n_clusters + 1), "Marker1": markerslist, "Marker2": markerslist, "Ligand": ligand, "Dose": doses, "Time": times})
 
     # Loop over separate conditions
     for name, cond_cells in zflowDF.groupby(["Ligand", "Dose", "Time"]):
@@ -67,6 +58,6 @@ def probGMM(zflowDF, n_clusters: int):
 
         nk.loc[:, name[0], name[1], name[2]] = output[0]
         means.loc[:, :, name[0], name[1], name[2]] = output[1]
-        covariances.append(output[2])
+        covariances.loc[:, :, :, name[0], name[1], name[2]] = output[2]
 
-    return nk, means, np.stack(covariances)
+    return nk, means, covariances
