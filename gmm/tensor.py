@@ -15,9 +15,15 @@ def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
     """ Runs tensor decomposition on means tensor. """
 
     if tensortype == "NNparafac":
-        fac = non_negative_parafac(np.nan_to_num(tensor.to_numpy()), mask=np.isfinite(tensor.to_numpy()), rank=ranknumb)
+        fac = non_negative_parafac(
+            np.nan_to_num(
+                tensor.to_numpy()), mask=np.isfinite(
+                tensor.to_numpy()), rank=ranknumb)
     else:
-        fac = parafac(np.nan_to_num(tensor.to_numpy()), mask=np.isfinite(tensor.to_numpy()), rank=ranknumb)
+        fac = parafac(
+            np.nan_to_num(
+                tensor.to_numpy()), mask=np.isfinite(
+                tensor.to_numpy()), rank=ranknumb)
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, ranknumb + 1)]
     fac = cp_normalize(fac)
@@ -45,17 +51,16 @@ def tensor_R2X(tensor, maxrank, tensortype):
     return rank, varexpl
 
 
-def comparingGMM(zflowDF, meansDF, tCovar, nk: np.ndarray):
+def comparingGMM(zflowDF: pd.DataFrame, tMeans: xa.DataArray, tCovar: xa.DataArray, nk: np.ndarray):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values"""
     assert nk.ndim == 1
     nk /= np.sum(nk)
     conditions = zflowDF.groupby(["Ligand", "Dose", "Time"])
-
     loglik = 0.0
 
     for name, cond_cells in conditions:
         # Means of GMM
-        flow_mean = meansDF.loc[:, markerslist, name[0], name[1], name[2]]
+        flow_mean = tMeans.loc[:, markerslist, name[0], name[1], name[2]]
         flow_covar = tCovar.loc[:, markerslist, markerslist, name[0], name[1], name[2]]
         assert flow_mean.shape[0] == flow_covar.shape[0]  # Rows are clusters
         assert flow_mean.size > 0
@@ -65,12 +70,14 @@ def comparingGMM(zflowDF, meansDF, tCovar, nk: np.ndarray):
 
         X = cond_cells[markerslist].to_numpy()
 
-        gmm = GaussianMixture(n_components=nk.size, max_iter=1000, covariance_type="full", means_init=flow_mean.to_numpy(), weights_init=nk)
+        gmm = GaussianMixture(
+            n_components=nk.size,
+            covariance_type="full",
+            means_init=flow_mean.to_numpy(),
+            weights_init=nk)
         gmm._initialize(X, np.ones((X.shape[0], nk.size)))
-        gmm.fit(X)
         gmm.precisions_cholesky_ = _compute_precision_cholesky(flow_covar, "full")
 
         loglik += np.sum(gmm.score_samples(X))
-        print(loglik)
 
-    return
+    return loglik

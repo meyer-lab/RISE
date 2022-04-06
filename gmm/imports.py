@@ -1,7 +1,6 @@
 """ Methods for data import and normalization. """
 
 import numpy as np
-import pandas as pd
 import pyarrow.parquet as pq
 
 
@@ -12,6 +11,7 @@ def smallDF(fracCells):
     flowDF = importflowDF()
     gVars = ["Time", "Dose", "Ligand"]
     # Columns that should be trasformed
+    tCols = ["Foxp3", "CD25", "CD45RA", "CD4"]
     transCols = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
     flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].astype(int).astype(str)
@@ -21,7 +21,7 @@ def smallDF(fracCells):
     # Also drop columns with missing values
     flowDF = flowDF.dropna(subset=["Foxp3"]).dropna(axis=1)
     experimentcells = flowDF.groupby(by=gVars).size()
-    flowDF[["Foxp3", "CD25", "CD45RA", "CD4"]] = flowDF.groupby(by=gVars)[["Foxp3", "CD25", "CD45RA", "CD4"]].transform(lambda x: x / np.std(x))
+    flowDF[tCols] = flowDF.groupby(by=gVars)[tCols].transform(lambda x: x / np.std(x))
     for mark in transCols:
         flowDF = flowDF[flowDF[mark] < flowDF[mark].quantile(.995)]
     flowDF = flowDF.groupby(by=gVars).sample(n=fracCells).reset_index(drop=True)
