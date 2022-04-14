@@ -1,7 +1,6 @@
 """
 Test the data import.
 """
-import pytest
 from ..imports import smallDF
 
 
