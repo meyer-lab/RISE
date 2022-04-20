@@ -1,6 +1,7 @@
 """
 This creates Figure 1.
 """
+import numpy as np
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import cvGMM
@@ -18,14 +19,14 @@ def makeFigure():
     cellperexp = 50
     zflowDF, experimentalcells = smallDF(cellperexp)
 
-    ax[0].hist(experimentalcells, bins=20)
+    ax[0].hist(experimentalcells[0], bins=20)
     xlabel = "Number of Cells per Experiment"
     ylabel = "Events"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
     # scoreDF(DF, maximum cluster): [DF(Cluster #,Score)] Determines rand_score/score for GMM
     maxcluster = 18
-    scoreDF = cvGMM(zflowDF, maxcluster)
+    scoreDF = cvGMM(zflowDF, maxcluster, experimentalcells[1])
 
     for i in range(maxcluster):
         ax[1].plot(scoreDF.Cluster.values, scoreDF.rand_score.values)

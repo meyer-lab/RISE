@@ -2,9 +2,10 @@
 
 import numpy as np
 import pyarrow.parquet as pq
+import xarray as xa
 
 
-def smallDF(fracCells):
+def smallDF(fracCells: int):
     """Creates DF of specific # of experiments
     Zscores all markers per experiment but pSTAT5 normalized over all experiments"""
     # fracCells = Amount of cells per experiment
@@ -29,7 +30,13 @@ def smallDF(fracCells):
     flowDF["pSTAT5"] /= np.std(flowDF["pSTAT5"])
     flowDF.sort_values(by=gVars, inplace=True)
 
-    return flowDF, experimentcells
+    flowDF["Cell"] = np.tile(np.arange(1, fracCells + 1), int(flowDF.shape[0] / fracCells))
+    flowDF = flowDF.set_index(["Cell", "Time", "Dose", "Ligand"]).to_xarray()
+    cell_type = flowDF["Cell Type"]
+    flowDF = flowDF.drop_vars(["Cell Type"])
+    flowDF = flowDF[transCols].to_array(dim="Marker")
+
+    return flowDF, (experimentcells, cell_type)
 
 
 def celltypetonumb(typ):

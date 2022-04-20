@@ -37,12 +37,12 @@ def makeFigure():
     heatmapDF = heatmapDF.pivot(index='Ligand/Dose', columns='Clust/Time', values='pSTAT5')
     sns.heatmap(heatmapDF, ax=ax[2])
 
-    ax[3].hist(zflowDF["pSTAT5"].values, bins=1000, color='r')
+    ax[3].hist(tMeans.loc[:, "pSTAT5", :, :, :].values.flatten(), bins=1000, color='r')
     xlabel = "Event"
     ylabel = "pSTAT Signal"
     ax[3].set(xlabel=xlabel, ylabel=ylabel)
 
-    wtntermDF = tMeans.loc[:, :, "WT C-term-1", :, :]
+    wtntermDF = tMeans.loc[:, :, :, :, "WT C-term-1"]
 
     for i, mark in enumerate(["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]):
         df = wtntermDF.loc[:, mark, :, :].to_dataframe(mark)
