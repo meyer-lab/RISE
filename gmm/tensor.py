@@ -50,14 +50,14 @@ def tensor_R2X(tensor, maxrank, tensortype):
     return rank, varexpl
 
 
-def comparingGMM(zflowDF: xa.DataArray, tMeans: xa.DataArray, tCovar: xa.DataArray, nk: np.ndarray):
+def comparingGMM(zflowDF: xa.DataArray, tMeans: xa.DataArray, tPrecision: xa.DataArray, nk: np.ndarray):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values"""
     assert nk.ndim == 1
     nk /= np.sum(nk)
     loglik = 0.0
 
     tMeans = tMeans.to_numpy()
-    tCovar = tCovar.to_numpy()
+    tPrecision = tPrecision.to_numpy()
     X = zflowDF.to_numpy()
 
     it = np.nditer(tMeans[0, 0, :, :, :], flags=['multi_index', 'refs_ok'])
@@ -72,7 +72,7 @@ def comparingGMM(zflowDF: xa.DataArray, tMeans: xa.DataArray, tCovar: xa.DataArr
         gmm = GaussianMixture(n_components=nk.size, covariance_type="full", means_init=tMeans[:, :, i, j, k],
                               weights_init=nk)
         gmm._initialize(Xcur, np.ones((X.shape[1], nk.size)))
-        gmm.precisions_cholesky_ = tCovar[:, :, :, i, j, k]
+        gmm.precisions_cholesky_ = tPrecision[:, :, :, i, j, k]
         loglik += np.sum(gmm.score_samples(Xcur))
 
     return loglik
