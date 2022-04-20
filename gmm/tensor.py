@@ -3,7 +3,6 @@ import numpy as np
 import tensorly as tl
 import xarray as xa
 from sklearn.mixture import GaussianMixture
-from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky
 
 from tensorly.decomposition import non_negative_parafac, parafac
 from tensorly.cp_tensor import cp_normalize
@@ -57,21 +56,45 @@ def comparingGMM(zflowDF: xa.DataArray, tMeans: xa.DataArray, tCovar: xa.DataArr
     nk /= np.sum(nk)
     loglik = 0.0
 
+    tMeans = tMeans.to_numpy()
+    tCovar = tCovar.to_numpy()
+    X = zflowDF.to_numpy()
+
     it = np.nditer(tMeans[0, 0, :, :, :], flags=['multi_index', 'refs_ok'])
     for _ in it:  # Loop over indices
         i, j, k = it.multi_index
-        X = zflowDF[:, :, i, j, k].to_numpy()  # Marker X Cells
+
+        Xcur = np.transpose(X[:, :, i, j, k])
 
         if np.all(np.isnan(X)):  # Skip if there's no data
             continue
 
-        flow_mean = tMeans[:, :, i, j, k].to_numpy()
-        flow_covar = tCovar[:, :, :, i, j, k].to_numpy()
-
-        gmm = GaussianMixture(n_components=nk.size, covariance_type="full", means_init=flow_mean,
+        gmm = GaussianMixture(n_components=nk.size, covariance_type="full", means_init=tMeans[:, :, i, j, k],
                               weights_init=nk)
-        gmm._initialize(np.transpose(X), np.ones((X.shape[1], nk.size)))
-        gmm.precisions_cholesky_ = _compute_precision_cholesky(flow_covar, "full")
-        loglik += np.sum(gmm.score_samples(np.transpose(X)))
+        gmm._initialize(Xcur, np.ones((X.shape[1], nk.size)))
+        gmm.precisions_cholesky_ = tCovar[:, :, :, i, j, k]
+        loglik += np.sum(gmm.score_samples(Xcur))
 
     return loglik
+
+
+def leastsquaresguess(nk, tMeans):
+    nkCommon = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))  # nk is shared across conditions
+    tMeans_vector = tMeans.values.flatten()
+    return np.append(nkCommon, tMeans_vector)
+
+
+def maxloglik(nk_tMeans_input, maxcluster, zflowDF, tMeans, tCovar):
+    nk_guess = nk_tMeans_input[0:maxcluster]
+
+    tGuessMeans = tMeans.copy()
+    assert len(nk_guess) == maxcluster
+    tMeans_input = nk_tMeans_input[maxcluster:]
+    assert len(tMeans_input) == len(tMeans.values.flatten())
+
+    tGuessMeans.values = np.reshape(tMeans_input, tMeans.shape)
+
+    ll = comparingGMM(zflowDF, tGuessMeans, tCovar, nk_guess)
+    print(ll)
+
+    return -ll

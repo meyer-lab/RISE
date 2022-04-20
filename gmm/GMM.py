@@ -4,7 +4,7 @@ import xarray as xa
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import KFold
-from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters
+from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters, _compute_precision_cholesky
 from .tensor import markerslist
 
 
@@ -64,8 +64,8 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
                       coords={"Cluster": clustArray, **commonDims})
     means = xa.DataArray(np.full((n_clusters, len(markerslist), *commonSize), np.nan),
                          coords={"Cluster": clustArray, "Markers": markerslist, **commonDims})
-    covariances = xa.DataArray(np.full((n_clusters, len(markerslist), len(markerslist), *commonSize), np.nan),
-                               coords={"Cluster": clustArray, "Marker1": markerslist, "Marker2": markerslist, **commonDims})
+    precision = xa.DataArray(np.full((n_clusters, len(markerslist), len(markerslist), *commonSize), np.nan),
+                             coords={"Cluster": clustArray, "Marker1": markerslist, "Marker2": markerslist, **commonDims})
 
     it = np.nditer(nk[0, :, :, :], flags=['multi_index', 'refs_ok'])
     for _ in it:
@@ -76,6 +76,6 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
 
         nk[:, i, j, k] = output[0]
         means[:, :, i, j, k] = output[1]
-        covariances[:, :, :, i, j, k] = output[2]
+        precision[:, :, :, i, j, k] = _compute_precision_cholesky(output[2], "full")
 
-    return nk, means, covariances
+    return nk, means, precision

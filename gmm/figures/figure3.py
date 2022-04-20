@@ -18,15 +18,15 @@ def makeFigure():
     subplotLabel(ax)
 
     # smallDF(Amount of cells wanted per experiment): [DF] with all conditions as data
-    cellperexp = 6000
+    cellperexp = 50
     zflowDF, _ = smallDF(cellperexp)
 
     # probGM(DF,maximum cluster,cellsperexperiment): [nk, means, covar] while using estimation gaussian parameters
-    maxcluster = 5
+    maxcluster = 3
     _, tMeans, _ = probGMM(zflowDF, maxcluster)
 
     # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] outputs  and variance explained
-    maxrank = 10
+    maxrank = 3
     rankings, varexpl_NNP = tensor_R2X(tMeans, maxrank, "NNparafac")
 
     ax[0].plot(rankings, varexpl_NNP, "r")
@@ -38,7 +38,7 @@ def makeFigure():
     # factors/weights] creates DF of factors for different conditions and
     # output of decomposition
     rank = 5
-    factors_NNP, _ = tensor_decomp(tMeans, rank, "NNparafac")
+    factors_NNP, facinfo = tensor_decomp(tMeans, rank, "NNparafac")
 
     for i in range(0, 5):
         heatmap = sns.heatmap(data=factors_NNP[i], ax=ax[i + 1], vmin=0, vmax=1, cmap="Blues")

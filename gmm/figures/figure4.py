@@ -1,11 +1,11 @@
 """
 This creates Figure 4.
 """
-import numpy as np
+from scipy.optimize import minimize
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import probGMM
-from ..tensor import tensor_decomp, comparingGMM
+from ..tensor import tensor_decomp, maxloglik, leastsquaresguess
 
 
 def makeFigure():
@@ -21,17 +21,20 @@ def makeFigure():
     zflowTensor, _ = smallDF(cellperexp)
 
     # probGM(DF,maximum cluster,cellsperexperiment): [nk, means, covar] while using estimation gaussian parameters
-    maxcluster = 4
+    maxcluster = 2
     nk, tMeans, tCovar = probGMM(zflowTensor, maxcluster)
 
     # tensor_decomp(tensor means, rank, type of decomposition):
     # [DF,tensorfactors/weights] creates DF of factors for different
     # conditions and output of decomposition
-    rank = 5
+
+    rank = 2
     _, _ = tensor_decomp(tMeans, rank, "NNparafac")
 
-    nkCommon = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))  # nk is shared across conditions
-    maxloglik = comparingGMM(zflowTensor, tMeans, tCovar, nkCommon)
-    print(maxloglik)
+    nk_tMeans_guess = leastsquaresguess(nk, tMeans)
+
+    optimized = minimize(maxloglik, nk_tMeans_guess, method="Nelder-Mead", args=(maxcluster, zflowTensor, tMeans, tCovar), options={"disp": True, "maxiter": 1})
+
+    print("Optimized Parameters:", optimized)
 
     return f
