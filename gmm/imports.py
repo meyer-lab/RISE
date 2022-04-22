@@ -2,7 +2,6 @@
 
 import numpy as np
 import pyarrow.parquet as pq
-import xarray as xa
 
 
 def smallDF(fracCells: int):

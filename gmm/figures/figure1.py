@@ -1,7 +1,6 @@
 """
 This creates Figure 1.
 """
-import numpy as np
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import cvGMM
