@@ -35,18 +35,8 @@ def makeFigure():
     nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
     cpVector = cp_to_vector(facInfo)
 
-    optimized = minimize(
-        maxloglik,
-        cpVector,
-        method="Nelder-Mead",
-        args=(
-            facInfo,
-            tCovar,
-            nkValues,
-            zflowTensor),
-        options={
-            "disp": True,
-            "maxiter": 10})
+    optimized = minimize(maxloglik, cpVector, method="Nelder-Mead",
+                         args=(facInfo, tCovar, nkValues, zflowTensor), options={"disp": True, "maxiter": 10})
 
     print("Optimized Parameters:", optimized)
 
