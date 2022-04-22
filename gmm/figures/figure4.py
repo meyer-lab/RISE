@@ -1,11 +1,12 @@
 """
 This creates Figure 4.
 """
+import numpy as np
 from scipy.optimize import minimize
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import probGMM
-from ..tensor import tensor_decomp, maxloglik, leastsquaresguess
+from ..tensor import tensor_decomp, cp_to_vector, markerslist, maxloglik
 
 
 def makeFigure():
@@ -29,11 +30,23 @@ def makeFigure():
     # conditions and output of decomposition
 
     rank = 2
-    _, _ = tensor_decomp(tMeans, rank, "NNparafac")
+    _, facInfo = tensor_decomp(tMeans, rank, "NNparafac")
 
-    nk_tMeans_guess = leastsquaresguess(nk, tMeans)
+    nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
+    cpVector = cp_to_vector(facInfo)
 
-    optimized = minimize(maxloglik, nk_tMeans_guess, method="Nelder-Mead", args=(maxcluster, zflowTensor, tMeans, tCovar), options={"disp": True, "maxiter": 1})
+    optimized = minimize(
+        maxloglik,
+        cpVector,
+        method="Nelder-Mead",
+        args=(
+            facInfo,
+            tCovar,
+            nkValues,
+            zflowTensor),
+        options={
+            "disp": True,
+            "maxiter": 10})
 
     print("Optimized Parameters:", optimized)
 
