@@ -34,7 +34,7 @@ def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
     return dfs, fac
 
 
-def tensor_R2X(tensor, maxrank, tensortype):
+def tensor_R2X(tensor: xa.DataArray, maxrank: int, tensortype):
     """ Calculates the R2X value even where NaN values are present"""
     rank = np.arange(1, maxrank)
     varexpl = np.empty(len(rank))
@@ -48,6 +48,25 @@ def tensor_R2X(tensor, maxrank, tensortype):
         varexpl[i] = 1.0 - vTop / vBottom
 
     return rank, varexpl
+
+
+def cp_to_vector(facinfo: tl.cp_tensor.CPTensor):
+    """ Converts from factors to a linear vector. """
+    vec = []
+
+    for fac in facinfo.factors:
+        vec = np.append(vec, fac.flatten())
+
+    return vec
+
+
+def vector_to_cp(vectorIn: np.ndarray, rank: int, shape: tuple):
+    """Converts linear vector to factors"""
+    nN = np.cumsum(np.array(shape)*rank)
+    nN = np.insert(nN, 0, 0)
+
+    factors = [np.reshape(vectorIn[nN[ii]:nN[ii+1]], (shape[ii], rank)) for ii in range(len(shape))]
+    return tl.cp_tensor.CPTensor((None, factors))
 
 
 def comparingGMM(zflowDF: xa.DataArray, tMeans: xa.DataArray, tPrecision: xa.DataArray, nk: np.ndarray):
@@ -84,7 +103,7 @@ def leastsquaresguess(nk, tMeans):
     return np.append(nkCommon, tMeans_vector)
 
 
-def maxloglik(nk_tMeans_input, maxcluster, zflowDF, tMeans, tCovar):
+def maxloglik(nk_tMeans_input, maxcluster, zflowDF, tMeans, tPrecision):
     nk_guess = nk_tMeans_input[0:maxcluster]
 
     tGuessMeans = tMeans.copy()
@@ -94,7 +113,6 @@ def maxloglik(nk_tMeans_input, maxcluster, zflowDF, tMeans, tCovar):
 
     tGuessMeans.values = np.reshape(tMeans_input, tMeans.shape)
 
-    ll = comparingGMM(zflowDF, tGuessMeans, tCovar, nk_guess)
-    print(ll)
+    ll = comparingGMM(zflowDF, tGuessMeans, tPrecision, nk_guess)
 
     return -ll
