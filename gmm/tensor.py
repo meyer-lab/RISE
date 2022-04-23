@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import tensorly as tl
 import xarray as xa
+from scipy.special import logsumexp
 from sklearn.mixture import GaussianMixture
 
 from tensorly.decomposition import non_negative_parafac, parafac
@@ -65,14 +66,13 @@ def vector_to_cp(vectorIn: np.ndarray, rank: int, shape: tuple):
     return tl.cp_tensor.CPTensor((None, factors))
 
 
-def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: xa.DataArray, nk: np.ndarray):
+def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
     assert nk.ndim == 1
     nk /= np.sum(nk)
     loglik = 0.0
 
-    tPrecision = tPrecision.to_numpy()
     X = zflowDF.to_numpy()
 
     it = np.nditer(tMeans[0, 0, :, :, :], flags=['multi_index', 'refs_ok'])
@@ -81,7 +81,7 @@ def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: xa.DataA
 
         Xcur = np.transpose(X[:, :, i, j, k])
 
-        if np.all(np.isnan(X)):  # Skip if there's no data
+        if np.all(np.isnan(Xcur)):  # Skip if there's no data
             continue
 
         gmm = GaussianMixture(n_components=nk.size, covariance_type="full", means_init=tMeans[:, :, i, j, k],
@@ -90,6 +90,33 @@ def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: xa.DataA
         gmm.precisions_cholesky_ = tPrecision[:, :, :, i, j, k]
         loglik += np.sum(gmm.score_samples(Xcur))
 
+    return loglik
+
+
+def comparingGMMjax(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
+    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
+    to determine the max log-likelihood"""
+    assert nk.ndim == 1
+    nkl = np.log(nk / np.sum(nk))
+
+    n_features = zflowDF.shape[0]
+
+    mp = np.einsum("ijklm,ijoklm->ioklm", tMeans, tPrecision)
+    Xp = np.einsum("jiklm,njoklm->nioklm", zflowDF, tPrecision)
+    diff_sum = np.sum(np.square(Xp - mp[:, np.newaxis, :, :, :, :]), axis=2)
+    log_prob = np.swapaxes(diff_sum, 0, 1)
+    log_prob = -0.5 * (n_features * np.log(2 * np.pi) + log_prob)
+
+    # The determinant of the precision matrix from the Cholesky decomposition
+    # corresponds to the negative half of the determinant of the full precision
+    # matrix.
+    # In short: det(precision_chol) = - det(precision) / 2
+    ppp = tPrecision.reshape(tMeans.shape[0], -1, tPrecision.shape[3], tPrecision.shape[4], tPrecision.shape[5])
+    log_det = np.sum(np.log(ppp[:, :: n_features + 1, :, :, :]), 1)
+
+    # Since we are using the precision of the Cholesky decomposition,
+    # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
+    loglik = np.sum(logsumexp(log_prob + log_det[np.newaxis, :, :, :, :] + nkl[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis], axis=1))
     return loglik
 
 
@@ -104,5 +131,5 @@ def maxloglik(facVector: np.ndarray, facInfo: tl.cp_tensor.CPTensor, tPrecision:
     factorsguess = vector_to_cp(facVector, facInfo.rank, facInfo.shape)
     rebuildMeans = tl.cp_to_tensor(factorsguess)
 
-    ll = comparingGMM(zflowTensor, rebuildMeans, tPrecision, nk)
+    ll = comparingGMMjax(zflowTensor, rebuildMeans, tPrecision.to_numpy(), nk)
     return -ll
