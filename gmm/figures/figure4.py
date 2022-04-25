@@ -2,11 +2,17 @@
 This creates Figure 4.
 """
 import numpy as np
+import tensorly as tl
 from scipy.optimize import minimize
+from jax.config import config
+from jax import value_and_grad
 from .common import subplotLabel, getSetup
 from ..imports import smallDF
 from ..GMM import probGMM
-from ..tensor import tensor_decomp, cp_to_vector, markerslist, maxloglik
+from ..tensor import tensor_decomp, cp_to_vector, maxloglik
+
+config.update("jax_enable_x64", True)
+
 
 
 def makeFigure():
@@ -34,14 +40,15 @@ def makeFigure():
 
     nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
     cpVector = cp_to_vector(facInfo)
+    args = (facInfo, tCovar, nkValues, zflowTensor)
 
-    def callbk(xk):
-        print(maxloglik(xk, facInfo, tCovar, nkValues, zflowTensor))
-        return False
+    tl.set_backend("jax")
 
-    optimized = minimize(maxloglik, cpVector, callback=callbk,
-                         args=(facInfo, tCovar, nkValues, zflowTensor), options={"disp": True, "maxiter": 200})
+    func = value_and_grad(maxloglik)
 
-    print("Optimized Parameters:", optimized)
+    opt = minimize(func, cpVector, jac=True, method="L-BFGS-B",
+                   args=args, options={"iprint": 50})
+
+    tl.set_backend("numpy")
 
     return f

@@ -34,6 +34,6 @@ def test_comparingGMM():
     nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
 
     optimized1 = comparingGMM(data_import, tMeans, tCovar.to_numpy(), nkValues)
-    optimized2 = comparingGMMjax(data_import, tMeans, tCovar.to_numpy(), nkValues)
+    optimized2 = comparingGMMjax(data_import.to_numpy(), tMeans.to_numpy(), tCovar.to_numpy(), nkValues)
 
     np.testing.assert_almost_equal(optimized1, optimized2)

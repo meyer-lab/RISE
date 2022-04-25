@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import jax.numpy as jnp
+import jax.scipy.special as jsp
+from jax.config import config
 import tensorly as tl
 import xarray as xa
 from scipy.special import logsumexp
@@ -9,6 +12,7 @@ from tensorly.decomposition import non_negative_parafac, parafac
 from tensorly.cp_tensor import cp_normalize
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
+config.update("jax_enable_x64", True)
 
 
 def tensor_decomp(tensor: xa.DataArray, ranknumb: int, tensortype):
@@ -57,12 +61,12 @@ def cp_to_vector(facinfo: tl.cp_tensor.CPTensor):
     return vec
 
 
-def vector_to_cp(vectorIn: np.ndarray, rank: int, shape: tuple):
+def vector_to_cp(vectorIn, rank: int, shape: tuple):
     """Converts linear vector to factors"""
-    nN = np.cumsum(np.array(shape) * rank)
-    nN = np.insert(nN, 0, 0)
+    nN = jnp.cumsum(np.array(shape) * rank)
+    nN = jnp.insert(nN, 0, 0)
 
-    factors = [np.reshape(vectorIn[nN[ii]:nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
+    factors = [jnp.reshape(vectorIn[nN[ii]:nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
     return tl.cp_tensor.CPTensor((None, factors))
 
 
@@ -93,30 +97,27 @@ def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarr
     return loglik
 
 
-def comparingGMMjax(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
+def comparingGMMjax(X, tMeans, tPrecision, nk):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
     assert nk.ndim == 1
-    nkl = np.log(nk / np.sum(nk))
+    nkl = jnp.log(nk / jnp.sum(nk))
 
-    n_features = zflowDF.shape[0]
-
-    mp = np.einsum("ijklm,ijoklm->ioklm", tMeans, tPrecision)
-    Xp = np.einsum("jiklm,njoklm->nioklm", zflowDF, tPrecision)
-    diff_sum = np.sum(np.square(Xp - mp[:, np.newaxis, :, :, :, :]), axis=2)
-    log_prob = np.swapaxes(diff_sum, 0, 1)
-    log_prob = -0.5 * (n_features * np.log(2 * np.pi) + log_prob)
+    mp = jnp.einsum("ijklm,ijoklm->ioklm", tMeans, tPrecision)
+    Xp = jnp.einsum("jiklm,njoklm->nioklm", X, tPrecision)
+    diff_sum = jnp.sum(jnp.square(Xp - mp[:, jnp.newaxis, :, :, :, :]), axis=2)
+    log_prob = jnp.swapaxes(diff_sum, 0, 1)
+    log_prob = -0.5 * (X.shape[0] * jnp.log(2 * jnp.pi) + log_prob)
 
     # The determinant of the precision matrix from the Cholesky decomposition
-    # corresponds to the negative half of the determinant of the full precision
-    # matrix.
+    # corresponds to the negative half of the determinant of the full precision matrix.
     # In short: det(precision_chol) = - det(precision) / 2
     ppp = tPrecision.reshape(tMeans.shape[0], -1, tPrecision.shape[3], tPrecision.shape[4], tPrecision.shape[5])
-    log_det = np.sum(np.log(ppp[:, :: n_features + 1, :, :, :]), 1)
+    log_det = jnp.sum(jnp.log(ppp[:, :: X.shape[0] + 1, :, :, :]), 1)
 
     # Since we are using the precision of the Cholesky decomposition,
     # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
-    loglik = np.sum(logsumexp(log_prob + log_det[np.newaxis, :, :, :, :] + nkl[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis], axis=1))
+    loglik = jnp.sum(jsp.logsumexp(log_prob + log_det[jnp.newaxis, :, :, :, :] + nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis], axis=1))
     return loglik
 
 
@@ -126,10 +127,8 @@ def leastsquaresguess(nk, tMeans):
     return np.append(nkCommon, tMeans_vector)
 
 
-def maxloglik(facVector: np.ndarray, facInfo: tl.cp_tensor.CPTensor, tPrecision: xa.DataArray, nk: np.ndarray, zflowTensor: xa.DataArray):
+def maxloglik(facVector, facInfo: tl.cp_tensor.CPTensor, tPrecision: xa.DataArray, nk: np.ndarray, zflowTensor: xa.DataArray):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     factorsguess = vector_to_cp(facVector, facInfo.rank, facInfo.shape)
     rebuildMeans = tl.cp_to_tensor(factorsguess)
-
-    ll = comparingGMMjax(zflowTensor, rebuildMeans, tPrecision.to_numpy(), nk)
-    return -ll
+    return -comparingGMMjax(zflowTensor.to_numpy(), rebuildMeans, tPrecision.to_numpy(), nk)

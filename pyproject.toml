@@ -14,9 +14,11 @@ seaborn = "^0.11.2"
 svgutils = "^0.3.4"
 ipykernel = "^6.9.0"
 pyarrow = "^7.0.0"
-tensorly = "^0.7.0"
+tensorly = "0.7.0"
 xarray = "^2022.3.0"
 autopep8 = "^1.6.0"
+jaxlib = "0.3.0"
+jax = "0.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.0"
