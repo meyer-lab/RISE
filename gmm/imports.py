@@ -12,7 +12,7 @@ def smallDF(fracCells: int):
     gVars = ["Time", "Dose", "Ligand"]
     # Columns that should be trasformed
     tCols = ["Foxp3", "CD25", "CD45RA", "CD4"]
-    transCols = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
+    transCols = tCols + ["pSTAT5"]
 
     flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].astype(int).astype(str)
     flowDF.drop(columns=["Valency", "index", "Date"], axis=1, inplace=True)
@@ -25,7 +25,7 @@ def smallDF(fracCells: int):
     for mark in transCols:
         flowDF = flowDF[flowDF[mark] < flowDF[mark].quantile(.995)]
     flowDF = flowDF.groupby(by=gVars).sample(n=fracCells).reset_index(drop=True)
-    flowDF["Cell Type"] = flowDF["Cell Type"].apply(celltypetonumb)
+    flowDF["Cell Type"] = flowDF["Cell Type"].replace({"None": 1, "Treg": 2, "Thelper": 3})
     flowDF["pSTAT5"] /= np.std(flowDF["pSTAT5"])
     flowDF.sort_values(by=gVars, inplace=True)
 
@@ -36,16 +36,6 @@ def smallDF(fracCells: int):
     flowDF = flowDF[transCols].to_array(dim="Marker")
 
     return flowDF, (experimentcells, cell_type)
-
-
-def celltypetonumb(typ):
-    """Changing cell types to a number"""
-    if typ == "None":
-        return 1
-    elif typ == "Treg":
-        return 2
-    else:  # Thelper
-        return 3
 
 
 def importflowDF():
