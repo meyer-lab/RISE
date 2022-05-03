@@ -4,9 +4,9 @@ This creates Figure 3.
 import seaborn as sns
 
 from .common import subplotLabel, getSetup
-from ..imports import smallDF
-from ..GMM import probGMM
-from ..tensor import tensor_decomp, tensor_R2X
+from gmm.imports import smallDF
+from gmm.GMM import probGMM
+from gmm.tensor import tensor_decomp, tensor_R2X
 
 
 def makeFigure():

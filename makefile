@@ -18,3 +18,6 @@ clean:
 
 testprofile:
 	poetry run python3 -m cProfile -o profile -m pytest -s -v -x
+
+mypy:
+	poetry run mypy --install-types --non-interactive --ignore-missing-imports gmm

@@ -7,12 +7,11 @@ from scipy.optimize import minimize
 from jax.config import config
 from jax import value_and_grad
 from .common import subplotLabel, getSetup
-from ..imports import smallDF
-from ..GMM import probGMM
-from ..tensor import tensor_decomp, cp_to_vector, maxloglik
+from gmm.imports import smallDF
+from gmm.GMM import probGMM
+from gmm.tensor import tensor_decomp, cp_to_vector, maxloglik
 
 config.update("jax_enable_x64", True)
-
 
 
 def makeFigure():
@@ -46,8 +45,7 @@ def makeFigure():
 
     func = value_and_grad(maxloglik)
 
-    opt = minimize(func, cpVector, jac=True, method="L-BFGS-B",
-                   args=args, options={"iprint": 50})
+    opt = minimize(func, cpVector, jac=True, method="L-BFGS-B", args=args, options={"iprint": 50})
 
     tl.set_backend("numpy")
 

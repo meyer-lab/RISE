@@ -19,7 +19,7 @@ def cvGMM(zflowDF: xa.DataArray, maxcluster: int, true_types: xa.DataArray):
     zflowDF = zflowDF.drop_sel({"Marker": "pSTAT5"})
     # Creating matrix that will be used in GMM model
     X = zflowDF.stack(z=("Ligand", "Dose", "Time", "Cell")).to_numpy().T
-    true_types = true_types.stack(z=("Ligand", "Dose", "Time", "Cell")).to_numpy().T
+    true_stack = true_types.stack(z=("Ligand", "Dose", "Time", "Cell")).to_numpy().T
 
     cv = KFold(10, shuffle=True)
     GMM = GaussianMixture(covariance_type="full", tol=1e-6, max_iter=5000)
@@ -27,7 +27,7 @@ def cvGMM(zflowDF: xa.DataArray, maxcluster: int, true_types: xa.DataArray):
     scoring = {"LL": LLscorer, "rand": "rand_score"}
     grid = {'n_components': np.arange(1, maxcluster)}
     grid_search = GridSearchCV(GMM, param_grid=grid, scoring=scoring, cv=cv, refit=False, n_jobs=-1)
-    grid_search.fit(X, true_types.flatten())
+    grid_search.fit(X, true_stack.flatten())
     results = grid_search.cv_results_
 
     return pd.DataFrame({"Cluster": results["param_n_components"],

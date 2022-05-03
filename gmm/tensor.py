@@ -52,7 +52,7 @@ def tensor_R2X(tensor: xa.DataArray, maxrank: int, tensortype):
 
 def cp_to_vector(facinfo: tl.cp_tensor.CPTensor):
     """ Converts from factors to a linear vector. """
-    vec = []
+    vec = np.array([], dtype=float)
 
     for fac in facinfo.factors:
         vec = np.append(vec, fac.flatten())

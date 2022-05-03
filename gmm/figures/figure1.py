@@ -2,8 +2,8 @@
 This creates Figure 1.
 """
 from .common import subplotLabel, getSetup
-from ..imports import smallDF
-from ..GMM import cvGMM
+from gmm.imports import smallDF
+from gmm.GMM import cvGMM
 
 
 def makeFigure():
