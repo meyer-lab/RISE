@@ -125,8 +125,9 @@ def leastsquaresguess(nk, tMeans):
     return np.append(nkCommon, tMeans_vector)
 
 
-def maxloglik(facVector, facInfo: tl.cp_tensor.CPTensor, tPrecision: xa.DataArray, nk: np.ndarray, zflowTensor: xa.DataArray):
+def maxloglik(facVector, facInfo: tl.cp_tensor.CPTensor, tPrecision: xa.DataArray, zflowTensor: xa.DataArray):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
-    factorsguess = vector_to_cp(facVector, facInfo.rank, facInfo.shape)
+    nk = facVector[0:facInfo.shape[0]]
+    factorsguess = vector_to_cp(facVector[facInfo.shape[0]::], facInfo.rank, facInfo.shape)
     rebuildMeans = tl.cp_to_tensor(factorsguess)
     return -comparingGMMjax(zflowTensor.to_numpy(), rebuildMeans, tPrecision.to_numpy(), nk)

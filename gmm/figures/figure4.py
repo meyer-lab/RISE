@@ -39,7 +39,8 @@ def makeFigure():
 
     nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
     cpVector = cp_to_vector(facInfo)
-    args = (facInfo, tCovar, nkValues, zflowTensor)
+    cpVector = np.concatenate((nkValues, cpVector))
+    args = (facInfo, tCovar, zflowTensor)
 
     tl.set_backend("jax")
 
