@@ -5,7 +5,6 @@ import jax.scipy.special as jsp
 from jax.config import config
 import tensorly as tl
 import xarray as xa
-from scipy.special import logsumexp
 from sklearn.mixture import GaussianMixture
 
 from tensorly.decomposition import non_negative_parafac, parafac
