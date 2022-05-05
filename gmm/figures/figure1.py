@@ -14,7 +14,8 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # smallDF(Amount of cells wanted per experiment): [DF] with all conditions as data
+    # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
+    # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 50
     zflowDF, experimentalcells = smallDF(cellperexp)
 
@@ -23,7 +24,8 @@ def makeFigure():
     ylabel = "Events"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    # scoreDF(DF, maximum cluster): [DF(Cluster #,Score)] Determines rand_score/score for GMM
+    # scoreDF(Xarray, maxcluster, cell types): DF(Cluster #,Score, Rand Score)
+    # Determines rand_score/score for GMM
     maxcluster = 18
     scoreDF = cvGMM(zflowDF, maxcluster, experimentalcells[1])
 

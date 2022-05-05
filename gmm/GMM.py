@@ -19,7 +19,9 @@ def cvGMM(zflowDF: xa.DataArray, maxcluster: int, true_types: xa.DataArray):
     zflowDF = zflowDF.drop_sel({"Marker": "pSTAT5"})
     # Creating matrix that will be used in GMM model
     X = zflowDF.stack(z=("Ligand", "Dose", "Time", "Cell")).to_numpy().T
+    # Need shape to be [Experiments,Markers] (flattened by in reverse order)
     true_stack = true_types.stack(z=("Ligand", "Dose", "Time", "Cell")).to_numpy().T
+    # Need shape to be array of cell type value per experiment
 
     cv = KFold(10, shuffle=True)
     GMM = GaussianMixture(covariance_type="full", tol=1e-6, max_iter=5000)
@@ -40,14 +42,14 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
     # Fit the GMM with the full dataset
     # Creating matrix that will be used in GMM model
     Xxa = zflowDF.stack(z=("Ligand", "Dose", "Time", "Cell")).transpose()
+    # Need shape to be [Experiments,Markers] (flattened by in reverse order)
     X = Xxa.to_numpy()
-    GMM = GaussianMixture(
-        n_components=n_clusters,
-        covariance_type="full",
-        max_iter=5000,
-        verbose=20)
+    GMM = GaussianMixture(n_components=n_clusters, covariance_type="full",
+                          max_iter=5000, verbose=20)
     GMM.fit(X)
+    # Need shape to be [Experiments,Markers] (flattened by in reverse order)
     log_resp = np.exp(GMM._estimate_log_prob_resp(X)[1])  # Get the responsibilities
+    # log_resp = [Each experiment per cell, log_resp for each cluster]
 
     times = zflowDF.coords["Time"]
     doses = zflowDF.coords["Dose"]
@@ -58,7 +60,9 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
 
     # Setup storage
     log_resp = xa.DataArray(log_resp, coords={"z": Xxa.coords["z"], "Cluster": clustArray}, dims=["z", "Cluster"])
+    # Sets log_resp into Xarray
     log_resp = log_resp.unstack()
+    # log_resp becomes Xarray of [Cluster, Ligand, Dose, Time, Cell Number]
 
     nk = xa.DataArray(np.full((n_clusters, *commonSize), np.nan),
                       coords={"Cluster": clustArray, **commonDims})
@@ -70,12 +74,12 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
     it = np.nditer(nk[0, :, :, :], flags=['multi_index', 'refs_ok'])
     for _ in it:
         i, j, k = it.multi_index
-
+        # _estimate_gaussian_parameters(zflowXArray[Cell Number, Marker],Log_resp[Cell Number, Cluster])
         output = _estimate_gaussian_parameters(np.transpose(zflowDF[:, :, i, j, k].values),
                                                np.transpose(log_resp[:, k, j, i, :].values), 1e-6, "full")
 
-        nk[:, i, j, k] = output[0]
-        means[:, :, i, j, k] = output[1]
-        precision[:, :, :, i, j, k] = _compute_precision_cholesky(output[2], "full")
+        nk[:, i, j, k] = output[0]  # Cluster
+        means[:, :, i, j, k] = output[1]  # Cluster x Marker
+        precision[:, :, :, i, j, k] = _compute_precision_cholesky(output[2], "full")  # Cluster x Marker x Marker
 
     return nk, means, precision

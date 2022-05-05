@@ -17,16 +17,18 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # smallDF(Amount of cells wanted per experiment): [DF] with all conditions as data
+    # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
+    # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 50
     zflowDF, _ = smallDF(cellperexp)
 
-    # probGM(DF,maximum cluster,cellsperexperiment): [nk, means, covar] while using estimation gaussian parameters
+    # probGM(Xarray, max cluster): Xarray [nk, means, covar] while using estimation gaussian parameters
+    # tMeans[Cluster, Marker, Time, Dose, Ligand]
     maxcluster = 3
     _, tMeans, _ = probGMM(zflowDF, maxcluster)
 
-    # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] outputs  and variance explained
-    maxrank = 3
+    # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] ranking and variance explained
+    maxrank = 6
     rankings, varexpl_NNP = tensor_R2X(tMeans, maxrank, "NNparafac")
 
     ax[0].plot(rankings, varexpl_NNP, "r")
@@ -37,10 +39,10 @@ def makeFigure():
     # tensor_decomp(tensor means, rank, type of decomposition): [DF,tensor
     # factors/weights] creates DF of factors for different conditions and
     # output of decomposition
-    rank = 5
-    factors_NNP, facinfo = tensor_decomp(tMeans, rank, "NNparafac")
+    rank = 6
+    factors_NNP, facInfo = tensor_decomp(tMeans, rank, "NNparafac")
 
-    for i in range(0, 5):
+    for i in range(0, len(facInfo.shape)):
         heatmap = sns.heatmap(data=factors_NNP[i], ax=ax[i + 1], vmin=0, vmax=1, cmap="Blues")
 
     return f

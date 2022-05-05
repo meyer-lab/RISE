@@ -16,11 +16,12 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # smallDF(Amount of cells wanted per experiment): [DF] with all conditions as data
+    # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
+    # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 600
     zflowDF, _ = smallDF(cellperexp)
 
-    # probGM(DF,maximum cluster,cellsperexperiemtn): [nk, means, covar] while using estimation gaussian parameters
+    # probGM(Xarray, max cluster): Xarray [nk, means, covar] while using estimation gaussian parameters
     maxcluster = 4
     _, tMeans, _ = probGMM(zflowDF, maxcluster)
 
@@ -40,10 +41,9 @@ def makeFigure():
     ax[3].hist(tMeans.loc[:, "pSTAT5", :, :, :].values.flatten(), bins=1000, color="r")
     xlabel = "Event"
     ylabel = "pSTAT Signal"
-    ax[3].set(xlabel=xlabel, ylabel=ylabel)
+    ax[2].set(xlabel=xlabel, ylabel=ylabel)
 
     wtntermDF = tMeans.loc[:, :, :, :, "WT C-term-1"]
-
     for i, mark in enumerate(["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]):
         df = wtntermDF.loc[:, mark, :, :].to_dataframe(mark)
         sns.lineplot(data=df, x="Dose", y=mark, hue="Cluster", ax=ax[i + 4], palette="pastel", ci=None)
