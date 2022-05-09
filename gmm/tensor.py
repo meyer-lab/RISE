@@ -76,10 +76,9 @@ def pt_to_vector(ptFactors, ptCore):
     for fac in ptFactors:
         vec = np.append(vec, fac.flatten())
 
-    ptFactor_length = len(vec)
     vec = np.append(vec, ptCore.flatten())
 
-    return vec, ptFactor_length
+    return vec
 
 
 def vector_to_cp(vectorIn, rank: int, shape: tuple):
@@ -93,20 +92,17 @@ def vector_to_cp(vectorIn, rank: int, shape: tuple):
     return tl.cp_tensor.CPTensor((None, factors))
 
 
-def vector_to_pt(ptVector, ranknumb, tPrecision, ptFacLength, ptCore):
+def vector_to_pt(ptVector, ranknumb: int, tPrecision, ptCore: np.ndarray):
     """Converts linear vector into partial tucker core and factors"""
-    modesPrecision = [tPrecision.shape[0], tPrecision.shape[3], tPrecision.shape[4], tPrecision.shape[5]]
+    modesPrecision = np.array([tPrecision.shape[0], tPrecision.shape[3], tPrecision.shape[4], tPrecision.shape[5]])
 
-    nN = jnp.cumsum(np.array(modesPrecision) * ranknumb)
+    nN = jnp.cumsum(modesPrecision) * ranknumb
     nN = jnp.insert(nN, 0, 0)
 
     factors = [jnp.reshape(ptVector[nN[ii] : nN[ii + 1]], (modesPrecision[ii], ranknumb)) for ii in range(len(modesPrecision))]
-    ptNewFactors = tl.cp_tensor.CPTensor((None, factors))
+    ptNewCore = ptVector[nN[-1]::].reshape(*ptCore.shape)
 
-    ptcorelong = ptVector[ptFacLength::]
-    ptNewCore = ptcorelong.reshape(ptCore.shape[0], ptCore.shape[1], ptCore.shape[2], ptCore.shape[3], ptCore.shape[4], -1)
-
-    return ptNewFactors.factors, ptNewCore
+    return factors, ptNewCore
 
 
 def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
@@ -158,14 +154,14 @@ def comparingGMMjax(X, tMeans, tPrecision, nk):
     return loglik
 
 
-def maxloglik_ptnnp(facVector, tPrecision, facInfo: tl.cp_tensor.CPTensor, zflowTensor: xa.DataArray, cpVectorLength, ptFacLength, ptCore):
+def maxloglik_ptnnp(facVector, tPrecision, facInfo: tl.cp_tensor.CPTensor, zflowTensor: xa.DataArray, cpVectorLength, ptCore):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     rebuildnk = facVector[0 : facInfo.shape[0]]
 
     factorsguess = vector_to_cp(facVector[facInfo.shape[0] : facInfo.shape[0] + cpVectorLength], facInfo.rank, facInfo.shape)
     rebuildMeans = tl.cp_to_tensor(factorsguess)
 
-    rebuildPtFactors, rebuildPtCore = vector_to_pt(facVector[facInfo.shape[0] + cpVectorLength : :], facInfo.rank, tPrecision, ptFacLength, ptCore)
+    rebuildPtFactors, rebuildPtCore = vector_to_pt(facVector[facInfo.shape[0] + cpVectorLength : :], facInfo.rank, tPrecision, ptCore)
     rebuildPrecision = multi_mode_dot(rebuildPtCore, rebuildPtFactors, modes=[0, 3, 4, 5], transpose=False)
     rebuildPrecision = jnp.abs(rebuildPrecision)  # TODO: Remove this eventually.
     rebuildPrecision = (rebuildPrecision + np.swapaxes(rebuildPrecision, 1, 2)) / 2.0  # Enforce symmetry

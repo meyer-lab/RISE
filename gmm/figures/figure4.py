@@ -7,9 +7,9 @@ from scipy.optimize import minimize
 from jax.config import config
 from jax import value_and_grad
 from .common import subplotLabel, getSetup
-from ..imports import smallDF
-from ..GMM import probGMM
-from ..tensor import tensor_decomp, cp_to_vector, tensorcovar_decomp, pt_to_vector, maxloglik_ptnnp
+from gmm.imports import smallDF
+from gmm.GMM import probGMM
+from gmm.tensor import tensor_decomp, cp_to_vector, tensorcovar_decomp, pt_to_vector, maxloglik_ptnnp
 
 
 config.update("jax_enable_x64", True)
@@ -42,13 +42,13 @@ def makeFigure():
 
     ptFactors, ptCore = tensorcovar_decomp(tPrecision, ranknumb)
 
-    vecptFacCore, ptFacLength = pt_to_vector(ptFactors, ptCore)
+    vecptFacCore = pt_to_vector(ptFactors, ptCore)
 
     nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
     cpVector = cp_to_vector(facInfo)
     totalVector = np.concatenate((nkValues, cpVector, vecptFacCore))
 
-    args = (tPrecision, facInfo, zflowTensor, len(cpVector), ptFacLength, ptCore)
+    args = (tPrecision, facInfo, zflowTensor, len(cpVector), ptCore)
 
     tl.set_backend("jax")
 
