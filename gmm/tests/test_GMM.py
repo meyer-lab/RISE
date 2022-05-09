@@ -4,10 +4,9 @@ Test the data import.
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_allclose
-from tensorly.random import random_cp
 from ..imports import smallDF
 from ..GMM import cvGMM, probGMM
-from ..tensor import cp_to_vector, vector_to_cp, comparingGMM, comparingGMMjax
+from ..tensor import cp_pt_to_vector, vector_to_cp_pt, comparingGMM, comparingGMMjax
 
 data_import, other_import = smallDF(10)
 
@@ -20,12 +19,12 @@ def test_cvGMM():
 
 def test_CP_to_vec():
     """Test that we can go from Cp to vector, and from vector to Cp without changing values."""
-    cp_tensor = random_cp((10, 11, 12, 13, 14), 3, normalise_factors=False)
-    cpVector = cp_to_vector(cp_tensor)
-    vectorFac = vector_to_cp(cpVector, cp_tensor.rank, cp_tensor.shape)
+    rand_vec = np.random.random(2130)
 
-    for ii in range(len(vectorFac.factors)):
-        assert_allclose(vectorFac.factors[ii], cp_tensor.factors[ii])
+    built = vector_to_cp_pt(rand_vec, 3, (6, 5, 4, 12, 8))
+    out_vec = cp_pt_to_vector(built[0], built[2])
+
+    assert_allclose(rand_vec, out_vec)
 
 
 def test_comparingGMM():

@@ -59,21 +59,11 @@ def tensor_R2X(tensor: xa.DataArray, maxrank: int, tensortype):
     return rank, varexpl
 
 
-def cp_to_vector(facinfo: tl.cp_tensor.CPTensor):
+def cp_pt_to_vector(facinfo: tl.cp_tensor.CPTensor, ptCore):
     """Converts from factors to a linear vector."""
     vec = np.array([], dtype=float)
 
     for fac in facinfo.factors:
-        vec = np.append(vec, fac.flatten())
-
-    return vec
-
-
-def pt_to_vector(ptFactors, ptCore):
-    """Converts from factors to a linear vector."""
-    vec = np.array([], dtype=float)
-
-    for fac in ptFactors:
         vec = np.append(vec, fac.flatten())
 
     vec = np.append(vec, ptCore.flatten())
@@ -81,7 +71,7 @@ def pt_to_vector(ptFactors, ptCore):
     return vec
 
 
-def vector_to_cp(vectorIn, rank: int, shape: tuple):
+def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     """Converts linear vector to factors"""
     # Shape of tensor for means or precision matrix
     nN = jnp.cumsum(np.array(shape) * rank)
@@ -89,20 +79,11 @@ def vector_to_cp(vectorIn, rank: int, shape: tuple):
 
     factors = [jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
     # Rebuidling factors and ranks
-    return tl.cp_tensor.CPTensor((None, factors))
 
+    factors_pt = [factors[0], factors[2], factors[3], factors[4]]
+    ptNewCore = vectorIn[nN[-1]::].reshape(rank, shape[1], shape[1], rank, rank, rank)
 
-def vector_to_pt(ptVector, ranknumb: int, tPrecision, ptCore: np.ndarray):
-    """Converts linear vector into partial tucker core and factors"""
-    modesPrecision = np.array([tPrecision.shape[0], tPrecision.shape[3], tPrecision.shape[4], tPrecision.shape[5]])
-
-    nN = jnp.cumsum(modesPrecision) * ranknumb
-    nN = jnp.insert(nN, 0, 0)
-
-    factors = [jnp.reshape(ptVector[nN[ii] : nN[ii + 1]], (modesPrecision[ii], ranknumb)) for ii in range(len(modesPrecision))]
-    ptNewCore = ptVector[nN[-1]::].reshape(*ptCore.shape)
-
-    return factors, ptNewCore
+    return tl.cp_tensor.CPTensor((None, factors)), factors_pt, ptNewCore
 
 
 def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
@@ -154,14 +135,13 @@ def comparingGMMjax(X, tMeans, tPrecision, nk):
     return loglik
 
 
-def maxloglik_ptnnp(facVector, tPrecision, facInfo: tl.cp_tensor.CPTensor, zflowTensor: xa.DataArray, cpVectorLength, ptCore):
+def maxloglik_ptnnp(facVector, facInfo: tl.cp_tensor.CPTensor, zflowTensor: xa.DataArray):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     rebuildnk = facVector[0 : facInfo.shape[0]]
 
-    factorsguess = vector_to_cp(facVector[facInfo.shape[0] : facInfo.shape[0] + cpVectorLength], facInfo.rank, facInfo.shape)
+    factorsguess, rebuildPtFactors, rebuildPtCore = vector_to_cp_pt(facVector[facInfo.shape[0]::], facInfo.rank, facInfo.shape)
     rebuildMeans = tl.cp_to_tensor(factorsguess)
 
-    rebuildPtFactors, rebuildPtCore = vector_to_pt(facVector[facInfo.shape[0] + cpVectorLength : :], facInfo.rank, tPrecision, ptCore)
     rebuildPrecision = multi_mode_dot(rebuildPtCore, rebuildPtFactors, modes=[0, 3, 4, 5], transpose=False)
     rebuildPrecision = jnp.abs(rebuildPrecision)  # TODO: Remove this eventually.
     rebuildPrecision = (rebuildPrecision + np.swapaxes(rebuildPrecision, 1, 2)) / 2.0  # Enforce symmetry
