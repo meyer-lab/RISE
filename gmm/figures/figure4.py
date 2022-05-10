@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import tensorly as tl
-from scipy.optimize import minimize
+from scipy.optimize import minimize, Bounds
 from jax.config import config
 from jax import value_and_grad
 from .common import subplotLabel, getSetup
@@ -28,7 +28,7 @@ def makeFigure():
 
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-    cellperexp = 50
+    cellperexp = 100
     zflowTensor, _ = smallDF(cellperexp)
 
     # probGM(Xarray, max cluster): Xarray [nk, means, covar] while using estimation gaussian parameters
@@ -41,13 +41,14 @@ def makeFigure():
     # conditions and output of decomposition
 
     ranknumb = 3
-    _, facInfo = tensor_decomp(tMeans, ranknumb, "NNparafac")
+    _, facInfo = tensor_decomp(tMeans, ranknumb)
 
     _, ptCore = tensorcovar_decomp(tPrecision, ranknumb)
 
     facVector = cp_pt_to_vector(facInfo, ptCore)
     nkValues = np.exp(np.nanmean(np.log(nk), axis=(1, 2, 3)))
     totalVector = np.concatenate((nkValues, facVector))
+    totalVector = np.abs(totalVector)
 
     args = (facInfo, zflowTensor)
 
@@ -55,18 +56,18 @@ def makeFigure():
 
     func = value_and_grad(maxloglik_ptnnp)
 
-    opt = minimize(func, totalVector, jac=True, method="L-BFGS-B", args=args, options={"iprint": 50, "maxiter": 1000})
+    bnds = Bounds(np.zeros_like(totalVector), np.full_like(totalVector, np.inf), keep_feasible=True)
+    opt = minimize(func, totalVector, bounds=bnds, jac=True, method="L-BFGS-B", args=args, options={"iprint": 1, "maxiter": 500})
 
     tl.set_backend("numpy")
 
-    rebuildCpFactors, rebuildPtFactors, rebuildPtCore = vector_to_cp_pt(opt.x[facInfo.shape[0]::], facInfo.rank, facInfo.shape)
+    rebuildCpFactors, _, _ = vector_to_cp_pt(opt.x[facInfo.shape[0] : :], facInfo.rank, facInfo.shape)
     maximizedCpInfo = cp_normalize(rebuildCpFactors)
 
-    ax[0].bar(np.arange(1,maxcluster+1),opt.x[0:facInfo.shape[0]])
+    ax[0].bar(np.arange(1, maxcluster + 1), opt.x[0 : facInfo.shape[0]])
     xlabel = "Cluster"
     ylabel = "NK Value"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
-
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, ranknumb + 1)]
 
@@ -75,7 +76,6 @@ def makeFigure():
         maximizedFactors.append(pd.DataFrame(maximizedCpInfo.factors[ii], columns=cmpCol, index=tMeans.coords[dd]))
 
     for i in range(0, len(facInfo.shape)):
-        heatmap = sns.heatmap(data= maximizedFactors[i], ax=ax[i+1], vmin=0, vmax=1, cmap="Blues")
-
+        heatmap = sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 1])
 
     return f

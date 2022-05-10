@@ -29,7 +29,7 @@ def makeFigure():
 
     # tensor_R2X(tensor means, maximum rank): [list of rankings,varexpl_NNP] ranking and variance explained
     maxrank = 6
-    rankings, varexpl_NNP = tensor_R2X(tMeans, maxrank, "NNparafac")
+    rankings, varexpl_NNP = tensor_R2X(tMeans, maxrank)
 
     ax[0].plot(rankings, varexpl_NNP, "r")
     xlabel = "Number of Components"
@@ -40,7 +40,7 @@ def makeFigure():
     # factors/weights] creates DF of factors for different conditions and
     # output of decomposition
     rank = 6
-    factors_NNP, facInfo = tensor_decomp(tMeans, rank, "NNparafac")
+    factors_NNP, facInfo = tensor_decomp(tMeans, rank)
 
     for i in range(0, len(facInfo.shape)):
         heatmap = sns.heatmap(data=factors_NNP[i], ax=ax[i + 1], vmin=0, vmax=1, cmap="Blues")
