@@ -6,7 +6,9 @@ from jax.config import config
 import tensorly as tl
 import xarray as xa
 from sklearn.mixture import GaussianMixture
+from jax import value_and_grad, grad
 
+from scipy.optimize import minimize, Bounds
 from tensorly.decomposition import partial_tucker, non_negative_parafac
 from tensorly.cp_tensor import cp_normalize
 from tensorly.tenalg import multi_mode_dot
@@ -83,6 +85,21 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     return tl.cp_tensor.CPTensor((None, factors)), factors_pt, ptNewCore
 
 
+def vector_guess(zflowTensor: xa.DataArray, rank: int, n_cluster: int):
+    """Predetermines total vector that will be maximized for NK, factors and core"""
+    factortotal = np.sum(zflowTensor.shape) * rank
+
+    factortotal = (
+        factortotal
+        - (len(zflowTensor.coords["Cell"]) * rank)
+        + (rank * n_cluster)
+        + ((rank**4) * (len(markerslist) ** 2))
+        + n_cluster
+    )
+
+    return np.random.lognormal(mean=-1.0, size=factortotal)
+
+
 def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
@@ -132,14 +149,54 @@ def comparingGMMjax(X, tMeans, tPrecision, nk):
     return loglik
 
 
-def maxloglik_ptnnp(facVector, facInfo: tl.cp_tensor.CPTensor, zflowTensor: xa.DataArray):
+def maxloglik_ptnnp(facVector, shape, rank:int, zflowTensor: xa.DataArray):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
-    rebuildnk = facVector[0 : facInfo.shape[0]]
+    rebuildnk = facVector[0 : shape[0]]
 
-    factorsguess, rebuildPtFactors, rebuildPtCore = vector_to_cp_pt(facVector[facInfo.shape[0] : :], facInfo.rank, facInfo.shape)
+    factorsguess, rebuildPtFactors, rebuildPtCore = vector_to_cp_pt(facVector[shape[0] : :], rank, shape)
     rebuildMeans = tl.cp_to_tensor(factorsguess)
 
     rebuildPrecision = multi_mode_dot(rebuildPtCore, rebuildPtFactors, modes=[0, 3, 4, 5], transpose=False)
     rebuildPrecision = (rebuildPrecision + np.swapaxes(rebuildPrecision, 1, 2)) / 2.0  # Enforce symmetry
     # Creating function that we want to minimize
     return -comparingGMMjax(zflowTensor.to_numpy(), rebuildMeans, rebuildPrecision, rebuildnk)
+
+
+def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int):
+    """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
+    x0 = vector_guess(zflowTensor, rank, n_cluster)
+
+    times = zflowTensor.coords["Time"]
+    doses = zflowTensor.coords["Dose"]
+    ligand = zflowTensor.coords["Ligand"]
+
+    clustArray = np.arange(1, n_cluster + 1)
+    meanShape = (n_cluster, len(markerslist), len(times), len(doses), len(ligand))
+    commonDims = {"Time": times, "Dose": doses, "Ligand": ligand}
+    coords={"Cluster": clustArray, "Markers": markerslist, **commonDims}
+
+    args = (meanShape, rank, zflowTensor)
+
+    tl.set_backend("jax")
+
+    func = value_and_grad(maxloglik_ptnnp)
+
+    def hvp(x, v, *args):
+        return grad(lambda x: jnp.vdot(grad(maxloglik_ptnnp)(x, *args), v))(x)
+
+    bnds = Bounds(np.zeros_like(x0), np.full_like(x0, np.inf), keep_feasible=True)
+    opt = minimize(func, x0, bounds=bnds, jac=True, hessp=hvp, method="trust-constr", args=args, options={"verbose": 2, "maxiter": 50})
+
+    tl.set_backend("numpy")
+
+    rebuildCpFactors, _, ptNewCore = vector_to_cp_pt(opt.x[n_cluster : :], rank, meanShape)
+    maximizedCpInfo = cp_normalize(rebuildCpFactors)
+    maximizedNK = opt.x[0 : n_cluster]
+
+    cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+
+    maximizedFactors = []
+    for ii, key in enumerate(coords):
+        maximizedFactors.append(pd.DataFrame(maximizedCpInfo.factors[ii], columns=cmpCol, index=coords[key]))
+
+    return maximizedNK, maximizedFactors, ptNewCore
