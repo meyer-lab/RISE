@@ -6,10 +6,10 @@ from jax.config import config
 import tensorly as tl
 import xarray as xa
 from sklearn.mixture import GaussianMixture
-from jax import value_and_grad, grad
+from jax import value_and_grad
 
-from scipy.optimize import minimize, Bounds
-from tensorly.decomposition import partial_tucker, non_negative_parafac
+from scipy.optimize import minimize
+from tensorly.decomposition import non_negative_parafac
 from tensorly.cp_tensor import cp_normalize
 from tensorly.tenalg import multi_mode_dot
 
@@ -34,13 +34,6 @@ def tensor_decomp(tensor: xa.DataArray, ranknumb: int):
     return dfs, fac
 
 
-def tensorcovar_decomp(tCovar: xa.DataArray, ranknumb: int):
-    """Runs partial tucker decomposition on covariance tensor"""
-    ptCore, ptFactors = partial_tucker(tCovar.to_numpy(), modes=[0, 3, 4, 5], rank=[ranknumb] * 4)
-
-    return ptFactors, ptCore
-
-
 def tensor_R2X(tensor: xa.DataArray, maxrank: int):
     """Calculates the R2X value even where NaN values are present"""
     rank = np.arange(1, maxrank + 1)
@@ -58,46 +51,46 @@ def tensor_R2X(tensor: xa.DataArray, maxrank: int):
     return rank, varexpl
 
 
-def cp_pt_to_vector(facinfo: tl.cp_tensor.CPTensor, ptCore):
+def cp_pt_to_vector(nk, facinfo: tl.cp_tensor.CPTensor, factors_pt, ptCore):
     """Converts from factors to a linear vector."""
     vec = np.array([], dtype=float)
+    vec = np.append(vec, nk)
 
     for fac in facinfo.factors:
         vec = np.append(vec, fac.flatten())
 
+    vec = np.append(vec, factors_pt[1].flatten())
     vec = np.append(vec, ptCore.flatten())
 
-    return vec
+    return np.log(vec)
 
 
 def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     """Converts linear vector to factors"""
+    vectorIn = jnp.exp(vectorIn)
+    rebuildnk = vectorIn[0 : shape[0]]
+    vectorIn = vectorIn[shape[0] : :]
+
     # Shape of tensor for means or precision matrix
     nN = np.cumsum(np.array(shape) * rank)
     nN = np.insert(nN, 0, 0)
+    nN = np.append(nN, nN[-1] + shape[1] * shape[1] * rank)
 
     factors = [jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
     # Rebuidling factors and ranks
 
-    factors_pt = [factors[0], factors[2], factors[3], factors[4]]
-    ptNewCore = vectorIn[nN[-1] : :].reshape(rank, shape[1], shape[1], rank, rank, rank)
+    precFactor = vectorIn[nN[-2] : nN[-1]].reshape(shape[1], shape[1], rank)
 
-    return tl.cp_tensor.CPTensor((None, factors)), factors_pt, ptNewCore
+    factors_pt = [factors[0], precFactor, factors[2], factors[3], factors[4]]
+    ptNewCore = vectorIn[nN[-1] : :].reshape(rank, rank, rank, rank, rank)
+
+    return rebuildnk, tl.cp_tensor.CPTensor((None, factors)), factors_pt, ptNewCore
 
 
-def vector_guess(zflowTensor: xa.DataArray, rank: int, n_cluster: int):
+def vector_guess(shape: tuple, rank: int):
     """Predetermines total vector that will be maximized for NK, factors and core"""
-    factortotal = np.sum(zflowTensor.shape) * rank
-
-    factortotal = (
-        factortotal
-        - (len(zflowTensor.coords["Cell"]) * rank)
-        + (rank * n_cluster)
-        + ((rank**4) * (len(markerslist) ** 2))
-        + n_cluster
-    )
-
-    return np.random.lognormal(mean=-1.0, size=factortotal)
+    factortotal = np.sum(shape) * rank + shape[1] * shape[1] * rank + rank**5 + shape[0]
+    return np.random.normal(loc=-1.0, size=factortotal)
 
 
 def comparingGMM(zflowDF: xa.DataArray, tMeans: np.ndarray, tPrecision: np.ndarray, nk: np.ndarray):
@@ -134,7 +127,7 @@ def comparingGMMjax(X, tMeans, tPrecision, nk):
 
     mp = jnp.einsum("ijklm,ijoklm->ioklm", tMeans, tPrecision)
     Xp = jnp.einsum("jiklm,njoklm->inoklm", X, tPrecision)
-    log_prob = jnp.sum(jnp.square(Xp - mp[jnp.newaxis, :, :, :, :, :]), axis=2)
+    log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :, :, :], axis=2))
     log_prob = -0.5 * (X.shape[0] * jnp.log(2 * jnp.pi) + log_prob)
 
     # The determinant of the precision matrix from the Cholesky decomposition
@@ -149,23 +142,21 @@ def comparingGMMjax(X, tMeans, tPrecision, nk):
     return loglik
 
 
-def maxloglik_ptnnp(facVector, shape, rank:int, zflowTensor: xa.DataArray):
+def maxloglik_ptnnp(facVector, shape: tuple, rank: int, zflowTensor: xa.DataArray):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
-    rebuildnk = facVector[0 : shape[0]]
+    nk, meanFact, ptFact, ptCore = vector_to_cp_pt(facVector, rank, shape)
+    builtMeans = tl.cp_to_tensor(meanFact)
 
-    factorsguess, rebuildPtFactors, rebuildPtCore = vector_to_cp_pt(facVector[shape[0] : :], rank, shape)
-    rebuildMeans = tl.cp_to_tensor(factorsguess)
+    ptCoreFull = jnp.einsum("ijk,lkmno->lijmno", ptFact[1], ptCore)
 
-    rebuildPrecision = multi_mode_dot(rebuildPtCore, rebuildPtFactors, modes=[0, 3, 4, 5], transpose=False)
-    rebuildPrecision = (rebuildPrecision + np.swapaxes(rebuildPrecision, 1, 2)) / 2.0  # Enforce symmetry
+    ptBuilt = multi_mode_dot(ptCoreFull, [ptFact[0], ptFact[2], ptFact[3], ptFact[4]], modes=[0, 3, 4, 5], transpose=False)
+    ptBuilt = (ptBuilt + np.swapaxes(ptBuilt, 1, 2)) / 2.0  # Enforce symmetry
     # Creating function that we want to minimize
-    return -comparingGMMjax(zflowTensor.to_numpy(), rebuildMeans, rebuildPrecision, rebuildnk)
+    return -comparingGMMjax(zflowTensor.to_numpy(), builtMeans, ptBuilt, nk)
 
 
 def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
-    x0 = vector_guess(zflowTensor, rank, n_cluster)
-
     times = zflowTensor.coords["Time"]
     doses = zflowTensor.coords["Dose"]
     ligand = zflowTensor.coords["Ligand"]
@@ -181,17 +172,13 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int):
 
     func = value_and_grad(maxloglik_ptnnp)
 
-    def hvp(x, v, *args):
-        return grad(lambda x: jnp.vdot(grad(maxloglik_ptnnp)(x, *args), v))(x)
-
-    bnds = Bounds(np.zeros_like(x0), np.full_like(x0, np.inf), keep_feasible=True)
-    opt = minimize(func, x0, bounds=bnds, jac=True, hessp=hvp, method="trust-constr", args=args, options={"verbose": 2, "maxiter": 50})
+    x0 = vector_guess(meanShape, rank)
+    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxls": 200, "iprint": 50, "maxiter": 2000})
 
     tl.set_backend("numpy")
 
-    rebuildCpFactors, _, ptNewCore = vector_to_cp_pt(opt.x[n_cluster : :], rank, meanShape)
+    maximizedNK, rebuildCpFactors, _, ptNewCore = vector_to_cp_pt(opt.x, rank, meanShape)
     maximizedCpInfo = cp_normalize(rebuildCpFactors)
-    maximizedNK = opt.x[0 : n_cluster]
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
 

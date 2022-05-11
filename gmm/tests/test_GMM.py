@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from ..imports import smallDF
 from ..GMM import cvGMM, probGMM
-from ..tensor import cp_pt_to_vector, vector_to_cp_pt, comparingGMM, comparingGMMjax
+from ..tensor import cp_pt_to_vector, vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp
 
 data_import, other_import = smallDF(10)
 
@@ -19,12 +19,17 @@ def test_cvGMM():
 
 def test_CP_to_vec():
     """Test that we can go from Cp to vector, and from vector to Cp without changing values."""
-    rand_vec = np.random.random(2130)
+    meanShape = (6, 5, 4, 12, 8)
+    x0 = vector_guess(meanShape, rank=3)
 
-    built = vector_to_cp_pt(rand_vec, 3, (6, 5, 4, 12, 8))
-    out_vec = cp_pt_to_vector(built[0], built[2])
+    built = vector_to_cp_pt(x0, 3, meanShape)
+    out_vec = cp_pt_to_vector(*built)
 
-    assert_allclose(rand_vec, out_vec)
+    # Check that we can get a likelihood
+    ll = maxloglik_ptnnp(x0, meanShape, 3, data_import)
+
+    assert np.isfinite(ll)
+    assert_allclose(x0, out_vec)
 
 
 def test_comparingGMM():
