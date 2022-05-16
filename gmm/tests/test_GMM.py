@@ -23,7 +23,8 @@ def test_CP_to_vec():
     meanShape = (6, 5, 4, 12, 8)
     x0 = vector_guess(meanShape, rank=3)
 
-    built = vector_to_cp_pt(x0, 3, meanShape)
+    built = vector_to_cp_pt(x0, 3, meanShape, enforceSPD=False)
+    vector_to_cp_pt(x0, 3, meanShape, enforceSPD=True)
     out_vec = cp_pt_to_vector(*built)
 
     # Check that we can get a likelihood
@@ -44,11 +45,11 @@ def test_comparingGMM():
     ptBuilt = (ptBuilt + np.swapaxes(ptBuilt, 1, 2)) / 2.0  # Enforce symmetry
 
     optimized1 = comparingGMM(data_import, meanFact, ptBuilt, nk)
-    optimized2 = comparingGMMjax(data_import.to_numpy(), meanFact, ptBuilt, nk)
+    optimized2 = comparingGMMjax(data_import.to_numpy(), nk, meanFact, ptFact, ptCore)
 
     np.testing.assert_almost_equal(optimized1, optimized2)
 
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, core = minimize_func(data_import, 2, 3, maxiter=200)
+    nk, fac, core = minimize_func(data_import, 2, 3, maxiter=500)
