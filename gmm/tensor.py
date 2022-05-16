@@ -11,7 +11,6 @@ from jax import value_and_grad
 from scipy.optimize import minimize
 from tensorly.decomposition import non_negative_parafac
 from tensorly.cp_tensor import cp_normalize
-from tensorly.tenalg import multi_mode_dot
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 config.update("jax_enable_x64", True)
@@ -158,12 +157,12 @@ def comparingGMMjax(X, nk, meanFact, ptFact, ptCore):
     return loglik
 
 
-def maxloglik_ptnnp(facVector, shape: tuple, rank: int, zflowTensor: xa.DataArray):
+def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     parts = vector_to_cp_pt(facVector, rank, shape)
 
     # Creating function that we want to minimize
-    return -comparingGMMjax(zflowTensor.to_numpy(), *parts)
+    return -comparingGMMjax(X, *parts)
 
 
 def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=2000):
@@ -177,7 +176,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     commonDims = {"Time": times, "Dose": doses, "Ligand": ligand}
     coords={"Cluster": clustArray, "Markers": markerslist, **commonDims}
 
-    args = (meanShape, rank, zflowTensor)
+    args = (meanShape, rank, zflowTensor.to_numpy())
 
     tl.set_backend("jax")
 

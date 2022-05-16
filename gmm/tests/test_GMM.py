@@ -28,7 +28,7 @@ def test_CP_to_vec():
     out_vec = cp_pt_to_vector(*built)
 
     # Check that we can get a likelihood
-    ll = maxloglik_ptnnp(x0, meanShape, 3, data_import)
+    ll = maxloglik_ptnnp(x0, meanShape, 3, data_import.to_numpy())
 
     assert np.isfinite(ll)
     assert_allclose(x0, out_vec)
