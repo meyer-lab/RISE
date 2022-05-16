@@ -1,7 +1,8 @@
 """
-This creates Figure 4.
+This creates Figure 5.
 """
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from jax.config import config
 from .common import subplotLabel, getSetup
@@ -23,16 +24,23 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
+    ranknumb = np.arange(1, 6)
+    n_cluster = np.arange(2, 8)
     zflowTensor, _ = smallDF(cellperexp)
 
-    maximizedNK, maximizedFactors, _, _ = minimize_func(zflowTensor, rank=3, n_cluster=6)
+    # maxloglikDF = pd.DataFrame(columns=["Rank", "Cluster", "MaxLoglik"])
+    maxloglikDF = pd.DataFrame()
 
-    ax[0].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
-    xlabel = "Cluster"
-    ylabel = "NK Value"
-    ax[0].set(xlabel=xlabel, ylabel=ylabel)
+    for i in range(len(ranknumb)):
+        row = pd.DataFrame()
+        row["Rank"] = ["Rank:" + str(ranknumb[i])]
+        for j in range(len(n_cluster)):
+            _, _, _, loglik = minimize_func(zflowTensor, ranknumb[i], n_cluster[j], maxiter=1000)
+            row["Cluster:" + str(n_cluster[j])] = loglik
 
-    for i in range(0, len(maximizedFactors)):
-        sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 1])
+        maxloglikDF = pd.concat([maxloglikDF, row])
+
+    maxloglikDF = maxloglikDF.set_index("Rank")
+    sns.heatmap(data=maxloglikDF, ax=ax[0])
 
     return f

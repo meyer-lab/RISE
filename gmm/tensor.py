@@ -176,7 +176,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     clustArray = np.arange(1, n_cluster + 1)
     meanShape = (n_cluster, len(markerslist), len(times), len(doses), len(ligand))
     commonDims = {"Time": times, "Dose": doses, "Ligand": ligand}
-    coords={"Cluster": clustArray, "Markers": markerslist, **commonDims}
+    coords = {"Cluster": clustArray, "Markers": markerslist, **commonDims}
 
     args = (meanShape, rank, zflowTensor.to_numpy())
 
@@ -189,13 +189,11 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
 
     tl.set_backend("numpy")
 
-    maximizedNK, rebuildCpFactors, _, ptNewCore = vector_to_cp_pt(opt.x, rank, meanShape)
-    maximizedCpInfo = cp_normalize((None, rebuildCpFactors))
+    optNK, optCP, _, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
+    optLL = -opt.fun
+    optCP = cp_normalize((None, optCP))
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    CPdf = [pd.DataFrame(optCP.factors[ii], columns=cmpCol, index=coords[key]) for ii, key in enumerate(coords)]
 
-    maximizedFactors = []
-    for ii, key in enumerate(coords):
-        maximizedFactors.append(pd.DataFrame(maximizedCpInfo.factors[ii], columns=cmpCol, index=coords[key]))
-
-    return maximizedNK, maximizedFactors, ptNewCore
+    return optNK, CPdf, optPT, optLL
