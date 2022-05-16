@@ -6,7 +6,7 @@ from jax.config import config
 import tensorly as tl
 import xarray as xa
 from sklearn.mixture import GaussianMixture
-from jax import value_and_grad
+from jax import value_and_grad, jit
 
 from scipy.optimize import minimize
 from tensorly.decomposition import non_negative_parafac
@@ -50,12 +50,12 @@ def tensor_R2X(tensor: xa.DataArray, maxrank: int):
     return rank, varexpl
 
 
-def cp_pt_to_vector(nk, facinfo: tl.cp_tensor.CPTensor, factors_pt, ptCore):
+def cp_pt_to_vector(nk: np.ndarray, facinfo: list, factors_pt: list, ptCore: np.ndarray):
     """Converts from factors to a linear vector."""
     vec = np.array([], dtype=float)
     vec = np.append(vec, nk)
 
-    for fac in facinfo.factors:
+    for fac in facinfo:
         vec = np.append(vec, fac.flatten())
 
     vec = np.append(vec, factors_pt[1].flatten())
@@ -96,7 +96,7 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
     factors_pt = [factors[0], precSym, factors[2], factors[3], factors[4]]
     ptNewCore = vectorIn[nN[-1] : :].reshape(rank, rank, rank, rank, rank)
 
-    return rebuildnk, tl.cp_tensor.CPTensor((None, factors)), factors_pt, ptNewCore
+    return rebuildnk, factors, factors_pt, ptNewCore
 
 
 def vector_guess(shape: tuple, rank: int):
@@ -112,7 +112,7 @@ def comparingGMM(zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np
     nk /= np.sum(nk)
     loglik = 0.0
 
-    tMeans = tl.cp_to_tensor(meanFact)
+    tMeans = tl.cp_to_tensor((None, meanFact))
     X = zflowDF.to_numpy()
 
     it = np.nditer(tMeans[0, 0, :, :, :], flags=["multi_index", "refs_ok"])
@@ -132,22 +132,24 @@ def comparingGMM(zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np
     return loglik
 
 
-def comparingGMMjax(X, nk, meanFact, ptFact, ptCore):
+@jit
+def comparingGMMjax(X, nk, meanFact: list, ptFact, ptCore):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
     assert nk.ndim == 1
+    n_markers = ptFact[1].shape[0]
     nkl = jnp.log(nk / jnp.sum(nk))
 
-    mp = jnp.einsum("iz,jz,kz,lz,mz,ia,job,kc,ld,me,abcde->ioklm", *meanFact.factors, *ptFact, ptCore, optimize="greedy")
+    mp = jnp.einsum("iz,jz,kz,lz,mz,ia,job,kc,ld,me,abcde->ioklm", *meanFact, *ptFact, ptCore, optimize="greedy")
     Xp = jnp.einsum("jiklm,na,job,kc,ld,me,abcde->inoklm", X, *ptFact, ptCore, optimize="greedy")
     log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :, :, :], axis=2))
-    log_prob = -0.5 * (X.shape[0] * jnp.log(2 * jnp.pi) + log_prob)
+    log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
     # The determinant of the precision matrix from the Cholesky decomposition
     # corresponds to the negative half of the determinant of the full precision matrix.
     # In short: det(precision_chol) = - det(precision) / 2
     unrav = jnp.reshape(ptFact[1], (-1, ptFact[1].shape[2]))
-    unrav = unrav[:: X.shape[0] + 1, :]
+    unrav = unrav[:: n_markers + 1, :]
     ppp = jnp.einsum("ab,ce,fg,hi,jk,begik->acfhj", ptFact[0], unrav, ptFact[2], ptFact[3], ptFact[4], ptCore, optimize="greedy")
     log_det = jnp.sum(jnp.log(ppp), 1)
 
@@ -188,7 +190,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     tl.set_backend("numpy")
 
     maximizedNK, rebuildCpFactors, _, ptNewCore = vector_to_cp_pt(opt.x, rank, meanShape)
-    maximizedCpInfo = cp_normalize(rebuildCpFactors)
+    maximizedCpInfo = cp_normalize((None, rebuildCpFactors))
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
 
