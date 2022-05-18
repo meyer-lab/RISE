@@ -167,7 +167,7 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     return -comparingGMMjax(X, *parts)
 
 
-def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=2000):
+def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=20000):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     times = zflowTensor.coords["Time"]
     doses = zflowTensor.coords["Dose"]
@@ -182,10 +182,10 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
 
     tl.set_backend("jax")
 
-    func = value_and_grad(maxloglik_ptnnp)
+    func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
 
     x0 = vector_guess(meanShape, rank)
-    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxls": 200, "iprint": 50, "maxiter": maxiter})
+    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxls": 200, "iprint": 90, "maxiter": maxiter})
 
     tl.set_backend("numpy")
 
