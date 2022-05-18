@@ -39,17 +39,15 @@ def test_comparingGMM():
     meanShape = (6, 5, 4, 12, 8)
     x0 = vector_guess(meanShape, rank=3)
 
-    nk, meanFact, ptFact, ptCore = vector_to_cp_pt(x0, 3, meanShape)
-    ptCoreFull = np.einsum("ijk,lkmno->lijmno", ptFact[1], ptCore)
-    ptBuilt = multi_mode_dot(ptCoreFull, [ptFact[0], ptFact[2], ptFact[3], ptFact[4]], modes=[0, 3, 4, 5], transpose=False)
-    ptBuilt = (ptBuilt + np.swapaxes(ptBuilt, 1, 2)) / 2.0  # Enforce symmetry
+    nk, meanFact, ptFact = vector_to_cp_pt(x0, 3, meanShape)
+    ptBuilt = np.einsum("ax,bcx,dx,ex,fx->abcdef", *ptFact)
 
     optimized1 = comparingGMM(data_import, meanFact, ptBuilt, nk)
-    optimized2 = comparingGMMjax(data_import.to_numpy(), nk, meanFact, ptFact, ptCore)
+    optimized2 = comparingGMMjax(data_import.to_numpy(), nk, meanFact, ptFact)
 
     np.testing.assert_almost_equal(optimized1, optimized2)
 
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, core, ll = minimize_func(data_import, 3, 10, maxiter=200)
+    nk, fac, ptfac, ll = minimize_func(data_import, 3, 10, maxiter=200)
