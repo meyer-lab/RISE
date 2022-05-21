@@ -134,7 +134,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
 
     x0 = vector_guess(meanShape, rank)
-    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxls": 200, "iprint": 90, "maxiter": maxiter})
+    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxcor": 30, "iprint": 90, "maxiter": maxiter})
 
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
     optLL = -opt.fun
@@ -147,7 +147,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     return optNK, CPdf, optPT, optLL, optVec
 
 
-def tensorGMM_CV(X, numFolds, numClusters, numRank, maxiter=2000):
+def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=2000):
     """Runs Cross Validation for TensorGMM in order to determine best cluster/rank combo."""
     logLik = 0.0
     meanShape = (numClusters, len(markerslist), X.shape[2], X.shape[3], X.shape[4])
@@ -162,4 +162,4 @@ def tensorGMM_CV(X, numFolds, numClusters, numRank, maxiter=2000):
         test_ll = -maxloglik_ptnnp(optVec, meanShape, numRank, X[:, test_index, :, :, :].to_numpy())
         logLik += test_ll
 
-    return logLik
+    return float(logLik)
