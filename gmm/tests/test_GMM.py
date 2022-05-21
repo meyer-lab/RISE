@@ -7,7 +7,7 @@ from numpy.testing import assert_allclose
 from ..imports import smallDF
 from ..GMM import cvGMM
 from tensorly.tenalg import multi_mode_dot
-from ..tensor import cp_pt_to_vector, vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func
+from ..tensor import cp_pt_to_vector, vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV
 
 data_import, other_import = smallDF(10)
 
@@ -50,4 +50,5 @@ def test_comparingGMM():
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, ptfac, ll = minimize_func(data_import, 3, 10, maxiter=200)
+    nk, fac, ptfac, ll, _ = minimize_func(data_import, 3, 10, maxiter=20)
+    loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)

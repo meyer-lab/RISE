@@ -7,8 +7,7 @@ import seaborn as sns
 from jax.config import config
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func
-
+from gmm.tensor import minimize_func, tensorGMM_CV
 
 config.update("jax_enable_x64", True)
 
@@ -20,27 +19,39 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
     ranknumb = np.arange(1, 6)
     n_cluster = np.arange(2, 8)
-    zflowTensor, _ = smallDF(cellperexp)
 
+    zflowTensor, _ = smallDF(cellperexp)
     # maxloglikDF = pd.DataFrame(columns=["Rank", "Cluster", "MaxLoglik"])
     maxloglikDF = pd.DataFrame()
-
     for i in range(len(ranknumb)):
         row = pd.DataFrame()
         row["Rank"] = ["Rank:" + str(ranknumb[i])]
         for j in range(len(n_cluster)):
-            _, _, _, loglik = minimize_func(zflowTensor, ranknumb[i], n_cluster[j], maxiter=1000)
+            _, _, _, loglik, _ = minimize_func(zflowTensor, ranknumb[i], n_cluster[j], maxiter=1000)
             row["Cluster:" + str(n_cluster[j])] = loglik
 
         maxloglikDF = pd.concat([maxloglikDF, row])
 
     maxloglikDF = maxloglikDF.set_index("Rank")
     sns.heatmap(data=maxloglikDF, ax=ax[0])
+
+    maxloglikDFcv = pd.DataFrame()
+    for i in range(len(ranknumb)):
+        row = pd.DataFrame()
+        row["Rank"] = ["Rank:" + str(ranknumb[i])]
+        for j in range(len(n_cluster)):
+            loglik = tensorGMM_CV(zflowTensor, numFolds=3, numClusters=n_cluster[j], numRank=ranknumb[i])
+            row["Cluster:" + str(n_cluster[j])] = loglik
+
+        maxloglikDFcv = pd.concat([maxloglikDFcv, row])
+
+    maxloglikDFcv = maxloglikDFcv.set_index("Rank")
+    sns.heatmap(data=maxloglikDFcv, ax=ax[1])
+    ax[1].set(title="Cross Validation")
 
     return f

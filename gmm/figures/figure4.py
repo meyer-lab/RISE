@@ -25,7 +25,7 @@ def makeFigure():
     cellperexp = 200
     zflowTensor, _ = smallDF(cellperexp)
 
-    maximizedNK, maximizedFactors, _, _ = minimize_func(zflowTensor, rank=3, n_cluster=6)
+    maximizedNK, maximizedFactors, _, _, _ = minimize_func(zflowTensor, rank=3, n_cluster=6)
 
     ax[0].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
     xlabel = "Cluster"

@@ -6,6 +6,7 @@ from jax.config import config
 import tensorly as tl
 import xarray as xa
 from sklearn.mixture import GaussianMixture
+from sklearn.model_selection import KFold
 from jax import value_and_grad, jit
 
 from scipy.optimize import minimize
@@ -160,7 +161,6 @@ def comparingGMMjax(X, nk, meanFact: list, ptFact):
 def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     parts = vector_to_cp_pt(facVector, rank, shape)
-
     # Creating function that we want to minimize
     return -comparingGMMjax(X, *parts)
 
@@ -190,8 +190,27 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
     optLL = -opt.fun
     optCP = cp_normalize((None, optCP))
+    optVec = opt.x
 
     cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     CPdf = [pd.DataFrame(optCP.factors[ii], columns=cmpCol, index=coords[key]) for ii, key in enumerate(coords)]
 
-    return optNK, CPdf, optPT, optLL
+    return optNK, CPdf, optPT, optLL, optVec
+
+
+def tensorGMM_CV(X, numFolds, numClusters, numRank, maxiter=2000):
+    """Runs Cross Validation for TensorGMM in order to determine best cluster/rank combo."""
+    logLik = 0.0
+    meanShape = (numClusters, len(markerslist), X.shape[2], X.shape[3], X.shape[4])
+
+    kf = KFold(n_splits=numFolds)
+
+    # Start generating splits and running model
+    for train_index, test_index in kf.split(X[:, :, 0, 0, 0].T):
+        # Train
+        _, _, _, _, optVec = minimize_func(X[:, train_index, :, :, :], numRank, numClusters, maxiter=maxiter)
+        # Test
+        test_ll = -maxloglik_ptnnp(optVec, meanShape, numRank, X[:, test_index, :, :, :].to_numpy())
+        logLik += test_ll
+
+    return logLik
