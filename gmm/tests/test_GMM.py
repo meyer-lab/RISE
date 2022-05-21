@@ -3,11 +3,9 @@ Test the data import.
 """
 import pandas as pd
 import numpy as np
-from numpy.testing import assert_allclose
 from ..imports import smallDF
 from ..GMM import cvGMM
-from tensorly.tenalg import multi_mode_dot
-from ..tensor import cp_pt_to_vector, vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV
+from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV
 
 data_import, other_import = smallDF(10)
 
@@ -25,13 +23,11 @@ def test_CP_to_vec():
 
     built = vector_to_cp_pt(x0, 3, meanShape, enforceSPD=False)
     vector_to_cp_pt(x0, 3, meanShape, enforceSPD=True)
-    out_vec = cp_pt_to_vector(*built)
 
     # Check that we can get a likelihood
     ll = maxloglik_ptnnp(x0, meanShape, 3, data_import.to_numpy())
 
     assert np.isfinite(ll)
-    assert_allclose(x0, out_vec)
 
 
 def test_comparingGMM():

@@ -10,58 +10,10 @@ from sklearn.model_selection import KFold
 from jax import value_and_grad, jit
 
 from scipy.optimize import minimize
-from tensorly.decomposition import non_negative_parafac
 from tensorly.cp_tensor import cp_normalize
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 config.update("jax_enable_x64", True)
-
-
-def tensor_decomp(tensor: xa.DataArray, ranknumb: int):
-    """Runs tensor decomposition on means tensor."""
-
-    # Need to input the tMeans as numpy tensor
-    fac = non_negative_parafac(np.nan_to_num(tensor.to_numpy()), mask=np.isfinite(tensor.to_numpy()), rank=ranknumb)
-
-    cmpCol = [f"Cmp. {i}" for i in np.arange(1, ranknumb + 1)]
-    fac = cp_normalize(fac)  # Normalizing factors
-
-    dfs = []
-    for ii, dd in enumerate(tensor.dims):
-        dfs.append(pd.DataFrame(fac.factors[ii], columns=cmpCol, index=tensor.coords[dd]))
-        # For each dimension in tensor, have a specific ranking for each parameter
-
-    return dfs, fac
-
-
-def tensor_R2X(tensor: xa.DataArray, maxrank: int):
-    """Calculates the R2X value even where NaN values are present"""
-    rank = np.arange(1, maxrank + 1)
-    varexpl = np.empty(len(rank))
-
-    for i in range(len(rank)):
-        _, facinfo = tensor_decomp(tensor, rank[i])
-        vTop, vBottom = 0.0, 0.0
-        tMask = np.isfinite(tensor)
-        vTop += np.sum(np.square(tl.cp_to_tensor(facinfo) * tMask - np.nan_to_num(tensor)))
-        # Need to rebuild tensor using factors and weights
-        vBottom += np.sum(np.square(np.nan_to_num(tensor)))
-        varexpl[i] = 1.0 - vTop / vBottom
-
-    return rank, varexpl
-
-
-def cp_pt_to_vector(nk: np.ndarray, facinfo: list, factors_pt: list):
-    """Converts from factors to a linear vector."""
-    vec = np.array([], dtype=float)
-    vec = np.append(vec, nk)
-
-    for fac in facinfo:
-        vec = np.append(vec, fac.flatten())
-
-    vec = np.append(vec, factors_pt[1].flatten())
-
-    return np.log(vec)
 
 
 def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
@@ -73,23 +25,24 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
     # Shape of tensor for means or precision matrix
     nN = np.cumsum(np.array(shape) * rank)
     nN = np.insert(nN, 0, 0)
-    nN = np.append(nN, nN[-1] + shape[1] * shape[1] * rank)
 
     factors = [jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
     # Rebuidling factors and ranks
 
-    precSym = vectorIn[nN[-2] : nN[-1]].reshape(shape[1], shape[1], rank)
+    precSym = jnp.zeros((shape[1], shape[1], rank))
+    ai, bi = jnp.tril_indices(5)
+    pVec = vectorIn[nN[-1] : :].reshape(-1, rank)
+    precSym = precSym.at[ai, bi, :].set(pVec)
+    precSym = (precSym + jnp.swapaxes(precSym, 0, 1)) / 2.0  # Enforce symmetry
 
     if enforceSPD:
-        precSym = (precSym + jnp.swapaxes(precSym, 0, 1)) / 2.0  # Enforce symmetry
-
         # Compute the symmetric polar factor of B. Call it H.
         # Clearly H is itself SPD.
         for ii in range(precSym.shape[2]):
             _, S, V = jnp.linalg.svd(precSym[:, :, ii], full_matrices=False)
             precSymH = V @ S @ V.T
-            # get Ahat in the above formula
-            precSym.at[:, :, ii].set((precSym[:, :, ii] + precSymH) / 2)
+        #     # get Ahat in the above formula
+        #     precSym = precSym.at[:, :, ii].set((precSym[:, :, ii] + precSymH) / 2)
 
         precSym = (precSym + jnp.swapaxes(precSym, 0, 1)) / 2.0  # Enforce symmetry
 
@@ -100,7 +53,7 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
 
 def vector_guess(shape: tuple, rank: int):
     """Predetermines total vector that will be maximized for NK, factors and core"""
-    factortotal = np.sum(shape) * rank + shape[1] * shape[1] * rank + shape[0]
+    factortotal = np.sum(shape) * rank + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank + shape[0]
     return np.random.normal(loc=-1.0, size=factortotal)
 
 
@@ -178,14 +131,10 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
 
     args = (meanShape, rank, zflowTensor.to_numpy())
 
-    tl.set_backend("jax")
-
     func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
 
     x0 = vector_guess(meanShape, rank)
     opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxls": 200, "iprint": 90, "maxiter": maxiter})
-
-    tl.set_backend("numpy")
 
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
     optLL = -opt.fun
