@@ -4,13 +4,9 @@ This creates Figure 4.
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from jax.config import config
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
 from gmm.tensor import minimize_func, markerslist
-
-
-config.update("jax_enable_x64", True)
 
 
 def makeFigure():
@@ -25,12 +21,13 @@ def makeFigure():
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
     zflowTensor, _ = smallDF(cellperexp)
-    rank = 3
+    rank = 7
+    n_cluster = 6
 
-    maximizedNK, maximizedFactors, optPTfactors, _, _ = minimize_func(zflowTensor, rank=3, n_cluster=6)
+    maximizedNK, optCP, optPTfactors, _, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster)
     ptMarkerPatterns = optPTfactors[1]
 
-    for i in range(rank):
+    for i in range(3):
         dff = pd.DataFrame(ptMarkerPatterns[:, :, i], columns=markerslist, index=markerslist)
         sns.heatmap(data=dff, ax=ax[i])
 
@@ -38,6 +35,13 @@ def makeFigure():
     xlabel = "Cluster"
     ylabel = "NK Value"
     ax[3].set(xlabel=xlabel, ylabel=ylabel)
+
+    # CP factors
+    cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    commonDims = {"Time": zflowTensor.coords["Time"], "Dose": zflowTensor.coords["Dose"], "Ligand": zflowTensor.coords["Ligand"]}
+    clustArray = np.arange(1, n_cluster + 1)
+    coords = {"Cluster": clustArray, "Markers": markerslist, **commonDims}
+    maximizedFactors = [pd.DataFrame(optCP.factors[ii], columns=cmpCol, index=coords[key]) for ii, key in enumerate(coords)]
 
     for i in range(0, len(maximizedFactors)):
         sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 4])

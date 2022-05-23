@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import jax.numpy as jnp
 import jax.scipy.special as jsp
@@ -118,48 +117,42 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     return -comparingGMMjax(X, *parts)
 
 
-def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=20000):
+def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=20000, iprint=-1, x0=None):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
-    times = zflowTensor.coords["Time"]
-    doses = zflowTensor.coords["Dose"]
-    ligand = zflowTensor.coords["Ligand"]
-
-    clustArray = np.arange(1, n_cluster + 1)
-    meanShape = (n_cluster, len(markerslist), len(times), len(doses), len(ligand))
-    commonDims = {"Time": times, "Dose": doses, "Ligand": ligand}
-    coords = {"Cluster": clustArray, "Markers": markerslist, **commonDims}
+    meanShape = (n_cluster, zflowTensor.shape[0], zflowTensor.shape[2], zflowTensor.shape[3], zflowTensor.shape[4])
 
     args = (meanShape, rank, zflowTensor.to_numpy())
 
     func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
 
-    x0 = vector_guess(meanShape, rank)
-    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options={"maxcor": 30, "iprint": 90, "maxiter": maxiter})
+    if x0 is None:
+        x0 = vector_guess(meanShape, rank)
+
+    opts = {"maxcor": 30, "iprint": iprint, "maxiter": maxiter, "maxfun": 1e6, "ftol": 1e-10}
+    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options=opts)
 
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
     optLL = -opt.fun
     optCP = cp_normalize((None, optCP))
     optVec = opt.x
 
-    cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    CPdf = [pd.DataFrame(optCP.factors[ii], columns=cmpCol, index=coords[key]) for ii, key in enumerate(coords)]
-
-    return optNK, CPdf, optPT, optLL, optVec
+    return optNK, optCP, optPT, optLL, optVec
 
 
-def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=2000):
+def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=20000):
     """Runs Cross Validation for TensorGMM in order to determine best cluster/rank combo."""
     logLik = 0.0
     meanShape = (numClusters, len(markerslist), X.shape[2], X.shape[3], X.shape[4])
 
     kf = KFold(n_splits=numFolds)
+    x0 = None
 
     # Start generating splits and running model
     for train_index, test_index in kf.split(X[:, :, 0, 0, 0].T):
         # Train
-        _, _, _, _, optVec = minimize_func(X[:, train_index, :, :, :], numRank, numClusters, maxiter=maxiter)
+        _, _, _, _, x0 = minimize_func(X[:, train_index, :, :, :], numRank, numClusters, maxiter=maxiter, x0=x0)
         # Test
-        test_ll = -maxloglik_ptnnp(optVec, meanShape, numRank, X[:, test_index, :, :, :].to_numpy())
+        test_ll = -maxloglik_ptnnp(x0, meanShape, numRank, X[:, test_index, :, :, :].to_numpy())
         logLik += test_ll
 
     return float(logLik)
