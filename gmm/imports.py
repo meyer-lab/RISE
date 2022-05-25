@@ -9,7 +9,8 @@ def smallDF(numCells: int):
     Zscores all markers per experiment but pSTAT5 normalized over all experiments
     Outputs amount of experiments and cell types as an Xarray"""
     # numCells = Amount of cells per experiment
-    flowDF = importflowDF()
+    flowDF = pq.read_table("/opt/andrew/FlowDataGMM_Mon_NoSub.pq")
+    flowDF = flowDF.to_pandas()
     gVars = ["Time", "Dose", "Ligand"]
     # Columns that should be trasformed
     tCols = ["Foxp3", "CD25", "CD45RA", "CD4"]
@@ -38,13 +39,3 @@ def smallDF(numCells: int):
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
 
     return flowDF, (experimentcells, cell_type)
-
-
-def importflowDF():
-    """Downloads all conditions, surface markers and cell types.
-    Cells are labeled via Thelper, None, Treg, CD8 or NK"""
-
-    monomeric = pq.read_table("/opt/andrew/FlowDataGMM_Mon_NoSub.pq")
-    monomeric = monomeric.to_pandas()
-
-    return monomeric

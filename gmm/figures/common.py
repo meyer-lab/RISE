@@ -6,7 +6,6 @@ import sys
 import time
 import seaborn as sns
 import matplotlib
-import svgutils.transform as st
 from matplotlib import gridspec, pyplot as plt
 
 matplotlib.use("AGG")
@@ -58,19 +57,6 @@ def subplotLabel(axs):
     """Place subplot labels on figure."""
     for ii, ax in enumerate(axs):
         ax.text(-0.2, 1.2, ascii_lowercase[ii], transform=ax.transAxes, fontweight="bold", va="top")
-
-
-def overlayCartoon(figFile, cartoonFile, x, y, scalee=1):
-    """Add cartoon to a figure file."""
-
-    # Overlay Figure cartoons
-    template = st.fromfile(figFile)
-    cartoon = st.fromfile(cartoonFile).getroot()
-
-    cartoon.moveto(x, y, scale=scalee)
-
-    template.append(cartoon)
-    template.save(figFile)
 
 
 def genFigure():
