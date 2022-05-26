@@ -8,6 +8,7 @@ from ..GMM import cvGMM
 from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV
 
 data_import, other_import = smallDF(10)
+meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
 
 
 def test_cvGMM():
@@ -28,7 +29,6 @@ def test_import():
 
 def test_CP_to_vec():
     """Test that we can go from Cp to vector, and from vector to Cp without changing values."""
-    meanShape = (6, 5, 4, 12, 8)
     x0 = vector_guess(meanShape, rank=3)
 
     built = vector_to_cp_pt(x0, 3, meanShape, enforceSPD=False)
@@ -42,7 +42,6 @@ def test_CP_to_vec():
 
 def test_comparingGMM():
     """Test that we can ensures log likelihood is calculated the same"""
-    meanShape = (6, 5, 4, 12, 8)
     x0 = vector_guess(meanShape, rank=3)
 
     nk, meanFact, ptFact = vector_to_cp_pt(x0, 3, meanShape)

@@ -19,7 +19,7 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 100
-    ranknumb = np.arange(3, 11)
+    ranknumb = np.arange(3, 7)
     n_cluster = np.arange(4, 8)
 
     zflowTensor, _ = smallDF(cellperexp)

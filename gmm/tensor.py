@@ -3,10 +3,11 @@ import jax.numpy as jnp
 import jax.scipy.special as jsp
 from jax.config import config
 import tensorly as tl
+from tqdm import tqdm
 import xarray as xa
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import KFold
-from jax import value_and_grad, jit
+from jax import value_and_grad, jit, grad
 
 from scipy.optimize import minimize
 from tensorly.cp_tensor import cp_normalize
@@ -38,8 +39,9 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
         # Compute the symmetric polar factor of B. Call it H.
         # Clearly H is itself SPD.
         for ii in range(precSym.shape[2]):
-            _, S, V = jnp.linalg.svd(precSym[:, :, ii], full_matrices=False)
-            precSymH = V @ S @ V.T
+            temp = precSym[:, :, ii]
+            # _, S, V = jnp.linalg.svd(precSym[:, :, ii], full_matrices=False)
+            # precSymH = V @ S @ V.T
         #     # get Ahat in the above formula
         #     precSym = precSym.at[:, :, ii].set((precSym[:, :, ii] + precSymH) / 2)
 
@@ -114,10 +116,11 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     parts = vector_to_cp_pt(facVector, rank, shape)
     # Creating function that we want to minimize
+    # Regularize so that we don't get enormous values
     return -comparingGMMjax(X, *parts)
 
 
-def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=20000, iprint=-1, x0=None):
+def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=400, x0=None):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, zflowTensor.shape[0], zflowTensor.shape[2], zflowTensor.shape[3], zflowTensor.shape[4])
 
@@ -128,8 +131,23 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     if x0 is None:
         x0 = vector_guess(meanShape, rank)
 
-    opts = {"maxcor": 30, "iprint": iprint, "maxiter": maxiter, "maxfun": 1e6, "ftol": 1e-10}
-    opt = minimize(func, x0, jac=True, method="L-BFGS-B", args=args, options=opts)
+    def hvp(x, v, *argss):
+        return grad(lambda x: jnp.vdot(func(x, *argss)[1], v))(x)
+
+    hvpj = jit(hvp, static_argnums=(2, 3))
+
+    tq = tqdm(total=maxiter, delay=0.1)
+
+    def callback(xk):
+        val, grad = func(xk, *args)
+        gNorm = np.linalg.norm(grad)
+        tq.set_postfix(val='{:.2e}'.format(val), g='{:.2e}'.format(gNorm), refresh=False)
+        tq.update(1)
+
+    opts = {"maxiter": maxiter, "disp": False}
+    opt = minimize(func, x0, jac=True, hessp=hvpj, callback=callback, method="trust-krylov", args=args, options=opts)
+
+    tq.close()
 
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
     optLL = -opt.fun
@@ -139,7 +157,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     return optNK, optCP, optPT, optLL, optVec
 
 
-def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=20000):
+def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=100):
     """Runs Cross Validation for TensorGMM in order to determine best cluster/rank combo."""
     logLik = 0.0
     meanShape = (numClusters, len(markerslist), X.shape[2], X.shape[3], X.shape[4])
