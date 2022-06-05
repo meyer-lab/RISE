@@ -1,6 +1,7 @@
 """
 Test the data import.
 """
+from copy import deepcopy
 import pandas as pd
 import numpy as np
 from ..imports import smallDF
@@ -49,8 +50,38 @@ def test_comparingGMM():
 
     optimized1 = comparingGMM(data_import, meanFact, ptBuilt, nk)
     optimized2 = comparingGMMjax(data_import.to_numpy(), nk, meanFact, ptFact)
+    np.testing.assert_allclose(optimized1, optimized2, rtol=1e-5)
 
-    np.testing.assert_almost_equal(optimized1, optimized2)
+
+def test_independence():
+    """Test that conditions can be separately evaluated as expected."""
+    x0 = vector_guess(meanShape, rank=3)
+    data_numpy = data_import.to_numpy()
+
+    nk, meanFact, ptFact = vector_to_cp_pt(x0, 3, meanShape)
+    ptBuilt = np.einsum("ax,bcx,dx,ex,fx->abcdef", *ptFact)
+
+    ll1 = comparingGMM(data_import, meanFact, ptBuilt, nk)
+    ll2 = comparingGMMjax(data_numpy, nk, meanFact, ptFact)
+    np.testing.assert_allclose(ll1, ll2, rtol=1e-5)
+
+    # Test that cells are independent
+    ll3 = comparingGMMjax(data_numpy[:, :5, :, :, :], nk, meanFact, ptFact)
+    ll3 += comparingGMMjax(data_numpy[:, 5:, :, :, :], nk, meanFact, ptFact)
+    np.testing.assert_allclose(ll2, ll3, rtol=1e-5)
+
+    # Test that ligands are independent
+    meanFactOne = deepcopy(meanFact)
+    meanFactOne[4] = meanFact[4][:5, :]
+    ptFactOne = deepcopy(ptFact)
+    ptFactOne[4] = ptFact[4][:5, :]
+    ll4 = comparingGMMjax(data_numpy[:, :, :, :, :5], nk, meanFactOne, ptFactOne)
+    meanFactTwo = deepcopy(meanFact)
+    meanFactTwo[4] = meanFact[4][5:, :]
+    ptFactTwo = deepcopy(ptFact)
+    ptFactTwo[4] = ptFact[4][5:, :]
+    ll4 += comparingGMMjax(data_numpy[:, :, :, :, 5:], nk, meanFactTwo, ptFactTwo)
+    np.testing.assert_allclose(ll2, ll4, rtol=1e-5)
 
 
 def test_fit():
