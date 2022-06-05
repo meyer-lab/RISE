@@ -1,7 +1,6 @@
 import numpy as np
 import jax.numpy as jnp
 import jax.scipy.special as jsp
-from jax.config import config
 import tensorly as tl
 from tqdm import tqdm
 import xarray as xa
@@ -13,7 +12,6 @@ from scipy.optimize import minimize
 from tensorly.cp_tensor import cp_normalize
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
-config.update("jax_enable_x64", True)
 
 
 def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
@@ -140,7 +138,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
 
     tq = tqdm(total=maxiter, delay=0.1)
 
-    def callback(xk, bounds):
+    def callback(xk, state):
         val, grad = func(xk, *args)
         gNorm = np.linalg.norm(grad)
         tq.set_postfix(val='{:.2e}'.format(val), g='{:.2e}'.format(gNorm), refresh=False)
