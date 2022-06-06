@@ -31,8 +31,6 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     ai, bi = jnp.tril_indices(5)
     pVec = vectorIn[nN[-1] : :].reshape(-1, rank)
     precSym = precSym.at[ai, bi, :].set(pVec)
-    precSym += jnp.swapaxes(precSym, 0, 1)
-    # TODO: We should allow the off-diagnonal elements to be negative
 
     factors_pt = [factors[0], precSym, factors[2], factors[3], factors[4]]
     return rebuildnk, factors, factors_pt
@@ -73,26 +71,23 @@ def comparingGMM(zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np
     return loglik
 
 
-@jit
-def comparingGMMjax(X, nk, meanFact: list, ptFact):
+def comparingGMMjax(X, nk, meanFact: list, tPrecision):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
     assert nk.ndim == 1
-    n_markers = ptFact[1].shape[0]
+    n_markers = tPrecision.shape[1]
     nkl = jnp.log(nk / jnp.sum(nk))
 
-    mp = jnp.einsum("iz,jz,kz,lz,mz,ix,jox,kx,lx,mx->ioklm", *meanFact, *ptFact, optimize="greedy")
-    Xp = jnp.einsum("jiklm,nx,jox,kx,lx,mx->inoklm", X, *ptFact, optimize="greedy")
+    mp = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *meanFact, tPrecision)
+    Xp = jnp.einsum("jiklm,njoklm->inoklm", X, tPrecision)
     log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :, :, :], axis=2))
     log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
     # The determinant of the precision matrix from the Cholesky decomposition
     # corresponds to the negative half of the determinant of the full precision matrix.
     # In short: det(precision_chol) = - det(precision) / 2
-    unrav = jnp.reshape(ptFact[1], (-1, ptFact[1].shape[2]))
-    unrav = unrav[:: n_markers + 1, :]
-    ppp = jnp.einsum("ak,ck,fk,hk,jk->acfhj", ptFact[0], unrav, ptFact[2], ptFact[3], ptFact[4], optimize="greedy")
-    log_det = jnp.sum(jnp.log(ppp), 1)
+    ppp = jnp.diagonal(tPrecision, axis1=1, axis2=2)
+    log_det = jnp.sum(jnp.log(ppp), axis=-1)
 
     # Since we are using the precision of the Cholesky decomposition,
     # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
@@ -100,15 +95,26 @@ def comparingGMMjax(X, nk, meanFact: list, ptFact):
     return loglik
 
 
+def covFactor_to_precisions(covFac):
+    """Convert from the cholesky decomposition of the covariance matrix, to the precision matrix."""
+    cholBuilt = jnp.einsum("ax,bcx,dx,ex,fx->abcdef", *covFac)
+    cholMv = jnp.moveaxis(cholBuilt, (1, 2), (4, 5))
+    cholMv = jnp.linalg.inv(cholMv)
+    precBuild = jnp.moveaxis(cholMv, (4, 5), (1, 2))
+    assert cholBuilt.shape == precBuild.shape
+    return jnp.swapaxes(precBuild, 1, 2)
+
+
 def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
-    parts = vector_to_cp_pt(facVector, rank, shape)
+    nk, meanFact, covFac = vector_to_cp_pt(facVector, rank, shape)
+    precBuild = covFactor_to_precisions(covFac)
+
     # Creating function that we want to minimize
-    # Regularize so that we don't get enormous values
-    return -comparingGMMjax(X, *parts)
+    return -comparingGMMjax(X, nk, meanFact, precBuild)
 
 
-def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=500, x0=None):
+def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=300, x0=None):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, zflowTensor.shape[0], zflowTensor.shape[2], zflowTensor.shape[3], zflowTensor.shape[4])
 
@@ -132,7 +138,7 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
         tq.update(1)
 
     opts = {"maxiter": maxiter, "disp": False}
-    bounds = ((np.log(1e-1), np.log(1e1)), ) * n_cluster + ((np.log(1e-15), np.log(1e15)), ) * (len(x0) - n_cluster)
+    bounds = ((np.log(1e-1), np.log(1e1)), ) * n_cluster + ((np.log(1e-4), np.log(50.0)), ) * (len(x0) - n_cluster)
     opt = minimize(func, x0, jac=True, hessp=hvpj, callback=callback, method="trust-constr", bounds=bounds, args=args, options=opts)
     tq.close()
 

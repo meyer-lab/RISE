@@ -21,14 +21,14 @@ def makeFigure():
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
     zflowTensor, _ = smallDF(cellperexp)
-    rank = 7
-    n_cluster = 6
+    rank = 3
+    n_cluster = 3
 
     maximizedNK, optCP, optPTfactors, _, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster)
     ptMarkerPatterns = optPTfactors[1]
 
     for i in range(3):
-        dff = pd.DataFrame(ptMarkerPatterns[:, :, i], columns=markerslist, index=markerslist)
+        dff = pd.DataFrame(ptMarkerPatterns[:, :, i] @ ptMarkerPatterns[:, :, i].T, columns=markerslist, index=markerslist)
         sns.heatmap(data=dff, ax=ax[i])
 
     ax[3].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
