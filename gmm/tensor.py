@@ -31,6 +31,7 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     ai, bi = jnp.tril_indices(5)
     pVec = vectorIn[nN[-1] : :].reshape(-1, rank)
     precSym = precSym.at[ai, bi, :].set(pVec)
+    precSym += jnp.swapaxes(precSym, 0, 1)
     # TODO: We should allow the off-diagnonal elements to be negative
 
     factors_pt = [factors[0], precSym, factors[2], factors[3], factors[4]]
@@ -107,7 +108,7 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     return -comparingGMMjax(X, *parts)
 
 
-def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=200, x0=None):
+def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=500, x0=None):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, zflowTensor.shape[0], zflowTensor.shape[2], zflowTensor.shape[3], zflowTensor.shape[4])
 
