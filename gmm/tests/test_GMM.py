@@ -32,8 +32,7 @@ def test_CP_to_vec():
     """Test that we can go from Cp to vector, and from vector to Cp without changing values."""
     x0 = vector_guess(meanShape, rank=3)
 
-    built = vector_to_cp_pt(x0, 3, meanShape, enforceSPD=False)
-    vector_to_cp_pt(x0, 3, meanShape, enforceSPD=True)
+    built = vector_to_cp_pt(x0, 3, meanShape)
 
     # Check that we can get a likelihood
     ll = maxloglik_ptnnp(x0, meanShape, 3, data_import.to_numpy())

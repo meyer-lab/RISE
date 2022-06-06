@@ -14,7 +14,7 @@ from tensorly.cp_tensor import cp_normalize
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
 
-def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
+def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     """Converts linear vector to factors"""
     vectorIn = jnp.exp(vectorIn)
     rebuildnk = vectorIn[0 : shape[0]]
@@ -31,22 +31,9 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, enforceSPD=True):
     ai, bi = jnp.tril_indices(5)
     pVec = vectorIn[nN[-1] : :].reshape(-1, rank)
     precSym = precSym.at[ai, bi, :].set(pVec)
-    precSym = (precSym + jnp.swapaxes(precSym, 0, 1)) / 2.0  # Enforce symmetry
-
-    if enforceSPD:
-        # Compute the symmetric polar factor of B. Call it H.
-        # Clearly H is itself SPD.
-        for ii in range(precSym.shape[2]):
-            temp = precSym[:, :, ii]
-            # _, S, V = jnp.linalg.svd(precSym[:, :, ii], full_matrices=False)
-            # precSymH = V @ S @ V.T
-        #     # get Ahat in the above formula
-        #     precSym = precSym.at[:, :, ii].set((precSym[:, :, ii] + precSymH) / 2)
-
-        precSym = (precSym + jnp.swapaxes(precSym, 0, 1)) / 2.0  # Enforce symmetry
+    # TODO: We should allow the off-diagnonal elements to be negative
 
     factors_pt = [factors[0], precSym, factors[2], factors[3], factors[4]]
-
     return rebuildnk, factors, factors_pt
 
 
