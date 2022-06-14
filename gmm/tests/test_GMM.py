@@ -95,7 +95,7 @@ def test_independence():
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, ptfac, ll, _ = minimize_func(data_import, 3, 10, maxiter=20)
+    nk, fac, ptfac, ll, _, _ = minimize_func(data_import, 3, 10, maxiter=20)
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert type(loglik) is float
     assert type(ll) is float

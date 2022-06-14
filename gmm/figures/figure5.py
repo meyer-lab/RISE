@@ -29,7 +29,7 @@ def makeFigure():
         row = pd.DataFrame()
         row["Rank"] = ["Rank:" + str(ranknumb[i])]
         for j in range(len(n_cluster)):
-            _, _, _, loglik, _ = minimize_func(zflowTensor, ranknumb[i], n_cluster[j])
+            _, _, _, loglik, _, _ = minimize_func(zflowTensor, ranknumb[i], n_cluster[j])
             row["Cluster:" + str(n_cluster[j])] = loglik
 
         maxloglikDF = pd.concat([maxloglikDF, row])
