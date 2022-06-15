@@ -30,7 +30,7 @@ def smallDF(numCells: int):
     flowDF = flowDF.groupby(by=gVars).sample(n=numCells).reset_index(drop=True)
 
     # Add valency to the name
-    flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].apply(lambda x: f'{x:.0f}')
+    flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].apply(lambda x: f"{x:.0f}")
     flowDF.drop(columns=["Valency"], axis=1, inplace=True)
 
     flowDF["Cell Type"] = flowDF["Cell Type"].replace({"None": 1, "Treg": 2, "Thelper": 3})

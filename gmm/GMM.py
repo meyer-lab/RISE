@@ -9,12 +9,12 @@ from .tensor import markerslist
 
 
 def LLscorer(estimator, X, _):
-    """ Calculates the scores of the GMM vs. original predicted clusters"""
+    """Calculates the scores of the GMM vs. original predicted clusters"""
     return np.mean(estimator.score(X))
 
 
 def cvGMM(zflowDF: xa.DataArray, maxcluster: int, true_types: xa.DataArray):
-    """ Runs CV on GMM model with score and rand score for multiple clusters"""
+    """Runs CV on GMM model with score and rand score for multiple clusters"""
     zflowDF = zflowDF.copy()
     zflowDF = zflowDF.drop_sel({"Marker": "pSTAT5"})
     # Creating matrix that will be used in GMM model
@@ -27,14 +27,12 @@ def cvGMM(zflowDF: xa.DataArray, maxcluster: int, true_types: xa.DataArray):
     GMM = GaussianMixture(covariance_type="full", tol=1e-6, max_iter=5000)
 
     scoring = {"LL": LLscorer, "rand": "rand_score"}
-    grid = {'n_components': np.arange(1, maxcluster)}
+    grid = {"n_components": np.arange(1, maxcluster)}
     grid_search = GridSearchCV(GMM, param_grid=grid, scoring=scoring, cv=cv, refit=False, n_jobs=-1)
     grid_search.fit(X, true_stack.flatten())
     results = grid_search.cv_results_
 
-    return pd.DataFrame({"Cluster": results["param_n_components"],
-                         "ll_score": results["mean_test_LL"],
-                         "rand_score": results["mean_test_rand"]})
+    return pd.DataFrame({"Cluster": results["param_n_components"], "ll_score": results["mean_test_LL"], "rand_score": results["mean_test_rand"]})
 
 
 def probGMM(zflowDF: xa.DataArray, n_clusters: int):
@@ -44,8 +42,7 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
     Xxa = zflowDF.stack(z=("Ligand", "Dose", "Time", "Cell")).transpose()
     # Need shape to be [Experiments,Markers] (flattened by in reverse order)
     X = Xxa.to_numpy()
-    GMM = GaussianMixture(n_components=n_clusters, covariance_type="full",
-                          max_iter=5000, verbose=20)
+    GMM = GaussianMixture(n_components=n_clusters, covariance_type="full", max_iter=5000, verbose=20)
     GMM.fit(X)
     # Need shape to be [Experiments,Markers] (flattened by in reverse order)
     log_resp = np.exp(GMM._estimate_log_prob_resp(X)[1])  # Get the responsibilities
@@ -64,19 +61,17 @@ def probGMM(zflowDF: xa.DataArray, n_clusters: int):
     log_resp = log_resp.unstack()
     # log_resp becomes Xarray of [Cluster, Ligand, Dose, Time, Cell Number]
 
-    nk = xa.DataArray(np.full((n_clusters, *commonSize), np.nan),
-                      coords={"Cluster": clustArray, **commonDims})
-    means = xa.DataArray(np.full((n_clusters, len(markerslist), *commonSize), np.nan),
-                         coords={"Cluster": clustArray, "Markers": markerslist, **commonDims})
-    precision = xa.DataArray(np.full((n_clusters, len(markerslist), len(markerslist), *commonSize), np.nan),
-                             coords={"Cluster": clustArray, "Marker1": markerslist, "Marker2": markerslist, **commonDims})
+    nk = xa.DataArray(np.full((n_clusters, *commonSize), np.nan), coords={"Cluster": clustArray, **commonDims})
+    means = xa.DataArray(np.full((n_clusters, len(markerslist), *commonSize), np.nan), coords={"Cluster": clustArray, "Markers": markerslist, **commonDims})
+    precision = xa.DataArray(
+        np.full((n_clusters, len(markerslist), len(markerslist), *commonSize), np.nan), coords={"Cluster": clustArray, "Marker1": markerslist, "Marker2": markerslist, **commonDims}
+    )
 
-    it = np.nditer(nk[0, :, :, :], flags=['multi_index', 'refs_ok'])
+    it = np.nditer(nk[0, :, :, :], flags=["multi_index", "refs_ok"])
     for _ in it:
         i, j, k = it.multi_index
         # _estimate_gaussian_parameters(zflowXArray[Cell Number, Marker],Log_resp[Cell Number, Cluster])
-        output = _estimate_gaussian_parameters(np.transpose(zflowDF[:, :, i, j, k].values),
-                                               np.transpose(log_resp[:, k, j, i, :].values), 1e-6, "full")
+        output = _estimate_gaussian_parameters(np.transpose(zflowDF[:, :, i, j, k].values), np.transpose(log_resp[:, k, j, i, :].values), 1e-6, "full")
 
         nk[:, i, j, k] = output[0]  # Cluster
         means[:, :, i, j, k] = output[1]  # Cluster x Marker
