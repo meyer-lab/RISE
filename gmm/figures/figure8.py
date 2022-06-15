@@ -1,0 +1,39 @@
+"""
+This creates Figure 4.
+"""
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from .common import subplotLabel, getSetup
+from gmm.imports import smallDF
+from gmm.tensor import minimize_func, markerslist, gen_points_GMM_Flow
+
+
+def makeFigure():
+    """Get a list of the axis objects and create a figure."""
+    # Get list of axis objects
+    ax, f = getSetup((12, 8), (3, 4))
+
+    # Add subplot labels
+    subplotLabel(ax)
+
+    # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
+    # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
+    cellperexp = 200
+    zflowTensor, _ = smallDF(cellperexp)
+    rank = 4
+    n_cluster = 6
+    time = 1.0
+    ligand = "IL2-1"
+
+    timei = np.where(zflowTensor.Time.values == time)[0][0]
+    ligandi = np.where(zflowTensor.Ligand.values == ligand)[0]
+
+    maximizedNK, _, optPTfactors, _, _, preNormOptCP = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster)
+
+    for dose in range(0, 12):
+        pointsDF = gen_points_GMM_Flow(maximizedNK, preNormOptCP, optPTfactors, timei, dose, ligandi, n_cluster)
+        sns.scatterplot(data=pointsDF, x="Foxp3", y="pSTAT5", hue="Cluster", palette="tab10", ax=ax[dose])
+        ax[dose].set(xlim=(-5, 5), ylim=(-5, 5), title=ligand + " at time " + str(time) + " at nM=" + str(zflowTensor.Dose.values[dose]))
+
+    return f

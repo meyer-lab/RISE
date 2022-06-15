@@ -23,10 +23,12 @@ def makeFigure():
     zflowTensor, _ = smallDF(cellperexp)
     rank = 4
     n_cluster = 6
+    print(zflowTensor)
 
     maximizedNK, optCP, optPTfactors, _, _, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster)
     ptMarkerPatterns = optPTfactors[1]
 
+    
     for i in range(3):
         dff = pd.DataFrame(ptMarkerPatterns[:, :, i] @ ptMarkerPatterns[:, :, i].T, columns=markerslist, index=markerslist)
         sns.heatmap(data=dff, ax=ax[i])
@@ -45,5 +47,6 @@ def makeFigure():
 
     for i in range(0, len(maximizedFactors)):
         sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 4])
+
 
     return f
