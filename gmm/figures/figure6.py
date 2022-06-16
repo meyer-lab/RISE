@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 import xarray as xa
-from sklearn.mixture import GaussianMixture
 from .common import subplotLabel, getSetup
 from gmm.tensor import minimize_func, gen_points_GMM
 

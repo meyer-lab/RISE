@@ -1,6 +1,4 @@
-from time import time_ns
 import numpy as np
-from sklearn.cluster import MeanShift
 import jax.numpy as jnp
 import jax.scipy.special as jsp
 import tensorly as tl
@@ -11,7 +9,6 @@ from copy import copy
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import KFold
 from jax import value_and_grad, jit, grad
-from jax.experimental.host_callback import id_print
 
 from scipy.optimize import minimize
 from tensorly.cp_tensor import cp_normalize

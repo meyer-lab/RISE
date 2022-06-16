@@ -2,11 +2,10 @@
 This creates Figure 4.
 """
 import numpy as np
-import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, markerslist, gen_points_GMM_Flow
+from gmm.tensor import minimize_func, gen_points_GMM_Flow
 
 
 def makeFigure():

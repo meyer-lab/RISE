@@ -1,12 +1,8 @@
 """
 This creates Figure 7.
 """
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from .common import subplotLabel, getSetup
+from .common import getSetup
 from gmm.scImport import import_thompson_drug, geneNNMF, normalizeGenes, mu_sigma, gene_filter
-import matplotlib.pyplot as plt
 
 
 def makeFigure():
