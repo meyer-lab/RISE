@@ -9,12 +9,13 @@ from copy import copy
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import KFold
 from jax import value_and_grad, jit, grad
-
+from jax.experimental.host_callback import id_print
 from scipy.optimize import minimize
 from tensorly.cp_tensor import cp_normalize
+import jax
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
-
+#jax.config.update('jax_platform_name', 'cpu')
 
 def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     """Converts linear vector to factors"""
@@ -173,7 +174,7 @@ def gen_points_GMM(optNK, optCP, optPT, time, numClusters):
     """Generates points from a scikit-learn GMM object for a fit NK, CP and PT"""
     GMM = GaussianMixture(n_components=optNK.size, covariance_type="full")
     precisions = covFactor_to_precisions(optPT)
-    means = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *optCP, precisions)
+    means = tl.cp_to_tensor((None, np.asarray(optCP, dtype=object)))
     precisions = precisions[:, :, :, time, 0, 0].reshape([numClusters, 2, 2])
 
     for i in range(0, precisions.shape[0]):
@@ -189,14 +190,14 @@ def gen_points_GMM(optNK, optCP, optPT, time, numClusters):
     GMM.covariances_ = np.array(covariances)
     GMM.converged_ = True
     points = GMM.sample(1000)
-    return points[0]
+    return points
 
 
 def gen_points_GMM_Flow(optNK, optCP, optPT, time, dose, ligand, numClusters):
     """Generates points from a scikit-learn GMM object for a fit NK, CP and PT"""
     GMM = GaussianMixture(n_components=optNK.size, covariance_type="full")
     precisions = covFactor_to_precisions(optPT)
-    means = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *optCP, precisions)
+    means = tl.cp_to_tensor((None, np.asarray(optCP, dtype=object)))
     precisions = precisions[:, :, :, time, dose, ligand].reshape([numClusters, 5, 5])
 
     for i in range(0, precisions.shape[0]):

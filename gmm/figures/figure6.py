@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xa
+import tensorly as tl
 from .common import subplotLabel, getSetup
 from gmm.tensor import minimize_func, gen_points_GMM
 
@@ -25,11 +26,13 @@ def makeFigure():
     blob_xarray = make_blob_tensor(blob_DF)
 
     maximizedNK, optCP, optPTfactors, _, _, preNormOptCP = minimize_func(blob_xarray, rank=rank, n_cluster=n_cluster)
+
     for i in np.arange(0, 4):
+        print(i)
         points = gen_points_GMM(maximizedNK, preNormOptCP, optPTfactors, i * 6, n_cluster)
-        points_DF = pd.DataFrame({"X": points[:, 0], "Y": points[:, 1]})
-        sns.scatterplot(data=points_DF, x="X", y="Y", ax=ax[i + 8])
-        ax[i+8].set(xlim=(-2, 22), ylim=(-2, 22))
+        points_DF = pd.DataFrame({"Cluster": points[1], "X": points[0][:, 0], "Y": points[0][:, 1]})
+        sns.scatterplot(data=points_DF, x="X", y="Y", hue="Cluster", palette="tab10", ax=ax[i + 8])
+        ax[i+8].set(xlim=(-.2, 2.2), ylim=(-.2, 2.2))
 
 
     ax[4].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
@@ -52,7 +55,7 @@ def makeFigure():
 
 def make_blob_art(mean, cov, size, time, label, DF=False):
     """Makes a labeled DF for storing blob art"""
-    X = np.random.multivariate_normal(mean=mean, cov=cov, size=size)
+    X = np.random.multivariate_normal(mean=mean, cov=cov, size=size) / 10
     blob_DF = pd.DataFrame({"X": X[:, 0], "Y": X[:, 1], "Time": time, "Label": label})
 
     if isinstance(DF, pd.DataFrame):
@@ -90,7 +93,7 @@ def make_synth_pic(magnitude):
 def plot_synth_pic(blob_DF, t, ax):
     """Plots snthetic data at a time point"""
     sns.scatterplot(data=blob_DF.loc[blob_DF["Time"] == t], x="X", y="Y", hue="Label", palette=palette, legend=False, ax=ax)
-    ax.set(xlim=(-2, 22), ylim=(-2, 22))
+    ax.set(xlim=(-.2, 2.2), ylim=(-.2, 2.2))
 
 
 def make_blob_tensor(blob_DF):
@@ -105,8 +108,8 @@ def make_blob_tensor(blob_DF):
     for i, time in enumerate(blob_DF.Time.unique()):
         timeDF = blob_DF.loc[blob_DF["Time"] == time].reset_index()
         for j, _ in enumerate(np.arange(0, points)):
-            tensor[0, j, i] = timeDF.loc[j, :].X / 20
-            tensor[1, j, i] = timeDF.loc[j, :].Y / 20
+            tensor[0, j, i] = timeDF.loc[j, :].X
+            tensor[1, j, i] = timeDF.loc[j, :].Y
     tensor = tensor.reshape(tensor.shape[0], tensor.shape[1], tensor.shape[2], 1, 1)
     blob_xarray = xa.DataArray(tensor, dims=("Dimension", "Points", "Time", "Throwaway 1", "Throwaway 2"), coords={"Dimension": ["X", "Y"], "Points": np.arange(0, points), "Time": blob_DF.Time.unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"]})
     return blob_xarray
