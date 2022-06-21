@@ -12,21 +12,19 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-    blob_DF = make_synth_pic(magnitude=80)
-    plot_synth_pic(blob_DF, t=0, ax=ax[0])
-    plot_synth_pic(blob_DF, t=6, ax=ax[1])
-    plot_synth_pic(blob_DF, t=12, ax=ax[2])
-    plot_synth_pic(blob_DF, t=19, ax=ax[3])
+    blob_DF = make_synth_pic(magnitude=60)
+
+    for i in np.arange(0, 4):
+        plot_synth_pic(blob_DF, t=i * 3, ax=ax[i])
 
     rank = 6
     n_cluster = 6
     blob_xarray = make_blob_tensor(blob_DF)
 
-    maximizedNK, optCP, optPTfactors, _, _, preNormOptCP = minimize_func(blob_xarray, rank=rank, n_cluster=n_cluster, maxiter=1000)
+    maximizedNK, optCP, optPTfactors, _, _, preNormOptCP = minimize_func(blob_xarray, rank=rank, n_cluster=n_cluster, maxiter=2000)
 
     for i in np.arange(0, 4):
-        print(i)
-        points = gen_points_GMM(maximizedNK, preNormOptCP, optPTfactors, i * 6, 0, 0)
+        points = gen_points_GMM(maximizedNK, preNormOptCP, optPTfactors, i * 3, 0, 0)
         points_DF = pd.DataFrame({"Cluster": points[1], "X": points[0][:, 0], "Y": points[0][:, 1]})
         sns.scatterplot(data=points_DF, x="X", y="Y", hue="Cluster", palette="tab10", ax=ax[i + 8])
         ax[i+8].set(xlim=(-.2, 2.2), ylim=(-.2, 2.2))
@@ -63,7 +61,7 @@ palette = {"Ground": "khaki",
 
 def make_synth_pic(magnitude):
     """Makes blob of points depicting beach scene with sinusoidally moving sun"""
-    ts = np.arange(0, 101)
+    ts = np.arange(10)
     blob_DF = None
 
     for t in ts:

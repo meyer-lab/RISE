@@ -9,6 +9,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import KFold
 from jax import value_and_grad, jit, grad
 from jax.experimental.host_callback import id_print
+from jax.lax.linalg import triangular_solve
 from scipy.optimize import minimize
 from tensorly.cp_tensor import cp_normalize
 
@@ -94,15 +95,18 @@ def comparingGMMjax(X, nk, meanFact: list, tPrecision):
     return loglik
 
 
-def covFactor_to_precisions(covFac, returnCov=True):
+def covFactor_to_precisions(covFac, returnCov=False):
     """Convert from the cholesky decomposition of the covariance matrix, to the precision matrix."""
-    cholBuilt = jnp.einsum("ax,bcx,dx,ex,fx->abcdef", *covFac)
+    covBuilt = jnp.einsum("ax,bcx,dx,ex,fx->abcdef", *covFac)
+    origShape = covBuilt.shape
     if returnCov:
-        return cholBuilt
-    cholMv = jnp.moveaxis(cholBuilt, (1, 2), (4, 5))
-    cholMv = jnp.linalg.inv(cholMv)
-    precBuild = jnp.moveaxis(cholMv, (4, 5), (1, 2))
-    assert cholBuilt.shape == precBuild.shape
+        return covBuilt
+    covBuilt = jnp.moveaxis(covBuilt, (1, 2), (4, 5))
+    Y = jnp.broadcast_to(jnp.eye(covBuilt.shape[4])[jnp.newaxis, jnp.newaxis, jnp.newaxis, jnp.newaxis, :, :], covBuilt.shape)
+    assert covBuilt.shape == Y.shape
+    precBuild = triangular_solve(covBuilt, Y, lower=True)
+    precBuild = jnp.moveaxis(precBuild, (4, 5), (1, 2))
+    assert origShape == precBuild.shape
     return precBuild
 
 
@@ -190,10 +194,10 @@ def sample_GMM(weights_, means_, cholCovs, n_samples):
 def gen_points_GMM(optNK, optCP, optPT, time, dose, ligand):
     """Generates points from a scikit-learn GMM object for a fit NK, CP and PT"""
     cholCov = covFactor_to_precisions(optPT, returnCov=True)
-    cholCov = np.squeeze(cholCov[:, :, :, time, dose, ligand]) / 100.0
+    cholCov = cholCov[:, :, :, time, dose, ligand]
     means = tl.cp_to_tensor((None, optCP))
 
-    nk = np.array(optNK / np.sum(optNK))
-    means = np.array(means[:, :, time, dose, ligand])
-    samples = sample_GMM(nk, means, np.array(cholCov), 1000)
+    nk = optNK / np.sum(optNK)
+    means = means[:, :, time, dose, ligand]
+    samples = sample_GMM(nk, means, cholCov, 1000)
     return samples
