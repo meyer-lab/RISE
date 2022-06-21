@@ -2,10 +2,11 @@
 This creates Figure 4.
 """
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, gen_points_GMM_Flow
+from gmm.tensor import minimize_func, gen_points_GMM
 
 
 def makeFigure():
@@ -31,7 +32,8 @@ def makeFigure():
     maximizedNK, _, optPTfactors, _, _, preNormOptCP = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster)
 
     for dose in range(0, 12):
-        pointsDF = gen_points_GMM_Flow(maximizedNK, preNormOptCP, optPTfactors, timei, dose, ligandi, n_cluster)
+        points = gen_points_GMM(maximizedNK, preNormOptCP, optPTfactors, timei, dose, ligandi)
+        pointsDF = pd.DataFrame({"Cluster": points[1],'Foxp3': points[0][:, 0], 'CD25': points[0][:, 1], 'CD45RA': points[0][:, 2], 'CD4': points[0][:, 3], 'pSTAT5': points[0][:, 4]})
         sns.scatterplot(data=pointsDF, x="Foxp3", y="pSTAT5", hue="Cluster", palette="tab10", ax=ax[dose])
         ax[dose].set(xlim=(-5, 5), ylim=(-5, 5), title=ligand + " at time " + str(time) + " at nM=" + str(zflowTensor.Dose.values[dose]))
 
