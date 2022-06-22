@@ -3,6 +3,8 @@ Test the data import.
 """
 import pandas as pd
 import numpy as np
+import xarray as xa
+import math
 from ..imports import smallDF
 from ..GMM import cvGMM
 from ..scImport import import_thompson_drug
@@ -99,3 +101,19 @@ def test_fit():
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert isinstance(loglik, float)
     assert isinstance(ll, float)
+
+
+def test_cov_fit():
+    """Test that tensor-GMM method recreates covariance of data accurately"""
+    cov = [[0.5, 0], [0, 2]]
+    samples = np.transpose(np.random.multivariate_normal([3, 1], cov, 1000)).reshape((2, 1000, 1, 1, 1))
+    samples = xa.DataArray(samples, dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"), coords={"Dim": ["X", "Y"], "Point": np.arange(0, 1000), "Throwaway 1": [1], "Throwaway 2": [1], "Throwaway 3": [1]})
+    _, _, optPT, _, _, _ = minimize_func(samples, rank=6, n_cluster=1, maxiter=2000)
+    cholCov = covFactor_to_precisions(optPT, returnCov=True)
+    cholCov = np.squeeze(cholCov[:, :, :, 0, 0, 0])
+    covR = cholCov @ cholCov.T
+
+    assert math.isclose(cov[0][0], covR[0][0], abs_tol=0.3)
+    assert math.isclose(cov[1][0], covR[1][0], abs_tol=0.2)
+    assert math.isclose(cov[0][1], covR[0][1], abs_tol=0.2)
+    assert math.isclose(cov[1][1], covR[1][1], abs_tol=0.3)
