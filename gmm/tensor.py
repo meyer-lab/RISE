@@ -195,10 +195,10 @@ def sample_GMM(weights_, means_, cholCovs, n_samples):
 def gen_points_GMM(optNK, optCP, optPT, time, dose, ligand):
     """Generates points from a scikit-learn GMM object for a fit NK, CP and PT"""
     cholCov = covFactor_to_precisions(optPT, returnCov=True)
-    cholCov = cholCov[:, :, :, time, dose, ligand]
+    cholCov = np.squeeze(cholCov[:, :, :, time, dose, ligand])
     means = tl.cp_to_tensor((None, optCP))
 
     nk = optNK / np.sum(optNK)
-    means = means[:, :, time, dose, ligand]
+    means = np.squeeze(means[:, :, time, dose, ligand])
     samples = sample_GMM(nk, means, cholCov, 1000)
     return samples
