@@ -7,11 +7,12 @@ import xarray as xa
 import math
 from ..imports import smallDF
 from ..GMM import cvGMM
-from ..scImport import import_thompson_drug
+from ..scImport import import_thompson_drug, ThompsonDrugXA
 from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions
 
 data_import, other_import = smallDF(10)
 meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
+dataPA_import = ThompsonDrugXA(numCells=10, rank=10, maxit=20)
 
 
 def test_cvGMM():
@@ -101,6 +102,23 @@ def test_fit():
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert isinstance(loglik, float)
     assert isinstance(ll, float)
+
+
+def test_import_PopAlign():
+    """Stub test."""
+    dataPA_two = ThompsonDrugXA(numCells=20, rank=20, maxit=20)
+    assert 2 * dataPA_import.shape[0] == dataPA_two.shape[0]
+    assert 2 * dataPA_import.shape[1] == dataPA_two.shape[1]
+    assert dataPA_import.shape[2] == dataPA_two.shape[2]
+    assert dataPA_import.shape[3] == dataPA_two.shape[3]
+    assert dataPA_import.shape[4] == dataPA_two.shape[4]
+
+
+def test_finite_data():
+    """Test that all values in tensor has no NaN"""
+
+    assert np.isfinite(data_import.to_numpy()).all()
+    assert np.isfinite(dataPA_import.to_numpy()).all()
 
 
 def test_cov_fit():

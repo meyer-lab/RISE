@@ -117,7 +117,7 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     precBuild = covFactor_to_precisions(covFac)
 
     # Creating function that we want to minimize
-    return -comparingGMMjax(X, nk, meanFact, precBuild)
+    return -comparingGMMjax(X, nk, meanFact, precBuild) / X.shape[1]
 
 
 def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=200, x0=None):
@@ -179,13 +179,9 @@ def sample_GMM(weights_, means_, cholCovs, n_samples):
     n_samples_comp = np.random.multinomial(n_samples, weights_)
 
     X = np.vstack(
-        [
-            np.random.multivariate_normal(mean, cholCov @ cholCov.T, int(sample))
+        [np.random.multivariate_normal(mean, cholCov @ cholCov.T, int(sample))
             for (mean, cholCov, sample) in zip(
-                means_, cholCovs, n_samples_comp
-            )
-        ]
-    )
+                means_, cholCovs, n_samples_comp)])
     y = np.concatenate(
         [np.full(sample, j, dtype=int) for j, sample in enumerate(n_samples_comp)]
     )
