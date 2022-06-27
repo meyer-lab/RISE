@@ -4,7 +4,7 @@ import jax.scipy.special as jsp
 import tensorly as tl
 from tqdm import tqdm
 import xarray as xa
-from copy import copy
+from copy import deepcopy
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import KFold
 from jax import value_and_grad, jit, grad
@@ -120,11 +120,11 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     return -comparingGMMjax(X, nk, meanFact, precBuild) / X.shape[1]
 
 
-def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=200, x0=None):
+def minimize_func(X: xa.DataArray, rank: int, n_cluster: int, maxiter=400, verbose=True, x0=None):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
-    meanShape = (n_cluster, zflowTensor.shape[0], zflowTensor.shape[2], zflowTensor.shape[3], zflowTensor.shape[4])
+    meanShape = (n_cluster, X.shape[0], X.shape[2], X.shape[3], X.shape[4])
 
-    args = (meanShape, rank, zflowTensor.to_numpy())
+    args = (meanShape, rank, X.to_numpy())
     func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
 
     if x0 is None:
@@ -135,11 +135,11 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
 
     hvpj = jit(hvp, static_argnums=(2, 3))
 
-    tq = tqdm(total=maxiter, delay=0.1)
+    tq = tqdm(total=maxiter, delay=0.1, disable=(verbose is False))
 
-    def callback(xk, state):
+    def callback(_, state):
         gNorm = np.linalg.norm(state.grad)
-        tq.set_postfix(val='{:.2e}'.format(state.fun), g='{:.2e}'.format(gNorm), refresh=False)
+        tq.set_postfix(val='{:.2e}'.format(state.fun), g='{:.1e}'.format(gNorm), refresh=False)
         tq.update(1)
 
     opts = {"maxiter": maxiter, "disp": False}
@@ -148,12 +148,8 @@ def minimize_func(zflowTensor: xa.DataArray, rank: int, n_cluster: int, maxiter=
     tq.close()
 
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
-    optLL = -opt.fun
-    preNormCP = copy(optCP)
-    optCP = cp_normalize((None, optCP))
-    optVec = opt.x
-
-    return optNK, optCP, optPT, optLL, optVec, preNormCP
+    preNormCP = deepcopy(optCP)
+    return optNK, cp_normalize((None, optCP)), optPT, -opt.fun, opt.x, preNormCP
 
 
 def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=200):
@@ -167,7 +163,7 @@ def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=200):
     # Start generating splits and running model
     for train_index, test_index in kf.split(X[:, :, 0, 0, 0].T):
         # Train
-        _, _, _, _, x0, _ = minimize_func(X[:, train_index, :, :, :], numRank, numClusters, maxiter=maxiter, x0=x0)
+        _, _, _, _, x0, _ = minimize_func(X[:, train_index, :, :, :], numRank, numClusters, maxiter=maxiter, verbose=False, x0=x0)
         # Test
         test_ll = -maxloglik_ptnnp(x0, meanShape, numRank, X[:, test_index, :, :, :].to_numpy())
         logLik += test_ll

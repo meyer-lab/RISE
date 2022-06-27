@@ -98,7 +98,7 @@ def test_independence():
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, ptfac, ll, _, _ = minimize_func(data_import, 3, 10, maxiter=20)
+    nk, fac, ptfac, ll, _, _ = minimize_func(data_import, 3, 10, maxiter=20, verbose=False)
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert isinstance(loglik, float)
     assert isinstance(ll, float)
@@ -126,7 +126,7 @@ def test_cov_fit():
     cov = [[0.5, 0], [0, 2]]
     samples = np.transpose(np.random.multivariate_normal([3, 1], cov, 1000)).reshape((2, 1000, 1, 1, 1))
     samples = xa.DataArray(samples, dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"), coords={"Dim": ["X", "Y"], "Point": np.arange(0, 1000), "Throwaway 1": [1], "Throwaway 2": [1], "Throwaway 3": [1]})
-    _, _, optPT, _, _, _ = minimize_func(samples, rank=6, n_cluster=1, maxiter=2000)
+    _, _, optPT, _, _, _ = minimize_func(samples, rank=6, n_cluster=1, maxiter=2000, verbose=False)
     cholCov = covFactor_to_precisions(optPT, returnCov=True)
     cholCov = np.squeeze(cholCov[:, :, :, 0, 0, 0])
     covR = cholCov @ cholCov.T
