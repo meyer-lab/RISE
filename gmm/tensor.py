@@ -29,11 +29,11 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     factors = [jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
     # Rebuidling factors and ranks
 
-    precSym = jnp.zeros((shape[1], shape[1], rank))
+    precisions = jnp.zeros((shape[1], shape[1], rank))
     ai, bi = jnp.tril_indices(shape[1])
     pVec = vectorIn[nN[-1] : :].reshape(-1, rank)
-    precSym = precSym.at[ai, bi, :].set(pVec)
-    factors_pt = [factors[0], precSym, factors[2], factors[3], factors[4]]
+    precisions = precisions.at[ai, bi, :].set(pVec)
+    factors_pt = [factors[0], precisions, factors[2], factors[3], factors[4]]
     return rebuildnk, factors, factors_pt
 
 
@@ -98,26 +98,27 @@ def comparingGMMjax(X, nk, meanFact: list, tPrecision):
 
 def covFactor_to_precisions(covFac, returnCov=False):
     """Convert from the cholesky decomposition of the covariance matrix, to the precision matrix."""
-    covBuilt = jnp.einsum("ax,bcx,dx,ex,fx->abcdef", *covFac)
-    origShape = covBuilt.shape
+    cov_chol = jnp.einsum("ax,bcx,dx,ex,fx->abcdef", *covFac)
+    print(cov_chol[0, :, :, 0, 0, 0])
+    origShape = cov_chol.shape
     if returnCov:
-        return covBuilt
-    covBuilt = jnp.moveaxis(covBuilt, (1, 2), (4, 5))
-    Y = jnp.broadcast_to(jnp.eye(covBuilt.shape[4])[jnp.newaxis, jnp.newaxis, jnp.newaxis, jnp.newaxis, :, :], covBuilt.shape)
-    assert covBuilt.shape == Y.shape
-    precBuild = triangular_solve(covBuilt, Y, lower=True)
-    precBuild = jnp.moveaxis(precBuild, (4, 5), (1, 2))
-    assert origShape == precBuild.shape
-    return precBuild
+        return cov_chol
+    cov_chol = jnp.moveaxis(cov_chol, (1, 2), (4, 5))
+    Y = jnp.broadcast_to(jnp.eye(cov_chol.shape[4])[jnp.newaxis, jnp.newaxis, jnp.newaxis, jnp.newaxis, :, :], cov_chol.shape)
+    assert cov_chol.shape == Y.shape
+    prec_chol = triangular_solve(cov_chol, Y, lower=True)
+    prec_chol = jnp.moveaxis(prec_chol, (4, 5), (1, 2))
+    assert origShape == prec_chol.shape
+    return prec_chol
 
 
 def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     nk, meanFact, covFac = vector_to_cp_pt(facVector, rank, shape)
-    precBuild = covFactor_to_precisions(covFac)
+    prec_chol = covFactor_to_precisions(covFac)
 
     # Creating function that we want to minimize
-    return -comparingGMMjax(X, nk, meanFact, precBuild) / X.shape[1]
+    return -comparingGMMjax(X, nk, meanFact, prec_chol) / X.shape[1]
 
 
 def minimize_func(X: xa.DataArray, rank: int, n_cluster: int, maxiter=400, verbose=True, x0=None):
