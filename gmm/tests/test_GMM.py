@@ -8,7 +8,7 @@ import math
 from ..imports import smallDF
 from ..GMM import cvGMM
 from ..scImport import import_thompson_drug, ThompsonDrugXA
-from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions
+from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions, comparingGMMjax_NK
 
 data_import, other_import = smallDF(10)
 meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
@@ -135,3 +135,20 @@ def test_cov_fit():
     assert math.isclose(cov[1][0], covR[1][0], abs_tol=0.2)
     assert math.isclose(cov[0][1], covR[0][1], abs_tol=0.2)
     assert math.isclose(cov[1][1], covR[1][1], abs_tol=0.3)
+    
+def test_loglikelihood_NK():
+    """Testing to see if loglilihood is a number"""
+    cluster = 6
+    rank = 3
+    markers = 5
+    conditions = 4
+
+    # Think data isn't organized correctly.
+    X = np.random.rand(markers, 100, conditions)
+    nkFact = np.random.rand(cluster, rank)
+    meanFact = [np.random.rand(cluster, rank), np.random.rand(markers, rank), np.random.rand(conditions, rank)]
+    precBuild = np.random.rand(cluster, markers, markers, conditions)
+
+    ll = comparingGMMjax_NK(X, nkFact, meanFact, precBuild)
+    assert np.isfinite(ll)
+    
