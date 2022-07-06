@@ -5,12 +5,15 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def smallDF(numCells: int):
+def smallDF(numCells: int, hyperlog=False):
     """Creates Xarray of a specific # of experiments
     Zscores all markers per experiment but pSTAT5 normalized over all experiments
     Outputs amount of experiments and cell types as an Xarray"""
     # numCells = Amount of cells per experiment
-    flowArrow = pq.read_table("/opt/andrew/FlowDataGMM.pq")
+    if hyperlog is False:
+        flowArrow = pq.read_table("/opt/andrew/FlowDataGMM.pq")
+    else: 
+        flowArrow = pq.read_table("/opt/andrew/FlowDataGMM_hlog.pq")
     gVars = ["Time", "Dose", "Ligand", "Valency"]
     # Columns that should be trasformed
     tCols = ["Foxp3", "CD25", "CD45RA", "CD4"]
