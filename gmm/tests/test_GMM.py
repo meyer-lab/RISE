@@ -12,7 +12,7 @@ from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_gues
 
 data_import, other_import = smallDF(10)
 meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
-dataPA_import = ThompsonDrugXA(numCells=10, rank=10, maxit=20)
+dataPA_import, _, _ = ThompsonDrugXA(numCells=10, rank=10, maxit=20, runFacts=True)
 
 
 def test_cvGMM():
@@ -106,7 +106,7 @@ def test_fit():
 
 def test_import_PopAlign():
     """Stub test."""
-    dataPA_two = ThompsonDrugXA(numCells=20, rank=20, maxit=20)
+    dataPA_two, _, _ = ThompsonDrugXA(numCells=20, rank=20, maxit=20, runFacts=True)
     assert 2 * dataPA_import.shape[0] == dataPA_two.shape[0]
     assert 2 * dataPA_import.shape[1] == dataPA_two.shape[1]
     assert dataPA_import.shape[2] == dataPA_two.shape[2]
@@ -135,7 +135,8 @@ def test_cov_fit():
     assert math.isclose(cov[1][0], covR[1][0], abs_tol=0.2)
     assert math.isclose(cov[0][1], covR[0][1], abs_tol=0.2)
     assert math.isclose(cov[1][1], covR[1][1], abs_tol=0.3)
-    
+
+
 def test_loglikelihood_NK():
     """Testing to see if loglilihood is a number"""
     cluster = 6
@@ -151,4 +152,3 @@ def test_loglikelihood_NK():
 
     ll = comparingGMMjax_NK(X, nkFact, meanFact, precBuild)
     assert np.isfinite(ll)
-    

@@ -26,7 +26,10 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     nN = np.cumsum(np.array(shape) * rank)
     nN = np.insert(nN, 0, 0)
 
-    factors = [jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank)) for ii in range(len(shape))]
+    factors = [
+        jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank))
+        for ii in range(len(shape))
+    ]
     # Rebuidling factors and ranks
 
     precisions = jnp.zeros((shape[1], shape[1], rank))
@@ -39,13 +42,19 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
 
 def vector_guess(shape: tuple, rank: int):
     """Predetermines total vector that will be maximized for NK, factors and core"""
-    factortotal = np.sum(shape) * rank + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank + shape[0]
+    factortotal = (
+        np.sum(shape) * rank
+        + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
+        + shape[0]
+    )
     vector = np.random.normal(loc=-1.0, size=factortotal)
-    vector[0: shape[0]] = 1
+    vector[0 : shape[0]] = 1
     return vector
 
 
-def comparingGMM(zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np.ndarray):
+def comparingGMM(
+    zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np.ndarray
+):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
     assert nk.ndim == 1
@@ -64,9 +73,16 @@ def comparingGMM(zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np
         if np.all(np.isnan(Xcur)):  # Skip if there's no data
             continue
 
-        gmm = GaussianMixture(n_components=nk.size, covariance_type="full", means_init=tMeans[:, :, i, j, k], weights_init=nk)
+        gmm = GaussianMixture(
+            n_components=nk.size,
+            covariance_type="full",
+            means_init=tMeans[:, :, i, j, k],
+            weights_init=nk,
+        )
         gmm._initialize(Xcur, np.ones((X.shape[1], nk.size)))  # Markers x Clusters
-        gmm.precisions_cholesky_ = tPrecision[:, :, :, i, j, k]  # Cluster x Marker x Marker
+        gmm.precisions_cholesky_ = tPrecision[
+            :, :, :, i, j, k
+        ]  # Cluster x Marker x Marker
         loglik += np.sum(gmm.score_samples(Xcur))
 
     return loglik
@@ -83,7 +99,7 @@ def comparingGMMjax(X, nk, meanFact: list, tPrecision):
     log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :, :, :], axis=2))
     log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
-    # Need to check here for the sum 
+    # Need to check here for the sum
     # The determinant of the precision matrix from the Cholesky decomposition
     # corresponds to the negative half of the determinant of the full precision matrix.
     # In short: det(precision_chol) = - det(precision) / 2
@@ -92,7 +108,14 @@ def comparingGMMjax(X, nk, meanFact: list, tPrecision):
 
     # Since we are using the precision of the Cholesky decomposition,
     # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
-    loglik = jnp.sum(jsp.logsumexp(log_prob + log_det[jnp.newaxis, :, :, :, :] + nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis], axis=1))
+    loglik = jnp.sum(
+        jsp.logsumexp(
+            log_prob
+            + log_det[jnp.newaxis, :, :, :, :]
+            + nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis],
+            axis=1,
+        )
+    )
     return loglik
 
 
@@ -109,7 +132,7 @@ def comparingGMMjax_NK(X, nkFact, meanFact: list, tPrecision):
     log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :], axis=2))
     log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
-    # Need to check here for the sum 
+    # Need to check here for the sum
     # The determinant of the precision matrix from the Cholesky decomposition
     # corresponds to the negative half of the determinant of the full precision matrix.
     # In short: det(precision_chol) = - det(precision) / 2
@@ -118,7 +141,11 @@ def comparingGMMjax_NK(X, nkFact, meanFact: list, tPrecision):
 
     # Since we are using the precision of the Cholesky decomposition,
     # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
-    loglik = jnp.sum(jsp.logsumexp(log_prob + log_det[jnp.newaxis, :, :] + nkl[jnp.newaxis, :, :], axis=1))
+    loglik = jnp.sum(
+        jsp.logsumexp(
+            log_prob + log_det[jnp.newaxis, :, :] + nkl[jnp.newaxis, :, :], axis=1
+        )
+    )
     return loglik
 
 
@@ -129,7 +156,12 @@ def covFactor_to_precisions(covFac, returnCov=False):
     if returnCov:
         return cov_chol
     cov_chol = jnp.moveaxis(cov_chol, (1, 2), (4, 5))
-    Y = jnp.broadcast_to(jnp.eye(cov_chol.shape[4])[jnp.newaxis, jnp.newaxis, jnp.newaxis, jnp.newaxis, :, :], cov_chol.shape)
+    Y = jnp.broadcast_to(
+        jnp.eye(cov_chol.shape[4])[
+            jnp.newaxis, jnp.newaxis, jnp.newaxis, jnp.newaxis, :, :
+        ],
+        cov_chol.shape,
+    )
     assert cov_chol.shape == Y.shape
     prec_chol = triangular_solve(cov_chol, Y, lower=True)
     prec_chol = jnp.moveaxis(prec_chol, (4, 5), (1, 2))
@@ -146,7 +178,9 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     return -comparingGMMjax(X, nk, meanFact, prec_chol) / X.shape[1]
 
 
-def minimize_func(X: xa.DataArray, rank: int, n_cluster: int, maxiter=400, verbose=True, x0=None):
+def minimize_func(
+    X: xa.DataArray, rank: int, n_cluster: int, maxiter=400, verbose=True, x0=None
+):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, X.shape[0], X.shape[2], X.shape[3], X.shape[4])
 
@@ -165,12 +199,26 @@ def minimize_func(X: xa.DataArray, rank: int, n_cluster: int, maxiter=400, verbo
 
     def callback(_, state):
         gNorm = np.linalg.norm(state.grad)
-        tq.set_postfix(val='{:.2e}'.format(state.fun), g='{:.1e}'.format(gNorm), refresh=False)
+        tq.set_postfix(
+            val="{:.2e}".format(state.fun), g="{:.2e}".format(gNorm), refresh=False
+        )
         tq.update(1)
 
     opts = {"maxiter": maxiter, "disp": False}
-    bounds = ((np.log(1e-1), np.log(1e1)), ) * n_cluster + ((np.log(1e-6), np.log(100.0)), ) * (len(x0) - n_cluster)
-    opt = minimize(func, x0, jac=True, hessp=hvpj, callback=callback, method="trust-constr", bounds=bounds, args=args, options=opts)
+    bounds = ((np.log(1e-1), np.log(1e1)),) * n_cluster + (
+        (np.log(1e-6), np.log(100.0)),
+    ) * (len(x0) - n_cluster)
+    opt = minimize(
+        func,
+        x0,
+        jac=True,
+        hessp=hvpj,
+        callback=callback,
+        method="trust-constr",
+        bounds=bounds,
+        args=args,
+        options=opts,
+    )
     tq.close()
 
     optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
@@ -189,9 +237,18 @@ def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter=200):
     # Start generating splits and running model
     for train_index, test_index in kf.split(X[:, :, 0, 0, 0].T):
         # Train
-        _, _, _, _, x0, _ = minimize_func(X[:, train_index, :, :, :], numRank, numClusters, maxiter=maxiter, verbose=False, x0=x0)
+        _, _, _, _, x0, _ = minimize_func(
+            X[:, train_index, :, :, :],
+            numRank,
+            numClusters,
+            maxiter=maxiter,
+            verbose=False,
+            x0=x0,
+        )
         # Test
-        test_ll = -maxloglik_ptnnp(x0, meanShape, numRank, X[:, test_index, :, :, :].to_numpy())
+        test_ll = -maxloglik_ptnnp(
+            x0, meanShape, numRank, X[:, test_index, :, :, :].to_numpy()
+        )
         logLik += test_ll
 
     return float(logLik)
@@ -201,9 +258,11 @@ def sample_GMM(weights_, means_, cholCovs, n_samples):
     n_samples_comp = np.random.multinomial(n_samples, weights_)
 
     X = np.vstack(
-        [np.random.multivariate_normal(mean, cholCov @ cholCov.T, int(sample))
-            for (mean, cholCov, sample) in zip(
-                means_, cholCovs, n_samples_comp)])
+        [
+            np.random.multivariate_normal(mean, cholCov @ cholCov.T, int(sample))
+            for (mean, cholCov, sample) in zip(means_, cholCovs, n_samples_comp)
+        ]
+    )
     y = np.concatenate(
         [np.full(sample, j, dtype=int) for j, sample in enumerate(n_samples_comp)]
     )
