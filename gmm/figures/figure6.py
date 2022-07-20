@@ -1,3 +1,6 @@
+"""
+Creating synthetic data and running tGMM to calculate NK and factors 
+"""
 import numpy as np
 import pandas as pd
 import seaborn as sns

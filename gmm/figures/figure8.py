@@ -1,5 +1,5 @@
 """
-This creates Figure 4.
+Investigating synthetic data based on results from tGMM for IL-2 dataset
 """
 import numpy as np
 import pandas as pd

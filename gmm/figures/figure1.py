@@ -1,5 +1,5 @@
 """
-This creates Figure 1.
+Determining how well the IL-2 dataset is able to fit the output of the GMM
 """
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF

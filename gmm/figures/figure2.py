@@ -1,5 +1,5 @@
 """
-This creates Figure 2.
+Investigating output of GMM without tensor decomp: Looking at how markers vary over time/dose
 """
 import seaborn as sns
 

@@ -16,11 +16,17 @@ from tensorly.cp_tensor import cp_normalize
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
 
-def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
+def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, nk_rearrange=False):
     """Converts linear vector to factors"""
     vectorIn = jnp.exp(vectorIn)
-    rebuildnk = vectorIn[0 : shape[0]]
-    vectorIn = vectorIn[shape[0] : :]
+    if nk_rearrange is False:
+        rebuildnk = vectorIn[0 : shape[0]]
+        vectorIn = vectorIn[shape[0] : :]
+
+    else:
+        rebuildnk = vectorIn[0 : (shape[0] * rank)]
+        rebuildnk = jnp.reshape(rebuildnk, (shape[0], rank))
+        vectorIn = vectorIn[(shape[0] * rank) : :]
 
     # Shape of tensor for means or precision matrix
     nN = np.cumsum(np.array(shape) * rank)
@@ -40,13 +46,21 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple):
     return rebuildnk, factors, factors_pt
 
 
-def vector_guess(shape: tuple, rank: int):
+def vector_guess(shape: tuple, rank: int, nk_rearrange=False):
     """Predetermines total vector that will be maximized for NK, factors and core"""
-    factortotal = (
-        np.sum(shape) * rank
-        + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
-        + shape[0]
-    )
+
+    if nk_rearrange is False:
+        factortotal = (
+            np.sum(shape) * rank
+            + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
+            + shape[0]
+        )
+    else:
+        factortotal = (
+            np.sum(shape) * rank
+            + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
+            + (rank * shape[0])
+        )
     vector = np.random.normal(loc=-1.0, size=factortotal)
     vector[0 : shape[0]] = 1
     return vector
@@ -178,17 +192,48 @@ def maxloglik_ptnnp(facVector, shape: tuple, rank: int, X):
     return -comparingGMMjax(X, nk, meanFact, prec_chol) / X.shape[1]
 
 
+def maxloglik_ptnnp_NK(facVector, shape: tuple, rank: int, X):
+    """Function used to rebuild tMeans from factors and maximize log-likelihood"""
+    nk, meanFact, covFac = vector_to_cp_pt(facVector, rank, shape, nk_rearrange=True)
+    prec_chol = covFactor_to_precisions(covFac)
+
+    meanFact = [meanFact[0], meanFact[1], meanFact[2]]
+
+    prec_chol = jnp.reshape(
+        prec_chol,
+        (
+            prec_chol.shape[0],
+            prec_chol.shape[1],
+            prec_chol.shape[2],
+            prec_chol.shape[3],
+        ),
+    )
+    X = jnp.reshape(X, (X.shape[0], X.shape[1], X.shape[2]))
+    # Creating function that we want to minimize
+    return -comparingGMMjax_NK(X, nk, meanFact, prec_chol) / X.shape[1]
+
+
 def minimize_func(
-    X: xa.DataArray, rank: int, n_cluster: int, maxiter=400, verbose=True, x0=None
+    X: xa.DataArray,
+    rank: int,
+    n_cluster: int,
+    maxiter=400,
+    verbose=True,
+    x0=None,
+    nk_rearrange=False,
 ):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, X.shape[0], X.shape[2], X.shape[3], X.shape[4])
 
     args = (meanShape, rank, X.to_numpy())
-    func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
+
+    if nk_rearrange is False:
+        func = jit(value_and_grad(maxloglik_ptnnp), static_argnums=(1, 2))
+    else:
+        func = jit(value_and_grad(maxloglik_ptnnp_NK), static_argnums=(1, 2))
 
     if x0 is None:
-        x0 = vector_guess(meanShape, rank)
+        x0 = vector_guess(meanShape, rank, nk_rearrange=nk_rearrange)
 
     def hvp(x, v, *argss):
         return grad(lambda x: jnp.vdot(func(x, *argss)[1], v))(x)
@@ -221,8 +266,12 @@ def minimize_func(
     )
     tq.close()
 
-    optNK, optCP, optPT = vector_to_cp_pt(opt.x, rank, meanShape)
+    optNK, optCP, optPT = vector_to_cp_pt(
+        opt.x, rank, meanShape, nk_rearrange=nk_rearrange
+    )
+
     preNormCP = deepcopy(optCP)
+
     return optNK, cp_normalize((None, optCP)), optPT, -opt.fun, opt.x, preNormCP
 
 

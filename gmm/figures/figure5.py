@@ -1,5 +1,5 @@
 """
-This creates Figure 5.
+Investigating best cluster/rank combination from tGMM for IL-2 dataset
 """
 import numpy as np
 import pandas as pd

@@ -1,5 +1,5 @@
 """
-This creates Figure 4.
+Investigating NK, covariance, and factors from tGMM for IL-2 dataset
 """
 import numpy as np
 import pandas as pd
