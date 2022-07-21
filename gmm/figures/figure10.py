@@ -42,7 +42,7 @@ def makeFigure():
     ]
     maximizedFactors[2] = reorder_table(maximizedFactors[2])
 
-    NK_DF = pd.DataFrame(data=maximizedNK, columns=clustArray, index=rankCol)
+    NK_DF = pd.DataFrame(data=maximizedNK, columns=rankCol, index=clustArray)
     sns.heatmap(data=NK_DF, ax=ax[1])
     
     for i in range(0, len(maximizedFactors)):
