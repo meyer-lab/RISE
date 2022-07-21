@@ -313,7 +313,7 @@ def sample_GMM(weights_, means_, cholCovs, n_samples):
         ]
     )
     y = np.concatenate(
-        [np.full(sample, j, dtype=int) for j, sample in enumerate(n_samples_comp)]
+        [np.full(sample, j+1, dtype=int) for j, sample in enumerate(n_samples_comp)]
     )
     return X, y
 

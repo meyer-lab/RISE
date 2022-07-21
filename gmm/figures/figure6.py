@@ -32,7 +32,6 @@ def makeFigure():
         sns.scatterplot(data=points_DF, x="X", y="Y", hue="Cluster", palette="tab10", ax=ax[i + 8])
         ax[i+8].set(xlim=(-.2, 2.2), ylim=(-.2, 2.2))
 
-
     ax[4].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
     xlabel = "Cluster"
     ylabel = "NK Value"
