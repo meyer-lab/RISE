@@ -137,12 +137,16 @@ def ThompsonDrugXA(numCells: int, rank: int, maxit: int, runFacts=False):
     sse_error = np.empty(len(rank_vec))
 
     if runFacts:
+        columns = finalDF.drop("Drug", axis=1).columns
         for i in range(len(rank_vec)):
-            _, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0, maxiteration=maxit)
-            # np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Components.npy"), geneFactors)
+            loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0, maxiteration=maxit)
+            # loadingsDF = pd.DataFrame(data=loadings, columns=columns)
+            # loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
+            # np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Scores.npy"), geneFactors)
+            # loadingsDF.to_csv(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Loadings.csv"))
         # np.save(join(path_here, "gmm/data/NNMF_Errors.npy"), sse_error)
     else:
-        geneFactors = np.load(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank) + "_Components.npy"))
+        geneFactors = np.load(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank) + "_Scores.npy"))
         sse_error = np.load(join(path_here, "gmm/data/NNMF_Errors.npy"))[0:rank]
 
     cmpCol = [f"Fac. {i}" for i in np.arange(1, rank + 1)]
