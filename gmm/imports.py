@@ -44,7 +44,6 @@ def smallDF(numCells: int, hyperlog=False):
     flowDF = flowDF.loc[flowDF["Time"] != 0.5]
 
     flowDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(flowDF.shape[0] / numCells))
-    flowDF[transCols] = flowDF[transCols].clip(lower=0)
     flowDF = flowDF.set_index(["Cell", "Time", "Dose", "Ligand"]).to_xarray()
     cell_type = flowDF["Cell Type"]
     flowDF = flowDF.drop_vars(["Cell Type"])

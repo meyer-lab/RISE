@@ -22,9 +22,10 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
-    zflowTensor, _ = smallDF(cellperexp, hyperlog=False)
+    zflowTensor, _ = smallDF(cellperexp, hyperlog=True)
     rank = 4
     n_cluster = 6
+    print(np.amin(zflowTensor.data))
 
     time = 1.0
     ligand = "WT N-term-2"
