@@ -1,6 +1,8 @@
 """
 Calculating SSE, NK and factors for PopAlign scRNA-seq 
 """
+import os
+from os.path import join
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -8,6 +10,9 @@ from .common import subplotLabel, getSetup
 from gmm.scImport import ThompsonDrugXA, gene_import
 from gmm.tensor import minimize_func, tensorGMM_CV
 import scipy.cluster.hierarchy as sch
+
+
+path_here = os.path.dirname(os.path.dirname(__file__))
 
 
 def makeFigure():
@@ -48,7 +53,7 @@ def makeFigure():
 
     for i in range(0, len(maximizedFactors)):
         sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 2])
-
+    drug_gene_plot(maximizedFactors, "Alprostadil", fac, ax[5])
     # ranknumb = np.arange(2, 6)
     # n_cluster = np.arange(2, 6)
 
@@ -76,3 +81,20 @@ def reorder_table(df):
     index = sch.dendrogram(y, orientation="right")["leaves"]
 
     return df.iloc[index, :]
+
+
+def drug_gene_plot(factors_frame, drug, fac, ax):
+    """Plots genes most associated with factor which is most associated with a drug"""
+    max_fac = factors_frame[2].max(axis=1).loc[drug]
+    max_drug_comp = factors_frame[2].transpose()[factors_frame[2].transpose()[drug] == max_fac].index.values
+    max_fac_val = factors_frame[1][max_drug_comp].max().to_frame().values[0][0]
+    max_fac_comp = factors_frame[1][factors_frame[1][max_drug_comp[0]] == max_fac_val].index.values
+    NNMF_Comp = float(max_fac_comp[0][5::])
+    geneFactors = pd.read_csv(join(path_here, "data/NNMF_Facts/NNMF_" + str(fac) + "_Loadings.csv")).drop("Unnamed: 0", axis=1)
+    isoFac = geneFactors.loc[geneFactors.Component == NNMF_Comp].drop("Component", axis=1).transpose()
+    isoFac = isoFac.reset_index()
+    isoFac.columns = ["Gene", max_fac_comp[0]]
+    isoFac = isoFac.sort_values(by=max_fac_comp[0]).tail(10)
+    sns.barplot(data=isoFac, x="Gene", y=max_fac_comp[0], ax=ax, color='k')
+    ax.set(title="Genes Upregulated by " + drug)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
