@@ -46,7 +46,7 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, nk_rearrange=False):
     return rebuildnk, factors, factors_pt
 
 
-def vector_guess(shape: tuple, rank: int, nk_rearrange=False):
+def vector_guess(shape: tuple, rank: int, seed=None, nk_rearrange=False):
     """Predetermines total vector that will be maximized for NK, factors and core"""
 
     if nk_rearrange is False:
@@ -61,8 +61,11 @@ def vector_guess(shape: tuple, rank: int, nk_rearrange=False):
             + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
             + (rank * shape[0])
         )
-    vector = np.random.normal(loc=-1.0, size=factortotal)
+
+    rng = np.random.default_rng(seed)
+    vector = rng.normal(loc=-1.0, size=factortotal)
     vector[0 : shape[0]] = 1
+
     return vector
 
 
@@ -221,6 +224,7 @@ def minimize_func(
     verbose=True,
     x0=None,
     nk_rearrange=False,
+    seed=None
 ):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, X.shape[0], X.shape[2], X.shape[3], X.shape[4])
@@ -233,7 +237,7 @@ def minimize_func(
         func = jit(value_and_grad(maxloglik_ptnnp_NK), static_argnums=(1, 2))
 
     if x0 is None:
-        x0 = vector_guess(meanShape, rank, nk_rearrange=nk_rearrange)
+        x0 = vector_guess(meanShape, rank, seed=seed, nk_rearrange=nk_rearrange)
 
     def hvp(x, v, *argss):
         return grad(lambda x: jnp.vdot(func(x, *argss)[1], v))(x)
@@ -313,7 +317,7 @@ def sample_GMM(weights_, means_, cholCovs, n_samples):
         ]
     )
     y = np.concatenate(
-        [np.full(sample, j+1, dtype=int) for j, sample in enumerate(n_samples_comp)]
+        [np.full(sample, j + 1, dtype=int) for j, sample in enumerate(n_samples_comp)]
     )
     return X, y
 

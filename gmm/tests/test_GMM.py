@@ -98,10 +98,13 @@ def test_independence():
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, ptfac, ll, _, _ = minimize_func(data_import, 3, 10, maxiter=20, verbose=False)
+    nk, fac, ptfac, ll, _, _ = minimize_func(data_import, 3, 10, maxiter=20, seed=1, verbose=False)
+    nkTwo, facTwo, ptfacTwo, llTwo, _, _ = minimize_func(data_import, 3, 10, maxiter=20, seed=1, verbose=False)
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert isinstance(loglik, float)
     assert isinstance(ll, float)
+    np.testing.assert_allclose(ll, llTwo)
+    np.testing.assert_allclose(nk, nkTwo)
 
 
 def test_import_PopAlign():
