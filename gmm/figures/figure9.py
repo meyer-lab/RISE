@@ -1,12 +1,10 @@
 """
 Comparing synthetic based data from output of tGMM to original IL-2 dataset
 """
-import enum
-from optparse import Values
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from .common import subplotLabel, getSetup
+from .common import subplotLabel, getSetup, add_ellipse
 from gmm.imports import smallDF
 from gmm.tensor import minimize_func, gen_points_GMM, markerslist
 
@@ -21,11 +19,11 @@ def makeFigure():
 
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-    cellperexp = 200
-    zflowTensor, _ = smallDF(cellperexp, hyperlog=True)
-    rank = 4
-    n_cluster = 6
-    print(np.amin(zflowTensor.data))
+    cellperexp = 100
+    zflowTensor, _ = smallDF(cellperexp, hyperlog=False)
+    rank = 3
+    n_cluster = 3
+    assert np.amin(zflowTensor.data) < 0
 
     time = 1.0
     ligand = "WT N-term-2"
@@ -45,8 +43,9 @@ def makeFigure():
 
     markertotal["Dose"] = markDF["Dose"].values
     markertotal["Cell"] = markDF["Cell"].values
-
     dose_unique = np.unique(markDF["Dose"].values)
+
+    colorpal = sns.color_palette("tab10", n_cluster)
 
     for dose in range(0, 12):
         points = gen_points_GMM(
@@ -77,6 +76,19 @@ def makeFigure():
             ax=ax[dose * 2],
             s=5,
         )
+        add_ellipse(
+            timei,
+            dose,
+            ligandi,
+            preNormOptCP,
+            optPTfactors,
+            "pSTAT5",
+            "CD25",
+            n_cluster,
+            ax[dose * 2],
+            colorpal,
+            datatype="IL2",
+        )
         sns.scatterplot(
             data=markertotal.loc[markertotal["Dose"] == dose_unique[dose]],
             x="pSTAT5",
@@ -88,7 +100,7 @@ def makeFigure():
             xlim=(-5, 5),
             ylim=(-5, 5),
             title=ligand
-            + " at time "
+            + " at Time "
             + str(time)
             + " at nM="
             + str(zflowTensor.Dose.values[dose]),

@@ -6,7 +6,12 @@ import sys
 import time
 import seaborn as sns
 import matplotlib
+import numpy as np
+import tensorly as tl
 from matplotlib import gridspec, pyplot as plt
+from matplotlib.patches import Ellipse
+from gmm.tensor import markerslist, covFactor_to_precisions
+
 
 matplotlib.use("AGG")
 
@@ -70,3 +75,58 @@ def genFigure():
     ff.savefig(fdir + nameOut + ".svg", dpi=300, bbox_inches="tight", pad_inches=0)
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
+
+
+def add_ellipse(
+    timei,
+    dosei,
+    ligandi,
+    preNormCP,
+    optPT,
+    marker1,
+    marker2,
+    n_cluster,
+    ax,
+    colorpal,
+    datatype,
+):
+    """Adding necessary conditons to form elipse around clusters for data points based on factors with respect to sns."""
+
+    if datatype == "IL2":
+        markerVec = np.zeros(len(markerslist), dtype=bool)
+        markerVec[markerslist.index(marker1)] = 1
+        markerVec[markerslist.index(marker2)] = 1
+
+        markerProj = np.zeros((2, len(markerslist)), dtype=bool)
+        markerProj[0, markerslist.index(marker1)] = 1
+        markerProj[1, markerslist.index(marker2)] = 1
+    else:
+        markerVec = np.ones(2, dtype=bool)
+        markerProj = np.eye(2, dtype=bool)
+
+    means = tl.cp_to_tensor((None, preNormCP))
+    means = means[:, markerVec, timei, dosei, ligandi]
+    coVars = covFactor_to_precisions(optPT, returnCov=True)
+    coVars = np.squeeze(np.asarray(coVars[:, :, :, timei, dosei, ligandi]))
+
+    for i in range(n_cluster):
+        cholCov = coVars[i, :, :]
+        covar = cholCov @ cholCov.T
+        covar = markerProj @ covar @ markerProj.T
+        U, S, _ = np.linalg.svd(covar)
+        S = np.sqrt(S)
+        angle = np.angle(U[0, 0] + U[1, 0] * 1j, deg=True)
+
+        elipse = Ellipse(
+            xy=means[i],
+            width=3 * S[0],
+            height=3 * S[1],
+            edgecolor=colorpal[i],
+            fill=False,
+            facecolor=None,
+            angle=angle,
+        )
+
+        ax.add_artist(elipse)
+
+    return
