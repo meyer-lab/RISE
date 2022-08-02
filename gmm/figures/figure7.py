@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from .common import subplotLabel, getSetup
-from gmm.scImport import ThompsonDrugXA, gene_import
-from gmm.tensor import minimize_func, tensorGMM_CV
+from .common import getSetup
+from gmm.scImport import ThompsonDrugXA
+from gmm.tensor import minimize_func
 import scipy.cluster.hierarchy as sch
 
 
@@ -25,9 +25,7 @@ def makeFigure():
 
     # geneDF = gene_import(offset=1.1,filter=True)
 
-    num = 290
-    fac = 15
-    drugXA, fac_vector, sse = ThompsonDrugXA(numCells=num, rank=fac, maxit=2000, runFacts=False)
+    drugXA, fac_vector, sse = ThompsonDrugXA(rank=20, runFacts=True)
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
     ylabel = "SSE"
@@ -35,6 +33,7 @@ def makeFigure():
 
     rank = 4
     clust = 4
+    fac = 20
     maximizedNK, optCP, _, x, _, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=False)
     print("LogLik", x)
 

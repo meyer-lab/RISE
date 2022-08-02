@@ -1,18 +1,18 @@
 """
 Test the data import.
 """
+import pytest
 import pandas as pd
 import numpy as np
 import xarray as xa
 import math
 from ..imports import smallDF
 from ..GMM import cvGMM
-from ..scImport import import_thompson_drug, ThompsonDrugXA
+from ..scImport import ThompsonDrugXA
 from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions, comparingGMMjax_NK
 
 data_import, other_import = smallDF(10)
 meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
-dataPA_import, _, _ = ThompsonDrugXA(numCells=10, rank=10, maxit=20, runFacts=True)
 
 
 def test_cvGMM():
@@ -107,21 +107,18 @@ def test_fit():
     np.testing.assert_allclose(nk, nkTwo)
 
 
-def test_import_PopAlign():
-    """Stub test."""
-    dataPA_two, _, _ = ThompsonDrugXA(numCells=20, rank=20, maxit=20, runFacts=True)
-    assert 2 * dataPA_import.shape[0] == dataPA_two.shape[0]
-    assert 2 * dataPA_import.shape[1] == dataPA_two.shape[1]
-    assert dataPA_import.shape[2] == dataPA_two.shape[2]
-    assert dataPA_import.shape[3] == dataPA_two.shape[3]
-    assert dataPA_import.shape[4] == dataPA_two.shape[4]
+@pytest.mark.parametrize("rank", [3, 10])
+@pytest.mark.parametrize("nCell", [20, 290])
+def test_import_PopAlign(nCell, rank):
+    """Test the scRNAseq import."""
+    dataPA_import, _, _ = ThompsonDrugXA(numCells=nCell, rank=rank, runFacts=True, saveFacts=False)
+    assert dataPA_import.shape == (rank, nCell, 46, 1, 1)
+    assert np.isfinite(dataPA_import.to_numpy()).all()
 
 
 def test_finite_data():
     """Test that all values in tensor has no NaN"""
-
     assert np.isfinite(data_import.to_numpy()).all()
-    assert np.isfinite(dataPA_import.to_numpy()).all()
 
 
 def test_cov_fit():

@@ -106,7 +106,7 @@ def gene_filter(geneDF, mean, std, offset_value=1.0):
     return finalDF, above_idx
 
 
-def geneNNMF(X, k=14, verbose=0, maxiteration=2000):
+def geneNNMF(X, k=14, verbose=0, maxiteration=50000):
     """Turn gene expression into cells X components"""
     model = NMF(n_components=k, verbose=verbose, max_iter=maxiteration, tol=1e-6)
     X = X.drop("Drug", axis=1)
@@ -119,47 +119,49 @@ def geneNNMF(X, k=14, verbose=0, maxiteration=2000):
 
 def gene_import(offset=1.0, filter=False):
     """Imports gene data from PopAlign and perfroms gene filtering process"""
-    genesDF, geneNames = import_thompson_drug()
+    genesDF, _ = import_thompson_drug()
     filteredGeneDF, logmean, logstd = mu_sigma_normalize(genesDF, scalingfactor=1000)
     if filter == True:
-        filteredGeneDF, filtered_index = gene_filter(filteredGeneDF, logmean, logstd, offset_value=offset)
+        filteredGeneDF, _ = gene_filter(filteredGeneDF, logmean, logstd, offset_value=offset)
     return filteredGeneDF
 
 
-def ThompsonDrugXA(numCells: int, rank: int, maxit: int, runFacts=False):
+def ThompsonDrugXA(numCells: int = 290, rank: int = 15, runFacts=False, saveFacts=False):
     """Converts DF to Xarray given number of cells, factor number, and max iter: Factor, CellNumb, Drug, Empty, Empty"""
-    # finalDF = pd.read_csv("/opt/andrew/FilteredDrugs_Offset1.3.csv")
-    finalDF = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv")
-    finalDF.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
-    finalDF = finalDF.groupby(by="Drug").sample(n=numCells).reset_index(drop=True)
-
     rank_vec = np.arange(1, rank + 1)
     sse_error = np.empty(len(rank_vec))
 
     if runFacts:
+        finalDF = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
+        finalDF.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
+        finalDF = finalDF.groupby(by="Drug").sample(n=numCells).reset_index(drop=True)
         columns = finalDF.drop("Drug", axis=1).columns
-        for i in range(len(rank_vec)):
-            loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0, maxiteration=maxit)
-            # loadingsDF = pd.DataFrame(data=loadings, columns=columns)
-            # loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
-            # np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Scores.npy"), geneFactors)
-            # loadingsDF.to_csv(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Loadings.csv"))
-        # np.save(join(path_here, "gmm/data/NNMF_Errors.npy"), sse_error)
+        if saveFacts:
+            for i in range(len(rank_vec)):
+                loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0)
+                loadingsDF = pd.DataFrame(data=loadings, columns=columns)
+                loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
+                geneFactors = np.append(geneFactors, np.reshape(finalDF["Drug"].values, (-1, 1)), 1)
+                np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Scores.npy"), geneFactors)
+                loadingsDF.to_csv(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Loadings.csv"))
+            np.save(join(path_here, "gmm/data/NNMF_Errors.npy"), sse_error)
+        else:
+            _, geneFactors, _ = geneNNMF(finalDF, k=rank, verbose=0)
+            geneFactors = np.append(geneFactors, np.reshape(finalDF["Drug"].values, (-1, 1)), 1)
     else:
-        geneFactors = np.load(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank) + "_Scores.npy"))
-        sse_error = np.load(join(path_here, "gmm/data/NNMF_Errors.npy"))[0:rank]
+        geneFactors = np.load(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank) + "_Scores.npy"), allow_pickle=True)
+        sse_error = np.load(join(path_here, "gmm/data/NNMF_Errors.npy"), allow_pickle=True)[0:rank]
 
     cmpCol = [f"Fac. {i}" for i in np.arange(1, rank + 1)]
-    PopAlignDF = pd.DataFrame(data=geneFactors, columns=cmpCol)
-    PopAlignDF["Drug"] = finalDF["Drug"].values
+    PopAlignDF = pd.DataFrame(data=geneFactors, columns=cmpCol + ["Drug"])
     PopAlignDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(PopAlignDF.shape[0] / numCells))
 
     PopAlignXA = PopAlignDF.set_index(["Cell", "Drug"]).to_xarray()
     PopAlignXA = PopAlignXA[cmpCol].to_array(dim="Factor")
 
-    npPopAlign = np.reshape(PopAlignXA.to_numpy(), (PopAlignXA.shape[0], PopAlignXA.shape[1], -1, 1, 1))
+    npPopAlign = np.reshape(PopAlignXA.to_numpy(), (PopAlignXA.shape[0], PopAlignXA.shape[1], -1, 1, 1)).astype('float64')
     PopAlignXA = xa.DataArray(npPopAlign, dims=("Factor", "Cell", "Drug", "Throwaway 1", "Throwaway 2"),
         coords={"Factor": cmpCol, "Cell": np.arange(1, numCells + 1),
-            "Drug": finalDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"],},)
+            "Drug": PopAlignDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"],},)
 
     return PopAlignXA, rank_vec, sse_error
