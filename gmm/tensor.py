@@ -254,8 +254,9 @@ def minimize_func(
         tq.update(1)
 
     opts = {"maxiter": maxiter, "disp": False}
-    bounds = ((np.log(1e-1), np.log(1e1)),) * n_cluster + (
-        (np.log(1e-6), np.log(100.0)),
+    # Add bounds (note these are in log-space)
+    bounds = ((np.log(0.1), 0.0)) * n_cluster + (
+        (0.0 + np.eps, np.inf),
     ) * (len(x0) - n_cluster)
     opt = minimize(
         func,
