@@ -30,7 +30,7 @@ def smallDF(numCells: int, hyperlog=False):
     for mark in transCols:
         flowDF = flowDF[flowDF[mark] < flowDF[mark].quantile(0.995)]  # Getting rid of outlier values
     flowDF[tCols] = flowDF.groupby(by=gVars)[tCols].transform(lambda x: x / np.std(x))  # Dividing by std per experiement
-    flowDF = flowDF.groupby(by=gVars).sample(n=numCells).reset_index(drop=True)
+    flowDF = flowDF.groupby(by=gVars).sample(n=numCells, random_state=1).reset_index(drop=True)
 
     # Add valency to the name
     flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].apply(lambda x: f"{x:.0f}")

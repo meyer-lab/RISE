@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, markerslist
+from gmm.tensor import minimize_func, markerslist, optimal_seed
 
 
 def makeFigure():
@@ -21,16 +21,28 @@ def makeFigure():
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
     zflowTensor, _ = smallDF(cellperexp, hyperlog=False)
-    rank = 4
-    n_cluster = 6
+    rank = 5
+    n_cluster = 4
 
-    maximizedNK, optCP, optPTfactors, _, _, _ = minimize_func(
-        zflowTensor, rank=rank, n_cluster=n_cluster, seed=0
+    optimalseed, min_loglik = optimal_seed(
+        2, zflowTensor, rank=rank, n_cluster=n_cluster
+    )
+    print(optimalseed)
+    print(min_loglik)
+
+    maximizedNK, optCP, optPTfactors, x, _, _ = minimize_func(
+        zflowTensor, rank=rank, n_cluster=n_cluster, seed=optimalseed
     )
     ptMarkerPatterns = optPTfactors[1]
 
+    print("LogLik", x)
+
     for i in range(3):
-        dff = pd.DataFrame(ptMarkerPatterns[:, :, i] @ ptMarkerPatterns[:, :, i].T, columns=markerslist, index=markerslist)
+        dff = pd.DataFrame(
+            ptMarkerPatterns[:, :, i] @ ptMarkerPatterns[:, :, i].T,
+            columns=markerslist,
+            index=markerslist,
+        )
         sns.heatmap(data=dff, ax=ax[i])
         ax[i].set(title="Covariance: Rank - " + str(i))
 
