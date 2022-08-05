@@ -10,7 +10,7 @@ from sklearn.model_selection import KFold
 from jax import value_and_grad, jit, grad
 from jax.experimental.host_callback import id_print
 from jax.lax.linalg import triangular_solve
-from scipy.optimize import minimize
+from scipy.optimize import minimize, Bounds
 from tensorly.cp_tensor import cp_normalize
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
@@ -64,7 +64,7 @@ def vector_guess(shape: tuple, rank: int, seed=None, nk_rearrange=False):
 
     rng = np.random.default_rng(seed)
     vector = rng.normal(loc=-1.0, size=factortotal)
-    vector[0 : shape[0]] = 1
+    vector[0 : shape[0]] = np.log(1.0 / shape[0])
 
     return vector
 
@@ -224,7 +224,7 @@ def minimize_func(
     verbose=True,
     x0=None,
     nk_rearrange=False,
-    seed=None
+    seed=None,
 ):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
     meanShape = (n_cluster, X.shape[0], X.shape[2], X.shape[3], X.shape[4])
@@ -254,10 +254,14 @@ def minimize_func(
         tq.update(1)
 
     opts = {"maxiter": maxiter, "disp": False}
-    # Add bounds (note these are in log-space)
-    bounds = ((np.log(0.1), 0.0)) * n_cluster + (
-        (0.0 + np.eps, np.inf),
-    ) * (len(x0) - n_cluster)
+
+    # Add bounds
+    lb = np.full_like(x0, -np.inf)
+    ub = np.full_like(x0, np.inf)
+    lb[0:n_cluster] = np.log(0.1)
+    ub[0:n_cluster] = 0.0
+    bounds = Bounds(lb, ub, keep_feasible=True)
+
     opt = minimize(
         func,
         x0,

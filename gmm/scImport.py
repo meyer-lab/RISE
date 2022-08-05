@@ -126,7 +126,7 @@ def gene_import(offset=1.0, filter=False):
     return filteredGeneDF
 
 
-def ThompsonDrugXA(numCells: int = 290, rank: int = 15, runFacts=False, saveFacts=False):
+def ThompsonDrugXA(numCells: int = 290, rank: int = 15, runFacts=False):
     """Converts DF to Xarray given number of cells, factor number, and max iter: Factor, CellNumb, Drug, Empty, Empty"""
     rank_vec = np.arange(1, rank + 1)
     sse_error = np.empty(len(rank_vec))
@@ -136,18 +136,14 @@ def ThompsonDrugXA(numCells: int = 290, rank: int = 15, runFacts=False, saveFact
         finalDF.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
         finalDF = finalDF.groupby(by="Drug").sample(n=numCells).reset_index(drop=True)
         columns = finalDF.drop("Drug", axis=1).columns
-        if saveFacts:
-            for i in range(len(rank_vec)):
-                loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0)
-                loadingsDF = pd.DataFrame(data=loadings, columns=columns)
-                loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
-                geneFactors = np.append(geneFactors, np.reshape(finalDF["Drug"].values, (-1, 1)), 1)
-                np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Scores.npy"), geneFactors)
-                loadingsDF.to_csv(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Loadings.csv"))
-            np.save(join(path_here, "gmm/data/NNMF_Errors.npy"), sse_error)
-        else:
-            _, geneFactors, _ = geneNNMF(finalDF, k=rank, verbose=0)
+        for i in range(len(rank_vec)):
+            loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0)
+            loadingsDF = pd.DataFrame(data=loadings, columns=columns)
+            loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
             geneFactors = np.append(geneFactors, np.reshape(finalDF["Drug"].values, (-1, 1)), 1)
+            np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Scores.npy"), geneFactors)
+            loadingsDF.to_csv(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Loadings.csv"))
+        np.save(join(path_here, "gmm/data/NNMF_Errors.npy"), sse_error)
     else:
         geneFactors = np.load(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank) + "_Scores.npy"), allow_pickle=True)
         sse_error = np.load(join(path_here, "gmm/data/NNMF_Errors.npy"), allow_pickle=True)[0:rank]

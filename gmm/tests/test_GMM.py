@@ -111,7 +111,7 @@ def test_fit():
 @pytest.mark.parametrize("nCell", [20, 290])
 def test_import_PopAlign(nCell, rank):
     """Test the scRNAseq import."""
-    dataPA_import, _, _ = ThompsonDrugXA(numCells=nCell, rank=rank, runFacts=True, saveFacts=False)
+    dataPA_import, _, _ = ThompsonDrugXA(numCells=nCell, rank=rank)
     assert dataPA_import.shape == (rank, nCell, 46, 1, 1)
     assert np.isfinite(dataPA_import.to_numpy()).all()
 

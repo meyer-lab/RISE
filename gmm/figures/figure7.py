@@ -25,7 +25,7 @@ def makeFigure():
 
     # geneDF = gene_import(offset=1.1,filter=True)
 
-    drugXA, fac_vector, sse = ThompsonDrugXA(rank=20, runFacts=True)
+    drugXA, fac_vector, sse = ThompsonDrugXA(rank=20)
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
     ylabel = "SSE"
