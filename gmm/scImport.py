@@ -126,17 +126,19 @@ def gene_import(offset=1.0, filter=False):
     return filteredGeneDF
 
 
-def ThompsonDrugXA(numCells: int = 290, rank: int = 15, runFacts=False):
+def ThompsonDrugXA(rank: int = 15, runFacts=False):
     """Converts DF to Xarray given number of cells, factor number, and max iter: Factor, CellNumb, Drug, Empty, Empty"""
     rank_vec = np.arange(1, rank + 1)
     sse_error = np.empty(len(rank_vec))
+    numCells = 290 # Minimum amount in an experiment
 
     if runFacts:
         finalDF = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
         finalDF.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
-        finalDF = finalDF.groupby(by="Drug").sample(n=numCells).reset_index(drop=True)
         columns = finalDF.drop("Drug", axis=1).columns
+
         for i in range(len(rank_vec)):
+            print(i)
             loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0)
             loadingsDF = pd.DataFrame(data=loadings, columns=columns)
             loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
@@ -150,6 +152,7 @@ def ThompsonDrugXA(numCells: int = 290, rank: int = 15, runFacts=False):
 
     cmpCol = [f"Fac. {i}" for i in np.arange(1, rank + 1)]
     PopAlignDF = pd.DataFrame(data=geneFactors, columns=cmpCol + ["Drug"])
+    PopAlignDF = PopAlignDF.groupby(by="Drug").sample(n=numCells).reset_index(drop=True)
     PopAlignDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(PopAlignDF.shape[0] / numCells))
 
     PopAlignXA = PopAlignDF.set_index(["Cell", "Drug"]).to_xarray()

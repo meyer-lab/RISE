@@ -21,11 +21,9 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((10, 12), (4, 3), multz={9: 2}, constrained_layout=False)
 
-    # ax[5].axis("off")
+    fac = 20
+    drugXA, fac_vector, sse = ThompsonDrugXA(rank=fac)
 
-    # geneDF = gene_import(offset=1.1,filter=True)
-
-    drugXA, fac_vector, sse = ThompsonDrugXA(rank=20)
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
     ylabel = "SSE"
@@ -33,8 +31,7 @@ def makeFigure():
 
     rank = 4
     clust = 4
-    fac = 20
-    maximizedNK, optCP, _, x, _, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=False)
+    maximizedNK, optCP, _, x, _, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=False, maxiter=2000)
     print("LogLik", x)
 
     ax[1].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
@@ -59,24 +56,6 @@ def makeFigure():
     drug_gene_plot(maximizedFactors, "Dexrazoxane HCl (ICRF-187, ADR-529)", fac, ax[7], max=True)
     drug_gene_plot(maximizedFactors, "Alprostadil", fac, ax[8], max=True)
     plt.tight_layout()
-
-    # ranknumb = np.arange(2, 6) 
-    # n_cluster = np.arange(2, 6)
-
-    # maxloglikDFcv = pd.DataFrame()
-    # for i in range(len(ranknumb)):
-    #     row = pd.DataFrame()
-    #     row["Rank"] = ["Rank:" + str(ranknumb[i])]
-    #     for j in range(len(n_cluster)):
-    #         loglik = tensorGMM_CV(drugXA, numFolds=3, numClusters=n_cluster[j], numRank=ranknumb[i])
-    #         print("LogLik", loglik)
-    #         row["Cluster:" + str(n_cluster[j])] = loglik
-
-    #     maxloglikDFcv = pd.concat([maxloglikDFcv, row])
-
-    # maxloglikDFcv = maxloglikDFcv.set_index("Rank")
-    # sns.heatmap(data=maxloglikDFcv, ax=ax[6])
-    # ax[6].set(title="Cross Validation")
 
     return f
 

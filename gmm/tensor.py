@@ -5,10 +5,8 @@ import tensorly as tl
 from tqdm import tqdm
 import xarray as xa
 from copy import deepcopy
-from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import KFold
 from jax import value_and_grad, jit, grad
-from jax.experimental.host_callback import id_print
 from jax.lax.linalg import triangular_solve
 from scipy.optimize import minimize, Bounds
 from tensorly.cp_tensor import cp_normalize
@@ -48,19 +46,14 @@ def vector_to_cp_pt(vectorIn, rank: int, shape: tuple, nk_rearrange=False):
 
 def vector_guess(shape: tuple, rank: int, seed=None, nk_rearrange=False):
     """Predetermines total vector that will be maximized for NK, factors and core"""
+    factortotal = (
+        np.sum(shape) * rank
+        + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
+        + shape[0]
+    )
 
-    if nk_rearrange is False:
-        factortotal = (
-            np.sum(shape) * rank
-            + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
-            + shape[0]
-        )
-    else:
-        factortotal = (
-            np.sum(shape) * rank
-            + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
-            + (rank * shape[0])
-        )
+    if (nk_rearrange is True) and (rank > 1):
+        factortotal += (rank - 1) * shape[0]
 
     rng = np.random.default_rng(seed)
     vector = rng.normal(loc=-1.0, size=factortotal)
@@ -69,51 +62,10 @@ def vector_guess(shape: tuple, rank: int, seed=None, nk_rearrange=False):
     return vector
 
 
-def comparingGMM(
-    zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np.ndarray
-):
-    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
-    to determine the max log-likelihood"""
-    assert nk.ndim == 1
-    nk /= np.sum(nk)
-    loglik = 0.0
-
-    tMeans = tl.cp_to_tensor((None, meanFact))
-    X = zflowDF.to_numpy()
-
-    it = np.nditer(tMeans[0, 0, :, :, :], flags=["multi_index", "refs_ok"])
-    for _ in it:  # Loop over indices
-        i, j, k = it.multi_index
-
-        Xcur = np.transpose(X[:, :, i, j, k])  # Cell Number per experiment x Marker
-
-        if np.all(np.isnan(Xcur)):  # Skip if there's no data
-            continue
-
-        gmm = GaussianMixture(
-            n_components=nk.size,
-            covariance_type="full",
-            means_init=tMeans[:, :, i, j, k],
-            weights_init=nk,
-        )
-        gmm._initialize(Xcur, np.ones((X.shape[1], nk.size)))  # Markers x Clusters
-        gmm.precisions_cholesky_ = tPrecision[
-            :, :, :, i, j, k
-        ]  # Cluster x Marker x Marker
-        loglik += np.sum(gmm.score_samples(Xcur))
-
-    return loglik
-
-
-def comparingGMMjax(X, nk, meanFact: list, tPrecision):
-    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
-    to determine the max log-likelihood"""
-    assert nk.ndim == 1
+def log_prob_and_det(X, mp, tPrecision):
     n_markers = tPrecision.shape[1]
-    nkl = jnp.log(nk / jnp.sum(nk))
-    mp = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *meanFact, tPrecision)
-    Xp = jnp.einsum("jiklm,njoklm->inoklm", X, tPrecision)
-    log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :, :, :], axis=2))
+    Xp = jnp.einsum("ji...,njo...->ino...", X, tPrecision)
+    log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, ...], axis=2))
     log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
     # Need to check here for the sum
@@ -125,11 +77,20 @@ def comparingGMMjax(X, nk, meanFact: list, tPrecision):
 
     # Since we are using the precision of the Cholesky decomposition,
     # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
+    return log_prob + log_det[jnp.newaxis, ...]
+
+
+def comparingGMMjax(X, nk, meanFact: list, tPrecision):
+    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
+    to determine the max log-likelihood"""
+    assert nk.ndim == 1
+    nkl = jnp.log(nk / jnp.sum(nk))
+    mp = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *meanFact, tPrecision)
+
+    log_prob_det = log_prob_and_det(X, mp, tPrecision)
     loglik = jnp.sum(
         jsp.logsumexp(
-            log_prob
-            + log_det[jnp.newaxis, :, :, :, :]
-            + nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis],
+            log_prob_det + nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis],
             axis=1,
         )
     )
@@ -139,30 +100,14 @@ def comparingGMMjax(X, nk, meanFact: list, tPrecision):
 def comparingGMMjax_NK(X, nkFact, meanFact: list, tPrecision):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
-    n_markers = tPrecision.shape[1]
     assert nkFact.ndim == 2
     nk = nkFact @ meanFact[2].T
     assert nk.ndim == 2
     nkl = jnp.log(nk / jnp.sum(nk, axis=0, keepdims=True))
     mp = jnp.einsum("iz,jz,kz,ijok->iok", *meanFact, tPrecision)
-    Xp = jnp.einsum("jik,njok->inok", X, tPrecision)
-    log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, :, :, :], axis=2))
-    log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
-    # Need to check here for the sum
-    # The determinant of the precision matrix from the Cholesky decomposition
-    # corresponds to the negative half of the determinant of the full precision matrix.
-    # In short: det(precision_chol) = - det(precision) / 2
-    ppp = jnp.diagonal(tPrecision, axis1=1, axis2=2)
-    log_det = jnp.sum(jnp.log(ppp), axis=-1)
-
-    # Since we are using the precision of the Cholesky decomposition,
-    # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
-    loglik = jnp.sum(
-        jsp.logsumexp(
-            log_prob + log_det[jnp.newaxis, :, :] + nkl[jnp.newaxis, :, :], axis=1
-        )
-    )
+    log_prob_det = log_prob_and_det(X, mp, tPrecision)
+    loglik = jnp.sum(jsp.logsumexp(log_prob_det + nkl[jnp.newaxis, :, :], axis=1))
     return loglik
 
 
@@ -202,16 +147,9 @@ def maxloglik_ptnnp_NK(facVector, shape: tuple, rank: int, X):
 
     meanFact = [meanFact[0], meanFact[1], meanFact[2]]
 
-    prec_chol = jnp.reshape(
-        prec_chol,
-        (
-            prec_chol.shape[0],
-            prec_chol.shape[1],
-            prec_chol.shape[2],
-            prec_chol.shape[3],
-        ),
-    )
-    X = jnp.reshape(X, (X.shape[0], X.shape[1], X.shape[2]))
+    prec_chol = jnp.reshape(prec_chol, prec_chol.shape[0:4])
+    X = jnp.reshape(X, X.shape[0:3])
+
     # Creating function that we want to minimize
     return -comparingGMMjax_NK(X, nk, meanFact, prec_chol) / X.shape[1]
 
@@ -276,7 +214,7 @@ def minimize_func(
     tq.close()
 
     optNK, optCP, optPT = vector_to_cp_pt(
-        opt.x, rank, meanShape, nk_rearrange=nk_rearrange
+        np.copy(opt.x), rank, meanShape, nk_rearrange=nk_rearrange
     )
 
     preNormCP = deepcopy(optCP)

@@ -6,13 +6,51 @@ import pandas as pd
 import numpy as np
 import xarray as xa
 import math
+import tensorly as tl
+from sklearn.mixture import GaussianMixture
 from ..imports import smallDF
 from ..GMM import cvGMM
 from ..scImport import ThompsonDrugXA
-from ..tensor import vector_to_cp_pt, comparingGMM, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions, comparingGMMjax_NK
+from ..tensor import vector_to_cp_pt, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions, comparingGMMjax_NK
 
 data_import, other_import = smallDF(10)
 meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
+
+
+def comparingGMM(
+    zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np.ndarray
+):
+    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
+    to determine the max log-likelihood"""
+    assert nk.ndim == 1
+    nk /= np.sum(nk)
+    loglik = 0.0
+
+    tMeans = tl.cp_to_tensor((None, meanFact))
+    X = zflowDF.to_numpy()
+
+    it = np.nditer(tMeans[0, 0, :, :, :], flags=["multi_index", "refs_ok"])
+    for _ in it:  # Loop over indices
+        i, j, k = it.multi_index
+
+        Xcur = np.transpose(X[:, :, i, j, k])  # Cell Number per experiment x Marker
+
+        if np.all(np.isnan(Xcur)):  # Skip if there's no data
+            continue
+
+        gmm = GaussianMixture(
+            n_components=nk.size,
+            covariance_type="full",
+            means_init=tMeans[:, :, i, j, k],
+            weights_init=nk,
+        )
+        gmm._initialize(Xcur, np.ones((X.shape[1], nk.size)))  # Markers x Clusters
+        gmm.precisions_cholesky_ = tPrecision[
+            :, :, :, i, j, k
+        ]  # Cluster x Marker x Marker
+        loglik += np.sum(gmm.score_samples(Xcur))
+
+    return loglik
 
 
 def test_cvGMM():
@@ -108,10 +146,9 @@ def test_fit():
 
 
 @pytest.mark.parametrize("rank", [3, 10])
-@pytest.mark.parametrize("nCell", [20, 290])
-def test_import_PopAlign(nCell, rank):
+def test_import_PopAlign(nCell,rank):
     """Test the scRNAseq import."""
-    dataPA_import, _, _ = ThompsonDrugXA(numCells=nCell, rank=rank)
+    dataPA_import, _, _ = ThompsonDrugXA(rank=rank)
     assert dataPA_import.shape == (rank, nCell, 46, 1, 1)
     assert np.isfinite(dataPA_import.to_numpy()).all()
 
@@ -128,7 +165,7 @@ def test_cov_fit():
     samples = xa.DataArray(samples, dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"), coords={"Dim": ["X", "Y"], "Point": np.arange(0, 1000), "Throwaway 1": [1], "Throwaway 2": [1], "Throwaway 3": [1]})
     _, _, optPT, _, _, _ = minimize_func(samples, rank=6, n_cluster=1, maxiter=2000, verbose=False)
     cholCov = covFactor_to_precisions(optPT, returnCov=True)
-    cholCov = np.squeeze(cholCov[:, :, :, 0, 0, 0])
+    cholCov = cholCov[:, :, :, 0, 0, 0]
     covR = cholCov @ cholCov.T
 
     assert math.isclose(cov[0][0], covR[0][0], abs_tol=0.3)

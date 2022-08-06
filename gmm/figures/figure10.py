@@ -15,10 +15,6 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((10, 8), (3, 3))
 
-    # ax[5].axis("off")
-
-    # geneDF = gene_import(offset=1.1,filter=True)
-
     drugXA, fac_vector, sse = ThompsonDrugXA()
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
@@ -45,24 +41,6 @@ def makeFigure():
     
     for i in range(0, len(maximizedFactors)):
         sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 2])
-
-    # ranknumb = np.arange(2, 6)
-    # n_cluster = np.arange(2, 6)
-
-    # maxloglikDFcv = pd.DataFrame()
-    # for i in range(len(ranknumb)):
-    #     row = pd.DataFrame()
-    #     row["Rank"] = ["Rank:" + str(ranknumb[i])]
-    #     for j in range(len(n_cluster)):
-    #         loglik = tensorGMM_CV(drugXA, numFolds=3, numClusters=n_cluster[j], numRank=ranknumb[i])
-    #         print("LogLik", loglik)
-    #         row["Cluster:" + str(n_cluster[j])] = loglik
-
-    #     maxloglikDFcv = pd.concat([maxloglikDFcv, row])
-
-    # maxloglikDFcv = maxloglikDFcv.set_index("Rank")
-    # sns.heatmap(data=maxloglikDFcv, ax=ax[6])
-    # ax[6].set(title="Cross Validation")
 
     return f
 
