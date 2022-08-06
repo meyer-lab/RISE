@@ -191,14 +191,14 @@ def minimize_func(
         )
         tq.update(1)
 
-    opts = {"maxiter": maxiter, "disp": False}
+    opts = {"maxiter": maxiter, "disp": False, "xtol": 1e-10}
 
     # Add bounds
     lb = np.full_like(x0, -np.inf)
     ub = np.full_like(x0, np.inf)
     lb[0:n_cluster] = np.log(0.1)
     ub[0:n_cluster] = 0.0
-    bounds = Bounds(lb, ub, keep_feasible=True)
+    bounds = Bounds(lb, ub, keep_feasible=False)
 
     opt = minimize(
         func,

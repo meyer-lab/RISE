@@ -5,16 +5,30 @@ import pytest
 import pandas as pd
 import numpy as np
 import xarray as xa
-import math
 import tensorly as tl
 from sklearn.mixture import GaussianMixture
 from ..imports import smallDF
 from ..GMM import cvGMM
 from ..scImport import ThompsonDrugXA
-from ..tensor import vector_to_cp_pt, comparingGMMjax, vector_guess, maxloglik_ptnnp, minimize_func, tensorGMM_CV, covFactor_to_precisions, comparingGMMjax_NK
+from ..tensor import (
+    vector_to_cp_pt,
+    comparingGMMjax,
+    vector_guess,
+    maxloglik_ptnnp,
+    minimize_func,
+    tensorGMM_CV,
+    covFactor_to_precisions,
+    comparingGMMjax_NK,
+)
 
 data_import, other_import = smallDF(10)
-meanShape = (6, data_import.shape[0], data_import.shape[2], data_import.shape[3], data_import.shape[4])
+meanShape = (
+    6,
+    data_import.shape[0],
+    data_import.shape[2],
+    data_import.shape[3],
+    data_import.shape[4],
+)
 
 
 def comparingGMM(
@@ -136,8 +150,12 @@ def test_independence():
 
 def test_fit():
     """Test that fitting can run fine."""
-    nk, fac, ptfac, ll, _, _ = minimize_func(data_import, 3, 10, maxiter=20, seed=1, verbose=False)
-    nkTwo, facTwo, ptfacTwo, llTwo, _, _ = minimize_func(data_import, 3, 10, maxiter=20, seed=1, verbose=False)
+    nk, _, _, ll, _, _ = minimize_func(
+        data_import, 3, 10, maxiter=20, seed=1, verbose=False
+    )
+    nkTwo, _, _, llTwo, _, _ = minimize_func(
+        data_import, 3, 10, maxiter=20, seed=1, verbose=False
+    )
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert isinstance(loglik, float)
     assert isinstance(ll, float)
@@ -146,10 +164,10 @@ def test_fit():
 
 
 @pytest.mark.parametrize("rank", [3, 10])
-def test_import_PopAlign(nCell,rank):
+def test_import_PopAlign(rank):
     """Test the scRNAseq import."""
     dataPA_import, _, _ = ThompsonDrugXA(rank=rank)
-    assert dataPA_import.shape == (rank, nCell, 46, 1, 1)
+    assert dataPA_import.shape == (rank, 290, 46, 1, 1)
     assert np.isfinite(dataPA_import.to_numpy()).all()
 
 
@@ -160,18 +178,29 @@ def test_finite_data():
 
 def test_cov_fit():
     """Test that tensor-GMM method recreates covariance of data accurately"""
-    cov = [[0.5, 0], [0, 2]]
-    samples = np.transpose(np.random.multivariate_normal([3, 1], cov, 1000)).reshape((2, 1000, 1, 1, 1))
-    samples = xa.DataArray(samples, dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"), coords={"Dim": ["X", "Y"], "Point": np.arange(0, 1000), "Throwaway 1": [1], "Throwaway 2": [1], "Throwaway 3": [1]})
-    _, _, optPT, _, _, _ = minimize_func(samples, rank=6, n_cluster=1, maxiter=2000, verbose=False)
+    cov = np.array([[0.5, 0.05], [0.05, 3.0]])
+    samples = np.transpose(np.random.multivariate_normal([3, 1], cov, 2000)).reshape(
+        (2, 2000, 1, 1, 1)
+    )
+    samples = xa.DataArray(
+        samples,
+        dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"),
+        coords={
+            "Dim": ["X", "Y"],
+            "Point": np.arange(0, 2000),
+            "Throwaway 1": [1],
+            "Throwaway 2": [1],
+            "Throwaway 3": [1],
+        },
+    )
+    _, _, optPT, _, _, _ = minimize_func(
+        samples, rank=1, n_cluster=1, maxiter=2000, verbose=False
+    )
     cholCov = covFactor_to_precisions(optPT, returnCov=True)
-    cholCov = cholCov[:, :, :, 0, 0, 0]
+    cholCov = cholCov[0, :, :, 0, 0, 0]
     covR = cholCov @ cholCov.T
 
-    assert math.isclose(cov[0][0], covR[0][0], abs_tol=0.3)
-    assert math.isclose(cov[1][0], covR[1][0], abs_tol=0.2)
-    assert math.isclose(cov[0][1], covR[0][1], abs_tol=0.2)
-    assert math.isclose(cov[1][1], covR[1][1], abs_tol=0.3)
+    np.testing.assert_allclose(cov, covR, atol=0.1, rtol=0.01)
 
 
 def test_loglikelihood_NK():
@@ -184,7 +213,11 @@ def test_loglikelihood_NK():
     # Think data isn't organized correctly.
     X = np.random.rand(markers, 100, conditions)
     nkFact = np.random.rand(cluster, rank)
-    meanFact = [np.random.rand(cluster, rank), np.random.rand(markers, rank), np.random.rand(conditions, rank)]
+    meanFact = [
+        np.random.rand(cluster, rank),
+        np.random.rand(markers, rank),
+        np.random.rand(conditions, rank),
+    ]
     precBuild = np.random.rand(cluster, markers, markers, conditions)
 
     ll = comparingGMMjax_NK(X, nkFact, meanFact, precBuild)

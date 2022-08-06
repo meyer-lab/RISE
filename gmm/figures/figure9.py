@@ -20,7 +20,7 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 100
-    zflowTensor, _ = smallDF(cellperexp, hyperlog=False)
+    zflowTensor, _ = smallDF(cellperexp)
     rank = 3
     n_cluster = 3
     assert np.amin(zflowTensor.data) < 0
