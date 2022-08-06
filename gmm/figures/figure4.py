@@ -19,13 +19,13 @@ def makeFigure():
 
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-    cellperexp = 200
+    cellperexp = 100
     zflowTensor, _ = smallDF(cellperexp)
-    rank = 5
-    n_cluster = 4
+    rank = 3
+    n_cluster = 3
 
     optimalseed, min_loglik = optimal_seed(
-        2, zflowTensor, rank=rank, n_cluster=n_cluster
+        3, zflowTensor, rank=rank, n_cluster=n_cluster
     )
     print(optimalseed)
     print(min_loglik)

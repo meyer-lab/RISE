@@ -279,12 +279,6 @@ def gen_points_GMM(optNK, optCP, optPT, time, dose, ligand, n_samples=1000):
 
 def optimal_seed(n_seeds, *args, **kwargs):
     """Finds the optimal seed number to minimize log likeihood"""
-    total_loglik = []
-    for i in range(n_seeds):
-        _, _, _, x, _, _ = minimize_func(*args, **kwargs, seed=i)
-        total_loglik = np.append(total_loglik, x)
+    total_loglik = [minimize_func(*args, **kwargs, seed=i)[3] for i in range(n_seeds)]
 
-    optimalseed = np.argmin(total_loglik)
-    min_loglik = np.min(total_loglik)
-
-    return optimalseed, min_loglik
+    return np.argmax(total_loglik), np.max(total_loglik)
