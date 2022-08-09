@@ -4,9 +4,10 @@ Calculating SSE, NK and factors for PopAlign scRNA-seq (Allowing NK to vary over
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from tensorly.cp_tensor import cp_normalize
 from .common import getSetup
 from gmm.scImport import ThompsonDrugXA
-from gmm.tensor import minimize_func
+from gmm.tensor import minimize_func, optimal_seed
 import scipy.cluster.hierarchy as sch
 
 
@@ -21,26 +22,27 @@ def makeFigure():
     ylabel = "SSE"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    rank = 3
+    rank = 5
     clust = 3
-    maximizedNK, optCP, _, x, _, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True)
+
+    optimalseed, _ = optimal_seed(
+        2, drugXA, rank=rank, n_cluster=clust, nk_rearrange=True
+    )
+
+    fac, x, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True, seed=optimalseed)
     print("LogLik", x)
-    
-    cmpCol = [f"Fac. {i}" for i in fac_vector]
+
     rankCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     clustArray = [f"Clust. {i}" for i in np.arange(1, clust + 1)]
-    coords = {"Cluster": clustArray, "Factor": cmpCol, "Drug": drugXA.coords["Drug"]}
-    maximizedFactors = [
-        pd.DataFrame(optCP.factors[ii], columns=rankCol, index=coords[key])
-        for ii, key in enumerate(coords)
-    ]
-    maximizedFactors[2] = reorder_table(maximizedFactors[2])
 
-    NK_DF = pd.DataFrame(data=maximizedNK, columns=rankCol, index=clustArray)
+    facDF = fac.get_factors_dataframes(drugXA)
+    facDF[2] = reorder_table(facDF[2])
+
+    NK_DF = pd.DataFrame(data=fac.nk, columns=rankCol, index=clustArray)
     sns.heatmap(data=NK_DF, ax=ax[1])
     
-    for i in range(0, len(maximizedFactors)):
-        sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 2])
+    for i in range(3):
+        sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 2])
 
     return f
 

@@ -19,7 +19,7 @@ def makeFigure():
 
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-    cellperexp = 100
+    cellperexp = 300
     zflowTensor, _ = smallDF(cellperexp)
     rank = 3
     n_cluster = 3
@@ -30,10 +30,10 @@ def makeFigure():
     print(optimalseed)
     print(min_loglik)
 
-    maximizedNK, optCP, optPTfactors, x, _, _ = minimize_func(
+    fac, x, _ = minimize_func(
         zflowTensor, rank=rank, n_cluster=n_cluster, seed=optimalseed
     )
-    ptMarkerPatterns = optPTfactors[1]
+    ptMarkerPatterns = fac.covars
 
     print("LogLik", x)
 
@@ -46,26 +46,15 @@ def makeFigure():
         sns.heatmap(data=dff, ax=ax[i])
         ax[i].set(title="Covariance: Rank - " + str(i))
 
-    ax[3].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
+    ax[3].bar(np.arange(1, fac.nk.size + 1), fac.nk)
     xlabel = "Cluster"
     ylabel = "NK Value"
     ax[3].set(xlabel=xlabel, ylabel=ylabel)
 
     # CP factors
-    cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    commonDims = {
-        "Time": zflowTensor.coords["Time"],
-        "Dose": zflowTensor.coords["Dose"],
-        "Ligand": zflowTensor.coords["Ligand"],
-    }
-    clustArray = np.arange(1, n_cluster + 1)
-    coords = {"Cluster": clustArray, "Markers": markerslist, **commonDims}
-    maximizedFactors = [
-        pd.DataFrame(optCP.factors[ii], columns=cmpCol, index=coords[key])
-        for ii, key in enumerate(coords)
-    ]
+    fac_df = fac.get_factors_dataframes(zflowTensor)
 
-    for i in range(0, len(maximizedFactors)):
-        sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 4])
+    for i in range(0, len(fac_df)):
+        sns.heatmap(data=fac_df[i], vmin=0, ax=ax[i + 4])
 
     return f

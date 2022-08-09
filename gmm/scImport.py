@@ -126,7 +126,7 @@ def gene_import(offset=1.0, filter=False):
     return filteredGeneDF
 
 
-def ThompsonDrugXA(rank: int = 15, runFacts=False):
+def ThompsonDrugXA(rank: int = 20, runFacts=False):
     """Converts DF to Xarray given number of cells, factor number, and max iter: Factor, CellNumb, Drug, Empty, Empty"""
     rank_vec = np.arange(1, rank + 1)
     sse_error = np.empty(len(rank_vec))
@@ -152,7 +152,7 @@ def ThompsonDrugXA(rank: int = 15, runFacts=False):
 
     cmpCol = [f"Fac. {i}" for i in np.arange(1, rank + 1)]
     PopAlignDF = pd.DataFrame(data=geneFactors, columns=cmpCol + ["Drug"])
-    PopAlignDF = PopAlignDF.groupby(by="Drug").sample(n=numCells).reset_index(drop=True)
+    PopAlignDF = PopAlignDF.groupby(by="Drug").sample(n=numCells, random_state=1).reset_index(drop=True)
     PopAlignDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(PopAlignDF.shape[0] / numCells))
 
     PopAlignXA = PopAlignDF.set_index(["Cell", "Drug"]).to_xarray()

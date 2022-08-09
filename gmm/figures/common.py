@@ -10,7 +10,7 @@ import numpy as np
 import tensorly as tl
 from matplotlib import gridspec, pyplot as plt
 from matplotlib.patches import Ellipse
-from gmm.tensor import markerslist, covFactor_to_precisions
+from gmm.tensor import markerslist, tensorGMM
 
 
 matplotlib.use("AGG")
@@ -78,20 +78,18 @@ def genFigure():
 
 
 def add_ellipse(
-    timei,
-    dosei,
-    ligandi,
-    preNormCP,
-    optPT,
+    timei: int,
+    dosei: int,
+    ligandi: int,
+    fac: tensorGMM,
     marker1,
     marker2,
-    n_cluster,
+    n_cluster: int,
     ax,
     colorpal,
     datatype,
 ):
     """Adding necessary conditons to form elipse around clusters for data points based on factors with respect to sns."""
-
     if datatype == "IL2":
         markerVec = np.zeros(len(markerslist), dtype=bool)
         markerVec[markerslist.index(marker1)] = 1
@@ -104,16 +102,20 @@ def add_ellipse(
         markerVec = np.ones(2, dtype=bool)
         markerProj = np.eye(2, dtype=bool)
 
-    means = tl.cp_to_tensor((None, preNormCP))
+    means = tl.cp_to_tensor(fac)
     means = means[:, markerVec, timei, dosei, ligandi]
-    coVars = covFactor_to_precisions(optPT, returnCov=True)
-    coVars = np.squeeze(np.asarray(coVars[:, :, :, timei, dosei, ligandi]))
+    coVars = fac.get_covariances()
+    coVars = np.squeeze(np.array(coVars[:, :, :, timei, dosei, ligandi]))
+
+    if datatype == "IL2":
+        if markerslist.index(marker2) < markerslist.index(marker1):
+            means = np.fliplr(means)
 
     for i in range(n_cluster):
         cholCov = coVars[i, :, :]
         covar = cholCov @ cholCov.T
         covar = markerProj @ covar @ markerProj.T
-        U, S, _ = np.linalg.svd(covar)
+        S, U = np.linalg.eigh(covar)
         S = np.sqrt(S)
         angle = np.angle(U[0, 0] + U[1, 0] * 1j, deg=True)
 

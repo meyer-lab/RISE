@@ -11,14 +11,13 @@ from ..imports import smallDF
 from ..GMM import cvGMM
 from ..scImport import ThompsonDrugXA
 from ..tensor import (
-    vector_to_cp_pt,
     comparingGMMjax,
     vector_guess,
-    maxloglik_ptnnp,
+    maxll,
     minimize_func,
     tensorGMM_CV,
-    covFactor_to_precisions,
-    comparingGMMjax_NK,
+    tensorGMM,
+    infer_rank
 )
 
 data_import, other_import = smallDF(10)
@@ -31,16 +30,16 @@ meanShape = (
 )
 
 
-def comparingGMM(
-    zflowDF: xa.DataArray, meanFact, tPrecision: np.ndarray, nk: np.ndarray
-):
+def comparingGMM(zflowDF: xa.DataArray, facs: tensorGMM):
     """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
     to determine the max log-likelihood"""
+    nk = facs.nk
     assert nk.ndim == 1
     nk /= np.sum(nk)
     loglik = 0.0
 
-    tMeans = tl.cp_to_tensor((None, meanFact))
+    tMeans = tl.cp_to_tensor(facs)
+    tPrecision = facs.get_precisions()
     X = zflowDF.to_numpy()
 
     it = np.nditer(tMeans[0, 0, :, :, :], flags=["multi_index", "refs_ok"])
@@ -87,8 +86,8 @@ def test_cov_to_prec():
     """Test that we can go from Cp to vector, and from vector to Cp without changing values."""
     x0 = vector_guess(meanShape, rank=3)
 
-    _, _, covFac = vector_to_cp_pt(x0, 3, meanShape)
-    precBuild = covFactor_to_precisions(covFac)
+    facs = tensorGMM(x0, meanShape)
+    precBuild = facs.get_precisions()
 
     assert np.all(np.isfinite(precBuild))
 
@@ -97,10 +96,10 @@ def test_CP_to_vec():
     """Test that we can go from Cp to vector, and from vector to Cp without changing values."""
     x0 = vector_guess(meanShape, rank=3)
 
-    built = vector_to_cp_pt(x0, 3, meanShape)
+    facs = tensorGMM(x0, meanShape)
 
     # Check that we can get a likelihood
-    ll = maxloglik_ptnnp(x0, meanShape, 3, data_import.to_numpy())
+    ll = maxll(x0, meanShape, data_import.to_numpy())
 
     assert np.isfinite(ll)
 
@@ -109,11 +108,10 @@ def test_comparingGMM():
     """Test that we can ensures log likelihood is calculated the same"""
     x0 = vector_guess(meanShape, rank=3)
 
-    nk, meanFact, covFac = vector_to_cp_pt(x0, 3, meanShape)
-    precBuild = covFactor_to_precisions(covFac)
+    facs = tensorGMM(x0, meanShape)
 
-    optimized1 = comparingGMM(data_import, meanFact, precBuild, nk)
-    optimized2 = comparingGMMjax(data_import.to_numpy(), nk, meanFact, precBuild)
+    optimized1 = comparingGMM(data_import, facs)
+    optimized2 = comparingGMMjax(data_import.to_numpy(), facs)
     np.testing.assert_allclose(optimized1, optimized2, rtol=1e-5)
 
 
@@ -122,16 +120,15 @@ def test_independence():
     x0 = vector_guess(meanShape, rank=3)
     data_numpy = data_import.to_numpy()
 
-    nk, meanFact, covFac = vector_to_cp_pt(x0, 3, meanShape)
-    precBuild = covFactor_to_precisions(covFac)
+    facs = tensorGMM(x0, meanShape)
 
-    ll1 = comparingGMM(data_import, meanFact, precBuild, nk)
-    ll2 = comparingGMMjax(data_numpy, nk, meanFact, precBuild)
+    ll1 = comparingGMM(data_import, facs)
+    ll2 = comparingGMMjax(data_numpy, facs)
     np.testing.assert_allclose(ll1, ll2, rtol=1e-5)
 
     # Test that cells are independent
-    ll3 = comparingGMMjax(data_numpy[:, :5, :, :, :], nk, meanFact, precBuild)
-    ll3 += comparingGMMjax(data_numpy[:, 5:, :, :, :], nk, meanFact, precBuild)
+    ll3 = comparingGMMjax(data_numpy[:, :5, :, :, :], facs)
+    ll3 += comparingGMMjax(data_numpy[:, 5:, :, :, :], facs)
     np.testing.assert_allclose(ll2, ll3, rtol=1e-5)
 
     # Test that ligands are independent
@@ -139,28 +136,27 @@ def test_independence():
     # meanFactOne[4] = meanFact[4][:5, :]
     # ptFactOne = deepcopy(ptFact)
     # ptFactOne[4] = ptFact[4][:5, :]
-    # ll4 = comparingGMMjax(data_numpy[:, :, :, :, :5], nk, meanFactOne, ptFactOne)
+    # ll4 = comparingGMMjax(data_numpy[:, :, :, :, :5], facs)
     # meanFactTwo = deepcopy(meanFact)
     # meanFactTwo[4] = meanFact[4][5:, :]
     # ptFactTwo = deepcopy(ptFact)
     # ptFactTwo[4] = ptFact[4][5:, :]
-    # ll4 += comparingGMMjax(data_numpy[:, :, :, :, 5:], nk, meanFactTwo, ptFactTwo)
+    # ll4 += comparingGMMjax(data_numpy[:, :, :, :, 5:], facs)
     # np.testing.assert_allclose(ll2, ll4, rtol=1e-5)
 
 
-def test_fit():
+@pytest.mark.parametrize("nk_r", [True, False])
+def test_fit(nk_r):
     """Test that fitting can run fine."""
-    nk, _, _, ll, _, _ = minimize_func(
-        data_import, 3, 10, maxiter=20, seed=1, verbose=False
-    )
-    nkTwo, _, _, llTwo, _, _ = minimize_func(
-        data_import, 3, 10, maxiter=20, seed=1, verbose=False
+    facs, ll, _ = minimize_func(data_import, 3, 10, maxiter=20, seed=1, verbose=False, nk_rearrange=nk_r)
+    facsTwo, llTwo, _ = minimize_func(
+        data_import, 3, 10, maxiter=20, seed=1, verbose=False, nk_rearrange=nk_r
     )
     loglik = tensorGMM_CV(data_import, numFolds=3, numClusters=3, numRank=2, maxiter=20)
     assert isinstance(loglik, float)
     assert isinstance(ll, float)
     np.testing.assert_allclose(ll, llTwo)
-    np.testing.assert_allclose(nk, nkTwo)
+    np.testing.assert_allclose(facs.nk, facsTwo.nk)
 
 
 @pytest.mark.parametrize("rank", [3, 10])
@@ -174,6 +170,15 @@ def test_import_PopAlign(rank):
 def test_finite_data():
     """Test that all values in tensor has no NaN"""
     assert np.isfinite(data_import.to_numpy()).all()
+
+
+@pytest.mark.parametrize("rank", [3, 10])
+@pytest.mark.parametrize("nk_r", [True, False])
+def test_infer_rank(rank, nk_r):
+    """Test that we correctly infer the vector rank."""
+    x0 = vector_guess(meanShape, rank=rank, nk_rearrange=nk_r)
+    rank_inf = infer_rank(x0.size, meanShape, nk_rearrange=nk_r)
+    assert rank_inf == rank
 
 
 def test_cov_fit():
@@ -193,32 +198,9 @@ def test_cov_fit():
             "Throwaway 3": [1],
         },
     )
-    _, _, optPT, _, _, _ = minimize_func(
-        samples, rank=1, n_cluster=1, maxiter=2000, verbose=False
-    )
-    cholCov = covFactor_to_precisions(optPT, returnCov=True)
+    fac, _, _ = minimize_func(samples, rank=1, n_cluster=1, maxiter=2000, verbose=False)
+    cholCov = fac.get_covariances()
     cholCov = cholCov[0, :, :, 0, 0, 0]
     covR = cholCov @ cholCov.T
 
     np.testing.assert_allclose(cov, covR, atol=0.1, rtol=0.01)
-
-
-def test_loglikelihood_NK():
-    """Testing to see if loglilihood is a number"""
-    cluster = 6
-    rank = 3
-    markers = 5
-    conditions = 4
-
-    # Think data isn't organized correctly.
-    X = np.random.rand(markers, 100, conditions)
-    nkFact = np.random.rand(cluster, rank)
-    meanFact = [
-        np.random.rand(cluster, rank),
-        np.random.rand(markers, rank),
-        np.random.rand(conditions, rank),
-    ]
-    precBuild = np.random.rand(cluster, markers, markers, conditions)
-
-    ll = comparingGMMjax_NK(X, nkFact, meanFact, precBuild)
-    assert np.isfinite(ll)

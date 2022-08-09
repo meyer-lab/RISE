@@ -6,13 +6,13 @@ import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup, add_ellipse
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, gen_points_GMM, markerslist
+from gmm.tensor import minimize_func, markerslist
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 8), (6, 4))
+    ax, f = getSetup((10, 10), (6, 4))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -31,12 +31,12 @@ def makeFigure():
     timei = np.where(zflowTensor.Time.values == time)[0][0]
     ligandi = np.where(zflowTensor.Ligand.values == ligand)[0]
 
-    maximizedNK, _, optPTfactors, _, _, preNormOptCP = minimize_func(
+    fac, _, _ = minimize_func(
         zflowTensor, rank=rank, n_cluster=n_cluster
     )
 
     markertotal = pd.DataFrame()
-    for i, mark in enumerate(markerslist):
+    for mark in markerslist:
         markDF = zflowTensor.loc[mark, :, time, :, ligand]
         markDF = markDF.to_dataframe(mark).reset_index()
         markertotal[mark] = markDF[mark].values
@@ -47,24 +47,18 @@ def makeFigure():
 
     colorpal = sns.color_palette("tab10", n_cluster)
 
+    points_all, points_y = fac.sample(n_samples=500)
+
     for dose in range(0, 12):
-        points = gen_points_GMM(
-            maximizedNK,
-            preNormOptCP,
-            optPTfactors,
-            timei,
-            dose,
-            ligandi,
-            n_samples=cellperexp,
-        )
+        points = np.squeeze(points_all[:, :, timei, dose, ligandi]).T
         pointsDF = pd.DataFrame(
             {
-                "Cluster": points[1],
-                "Foxp3": points[0][:, 0],
-                "CD25": points[0][:, 1],
-                "CD45RA": points[0][:, 2],
-                "CD4": points[0][:, 3],
-                "pSTAT5": points[0][:, 4],
+                "Cluster": np.squeeze(points_y[:, timei, dose, ligandi]),
+                "Foxp3": points[:, 0],
+                "CD25": points[:, 1],
+                "CD45RA": points[:, 2],
+                "CD4": points[:, 3],
+                "pSTAT5": points[:, 4],
             }
         )
         sns.scatterplot(
@@ -80,8 +74,7 @@ def makeFigure():
             timei,
             dose,
             ligandi,
-            preNormOptCP,
-            optPTfactors,
+            fac,
             "pSTAT5",
             "CD25",
             n_cluster,

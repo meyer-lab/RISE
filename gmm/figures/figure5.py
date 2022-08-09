@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, tensorGMM_CV
+from gmm.tensor import minimize_func
 
 
 def makeFigure():
@@ -29,7 +29,7 @@ def makeFigure():
         row = pd.DataFrame()
         row["Rank"] = ["Rank:" + str(ranknumb[i])]
         for j in range(len(n_cluster)):
-            _, _, _, loglik, _, _ = minimize_func(zflowTensor, ranknumb[i], n_cluster[j])
+            _, loglik, _ = minimize_func(zflowTensor, ranknumb[i], n_cluster[j])
             row["Cluster:" + str(n_cluster[j])] = loglik
 
         maxloglikDF = pd.concat([maxloglikDF, row])

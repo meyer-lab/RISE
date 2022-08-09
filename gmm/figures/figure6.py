@@ -4,8 +4,9 @@ Creating synthetic data and running tGMM to calculate NK and factors
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import tensorly as tl
 from .common import subplotLabel, getSetup, add_ellipse
-from gmm.tensor import minimize_func, gen_points_GMM
+from gmm.tensor import minimize_func, optimal_seed
 
 
 def makeFigure():
@@ -22,19 +23,24 @@ def makeFigure():
 
     rank = 3
     n_cluster = 6
-    blob_xarray = make_blob_tensor(blob_DF)
+    X = make_blob_tensor(blob_DF)
     colorpal = sns.color_palette("tab10", n_cluster)
 
-    maximizedNK, optCP, optPTfactors, _, _, preNormOptCP = minimize_func(
-        blob_xarray, rank=rank, n_cluster=n_cluster, maxiter=2000
+    optimalseed, _ = optimal_seed(
+        5, X, rank=rank, n_cluster=n_cluster
     )
 
+    print(optimalseed)
+
+    fac, _, _ = minimize_func(
+        X, rank=rank, n_cluster=n_cluster, seed=optimalseed
+    )
+
+    points_all, points_y = fac.sample(n_samples=200)
+
     for i in np.arange(0, 4):
-        points = gen_points_GMM(
-            maximizedNK, preNormOptCP, optPTfactors, i * 3, 0, 0, n_samples=200
-        )
         points_DF = pd.DataFrame(
-            {"Cluster": points[1], "X": points[0][:, 0], "Y": points[0][:, 1]}
+            {"Cluster": points_y[:, i * 3, 0, 0], "X": points_all[0, :, i * 3, 0, 0], "Y": points_all[1, :, i * 3, 0, 0]}
         )
         sns.scatterplot(
             data=points_DF,
@@ -49,8 +55,7 @@ def makeFigure():
             i * 3,
             0,
             0,
-            preNormOptCP,
-            optPTfactors,
+            fac,
             "X",
             "Y",
             n_cluster,
@@ -59,31 +64,20 @@ def makeFigure():
             "beach",
         )
         ax[i + 8].set(
-            xlim=(-0.4, 3.5),
-            ylim=(-0.5, 3.5),
+            xlim=(-0.2, 2.2),
+            ylim=(-0.2, 2.2),
             title="Time: " + str(i * 3) + " - tGMM Data",
         )
 
-    ax[4].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
+    ax[4].bar(np.arange(1, fac.nk.size + 1), fac.nk)
     xlabel = "Cluster"
     ylabel = "NK Value"
     ax[4].set(xlabel=xlabel, ylabel=ylabel)
 
     # CP factors
-    cmpCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    clustArray = np.arange(1, n_cluster + 1)
-    coords = {
-        "Cluster": clustArray,
-        "Dimension": ["X", "Y"],
-        "Time": blob_xarray.coords["Time"],
-    }
-    maximizedFactors = [
-        pd.DataFrame(optCP.factors[ii], columns=cmpCol, index=coords[key])
-        for ii, key in enumerate(coords)
-    ]
-
-    for i in range(0, len(maximizedFactors)):
-        sns.heatmap(data=maximizedFactors[i], ax=ax[i + 5])
+    fac_df = fac.get_factors_dataframes(X)
+    for i in range(3):
+        sns.heatmap(data=fac_df[i], ax=ax[i + 5])
 
     return f
 

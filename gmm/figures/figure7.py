@@ -21,8 +21,8 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((10, 12), (4, 3), multz={9: 2}, constrained_layout=False)
 
-    fac = 20
-    drugXA, fac_vector, sse = ThompsonDrugXA(rank=fac)
+    nfac = 20
+    drugXA, fac_vector, sse = ThompsonDrugXA(rank=nfac)
 
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
@@ -31,30 +31,24 @@ def makeFigure():
 
     rank = 4
     clust = 4
-    maximizedNK, optCP, _, x, _, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=False, maxiter=2000)
+    fac, x, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True, maxiter=2000)
     print("LogLik", x)
 
-    ax[1].bar(np.arange(1, maximizedNK.size + 1), maximizedNK)
-    xlabel = "Cluster"
-    ylabel = "NK Value"
-    ax[1].set(xlabel=xlabel, ylabel=ylabel)
+    # ax[1].bar(np.arange(1, fac.nk.size + 1), fac.nk)
+    # xlabel = "Cluster"
+    # ylabel = "NK Value"
+    # ax[1].set(xlabel=xlabel, ylabel=ylabel)
 
-    cmpCol = [f"Fac. {i}" for i in np.arange(1, fac + 1)]
-    rankCol = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    clustArray = [f"Clust. {i}" for i in np.arange(1, clust + 1)]
-    coords = {"Cluster": clustArray, "Factor": cmpCol, "Drug": drugXA.coords["Drug"]}
-    maximizedFactors = [
-        pd.DataFrame(optCP.factors[ii], columns=rankCol, index=coords[key])
-        for ii, key in enumerate(coords)]
-    maximizedFactors[2] = reorder_table(maximizedFactors[2], ax[9])
+    facDF = fac.get_factors_dataframes(drugXA)
+    facDF[2] = reorder_table(facDF[2], ax[9])
 
-    for i in range(0, len(maximizedFactors)):
-        sns.heatmap(data=maximizedFactors[i], vmin=0, ax=ax[i + 2])
+    for i in range(0, 3):
+        sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 2])
 
-    drug_gene_plot(maximizedFactors, "Budesonide", fac, ax[5], max=True)
-    drug_gene_plot(maximizedFactors, "Budesonide", fac, ax[6], max=False)
-    drug_gene_plot(maximizedFactors, "Dexrazoxane HCl (ICRF-187, ADR-529)", fac, ax[7], max=True)
-    drug_gene_plot(maximizedFactors, "Alprostadil", fac, ax[8], max=True)
+    drug_gene_plot(facDF, "Budesonide", nfac, ax[5], max=True)
+    drug_gene_plot(facDF, "Budesonide", nfac, ax[6], max=False)
+    drug_gene_plot(facDF, "Dexrazoxane HCl (ICRF-187, ADR-529)", nfac, ax[7], max=True)
+    drug_gene_plot(facDF, "Alprostadil", nfac, ax[8], max=True)
     plt.tight_layout()
 
     return f
@@ -69,7 +63,7 @@ def reorder_table(df, ax):
     return df.iloc[index, :]
 
 
-def drug_gene_plot(factors_frame, drug, fac, ax, max=True):
+def drug_gene_plot(factors_frame: list, drug, fac: int, ax, max=True):
     """Plots genes most associated with factor which is most associated with a drug"""
     if max:
         max_fac = factors_frame[2].max(axis=1).loc[drug]
