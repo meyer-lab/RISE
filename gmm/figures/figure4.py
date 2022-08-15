@@ -25,7 +25,7 @@ def makeFigure():
     n_cluster = 3
 
     optimalseed, min_loglik = optimal_seed(
-        3, zflowTensor, rank=rank, n_cluster=n_cluster
+        1, zflowTensor, rank=rank, n_cluster=n_cluster
     )
     print(optimalseed)
     print(min_loglik)
@@ -33,28 +33,35 @@ def makeFigure():
     fac, x, _ = minimize_func(
         zflowTensor, rank=rank, n_cluster=n_cluster, seed=optimalseed
     )
-    ptMarkerPatterns = fac.covars
 
     print("LogLik", x)
 
+    ax[0].bar(np.arange(1, fac.nk.size + 1), fac.nk)
+    xlabel = "Cluster"
+    ylabel = "NK Value"
+    ax[0].set(xlabel=xlabel, ylabel=ylabel)
+
+    # CP factors
+    facXA = fac.get_factors_xarray(zflowTensor)
+
+    for i, key in enumerate(facXA):
+        data = facXA[key]
+        sns.heatmap(
+            data=data,
+            xticklabels=data.coords[data.dims[1]].values,
+            yticklabels=data.coords[data.dims[0]].values,
+            vmin=0,
+            ax=ax[i + 1],
+        )
+
+    # Covariance for different ranks
     for i in range(3):
         dff = pd.DataFrame(
-            ptMarkerPatterns[:, :, i] @ ptMarkerPatterns[:, :, i].T,
+            fac.covars[:, :, i] @ fac.covars[:, :, i].T,
             columns=markerslist,
             index=markerslist,
         )
-        sns.heatmap(data=dff, ax=ax[i])
-        ax[i].set(title="Covariance: Rank - " + str(i))
-
-    ax[3].bar(np.arange(1, fac.nk.size + 1), fac.nk)
-    xlabel = "Cluster"
-    ylabel = "NK Value"
-    ax[3].set(xlabel=xlabel, ylabel=ylabel)
-
-    # CP factors
-    fac_df = fac.get_factors_dataframes(zflowTensor)
-
-    for i in range(0, len(fac_df)):
-        sns.heatmap(data=fac_df[i], vmin=0, ax=ax[i + 4])
+        sns.heatmap(data=dff, ax=ax[i + 6])
+        ax[i + 6].set(title="Covariance: Rank - " + str(i + 1))
 
     return f

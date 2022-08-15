@@ -1,3 +1,4 @@
+import enum
 import numpy as np
 import pandas as pd
 import jax.numpy as jnp
@@ -95,8 +96,27 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             "ax,bcx,dx,ex,fx->abcdef",
             self.factors[0],
             self.covars,
-            *self.factors[2::],
-        )
+            *self.factors[2::],)  
+        
+    def get_covariances_xarray(self, X):
+        """Return covariance matrices."""
+        covar =  jnp.einsum(
+            "ax,bcx,dx,ex,fx->abcdef",
+            self.factors[0],
+            self.covars,
+            *self.factors[2::],) 
+        
+        coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
+            "Marker1": X.coords[X.dims[0]],
+            "Marker2": X.coords[X.dims[0]],
+            X.dims[2]: X.coords[X.dims[2]],
+            X.dims[3]: X.coords[X.dims[3]],
+            X.dims[4]: X.coords[X.dims[4]]}
+
+        covar_xarray = xa.DataArray(covar,
+                         coords={**coordinates})
+         
+        return covar_xarray
 
     def log_det_prec(self) -> jnp.ndarray:
         """Return the determinants of the precisions matrices."""
@@ -146,6 +166,25 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             for ii, key in enumerate(coords)
         ]
         return fac_df
+    
+    def get_factors_xarray(self, X):
+        cp_factors = tl.cp_normalize(self)
+        
+        cmpCol = [f"Cmp. {i}" for i in np.arange(1, cp_factors.rank + 1)]
+        coordinates = {"Cluster": np.arange(1, cp_factors.shape[0] + 1),
+            X.dims[0]: X.coords[X.dims[0]],
+            X.dims[2]: X.coords[X.dims[2]],
+            X.dims[3]: X.coords[X.dims[3]],
+            X.dims[4]: X.coords[X.dims[4]]}
+    
+        da = xa.Dataset({"Dimension1":(["Cluster", "Cmp"],cp_factors.factors[0]),
+                         "Dimension2":([X.dims[0], "Cmp"],cp_factors.factors[1]),
+                         "Dimension3":([X.dims[2], "Cmp"],cp_factors.factors[2]),
+                         "Dimension4":([X.dims[3], "Cmp"],cp_factors.factors[3]),
+                         "Dimension5":([X.dims[4], "Cmp"],cp_factors.factors[4])},
+                         coords={"Cmp":cmpCol, **coordinates})
+         
+        return da
 
 
 def vector_guess(

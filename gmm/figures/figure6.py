@@ -75,10 +75,13 @@ def makeFigure():
     ax[4].set(xlabel=xlabel, ylabel=ylabel)
 
     # CP factors
-    fac_df = fac.get_factors_dataframes(X)
-    for i in range(3):
-        sns.heatmap(data=fac_df[i], ax=ax[i + 5])
+    facXA = fac.get_factors_xarray(X)
+    DimCol = [f"Dimension{i}" for i in np.arange(1, len(facXA) + 1)]
 
+    for i in range(0, 3):
+        sns.heatmap(data=facXA[DimCol[i]], xticklabels= facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[1]].values,
+                yticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[0]].values,vmin=0, ax=ax[i+5])
+        
     return f
 
 
