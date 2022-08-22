@@ -185,6 +185,13 @@ class tensorGMM(tl.cp_tensor.CPTensor):
                          coords={"Cmp":cmpCol, **coordinates})
          
         return da
+    
+    def norm_NK(self) -> jnp.ndarray:
+        """Normalizes NK values to percentages"""
+        return self.nk/np.sum(self.nk)
+    
+    
+
 
 
 def vector_guess(

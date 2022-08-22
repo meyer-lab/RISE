@@ -69,7 +69,7 @@ def makeFigure():
             title="Time: " + str(i * 3) + " - tGMM Data",
         )
 
-    ax[4].bar(np.arange(1, fac.nk.size + 1), fac.nk)
+    ax[4].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK())
     xlabel = "Cluster"
     ylabel = "NK Value"
     ax[4].set(xlabel=xlabel, ylabel=ylabel)

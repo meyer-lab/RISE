@@ -36,7 +36,7 @@ def makeFigure():
 
     print("LogLik", x)
 
-    ax[0].bar(np.arange(1, fac.nk.size + 1), fac.nk)
+    ax[0].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK())
     xlabel = "Cluster"
     ylabel = "NK Value"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
