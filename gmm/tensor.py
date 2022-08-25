@@ -244,6 +244,34 @@ def comparingGMMjax(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
     return jnp.sum(jsp.logsumexp(log_prob + log_det[jnp.newaxis, ...] + nkl, axis=1))
 
 
+def cell_assignment(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
+    """Provides the cell assignemtns to each cluster, given the dataset and factors."""
+    tPrecision = facBuild.get_precisions()
+    nk = facBuild.nk
+
+    if facBuild.nk_rearrange:
+        assert nk.ndim == 2
+        nk = nk @ facBuild.factors[2].T
+        assert nk.ndim == 2
+        nkl = jnp.log(nk / jnp.sum(nk, axis=0, keepdims=True))
+        nkl = nkl[jnp.newaxis, :, :, jnp.newaxis, jnp.newaxis]
+    else:
+        assert nk.ndim == 1
+        nkl = jnp.log(nk / jnp.sum(nk))
+        nkl = nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis]
+
+    mp = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *facBuild.factors, tPrecision)
+
+    n_markers = tPrecision.shape[1]
+    Xp = jnp.einsum("ji...,njo...->ino...", X, tPrecision)
+    log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, ...], axis=2))
+    log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob) + nkl
+
+    log_sum = jsp.logsumexp(log_prob, axis=1)
+    log_resp = log_prob - log_sum[:, np.newaxis, ...]
+    return jnp.exp(log_resp)
+
+
 def maxll(
     vec: jnp.ndarray,
     shape: tuple[int, ...],
