@@ -4,9 +4,15 @@ import numpy as np
 import pandas as pd
 import csv
 import xarray as xa
+import seaborn as sns
 from sklearn.decomposition import NMF
 from scipy.io import mmread
 from scipy.stats import linregress
+from umap import UMAP
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+
 
 path_here = os.path.dirname(os.path.dirname(__file__))
 
