@@ -13,7 +13,6 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 
-
 path_here = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -87,7 +86,7 @@ def mu_sigma_normalize(geneDF, scalingfactor=1000):
     assert np.isnan(normG).all() == False
     assert np.isfinite(normG).all() == True
 
-    logG = np.log10((scalingfactor*(normG)) + 1)
+    logG = np.log10((scalingfactor * (normG)) + 1)
 
     means = np.mean(logG, axis=0)
     std = np.std(logG, axis=0)
@@ -136,7 +135,8 @@ def ThompsonDrugXA(rank: int = 20, runFacts=False):
     """Converts DF to Xarray given number of cells, factor number, and max iter: Factor, CellNumb, Drug, Empty, Empty"""
     rank_vec = np.arange(1, rank + 1)
     sse_error = np.empty(len(rank_vec))
-    numCells = 290 # Minimum amount in an experiment
+    numCells = 290  # Minimum amount in an experiment
+    cell_types = pd.read_csv(join(path_here, "gmm/data/ThompsonCellTypes.csv"), index_col=0)
 
     if runFacts:
         finalDF = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
@@ -158,15 +158,21 @@ def ThompsonDrugXA(rank: int = 20, runFacts=False):
 
     cmpCol = [f"Fac. {i}" for i in np.arange(1, rank + 1)]
     PopAlignDF = pd.DataFrame(data=geneFactors, columns=cmpCol + ["Drug"])
+    PopAlignDF["Cell Type"] = cell_types.values
     PopAlignDF = PopAlignDF.groupby(by="Drug").sample(n=numCells, random_state=1).reset_index(drop=True)
     PopAlignDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(PopAlignDF.shape[0] / numCells))
 
     PopAlignXA = PopAlignDF.set_index(["Cell", "Drug"]).to_xarray()
+    cellTypeXA = PopAlignXA["Cell Type"]
     PopAlignXA = PopAlignXA[cmpCol].to_array(dim="Factor")
 
     npPopAlign = np.reshape(PopAlignXA.to_numpy(), (PopAlignXA.shape[0], PopAlignXA.shape[1], -1, 1, 1)).astype('float64')
+    npCellType = np.reshape(cellTypeXA.to_numpy(), (1, PopAlignXA.shape[1], -1, 1, 1)).astype('str')
     PopAlignXA = xa.DataArray(npPopAlign, dims=("Factor", "Cell", "Drug", "Throwaway 1", "Throwaway 2"),
-        coords={"Factor": cmpCol, "Cell": np.arange(1, numCells + 1),
-            "Drug": PopAlignDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"],},)
+                              coords={"Factor": cmpCol, "Cell": np.arange(1, numCells + 1),
+                                      "Drug": PopAlignDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"], },)
+    CellTypeXA = xa.DataArray(npCellType, dims=("Cell Type", "Cell", "Drug", "Throwaway 1", "Throwaway 2"),
+                              coords={"Cell Type": ["Cell Type"], "Cell": np.arange(1, numCells + 1),
+                                      "Drug": PopAlignDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"], },)
 
-    return PopAlignXA, rank_vec, sse_error
+    return PopAlignXA, CellTypeXA, rank_vec, sse_error

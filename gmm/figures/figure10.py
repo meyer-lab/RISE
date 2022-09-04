@@ -16,7 +16,7 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((10, 8), (3, 3))
 
-    drugXA, fac_vector, sse = ThompsonDrugXA()
+    drugXA, _, fac_vector, sse = ThompsonDrugXA()
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
     ylabel = "SSE"
@@ -40,7 +40,7 @@ def makeFigure():
 
     NK_DF = pd.DataFrame(data=fac.nk, columns=rankCol, index=clustArray)
     sns.heatmap(data=NK_DF, ax=ax[1])
-    
+
     for i in range(3):
         sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 2])
 

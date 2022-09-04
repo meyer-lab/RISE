@@ -52,12 +52,12 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         self.nk_rearrange = nk_rearrange
         vectorIn = jnp.exp(vectorIn)
         if nk_rearrange:
-            self.nk = vectorIn[0 : (shape[0] * rank)]
+            self.nk = vectorIn[0: (shape[0] * rank)]
             self.nk = jnp.reshape(self.nk, (shape[0], rank))
-            vectorIn = vectorIn[(shape[0] * rank) : :]
+            vectorIn = vectorIn[(shape[0] * rank)::]
         else:
-            self.nk = vectorIn[0 : shape[0]]
-            vectorIn = vectorIn[shape[0] : :]
+            self.nk = vectorIn[0: shape[0]]
+            vectorIn = vectorIn[shape[0]::]
 
         # Shape of tensor for means or precision matrix
         nN = np.cumsum(np.array(shape) * rank)
@@ -67,7 +67,7 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             (
                 None,
                 [
-                    jnp.reshape(vectorIn[nN[ii] : nN[ii + 1]], (shape[ii], rank))
+                    jnp.reshape(vectorIn[nN[ii]: nN[ii + 1]], (shape[ii], rank))
                     for ii in range(len(shape))
                 ],
             )
@@ -75,7 +75,7 @@ class tensorGMM(tl.cp_tensor.CPTensor):
 
         covars = jnp.zeros((shape[1], shape[1], rank))
         ai, bi = jnp.tril_indices(shape[1])
-        pVec = vectorIn[nN[-1] : :].reshape(-1, rank)
+        pVec = vectorIn[nN[-1]::].reshape(-1, rank)
         self.covars = covars.at[ai, bi, :].set(pVec)
 
     def get_precisions(self) -> jnp.ndarray:
@@ -96,26 +96,26 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             "ax,bcx,dx,ex,fx->abcdef",
             self.factors[0],
             self.covars,
-            *self.factors[2::],)  
-        
+            *self.factors[2::],)
+
     def get_covariances_xarray(self, X):
         """Return covariance matrices."""
-        covar =  jnp.einsum(
+        covar = jnp.einsum(
             "ax,bcx,dx,ex,fx->abcdef",
             self.factors[0],
             self.covars,
-            *self.factors[2::],) 
-        
+            *self.factors[2::],)
+
         coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
-            "Marker1": X.coords[X.dims[0]],
-            "Marker2": X.coords[X.dims[0]],
-            X.dims[2]: X.coords[X.dims[2]],
-            X.dims[3]: X.coords[X.dims[3]],
-            X.dims[4]: X.coords[X.dims[4]]}
+                       "Marker1": X.coords[X.dims[0]],
+                       "Marker2": X.coords[X.dims[0]],
+                       X.dims[2]: X.coords[X.dims[2]],
+                       X.dims[3]: X.coords[X.dims[3]],
+                       X.dims[4]: X.coords[X.dims[4]]}
 
         covar_xarray = xa.DataArray(covar,
-                         coords={**coordinates})
-         
+                                    coords={**coordinates})
+
         return covar_xarray
 
     def log_det_prec(self) -> jnp.ndarray:
@@ -166,32 +166,29 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             for ii, key in enumerate(coords)
         ]
         return fac_df
-    
+
     def get_factors_xarray(self, X):
         cp_factors = tl.cp_normalize(self)
-        
+
         cmpCol = [f"Cmp. {i}" for i in np.arange(1, cp_factors.rank + 1)]
         coordinates = {"Cluster": np.arange(1, cp_factors.shape[0] + 1),
-            X.dims[0]: X.coords[X.dims[0]],
-            X.dims[2]: X.coords[X.dims[2]],
-            X.dims[3]: X.coords[X.dims[3]],
-            X.dims[4]: X.coords[X.dims[4]]}
-    
-        da = xa.Dataset({"Dimension1":(["Cluster", "Cmp"],cp_factors.factors[0]),
-                         "Dimension2":([X.dims[0], "Cmp"],cp_factors.factors[1]),
-                         "Dimension3":([X.dims[2], "Cmp"],cp_factors.factors[2]),
-                         "Dimension4":([X.dims[3], "Cmp"],cp_factors.factors[3]),
-                         "Dimension5":([X.dims[4], "Cmp"],cp_factors.factors[4])},
-                         coords={"Cmp":cmpCol, **coordinates})
-         
+                       X.dims[0]: X.coords[X.dims[0]],
+                       X.dims[2]: X.coords[X.dims[2]],
+                       X.dims[3]: X.coords[X.dims[3]],
+                       X.dims[4]: X.coords[X.dims[4]]}
+
+        da = xa.Dataset({"Dimension1": (["Cluster", "Cmp"], cp_factors.factors[0]),
+                         "Dimension2": ([X.dims[0], "Cmp"], cp_factors.factors[1]),
+                         "Dimension3": ([X.dims[2], "Cmp"], cp_factors.factors[2]),
+                         "Dimension4": ([X.dims[3], "Cmp"], cp_factors.factors[3]),
+                         "Dimension5": ([X.dims[4], "Cmp"], cp_factors.factors[4])},
+                        coords={"Cmp": cmpCol, **coordinates})
+
         return da
-    
+
     def norm_NK(self) -> jnp.ndarray:
         """Normalizes NK values to percentages"""
-        return self.nk/np.sum(self.nk)
-    
-    
-
+        return self.nk / np.sum(self.nk)
 
 
 def vector_guess(
@@ -209,7 +206,7 @@ def vector_guess(
 
     rng = np.random.default_rng(seed)
     vector = rng.normal(loc=-1.0, size=factortotal)
-    vector[0 : shape[0]] = np.log(1.0 / shape[0])
+    vector[0: shape[0]] = np.log(1.0 / shape[0])
 
     return vector
 
@@ -245,7 +242,7 @@ def comparingGMMjax(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
 
 
 def cell_assignment(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
-    """Provides the cell assignemtns to each cluster, given the dataset and factors."""
+    """Provides the cell assignmens to each cluster, given the dataset and factors."""
     tPrecision = facBuild.get_precisions()
     nk = facBuild.nk
 

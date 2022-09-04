@@ -1,5 +1,5 @@
 """
-Calculating SSE, NK and factors for PopAlign scRNA-seq 
+Calculating SSE, NK and factors for PopAlign scRNA-seq
 """
 import os
 from os.path import join
@@ -9,7 +9,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from .common import getSetup
 from gmm.scImport import ThompsonDrugXA
-from gmm.tensor import minimize_func
+from gmm.tensor import minimize_func, cell_assignment, optimal_seed
 import scipy.cluster.hierarchy as sch
 
 
@@ -22,15 +22,22 @@ def makeFigure():
     ax, f = getSetup((10, 12), (4, 3), multz={9: 2}, constrained_layout=False)
 
     nfac = 20
-    drugXA, fac_vector, sse = ThompsonDrugXA(rank=nfac)
+    drugXA, typeXA, fac_vector, sse = ThompsonDrugXA(rank=nfac)
 
     ax[0].plot(fac_vector, sse, "r")
     xlabel = "Number of Components"
     ylabel = "SSE"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    rank = 4
-    clust = 4
+    rank = 5
+    clust = 8
+    optimalseed, _ = optimal_seed(5, drugXA, rank=rank, n_cluster=clust)
+
+    print(optimalseed)
+
+    fac, _, _ = minimize_func(
+        drugXA, rank=rank, n_cluster=clust, seed=optimalseed
+    )
     fac, x, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True, maxiter=2000)
     print("LogLik", x)
 
@@ -40,12 +47,14 @@ def makeFigure():
     # ax[1].set(xlabel=xlabel, ylabel=ylabel)
 
     facDF = fac.get_factors_dataframes(drugXA)
+    drug_nk_plot(fac, facDF, clust, ax[1])
+    cluster_type(drugXA, fac, typeXA, ax=ax[2])
     facDF[2] = reorder_table(facDF[2], ax[9])
 
     for i in range(0, 3):
-        sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 2])
+        sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 3])
 
-    drug_gene_plot(facDF, "Budesonide", nfac, ax[5], max=True)
+    #drug_gene_plot(facDF, "Budesonide", nfac, ax[5], max=True)
     drug_gene_plot(facDF, "Budesonide", nfac, ax[6], max=False)
     drug_gene_plot(facDF, "Dexrazoxane HCl (ICRF-187, ADR-529)", nfac, ax[7], max=True)
     drug_gene_plot(facDF, "Alprostadil", nfac, ax[8], max=True)
@@ -85,3 +94,36 @@ def drug_gene_plot(factors_frame: list, drug, fac: int, ax, max=True):
     else:
         ax.set(title="Genes Downregulated by " + drug)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
+
+
+def cluster_type(drugXA, fac, typeXA, ax):
+    """Assigns each cluster a cell type based on cell type prevalences."""
+    clustDF = pd.DataFrame()
+    respDF = pd.DataFrame()
+
+    resps = np.squeeze(cell_assignment(drugXA.data, fac))
+    resps = resps / np.reshape(np.sum(resps, axis=1), (-1, 1, 46))
+    types = np.squeeze(np.swapaxes(typeXA.data, 0, 1))
+
+    typesDF = pd.DataFrame({"Cell Type": np.ravel(types), "Drug": np.repeat(np.arange(0, 46), 290)})
+
+    for i in range(0, resps.shape[1]):
+        respDF = pd.DataFrame({"Responsibility": np.ravel(resps[:, i, :]), "Drug": np.repeat(np.arange(0, 46), 290)})
+        for cell_type in typesDF["Cell Type"].unique():
+            cell_total = 0
+            for drug in np.arange(0, 46):
+                cell_total += np.sum(respDF.loc[(typesDF["Cell Type"] == cell_type) & (typesDF.Drug == drug)].Responsibility.values)
+            clustDF = pd.concat([clustDF, pd.DataFrame({"Cluster": [i + 1], "Cell Type": cell_type, "Total Resp": cell_total})])
+    clustDF = clustDF.reset_index(drop=True)
+    clustDF = clustDF.pivot(index='Cell Type', columns='Cluster', values='Total Resp')
+    clustDF = clustDF.div(clustDF.max(axis=1), axis=0)
+    sns.heatmap(data=clustDF, ax=ax)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=6, ha="right")
+
+
+def drug_nk_plot(fac, facDF, clust, ax):
+    """Plots NK values as they change over time"""
+    nkWeights = np.matmul(fac.nk, facDF[2].T.values)
+    nkWeights = nkWeights / np.sum(nkWeights, axis=0)
+    nkWeights = pd.DataFrame(data=nkWeights.transpose(), columns=np.arange(1, clust + 1), index=facDF[2].index)
+    sns.heatmap(data=nkWeights, ax=ax)

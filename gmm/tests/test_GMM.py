@@ -162,7 +162,7 @@ def test_fit(nk_r):
 @pytest.mark.parametrize("rank", [3, 10])
 def test_import_PopAlign(rank):
     """Test the scRNAseq import."""
-    dataPA_import, _, _ = ThompsonDrugXA(rank=rank)
+    dataPA_import, _, _, _ = ThompsonDrugXA(rank=rank)
     assert dataPA_import.shape == (rank, 290, 46, 1, 1)
     assert np.isfinite(dataPA_import.to_numpy()).all()
 
