@@ -29,30 +29,24 @@ def makeFigure():
     ylabel = "SSE"
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
-    rank = 5
-    clust = 8
-    optimalseed, _ = optimal_seed(5, drugXA, rank=rank, n_cluster=clust)
+    rank = 10
+    clust = 10
+    optimalseed, _ = optimal_seed(10, drugXA, rank=rank, n_cluster=clust, nk_rearrange=True)
 
     print(optimalseed)
 
-    fac, _, _ = minimize_func(
-        drugXA, rank=rank, n_cluster=clust, seed=optimalseed
-    )
-    fac, x, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True, maxiter=2000)
+    fac, x, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True, maxiter=2000, seed=optimalseed)
     print("LogLik", x)
-
-    # ax[1].bar(np.arange(1, fac.nk.size + 1), fac.nk)
-    # xlabel = "Cluster"
-    # ylabel = "NK Value"
-    # ax[1].set(xlabel=xlabel, ylabel=ylabel)
 
     facDF = fac.get_factors_dataframes(drugXA)
     drug_nk_plot(fac, facDF, clust, ax[1])
     cluster_type(drugXA, fac, typeXA, ax=ax[2])
     facDF[2] = reorder_table(facDF[2], ax[9])
+    labels = ["Cluster", "NMF", "Drug"]
 
     for i in range(0, 3):
         sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 3])
+        ax[i+3].set(ylabel=labels[i])
 
     #drug_gene_plot(facDF, "Budesonide", nfac, ax[5], max=True)
     drug_gene_plot(facDF, "Budesonide", nfac, ax[6], max=False)
@@ -124,6 +118,6 @@ def cluster_type(drugXA, fac, typeXA, ax):
 def drug_nk_plot(fac, facDF, clust, ax):
     """Plots NK values as they change over time"""
     nkWeights = np.matmul(fac.nk, facDF[2].T.values)
-    nkWeights = nkWeights / np.sum(nkWeights, axis=0)
+    nkWeights = fac.nk @ facDF[2].T.values
     nkWeights = pd.DataFrame(data=nkWeights.transpose(), columns=np.arange(1, clust + 1), index=facDF[2].index)
     sns.heatmap(data=nkWeights, ax=ax)

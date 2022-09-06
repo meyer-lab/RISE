@@ -317,7 +317,10 @@ def minimize_func(
 
     # Add bounds
     lb = np.full_like(x0, -np.inf)
-    lb[0:n_cluster] = np.log(0.1)
+    if nk_rearrange:
+        lb[0:n_cluster * rank] = np.log(0.1)
+    else:
+        lb[0:n_cluster] = np.log(0.1)
     bounds = Bounds(lb, -lb, keep_feasible=False)
 
     opt = minimize(
@@ -364,5 +367,6 @@ def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter: int 
 def optimal_seed(n_seeds, *args, **kwargs):
     """Finds the optimal seed number to minimize log likeihood"""
     total_loglik = [minimize_func(*args, **kwargs, seed=i)[1] for i in range(n_seeds)]
+    total_loglik = np.nan_to_num(total_loglik)
 
     return np.argmax(total_loglik), np.max(total_loglik)
