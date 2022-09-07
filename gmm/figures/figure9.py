@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup, add_ellipse
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, markerslist
+from gmm.tensor import minimize_func, markerslist, optimal_seed
 
 
 def makeFigure():
@@ -19,24 +19,29 @@ def makeFigure():
 
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-    cellperexp = 100
+    cellperexp = 300
+    marks = ["Foxp3","CD25","pSTAT5"]
     zflowTensor, _ = smallDF(cellperexp)
+    zflowTensor = zflowTensor.loc[marks,:,:,:,:]
     rank = 3
-    n_cluster = 3
+    n_cluster = 4
     assert np.amin(zflowTensor.data) < 0
 
-    time = 1.0
-    ligand = "WT N-term-2"
+    time = 4.0
+    ligand = "WT C-term-1"
 
     timei = np.where(zflowTensor.Time.values == time)[0][0]
     ligandi = np.where(zflowTensor.Ligand.values == ligand)[0]
+    
+    
+    optimalseed, min_loglik = optimal_seed(5, zflowTensor, rank=rank, n_cluster=n_cluster)
+    print(optimalseed)
+    print(min_loglik)
 
-    fac, _, _ = minimize_func(
-        zflowTensor, rank=rank, n_cluster=n_cluster
-    )
+    fac, _, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster, seed=optimalseed)
 
     markertotal = pd.DataFrame()
-    for mark in markerslist:
+    for mark in marks:
         markDF = zflowTensor.loc[mark, :, time, :, ligand]
         markDF = markDF.to_dataframe(mark).reset_index()
         markertotal[mark] = markDF[mark].values
@@ -56,57 +61,53 @@ def makeFigure():
                 "Cluster": np.squeeze(points_y[:, timei, dose, ligandi]),
                 "Foxp3": points[:, 0],
                 "CD25": points[:, 1],
-                "CD45RA": points[:, 2],
-                "CD4": points[:, 3],
-                "pSTAT5": points[:, 4],
+                "pSTAT5": points[:, 2]
             }
         )
         sns.scatterplot(
             data=pointsDF,
-            x="pSTAT5",
-            y="CD25",
+            x=marks[1],
+            y=marks[2],
             hue="Cluster",
             palette="tab10",
             ax=ax[dose * 2],
-            s=5,
+            s=3,alpha=.5
         )
         add_ellipse(
             timei,
             dose,
             ligandi,
             fac,
-            "pSTAT5",
-            "CD25",
+            marks[1],
+            marks[2],
             n_cluster,
             ax[dose * 2],
-            colorpal,
-            datatype="IL2",
-        )
+            colorpal,"IL2",marks)
         sns.scatterplot(
             data=markertotal.loc[markertotal["Dose"] == dose_unique[dose]],
-            x="pSTAT5",
-            y="CD25",
+            x=marks[1],
+            y=marks[2],
             ax=ax[(dose * 2) + 1],
-            s=5,
+            s=3,alpha=.5
         )
         ax[dose * 2].set(
             xlim=(-5, 5),
             ylim=(-5, 5),
             title=ligand
-            + " at Time "
+            + "-Time:"
             + str(time)
-            + " at nM="
+            + "-nM:"
             + str(zflowTensor.Dose.values[dose]),
         )
         ax[(dose * 2) + 1].set(
             xlim=(-5, 5),
             ylim=(-5, 5),
             title=ligand
-            + " at time "
+            + "-Time:"
             + str(time)
-            + " at nM="
+            + "-nM:"
             + str(zflowTensor.Dose.values[dose])
-            + ":Original Data",
+            + "-Original Data",
         )
 
     return f

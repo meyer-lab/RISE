@@ -20,7 +20,10 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 300
+    marks = ["Foxp3","CD25","pSTAT5"]
     zflowTensor, _ = smallDF(cellperexp)
+    zflowTensor = zflowTensor.loc[marks,:,:,:,:]
+    
     rank = 3
     n_cluster = 3
 
@@ -58,8 +61,8 @@ def makeFigure():
     for i in range(3):
         dff = pd.DataFrame(
             fac.covars[:, :, i] @ fac.covars[:, :, i].T,
-            columns=markerslist,
-            index=markerslist,
+            columns=marks,
+            index=marks,
         )
         sns.heatmap(data=dff, ax=ax[i + 6])
         ax[i + 6].set(title="Covariance: Rank - " + str(i + 1))

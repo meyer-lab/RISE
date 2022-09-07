@@ -87,17 +87,16 @@ def add_ellipse(
     n_cluster: int,
     ax,
     colorpal,
-    datatype,
-):
+    datatype, totalmarkers=markerslist):
     """Adding necessary conditons to form elipse around clusters for data points based on factors with respect to sns."""
     if datatype == "IL2":
-        markerVec = np.zeros(len(markerslist), dtype=bool)
-        markerVec[markerslist.index(marker1)] = 1
-        markerVec[markerslist.index(marker2)] = 1
+        markerVec = np.zeros(len(totalmarkers), dtype=bool)
+        markerVec[totalmarkers.index(marker1)] = 1
+        markerVec[totalmarkers.index(marker2)] = 1
 
-        markerProj = np.zeros((2, len(markerslist)), dtype=bool)
-        markerProj[0, markerslist.index(marker1)] = 1
-        markerProj[1, markerslist.index(marker2)] = 1
+        markerProj = np.zeros((2, len(totalmarkers)), dtype=bool)
+        markerProj[0, totalmarkers.index(marker1)] = 1
+        markerProj[1, totalmarkers.index(marker2)] = 1
     else:
         markerVec = np.ones(2, dtype=bool)
         markerProj = np.eye(2, dtype=bool)
@@ -108,7 +107,7 @@ def add_ellipse(
     coVars = np.squeeze(np.array(coVars[:, :, :, timei, dosei, ligandi]))
 
     if datatype == "IL2":
-        if markerslist.index(marker2) < markerslist.index(marker1):
+        if totalmarkers.index(marker2) < totalmarkers.index(marker1):
             means = np.fliplr(means)
 
     for i in range(n_cluster):
