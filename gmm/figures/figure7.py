@@ -19,7 +19,7 @@ path_here = os.path.dirname(os.path.dirname(__file__))
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 12), (4, 3), multz={9: 2}, constrained_layout=False)
+    ax, f = getSetup((10, 12), (5, 3), multz={9: 2, 12: 2}, constrained_layout=False)
 
     nfac = 20
     drugXA, typeXA, fac_vector, sse = ThompsonDrugXA(rank=nfac)
@@ -41,6 +41,7 @@ def makeFigure():
     facDF = fac.get_factors_dataframes(drugXA)
     drug_nk_plot(fac, facDF, clust, ax[1])
     cluster_type(drugXA, fac, typeXA, ax=ax[2])
+    norm_dist_plot(facDF[2], ax[10])
     facDF[2] = reorder_table(facDF[2], ax[9])
     labels = ["Cluster", "NMF", "Drug"]
 
@@ -64,6 +65,16 @@ def reorder_table(df, ax):
     ax.set_xticklabels(df.iloc[index, :].index.values, rotation=45, fontsize=6, ha="right")
 
     return df.iloc[index, :]
+
+
+def norm_dist_plot(df, ax):
+    """Reorder a table's rows using heirarchical clustering"""
+    clustDF = df - df.loc["CTRL1", :]
+    clustDF["Norm"] = np.linalg.norm(clustDF, axis=1)
+    clustDF = clustDF.sort_values(by="Norm")
+    clustDF["Drug"] = clustDF.index.values
+    sns.barplot(data=clustDF, y="Norm", x="Drug", color='k', ax=ax)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=6, ha="right")
 
 
 def drug_gene_plot(factors_frame: list, drug, fac: int, ax, max=True):

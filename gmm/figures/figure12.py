@@ -1,13 +1,16 @@
 """
 # This creates Figure 12, typing Thompson drug data.
 # """
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+import pandas as pd
 from .common import subplotLabel, getSetup
 from gmm.scImport import gene_import
 import scanpy as sc
+import numpy as np
 from copy import copy
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn import preprocessing
 
 
 def makeFigure():
@@ -20,6 +23,7 @@ def makeFigure():
     geneDF = gene_import(offset=1, filter=False)
     drugCol = geneDF.Drug
     geneDF.drop(columns=["Drug"], axis=1, inplace=True)
+    genes_list = geneDF.columns
     adata = sc.AnnData(geneDF)
     sc.pp.pca(adata, svd_solver='arpack')
     sc.pp.neighbors(adata)
@@ -28,16 +32,18 @@ def makeFigure():
     marker_matches = sc.tl.marker_gene_overlap(adata, marker_genes)
     print(marker_matches)
     sc.tl.umap(adata)
-    sc.pl.umap(adata, color=['leiden'], ax=ax[0])
+    sc.pl.umap(adata, ax=ax[0])
     savedata = copy(adata)
     savedata.obs = savedata.obs.replace(clust_names)
     savedata.obs.columns = ["Cell Type"]
+    savedata = drug_SVM(savedata, genes_list)
     savedata.obs.to_csv("gmm/data/ThompsonCellTypes.csv")
     adata.rename_categories('leiden', clust_list)
     adata.obs["Drug"] = drugCol.values
+    adata.obs["Cell Type"] = savedata.obs
     sc.pp.subsample(adata, fraction=0.1, random_state=0)
     sc.pl.umap(adata, color='leiden', legend_loc='on data', title='', frameon=False, ax=ax[1])
-    sc.pl.umap(adata, color='Drug', title='', legend_loc='on data', legend_fontsize=3, frameon=False, ax=ax[2])
+    sc.pl.umap(adata, color='Cell Type', title='', legend_fontsize=3, ax=ax[2])
     sc.pl.umap(adata, color=['CD14'], ax=ax[3])
     sc.pl.umap(adata, color=['LAD1'], ax=ax[4])
     sc.pl.umap(adata, color=['MS4A1'], ax=ax[5])
@@ -46,6 +52,34 @@ def makeFigure():
     sc.pl.umap(adata, color=['NKG7'], ax=ax[8])
 
     return f
+
+
+def drug_SVM(save_data, genes):
+    """Retrieves cell types from perturbed data"""
+    completeDF = pd.DataFrame(data=save_data.X)
+    completeDF.columns = genes
+    completeDF["Cell Type"] = save_data.obs.values
+    drugDF = completeDF.loc[(completeDF['Cell Type'] == "T Helpers") | (completeDF['Cell Type'] == "None")]
+    trainingDF = pd.DataFrame()
+    for key in training_markers:
+        cell_weight = completeDF.loc[completeDF["Cell Type"] == key].shape[0] / completeDF.shape[0]
+        #concatDF = drugDF.sort_values(by=training_markers[key]).tail(n=int(np.ceil(290 * cell_weight) + 5))
+        concatDF = drugDF.sort_values(by=training_markers[key]).tail(n=int(np.ceil(50 * cell_weight) + 5))
+        concatDF["Cell Type"] = key
+        trainingDF = pd.concat([trainingDF, concatDF])
+
+    le = preprocessing.LabelEncoder()
+    le.fit(trainingDF["Cell Type"].values)
+    svm = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+    svm.fit(trainingDF.drop("Cell Type", axis=1), le.transform(trainingDF["Cell Type"].values))
+    drugDF = drugDF.drop("Cell Type", axis=1)
+    drugDF["Cell Type"] = le.inverse_transform(svm.predict(drugDF.values))
+    print(drugDF.loc[drugDF["Cell Type"] == "B Cells"])
+    print(drugDF.loc[drugDF["Cell Type"] == "T Cells"])
+    print(drugDF.loc[drugDF["Cell Type"] == "CD8 T Cells"])
+    print(drugDF.loc[drugDF["Cell Type"] == "Dendritic Cells"])
+    save_data.obs.loc[(save_data.obs["Cell Type"] == "T Helpers") | (save_data.obs["Cell Type"] == "None"), "Cell Type"] = drugDF["Cell Type"].values
+    return save_data
 
 
 clust_names = {
@@ -57,13 +91,15 @@ clust_names = {
     "5": "T Cells",
     "6": "CD8 T Cells",
     "7": "NK",
-    "8": "T Cells ",
-    "9": "T helpers",
+    "8": "T Cells",
+    "9": "T Helpers",
     "10": "Dendritic Cells",
     "11": "B Cells",
     "12": "Monocytes",
     "13": "Monocytes",
     "14": "Monocytes"}
+
+
 clust_list = [
     "NK",
     "Monocytes ",
@@ -91,7 +127,7 @@ marker_genes = {
         'CSF1R',
         'ITGAX',
         'HLA-DRB1'],
-    'Dendritic cells': [
+    'Dendritic Cells': [
         'LAD1',
         'LAMP3',
         'TSPAN13',
@@ -127,4 +163,24 @@ marker_genes = {
     'CD8': [
         'CD8A',
         'CD8B']
+}
+
+training_markers = {
+    'Monocytes': [
+        'CD14'
+        ],
+    'Dendritic Cells': [
+        'LAD1'
+        ],
+    'B Cells': [
+        'MS4A1'
+        ],
+    'T Cells': [
+        'CD3D'
+       ],
+    'NK': [
+        'NKG7'
+        ],
+    'CD8 T Cells': [
+        'CD8A']
 }
