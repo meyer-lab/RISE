@@ -105,7 +105,6 @@ def cluster_type(drugXA, fac, typeXA, ax):
     """Assigns each cluster a cell type based on cell type prevalences."""
     clustDF = pd.DataFrame()
     respDF = pd.DataFrame()
-
     resps = np.squeeze(cell_assignment(drugXA.data, fac))
     resps = resps / np.reshape(np.sum(resps, axis=1), (-1, 1, 46))
     types = np.squeeze(np.swapaxes(typeXA.data, 0, 1))
@@ -119,6 +118,7 @@ def cluster_type(drugXA, fac, typeXA, ax):
             for drug in np.arange(0, 46):
                 cell_total += np.sum(respDF.loc[(typesDF["Cell Type"] == cell_type) & (typesDF.Drug == drug)].Responsibility.values)
             clustDF = pd.concat([clustDF, pd.DataFrame({"Cluster": [i + 1], "Cell Type": cell_type, "Total Resp": cell_total})])
+        
     clustDF = clustDF.reset_index(drop=True)
     clustDF = clustDF.pivot(index='Cell Type', columns='Cluster', values='Total Resp')
     clustDF = clustDF.div(clustDF.max(axis=1), axis=0)

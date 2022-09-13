@@ -1,5 +1,4 @@
 """ Methods for data import and normalization. """
-
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -41,11 +40,11 @@ def smallDF(numCells: int):
     flowDF = flowDF.loc[flowDF["Time"] != 0.5]
 
     flowDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(flowDF.shape[0] / numCells))
-    flowDF = flowDF.set_index(["Cell", "Time", "Dose", "Ligand"]).to_xarray()
-    cell_type = flowDF["Cell Type"]
-    flowDF = flowDF.drop_vars(["Cell Type"])
-    flowDF = flowDF[transCols].to_array(dim="Marker")
+    flowXA = flowDF.set_index(["Cell", "Time", "Dose", "Ligand"]).to_xarray()
+    celltypeXA = flowXA["Cell Type"]
+    flowXA = flowXA.drop_vars(["Cell Type"])
+    flowXA = flowXA[transCols].to_array(dim="Marker")
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-
-    assert np.all(np.isfinite(flowDF.to_numpy()))
-    return flowDF, (experimentcells, cell_type)
+  
+    assert np.all(np.isfinite(flowXA.to_numpy()))
+    return flowXA, (experimentcells, celltypeXA)
