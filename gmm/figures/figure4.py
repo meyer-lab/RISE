@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, markerslist, optimal_seed, cell_assignment
+from gmm.tensor import optimal_seed, cell_assignment
 from sklearn.metrics import adjusted_rand_score, confusion_matrix
 
 def makeFigure():
@@ -21,21 +21,18 @@ def makeFigure():
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
     marks = ["Foxp3","CD25","pSTAT5"]
-    zflowTensor, celltypeXA = smallDF(cellperexp)
-    zflowTensor = zflowTensor.loc[marks,:,:,:,:]
+    flowXA, celltypeXA = smallDF(cellperexp)
+    flowXA = flowXA.loc[marks,:,:,:,:]
     
     rank = 3
     n_cluster = 3
 
-    optimalseed, min_loglik = optimal_seed(
-        5, zflowTensor, rank=rank, n_cluster=n_cluster
+    _, _, fit = optimal_seed(
+        5, flowXA, rank=rank, n_cluster=n_cluster
     )
-    print("Optimal Seed:", optimalseed)
-    print("Min LogLik:", min_loglik)
-
-    fac, x, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster, seed=optimalseed)
+    fac = fit[0]
    
-    cluster_type(zflowTensor, fac, celltypeXA[1], ax[9], ax[10])
+    cluster_type(flowXA, fac, celltypeXA[1], ax[9], ax[10])
     
     ax[0].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK())
     xlabel = "Cluster"
@@ -43,17 +40,15 @@ def makeFigure():
     ax[0].set(xlabel=xlabel, ylabel=ylabel)
 
     # CP factors
-    facXA = fac.get_factors_xarray(zflowTensor)
+    facXA = fac.get_factors_xarray(flowXA)
 
     for i, key in enumerate(facXA):
-        data = facXA[key]
-        sns.heatmap(
-            data=data,
-            xticklabels=data.coords[data.dims[1]].values,
-            yticklabels=data.coords[data.dims[0]].values,
-            vmin=0,
-            ax=ax[i + 1],
-        )
+            data = facXA[key]
+            sns.heatmap(
+                data=data,
+                xticklabels=data.coords[data.dims[1]].values,
+                yticklabels=data.coords[data.dims[0]].values,
+                ax=ax[i + 1])
 
     # Covariance for different ranks
     for i in range(3):
@@ -67,12 +62,12 @@ def makeFigure():
 
     return f
     
-def cluster_type(drugXA, fac, typeXA, ax1, ax2):
+def cluster_type(flowXA, fac, typeXA, ax1, ax2):
     """Solves for confusion matrix of predicted and actual cell type labels"""
     # Solves for cell assignments shape [Cell, Cell Prob (Clust), Time, Dose, Ligand]
-    resps = cell_assignment(drugXA.to_numpy(), fac) 
+    resps = cell_assignment(flowXA.to_numpy(), fac) 
     # Normalizes each responsibility for every cell to equal 1 for every condition
-    resps = resps / np.reshape(np.sum(resps, axis=1), (-1, 1, drugXA.shape[2], drugXA.shape[3], drugXA.shape[4]))
+    resps = resps / np.reshape(np.sum(resps, axis=1), (-1, 1, flowXA.shape[2], flowXA.shape[3], flowXA.shape[4]))
     
     # Finding hard clustering assignment for each cell 
     tensor_pred = np.argmax(resps, axis=1)+1
@@ -84,7 +79,7 @@ def cluster_type(drugXA, fac, typeXA, ax1, ax2):
     confmatrix = confusion_matrix(np.ravel(typeXA.to_numpy()), np.ravel(tensor_pred.astype(int)))
     confDF = pd.DataFrame(data=confmatrix, index=["None", "Treg", "Thelper"], columns=[f"Clst. {i}" for i in np.arange(1, resps.shape[1] + 1)])
     sns.heatmap(data=confDF, ax=ax1, annot=True)
-    ax1.set(title="HardClustering:ConfusionMatrix")
+    ax1.set(title="Hard Clustering: Confusion Matrix")
     
     type_tensor = typeXA.to_numpy()
     clustDF = pd.DataFrame()
@@ -103,7 +98,7 @@ def cluster_type(drugXA, fac, typeXA, ax1, ax2):
     assert np.isfinite(clustDF.to_numpy().all())
     sns.heatmap(data=clustDF, ax=ax2, annot=True)
     ax2.set_xticklabels(ax2.get_xticklabels(), rotation=45, ha="right")
-    ax2.set(title="SoftClustering:CellPercentages")
+    ax2.set(title="Soft Clustering: Cell %")
                         
                         
         

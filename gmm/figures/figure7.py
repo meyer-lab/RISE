@@ -9,7 +9,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from .common import getSetup
 from gmm.scImport import ThompsonDrugXA
-from gmm.tensor import minimize_func, cell_assignment, optimal_seed
+from gmm.tensor import cell_assignment, optimal_seed
 import scipy.cluster.hierarchy as sch
 
 
@@ -31,28 +31,29 @@ def makeFigure():
 
     rank = 10
     clust = 10
-    optimalseed, _ = optimal_seed(10, drugXA, rank=rank, n_cluster=clust, nk_rearrange=True)
+    _, _, fit = optimal_seed(10, drugXA, rank=rank, n_cluster=clust, nk_rearrange=True)
+    fac = fit[0]
 
-    print(optimalseed)
+    facXA = fac.get_factors_xarray(drugXA)
+    for i, key in enumerate(facXA):
+        if i < 3:
+            data = facXA[key]
+            sns.heatmap(
+                data=data,
+                xticklabels=data.coords[data.dims[1]].values,
+                yticklabels=data.coords[data.dims[0]].values,
+                ax=ax[i + 3])    
 
-    fac, x, _ = minimize_func(drugXA, rank=rank, n_cluster=clust, nk_rearrange=True, maxiter=2000, seed=optimalseed)
-    print("LogLik", x)
-
-    facDF = fac.get_factors_dataframes(drugXA)
-    drug_nk_plot(fac, facDF, clust, ax[1])
+    drug_nk_plot(fac, facXA["Dimension3"].to_pandas(), clust, ax[1])
     cluster_type(drugXA, fac, typeXA, ax=ax[2])
-    norm_dist_plot(facDF[2], ax[10])
-    facDF[2] = reorder_table(facDF[2], ax[9])
+    norm_dist_plot(facXA["Dimension3"].to_pandas(), ax[10])
+    reorder_table(facXA["Dimension3"].to_pandas(), ax[9])
     labels = ["Cluster", "NMF", "Drug"]
-
-    for i in range(0, 3):
-        sns.heatmap(data=facDF[i], vmin=0, ax=ax[i + 3])
-        ax[i+3].set(ylabel=labels[i])
-
-    #drug_gene_plot(facDF, "Budesonide", nfac, ax[5], max=True)
-    drug_gene_plot(facDF, "Budesonide", nfac, ax[6], max=False)
-    drug_gene_plot(facDF, "Dexrazoxane HCl (ICRF-187, ADR-529)", nfac, ax[7], max=True)
-    drug_gene_plot(facDF, "Alprostadil", nfac, ax[8], max=True)
+        
+    drug_gene_plot(facXA, "Budesonide", nfac, ax[5], max=True)
+    drug_gene_plot(facXA, "Budesonide", nfac, ax[6], max=False)
+    drug_gene_plot(facXA, "Dexrazoxane HCl (ICRF-187, ADR-529)", nfac, ax[7], max=True)
+    drug_gene_plot(facXA, "Alprostadil", nfac, ax[8], max=True)
     plt.tight_layout()
 
     return f
@@ -77,15 +78,15 @@ def norm_dist_plot(df, ax):
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=6, ha="right")
 
 
-def drug_gene_plot(factors_frame: list, drug, fac: int, ax, max=True):
+def drug_gene_plot(facDF, drug, fac: int, ax, max=True):
     """Plots genes most associated with factor which is most associated with a drug"""
     if max:
-        max_fac = factors_frame[2].max(axis=1).loc[drug]
+        max_fac = facDF["Dimension3"].to_pandas().max(axis=1).loc[drug]
     else:
-        max_fac = factors_frame[2].min(axis=1).loc[drug]
-    max_drug_comp = factors_frame[2].transpose()[factors_frame[2].transpose()[drug] == max_fac].index.values
-    max_fac_val = factors_frame[1][max_drug_comp].max().to_frame().values[0][0]
-    max_fac_comp = factors_frame[1][factors_frame[1][max_drug_comp[0]] == max_fac_val].index.values
+        max_fac = facDF["Dimension3"].to_pandas().min(axis=1).loc[drug]
+    max_drug_comp = facDF["Dimension3"].to_pandas().transpose()[facDF["Dimension3"].to_pandas().transpose()[drug] == max_fac].index.values
+    max_fac_val = facDF["Dimension2"].to_pandas()[max_drug_comp].max().to_frame().values[0][0]
+    max_fac_comp = facDF["Dimension2"].to_pandas()[facDF["Dimension2"].to_pandas()[max_drug_comp[0]] == max_fac_val].index.values
     NNMF_Comp = float(max_fac_comp[0][5::])
     geneFactors = pd.read_csv(join(path_here, "data/NNMF_Facts/NNMF_" + str(fac) + "_Loadings.csv")).drop("Unnamed: 0", axis=1)
     isoFac = geneFactors.loc[geneFactors.Component == NNMF_Comp].drop("Component", axis=1).transpose()
@@ -128,7 +129,7 @@ def cluster_type(drugXA, fac, typeXA, ax):
 
 def drug_nk_plot(fac, facDF, clust, ax):
     """Plots NK values as they change over time"""
-    nkWeights = np.matmul(fac.nk, facDF[2].T.values)
-    nkWeights = fac.nk @ facDF[2].T.values
-    nkWeights = pd.DataFrame(data=nkWeights.transpose(), columns=np.arange(1, clust + 1), index=facDF[2].index)
+    nkWeights = np.matmul(fac.nk, facDF.T.values)
+    nkWeights = fac.nk @ facDF.T.values
+    nkWeights = pd.DataFrame(data=nkWeights.transpose(), columns=np.arange(1, clust + 1), index=facDF.index)
     sns.heatmap(data=nkWeights, ax=ax)

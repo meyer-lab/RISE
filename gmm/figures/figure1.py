@@ -17,7 +17,7 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 50
-    zflowDF, experimentalcells = smallDF(cellperexp)
+    flowXA, experimentalcells = smallDF(cellperexp)
 
     ax[0].hist(experimentalcells[0], bins=20)
     xlabel = "Number of Cells per Experiment"
@@ -27,11 +27,11 @@ def makeFigure():
     # scoreDF(Xarray, maxcluster, cell types): DF(Cluster #,Score, Rand Score)
     # Determines rand_score/score for GMM
     maxcluster = 18
-    scoreDF = cvGMM(zflowDF, maxcluster, experimentalcells[1])
+    scoreDF = cvGMM(flowXA, maxcluster, experimentalcells[1])
 
     for i in range(maxcluster):
-        ax[1].plot(scoreDF.Cluster.values, scoreDF.rand_score.values)
-        ax[2].plot(scoreDF.Cluster.values, scoreDF.ll_score.values)
+        ax[1].plot(scoreDF["Cluster"].values, scoreDF["rand_score"].values)
+        ax[2].plot(scoreDF["Cluster"].values, scoreDF["ll_score"].values)
 
     xlabel = "Cluster Number"
     ylabel = "Score"

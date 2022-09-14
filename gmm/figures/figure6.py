@@ -4,9 +4,8 @@ Creating synthetic data and running tGMM to calculate NK and factors
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import tensorly as tl
 from .common import subplotLabel, getSetup, add_ellipse
-from gmm.tensor import minimize_func, optimal_seed
+from gmm.tensor import optimal_seed
 
 
 def makeFigure():
@@ -23,18 +22,13 @@ def makeFigure():
 
     rank = 3
     n_cluster = 6
-    X = make_blob_tensor(blob_DF)
+    blobXA = make_blob_tensor(blob_DF)
     colorpal = sns.color_palette("tab10", n_cluster)
 
-    optimalseed, _ = optimal_seed(
-        5, X, rank=rank, n_cluster=n_cluster
+    _, _, fit = optimal_seed(
+        5, blobXA, rank=rank, n_cluster=n_cluster
     )
-
-    print(optimalseed)
-
-    fac, _, _ = minimize_func(
-        X, rank=rank, n_cluster=n_cluster, seed=optimalseed
-    )
+    fac = fit[0]
 
     points_all, points_y = fac.sample(n_samples=200)
 
@@ -66,7 +60,7 @@ def makeFigure():
         ax[i + 8].set(
             xlim=(-0.2, 2.2),
             ylim=(-0.2, 2.2),
-            title="Time: " + str(i * 3) + " - tGMM Data",
+            title="Time: " + str(i * 3) + " - ULTRA",
         )
 
     ax[4].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK())
@@ -75,7 +69,7 @@ def makeFigure():
     ax[4].set(xlabel=xlabel, ylabel=ylabel)
 
     # CP factors
-    facXA = fac.get_factors_xarray(X)
+    facXA = fac.get_factors_xarray(blobXA)
     DimCol = [f"Dimension{i}" for i in np.arange(1, len(facXA) + 1)]
 
     for i in range(0, 3):
@@ -191,7 +185,7 @@ def plot_synth_pic(blob_DF, t, ax):
     ax.set(
         xlim=(-0.2, 2.2),
         ylim=(-0.2, 2.2),
-        title="Time: " + str(t) + " - Synthetic Data",
+        title="Time: " + str(t) + " - Synthetic Beach Scene",
     )
 
 

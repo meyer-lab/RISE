@@ -1,15 +1,11 @@
 """
-# This creates Figure 11.
-# """
+This creates Figure 11.
+"""
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
 from .common import subplotLabel, getSetup
-from os.path import join, dirname
 from ..CoHimport import CoH_xarray
-from ..tensor import minimize_func, optimal_seed
-
-path_here = dirname(dirname(__file__))
+from ..tensor import optimal_seed
 
 
 def makeFigure():
@@ -21,24 +17,26 @@ def makeFigure():
     subplotLabel(ax)
 
     cohXA = CoH_xarray(numCells=100, markers="Markers")
-    print(cohXA)
+
     rank = 3
     n_cluster = 20
 
-    optimalseed, _ = optimal_seed(5, cohXA, rank=rank, n_cluster=n_cluster)
-    print(optimalseed)
-
-    fac, x, _ = minimize_func(cohXA, rank=rank, n_cluster=n_cluster, seed=optimalseed)
+    _, _, fit = optimal_seed(10, cohXA, rank=rank, n_cluster=n_cluster)
+    fac = fit[0]
 
     ax[0].bar(np.arange(1, fac.nk.size + 1), fac.nk)
-    xlabel = "Cluster"
-    ylabel = "NK Value"
-    ax[0].set(xlabel=xlabel, ylabel=ylabel)
+    ax[0].set(xlabel="Cluster", ylabel="NK Value")
 
     # CP factors
-    fac_df = fac.get_factors_dataframes(cohXA)
+    facXA = fac.get_factors_xarray(cohXA)
 
-    for i in range(0, 4):
-        sns.heatmap(data=fac_df[i], vmin=0, ax=ax[i + 1])
+    for i, key in enumerate(facXA):
+        if i < 4:
+            data = facXA[key]
+            sns.heatmap(
+                data=data,
+                xticklabels=data.coords[data.dims[1]].values,
+                yticklabels=data.coords[data.dims[0]].values,
+                ax=ax[i + 1])
 
     return f

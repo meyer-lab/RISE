@@ -1,4 +1,3 @@
-import enum
 import numpy as np
 import pandas as pd
 import jax.numpy as jnp
@@ -107,8 +106,8 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             *self.factors[2::],)
 
         coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
-                       "Marker1": X.coords[X.dims[0]],
-                       "Marker2": X.coords[X.dims[0]],
+                       "Signal1": X.coords[X.dims[0]],
+                       "Signal2": X.coords[X.dims[0]],
                        X.dims[2]: X.coords[X.dims[2]],
                        X.dims[3]: X.coords[X.dims[3]],
                        X.dims[4]: X.coords[X.dims[4]]}
@@ -147,25 +146,6 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             )
 
         return X, y
-
-    def get_factors_dataframes(self, X):
-        """This returns the normalized factors in dataframe form."""
-        cp_factors = tl.cp_normalize(self)
-
-        cmpCol = [f"Cmp. {i}" for i in np.arange(1, cp_factors.rank + 1)]
-        coords = {
-            "Cluster": np.arange(1, cp_factors.shape[0] + 1),
-            X.dims[0]: X.coords[X.dims[0]],
-            X.dims[2]: X.coords[X.dims[2]],
-            X.dims[3]: X.coords[X.dims[3]],
-            X.dims[4]: X.coords[X.dims[4]],
-        }
-
-        fac_df = [
-            pd.DataFrame(cp_factors.factors[ii], columns=cmpCol, index=coords[key])
-            for ii, key in enumerate(coords)
-        ]
-        return fac_df
 
     def get_factors_xarray(self, X):
         cp_factors = tl.cp_normalize(self)
@@ -286,7 +266,7 @@ def minimize_func(
     X: xa.DataArray,
     rank: int,
     n_cluster: int,
-    maxiter: int = 4000,
+    maxiter: int = 8000,
     verbose: bool = True,
     x0=None,
     nk_rearrange: bool = False,
@@ -366,7 +346,7 @@ def tensorGMM_CV(X, numFolds: int, numClusters: int, numRank: int, maxiter: int 
 
 def optimal_seed(n_seeds, *args, **kwargs):
     """Finds the optimal seed number to minimize log likeihood"""
-    total_loglik = [minimize_func(*args, **kwargs, seed=i)[1] for i in range(n_seeds)]
-    total_loglik = np.nan_to_num(total_loglik)
-
-    return np.argmax(total_loglik), np.max(total_loglik)
+    fits = [minimize_func(*args, **kwargs, seed=i) for i in range(n_seeds)]
+    total_loglik = [f[1] for f in fits]
+    best_seed = np.argmax(total_loglik)
+    return best_seed, total_loglik[best_seed], fits[best_seed]

@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup, add_ellipse
 from gmm.imports import smallDF
-from gmm.tensor import minimize_func, markerslist, optimal_seed
+from gmm.tensor import minimize_func, optimal_seed
 
 
 def makeFigure():
@@ -21,28 +21,24 @@ def makeFigure():
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 300
     marks = ["Foxp3","CD25","pSTAT5"]
-    zflowTensor, _ = smallDF(cellperexp)
-    zflowTensor = zflowTensor.loc[marks,:,:,:,:]
+    flowXA, _ = smallDF(cellperexp)
+    flowXA = flowXA.loc[marks,:,:,:,:]
     rank = 3
     n_cluster = 4
-    assert np.amin(zflowTensor.data) < 0
+    assert np.amin(flowXA.data) < 0
 
     time = 4.0
     ligand = "WT C-term-1"
 
-    timei = np.where(zflowTensor.Time.values == time)[0][0]
-    ligandi = np.where(zflowTensor.Ligand.values == ligand)[0]
-    
-    
-    optimalseed, min_loglik = optimal_seed(5, zflowTensor, rank=rank, n_cluster=n_cluster)
-    print(optimalseed)
-    print(min_loglik)
+    timei = np.where(flowXA["Time"].values == time)[0][0]
+    ligandi = np.where(flowXA["Ligand"].values == ligand)[0]
 
-    fac, _, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster, seed=optimalseed)
+    _, _, fit = optimal_seed(5, flowXA, rank=rank, n_cluster=n_cluster)
+    fac = fit[0]
 
     markertotal = pd.DataFrame()
     for mark in marks:
-        markDF = zflowTensor.loc[mark, :, time, :, ligand]
+        markDF = flowXA.loc[mark, :, time, :, ligand]
         markDF = markDF.to_dataframe(mark).reset_index()
         markertotal[mark] = markDF[mark].values
 
@@ -97,7 +93,8 @@ def makeFigure():
             + "-Time:"
             + str(time)
             + "-nM:"
-            + str(zflowTensor.Dose.values[dose]),
+            + str(flowXA.Dose.values[dose])
+            + "-ULTRA"
         )
         ax[(dose * 2) + 1].set(
             xlim=(-5, 5),
@@ -106,7 +103,7 @@ def makeFigure():
             + "-Time:"
             + str(time)
             + "-nM:"
-            + str(zflowTensor.Dose.values[dose])
+            + str(flowXA["Dose"].values[dose])
             + "-Original Data",
         )
 

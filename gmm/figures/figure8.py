@@ -20,16 +20,16 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 200
-    zflowTensor, _ = smallDF(cellperexp)
+    flowXA, _ = smallDF(cellperexp)
     rank = 4
     n_cluster = 6
     time = 1.0
     ligand = "IL2-1"
 
-    timei = np.where(zflowTensor.Time.values == time)[0][0]
-    ligandi = np.where(zflowTensor.Ligand.values == ligand)[0]
+    timei = np.where(flowXA.Time.values == time)[0][0]
+    ligandi = np.where(flowXA.Ligand.values == ligand)[0]
 
-    fac, _, _ = minimize_func(zflowTensor, rank=rank, n_cluster=n_cluster)
+    fac, _, _ = minimize_func(flowXA, rank=rank, n_cluster=n_cluster)
 
     points_all, points_y = fac.sample()
 
@@ -60,7 +60,7 @@ def makeFigure():
             + " at time "
             + str(time)
             + " at nM="
-            + str(zflowTensor.Dose.values[dose]),
+            + str(flowXA["Dose"].values[dose]),
         )
 
     return f

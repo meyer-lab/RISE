@@ -22,14 +22,14 @@ def makeFigure():
     ranknumb = np.arange(3, 7)
     n_cluster = np.arange(4, 8)
 
-    zflowTensor, _ = smallDF(cellperexp)
+    flowXA, _ = smallDF(cellperexp)
     maxloglikDF = pd.DataFrame(columns=["Rank", "Cluster", "MaxLoglik"])
     maxloglikDF = pd.DataFrame()
     for i in range(len(ranknumb)):
         row = pd.DataFrame()
         row["Rank"] = ["Rank:" + str(ranknumb[i])]
         for j in range(len(n_cluster)):
-            _, loglik, _ = minimize_func(zflowTensor, ranknumb[i], n_cluster[j])
+            _, loglik, _ = minimize_func(flowXA, ranknumb[i], n_cluster[j])
             row["Cluster:" + str(n_cluster[j])] = loglik
 
         maxloglikDF = pd.concat([maxloglikDF, row])
