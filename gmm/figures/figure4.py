@@ -24,9 +24,9 @@ def makeFigure():
     flowXA, celltypeXA = smallDF(cellperexp)
     flowXA = flowXA.loc[marks,:,:,:,:]
     
-    rank = 3
-    n_cluster = 3
-
+    rank = 5
+    n_cluster = 6
+    
     _, _, fit = optimal_seed(
         5, flowXA, rank=rank, n_cluster=n_cluster
     )
@@ -77,6 +77,7 @@ def cluster_type(flowXA, fac, typeXA, ax1, ax2):
     # 1.0 is a perfect match for rand_score
     
     confmatrix = confusion_matrix(np.ravel(typeXA.to_numpy()), np.ravel(tensor_pred.astype(int)))
+    confmatrix  = confmatrix[0:len(np.unique(typeXA.to_numpy())),0:resps.shape[1]]
     confDF = pd.DataFrame(data=confmatrix, index=["None", "Treg", "Thelper"], columns=[f"Clst. {i}" for i in np.arange(1, resps.shape[1] + 1)])
     sns.heatmap(data=confDF, ax=ax1, annot=True)
     ax1.set(title="Hard Clustering: Confusion Matrix")

@@ -9,6 +9,8 @@ from sklearn.model_selection import KFold
 from jax import value_and_grad, jit
 from jax.lax.linalg import triangular_solve
 from scipy.optimize import minimize, Bounds
+from copy import copy
+
 
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
@@ -18,11 +20,11 @@ def infer_rank(length: int, shape: tuple[int, ...], nk_rearrange: bool = False):
     if nk_rearrange:
         return int(
             length
-            / (np.sum(shape) + shape[0] + int(shape[1] * (shape[1] - 1) / 2 + shape[1]))
+            / (np.sum(shape) + 2 * shape[0] + shape[2] + np.sum(shape[2::]) + int(shape[1] * (shape[1] - 1) / 2 + shape[1]))
         )
 
     length -= shape[0]
-    return int(length / (np.sum(shape) + int(shape[1] * (shape[1] - 1) / 2 + shape[1])))
+    return int(length / (np.sum(shape) + shape[0] + np.sum(shape[2::]) + int(shape[1] * (shape[1] - 1) / 2 + shape[1])))
 
 
 def sample_GMM(
@@ -49,11 +51,13 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         """Build factor matrices from vector and shapes."""
         rank = infer_rank(vectorIn.size, shape, nk_rearrange)
         self.nk_rearrange = nk_rearrange
-        vectorIn = jnp.exp(vectorIn)
         if nk_rearrange:
             self.nk = vectorIn[0: (shape[0] * rank)]
             self.nk = jnp.reshape(self.nk, (shape[0], rank))
             vectorIn = vectorIn[(shape[0] * rank)::]
+            self.nk_Fac = jnp.exp(vectorIn[0: (shape[2] * rank)])
+            self.nk_Fac = jnp.reshape(self.nk_Fac, (shape[2], rank))
+            vectorIn = vectorIn[(shape[2] * rank)::]
         else:
             self.nk = vectorIn[0: shape[0]]
             vectorIn = vectorIn[shape[0]::]
@@ -71,11 +75,23 @@ class tensorGMM(tl.cp_tensor.CPTensor):
                 ],
             )
         )
+        
+        # Reshapes non-signal covariance factors from vector
+        vectorIn = vectorIn[nN[-1]::]
+        nN[2::] -= rank * shape[1]
+        nN = np.delete(nN, 2)
+        covarFacS = list(shape)
+        covarFacS.pop(1)
+        covFacs = []
 
+        for ii in range(len(covarFacS)):
+            covFacs.append(jnp.exp(jnp.reshape(vectorIn[nN[ii]: nN[ii + 1]], (covarFacS[ii], rank))))
+
+        self.covFacs = covFacs
         covars = jnp.zeros((shape[1], shape[1], rank))
         ai, bi = jnp.tril_indices(shape[1])
         pVec = vectorIn[nN[-1]::].reshape(-1, rank)
-        self.covars = covars.at[ai, bi, :].set(pVec)
+        self.covars = covars.at[ai, bi, :].set(jnp.exp(pVec))
 
     def get_precisions(self) -> jnp.ndarray:
         """Return precision matrices."""
@@ -93,17 +109,17 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         """Return covariance matrices."""
         return jnp.einsum(
             "ax,bcx,dx,ex,fx->abcdef",
-            self.factors[0],
+            self.covFacs[0],
             self.covars,
-            *self.factors[2::],)
+            *self.covFacs[1::],)
 
     def get_covariances_xarray(self, X):
         """Return covariance matrices."""
         covar = jnp.einsum(
             "ax,bcx,dx,ex,fx->abcdef",
-            self.factors[0],
+            self.covFacs[0],
             self.covars,
-            *self.factors[2::],)
+            *self.covFacs[1::],)
 
         coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
                        "Signal1": X.coords[X.dims[0]],
@@ -149,7 +165,6 @@ class tensorGMM(tl.cp_tensor.CPTensor):
 
     def get_factors_xarray(self, X):
         cp_factors = tl.cp_normalize(self)
-
         cmpCol = [f"Cmp. {i}" for i in np.arange(1, cp_factors.rank + 1)]
         coordinates = {"Cluster": np.arange(1, cp_factors.shape[0] + 1),
                        X.dims[0]: X.coords[X.dims[0]],
@@ -177,16 +192,23 @@ def vector_guess(
     """Predetermines total vector that will be maximized for NK, factors and core"""
     factortotal = (
         np.sum(shape) * rank
+        + shape[0] * rank
+        + np.sum(shape[2::]) * rank
         + int(shape[1] * (shape[1] - 1) / 2 + shape[1]) * rank
         + shape[0]
     )
 
     if (nk_rearrange is True) and (rank > 1):
         factortotal += (rank - 1) * shape[0]
+        factortotal += rank * shape[2]
 
     rng = np.random.default_rng(seed)
-    vector = rng.normal(loc=-1.0, size=factortotal)
-    vector[0: shape[0]] = np.log(1.0 / shape[0])
+    vector = rng.normal(loc=0, size=factortotal)
+
+    if nk_rearrange:
+        vector[0: shape[0] * rank] = 1.0
+    else:
+        vector[0: shape[0]] = 1.0
 
     return vector
 
@@ -200,7 +222,7 @@ def comparingGMMjax(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
 
     if facBuild.nk_rearrange:
         assert nk.ndim == 2
-        nk = nk @ facBuild.factors[2].T
+        nk = nk @ facBuild.nk_Fac.T
         assert nk.ndim == 2
         nkl = jnp.log(nk / jnp.sum(nk, axis=0, keepdims=True))
         nkl = nkl[jnp.newaxis, :, :, jnp.newaxis, jnp.newaxis]
@@ -228,7 +250,7 @@ def cell_assignment(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
 
     if facBuild.nk_rearrange:
         assert nk.ndim == 2
-        nk = nk @ facBuild.factors[2].T
+        nk = nk @ facBuild.nk_Fac.T
         assert nk.ndim == 2
         nkl = jnp.log(nk / jnp.sum(nk, axis=0, keepdims=True))
         nkl = nkl[jnp.newaxis, :, :, jnp.newaxis, jnp.newaxis]
@@ -297,11 +319,16 @@ def minimize_func(
 
     # Add bounds
     lb = np.full_like(x0, -np.inf)
+    ub = copy(-lb)
     if nk_rearrange:
-        lb[0:n_cluster * rank] = np.log(0.1)
+        lb[0:n_cluster * rank] = 0.1
+        ub[0:n_cluster * rank] = 10
     else:
-        lb[0:n_cluster] = np.log(0.1)
-    bounds = Bounds(lb, -lb, keep_feasible=False)
+        lb[0:n_cluster] = 0.1
+        ub[0:n_cluster] = 10
+
+    bounds = Bounds(lb, ub, keep_feasible=False)
+
 
     opt = minimize(
         ffunc,

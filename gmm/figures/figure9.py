@@ -12,7 +12,7 @@ from gmm.tensor import minimize_func, optimal_seed
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 10), (6, 4))
+    ax, f = getSetup((7, 10), (6, 4))
 
     # Add subplot labels
     subplotLabel(ax)

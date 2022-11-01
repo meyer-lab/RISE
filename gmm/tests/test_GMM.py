@@ -21,13 +21,8 @@ from ..tensor import (
 )
 
 data_import, other_import = smallDF(10)
-meanShape = (
-    6,
-    data_import.shape[0],
-    data_import.shape[2],
-    data_import.shape[3],
-    data_import.shape[4],
-)
+meanShape = (6, data_import.shape[0],data_import.shape[2],
+    data_import.shape[3],data_import.shape[4])
 
 
 def comparingGMM(zflowDF: xa.DataArray, facs: tensorGMM):
@@ -171,33 +166,28 @@ def test_finite_data():
     """Test that all values in tensor has no NaN"""
     assert np.isfinite(data_import.to_numpy()).all()
 
-
 @pytest.mark.parametrize("rank", [3, 10])
 @pytest.mark.parametrize("nk_r", [True, False])
+
 def test_infer_rank(rank, nk_r):
     """Test that we correctly infer the vector rank."""
     x0 = vector_guess(meanShape, rank=rank, nk_rearrange=nk_r)
     rank_inf = infer_rank(x0.size, meanShape, nk_rearrange=nk_r)
     assert rank_inf == rank
 
-
 def test_cov_fit():
     """Test that tensor-GMM method recreates covariance of data accurately"""
     cov = np.array([[0.5, 0.05], [0.05, 3.0]])
     samples = np.transpose(np.random.multivariate_normal([3, 1], cov, 2000)).reshape(
-        (2, 2000, 1, 1, 1)
-    )
+        (2, 2000, 1, 1, 1))
     samples = xa.DataArray(
         samples,
         dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"),
-        coords={
-            "Dim": ["X", "Y"],
+        coords={"Dim": ["X", "Y"],
             "Point": np.arange(0, 2000),
             "Throwaway 1": [1],
             "Throwaway 2": [1],
-            "Throwaway 3": [1],
-        },
-    )
+            "Throwaway 3": [1]})
     fac, _, _ = minimize_func(samples, rank=1, n_cluster=1, maxiter=2000, verbose=False)
     cholCov = fac.get_covariances()
     cholCov = cholCov[0, :, :, 0, 0, 0]

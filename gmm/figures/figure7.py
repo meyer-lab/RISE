@@ -49,7 +49,7 @@ def makeFigure():
     norm_dist_plot(facXA["Dimension3"].to_pandas(), ax[10])
     reorder_table(facXA["Dimension3"].to_pandas(), ax[9])
     labels = ["Cluster", "NMF", "Drug"]
-        
+
     drug_gene_plot(facXA, "Budesonide", nfac, ax[5], max=True)
     drug_gene_plot(facXA, "Budesonide", nfac, ax[6], max=False)
     drug_gene_plot(facXA, "Dexrazoxane HCl (ICRF-187, ADR-529)", nfac, ax[7], max=True)

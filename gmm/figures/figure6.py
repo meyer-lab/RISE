@@ -26,7 +26,7 @@ def makeFigure():
     colorpal = sns.color_palette("tab10", n_cluster)
 
     _, _, fit = optimal_seed(
-        5, blobXA, rank=rank, n_cluster=n_cluster
+        10, blobXA, rank=rank, n_cluster=n_cluster
     )
     fac = fit[0]
 
@@ -58,8 +58,8 @@ def makeFigure():
             "beach",
         )
         ax[i + 8].set(
-            xlim=(-0.2, 2.2),
-            ylim=(-0.2, 2.2),
+            xlim=(-1.2, 1.2),
+            ylim=(-1.2, 1.2),
             title="Time: " + str(i * 3) + " - ULTRA",
         )
 
@@ -74,7 +74,7 @@ def makeFigure():
 
     for i in range(0, 3):
         sns.heatmap(data=facXA[DimCol[i]], xticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[1]].values,
-                    yticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[0]].values, vmin=0, ax=ax[i + 5])
+                    yticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[0]].values, ax=ax[i + 5])
 
     return f
 
@@ -98,7 +98,7 @@ def make_synth_pic(magnitude):
             [
                 blob_DF,
                 make_blob_art(
-                    (10, 2),
+                    (0, -8),
                     cov=[[20, 0], [0, 0.5]],
                     size=int(1 * magnitude),
                     time=t,
@@ -110,7 +110,7 @@ def make_synth_pic(magnitude):
             [
                 blob_DF,
                 make_blob_art(
-                    (4, 6),
+                    (-6, -4),
                     cov=[[0.05, 0], [0, 2]],
                     size=int(0.5 * magnitude),
                     time=t,
@@ -122,7 +122,7 @@ def make_synth_pic(magnitude):
             [
                 blob_DF,
                 make_blob_art(
-                    (16, 6),
+                    (6, -4),
                     cov=[[0.05, 0], [0, 2]],
                     size=int(0.5 * magnitude),
                     time=t,
@@ -134,7 +134,7 @@ def make_synth_pic(magnitude):
             [
                 blob_DF,
                 make_blob_art(
-                    (4, 10),
+                    (-6, 0),
                     cov=[[1, 0], [0, 1]],
                     size=int(0.5 * magnitude),
                     time=t,
@@ -146,7 +146,7 @@ def make_synth_pic(magnitude):
             [
                 blob_DF,
                 make_blob_art(
-                    (16, 10),
+                    (6, 0),
                     cov=[[1, 0], [0, 1]],
                     size=int(0.5 * magnitude),
                     time=t,
@@ -158,7 +158,7 @@ def make_synth_pic(magnitude):
             [
                 blob_DF,
                 make_blob_art(
-                    (10, 14 + 8 * np.sin(t * 2 * np.pi / (25))),
+                    (0, 4 + 8 * np.sin(t * 2 * np.pi / (25))),
                     cov=[[0.5, 0], [0, 0.5]],
                     size=int(1 * magnitude),
                     time=t,
@@ -183,8 +183,8 @@ def plot_synth_pic(blob_DF, t, ax):
         s=5,
     )
     ax.set(
-        xlim=(-0.2, 2.2),
-        ylim=(-0.2, 2.2),
+        xlim=(-1.2, 1.2),
+        ylim=(-1.2, 1.2),
         title="Time: " + str(t) + " - Synthetic Beach Scene",
     )
 
