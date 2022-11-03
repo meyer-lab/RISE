@@ -22,6 +22,7 @@ scanpy = "^1.9.1"
 igraph = "^0.9.11"
 louvain = "^0.7.1"
 leidenalg = "^0.8.10"
+tensorpack = {git = "https://github.com/meyer-lab/tensorpack.git", branch = "main"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

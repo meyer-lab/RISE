@@ -10,6 +10,7 @@ from sklearn.mixture import GaussianMixture
 from ..imports import smallDF
 from ..GMM import cvGMM
 from ..scImport import ThompsonDrugXA
+from ..CoHimport import CoH_xarray
 from ..tensor import (
     comparingGMMjax,
     vector_guess,
@@ -160,6 +161,14 @@ def test_import_PopAlign(rank):
     dataPA_import, _, _, _ = ThompsonDrugXA(rank=rank)
     assert dataPA_import.shape == (rank, 290, 46, 1, 1)
     assert np.isfinite(dataPA_import.to_numpy()).all()
+    
+@pytest.mark.parametrize("cells", [5, 100])  
+def test_import_CoH(cells):
+    """Test the CoH import."""
+    cond = ['Untreated', 'IFNg-50ng', 'IL10-50ng', 'IL4-50ng', 'IL2-50ng', 'IL6-50ng']
+    numCell=cells
+    cohXA_import, _, _ = CoH_xarray(numCell,cond,allmarkers=True)
+    assert np.isfinite(cohXA_import.to_numpy()).all()
 
 
 def test_finite_data():
