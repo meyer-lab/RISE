@@ -18,12 +18,18 @@ from ..tensor import (
     minimize_func,
     tensorGMM_CV,
     tensorGMM,
-    infer_rank
+    infer_rank,
+    norm_covariances,
 )
 
 data_import, other_import = smallDF(10)
-meanShape = (6, data_import.shape[0],data_import.shape[2],
-    data_import.shape[3],data_import.shape[4])
+meanShape = (
+    6,
+    data_import.shape[0],
+    data_import.shape[2],
+    data_import.shape[3],
+    data_import.shape[4],
+)
 
 
 def comparingGMM(zflowDF: xa.DataArray, facs: tensorGMM):
@@ -144,7 +150,9 @@ def test_independence():
 @pytest.mark.parametrize("nk_r", [True, False])
 def test_fit(nk_r):
     """Test that fitting can run fine."""
-    facs, ll, _ = minimize_func(data_import, 3, 10, maxiter=20, seed=1, verbose=False, nk_rearrange=nk_r)
+    facs, ll, _ = minimize_func(
+        data_import, 3, 10, maxiter=20, seed=1, verbose=False, nk_rearrange=nk_r
+    )
     facsTwo, llTwo, _ = minimize_func(
         data_import, 3, 10, maxiter=20, seed=1, verbose=False, nk_rearrange=nk_r
     )
@@ -161,13 +169,14 @@ def test_import_PopAlign(rank):
     dataPA_import, _, _, _ = ThompsonDrugXA(rank=rank)
     assert dataPA_import.shape == (rank, 290, 46, 1, 1)
     assert np.isfinite(dataPA_import.to_numpy()).all()
-    
-@pytest.mark.parametrize("cells", [5, 100])  
+
+
+@pytest.mark.parametrize("cells", [5, 100])
 def test_import_CoH(cells):
     """Test the CoH import."""
-    cond = ['Untreated', 'IFNg-50ng', 'IL10-50ng', 'IL4-50ng', 'IL2-50ng', 'IL6-50ng']
-    numCell=cells
-    cohXA_import, _, _ = CoH_xarray(numCell,cond,allmarkers=True)
+    cond = ["Untreated", "IFNg-50ng", "IL10-50ng", "IL4-50ng", "IL2-50ng", "IL6-50ng"]
+    numCell = cells
+    cohXA_import, _, _ = CoH_xarray(numCell, cond, allmarkers=True)
     assert np.isfinite(cohXA_import.to_numpy()).all()
 
 
@@ -175,31 +184,38 @@ def test_finite_data():
     """Test that all values in tensor has no NaN"""
     assert np.isfinite(data_import.to_numpy()).all()
 
+
 @pytest.mark.parametrize("rank", [3, 10])
 @pytest.mark.parametrize("nk_r", [True, False])
-
 def test_infer_rank(rank, nk_r):
     """Test that we correctly infer the vector rank."""
     x0 = vector_guess(meanShape, rank=rank, nk_rearrange=nk_r)
     rank_inf = infer_rank(x0.size, meanShape, nk_rearrange=nk_r)
     assert rank_inf == rank
 
-def test_cov_fit():
-    """Test that tensor-GMM method recreates covariance of data accurately"""
-    cov = np.array([[0.5, 0.05], [0.05, 3.0]])
-    samples = np.transpose(np.random.multivariate_normal([3, 1], cov, 2000)).reshape(
-        (2, 2000, 1, 1, 1))
-    samples = xa.DataArray(
-        samples,
-        dims=("Dim", "Point", "Throwaway 1", "Throwaway 2", "Throwaway 3"),
-        coords={"Dim": ["X", "Y"],
-            "Point": np.arange(0, 2000),
-            "Throwaway 1": [1],
-            "Throwaway 2": [1],
-            "Throwaway 3": [1]})
-    fac, _, _ = minimize_func(samples, rank=1, n_cluster=1, maxiter=2000, verbose=False)
-    cholCov = fac.get_covariances()
-    cholCov = cholCov[0, :, :, 0, 0, 0]
-    covR = cholCov @ cholCov.T
+def test_cov_tensor():
+    """Test that covariance factor normalization does not affect the reconstruction."""
+    fac, _, _ = minimize_func(data_import, rank=3, n_cluster=5, maxiter=10, seed=1, verbose=False)
 
-    np.testing.assert_allclose(cov, covR, atol=0.1, rtol=0.01)
+    # Perturb covFacs
+    fac.covFacs[0] *= 2.0
+    fac.covFacs[1] *= 5.0
+    fac.covars /= 3.0
+
+    covTensor1 = np.array(fac.get_covariances())
+
+    fac.covars, fac.covFacs, fac.covWeights = norm_covariances(fac.covars, fac.covFacs, fac.covWeights)
+
+    covTensor2 = np.array(fac.get_covariances())
+    np.testing.assert_allclose(covTensor1, covTensor2, rtol=1e-6)
+
+
+def test_cov_normalization():
+    """Test that running the covariance normalization a second time creates the same result."""
+    # Note that the first covariance normalization happens as part of the fitting process.
+    fac, _, _ = minimize_func(data_import, rank=4, n_cluster=6, maxiter=10, seed=1, verbose=False)
+
+    covars, covFacs, _ = norm_covariances(fac.covars, fac.covFacs)
+
+    np.testing.assert_allclose(fac.covFacs[0], covFacs[0], rtol=1e-6)
+    np.testing.assert_allclose(fac.covars, covars, rtol=1e-6)

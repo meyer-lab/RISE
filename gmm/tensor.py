@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import jax.numpy as jnp
 import jax.scipy.special as jsp
 import tensorly as tl
@@ -93,6 +92,8 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         pVec = vectorIn[nN[-1]::].reshape(-1, rank)
         self.covars = covars.at[ai, bi, :].set(jnp.exp(pVec))
 
+        self.covars, self.covFacs, self.covWeights = norm_covariances(self.covars, self.covFacs)
+
     def get_precisions(self) -> jnp.ndarray:
         """Return precision matrices."""
         cov_chol = self.get_covariances()
@@ -110,16 +111,12 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         return jnp.einsum(
             "ax,bcx,dx,ex,fx->abcdef",
             self.covFacs[0],
-            self.covars,
+            self.covars * self.covWeights[jnp.newaxis, jnp.newaxis, :],
             *self.covFacs[1::],)
 
     def get_covariances_xarray(self, X):
         """Return covariance matrices."""
-        covar = jnp.einsum(
-            "ax,bcx,dx,ex,fx->abcdef",
-            self.covFacs[0],
-            self.covars,
-            *self.covFacs[1::],)
+        covar = self.get_covariances()
 
         coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
                        "Signal1": X.coords[X.dims[0]],
@@ -184,6 +181,24 @@ class tensorGMM(tl.cp_tensor.CPTensor):
     def norm_NK(self) -> jnp.ndarray:
         """Normalizes NK values to percentages"""
         return self.nk / np.sum(self.nk)
+
+
+def norm_covariances(covars, covFacs, covWeights=None):
+    """Normalizes covariance factors. Weight is moved to inside covFacs."""
+    normalized_factors = []
+    if covWeights is None:
+        covWeights = jnp.ones(covFacs[0].shape[1])
+
+    for factor in covFacs:
+        scales = jnp.linalg.norm(factor, axis=0)
+        normalized_factors.append(factor / scales[jnp.newaxis, :])
+        covWeights *= scales
+
+    scales = jnp.linalg.norm(covars, axis=(0, 1))
+    covars /= scales[jnp.newaxis, jnp.newaxis, :]
+    covWeights *= scales
+    
+    return covars, normalized_factors, covWeights
 
 
 def vector_guess(
