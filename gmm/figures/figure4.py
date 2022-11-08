@@ -37,15 +37,15 @@ def makeFigure():
     # CP factors
     facXA = fac.get_factors_xarray(flowXA)
 
-    plotFactors_IL2(facXA, marks, ax)
-    plotCovarFactors_IL2(fac, facXA, n_cluster, marks, ax)
+    plotFactors_IL2(facXA, ax)
+    plotCovarFactors_IL2(fac, flowXA, n_cluster, ax)
 
     cluster_type(flowXA, fac, celltypeXA[1], ax[20], "Soft")
 
     return f
 
 
-def plotFactors_IL2(facXA, marks, ax):
+def plotFactors_IL2(facXA, ax):
     """Plots factors for ligand, time, dose, and cluster"""
     for i, key in enumerate(facXA):
         data = facXA[key]
@@ -58,34 +58,34 @@ def plotFactors_IL2(facXA, marks, ax):
         ax[i + 1].set_title("Mean Factors")
 
 
-def plotCovarFactors_IL2(fac, facXA, n_cluster, marks, ax):
+def plotCovarFactors_IL2(fac, dataXA, n_cluster, ax):
     """Plots covariance factors for ligand, time, dose, and cluster"""
-    for i in range(fac.covars.shape[2]):
-        dff = pd.DataFrame(
-            fac.covars[:, :, i] @ fac.covars[:, :, i].T,
-            columns=marks,
-            index=marks,
-        )
-        sns.heatmap(data=dff, ax=ax[i + 10])
+    cov_fac = fac.get_covariance_factors(dataXA)
+    DimCol = [f"Dimension{i}" for i in np.arange(1, len(cov_fac) + 1)]
+    covSig = cov_fac[DimCol[1]].to_numpy()
+
+    for i in range(fac.rank):
+        cov_signal = pd.DataFrame(
+        covSig[:, :, i] @ covSig[:, :, i].T,
+        columns=dataXA.coords[dataXA.dims[0]],
+        index=dataXA.coords[dataXA.dims[0]])
+        sns.heatmap(data=cov_signal, ax=ax[i + 10])
         ax[i + 10].set(title="Covariance: Rank - " + str(i + 1))
 
-    DimCol = [f"Dimension{i}" for i in np.arange(1, len(facXA) + 1)]
-
     for i in range(len(fac.covFacs)):
-
         if i == 0:
             sns.heatmap(
                 data=fac.covFacs[i],
-                xticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[1]].values,
-                yticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[0]].values,
+                xticklabels=cov_fac[DimCol[i]].coords[cov_fac[DimCol[i]].dims[1]].values,
+                yticklabels=cov_fac[DimCol[i]].coords[cov_fac[DimCol[i]].dims[0]].values,
                 ax=ax[i + 6],
             )
         else:
             sns.heatmap(
                 data=fac.covFacs[i],
-                xticklabels=facXA[DimCol[i]].coords[facXA[DimCol[i]].dims[1]].values,
-                yticklabels=facXA[DimCol[i + 1]]
-                .coords[facXA[DimCol[i + 1]].dims[0]]
+                xticklabels=cov_fac[DimCol[i+1]].coords[cov_fac[DimCol[i+1]].dims[1]].values,
+                yticklabels=cov_fac[DimCol[i+1]]
+                .coords[cov_fac[DimCol[i+1]].dims[0]]
                 .values,
                 ax=ax[i + 6],
             )

@@ -177,6 +177,25 @@ class tensorGMM(tl.cp_tensor.CPTensor):
                         coords={"Cmp": cmpCol, **coordinates})
 
         return da
+    
+    
+    def get_covariance_factors(self, X):
+        """Outputs xarray of all covariance factors for each dimension"""
+        cmpCol = [f"Cmp. {i}" for i in np.arange(1, self.rank + 1)]
+        coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
+                       X.dims[0]: X.coords[X.dims[0]],
+                       X.dims[2]: X.coords[X.dims[2]],
+                       X.dims[3]: X.coords[X.dims[3]],
+                       X.dims[4]: X.coords[X.dims[4]]}
+        
+        cov_fac = xa.Dataset({"Dimension1": (["Cluster", "Cmp"], self.covFacs[0]),
+                         "Dimension2": ([X.dims[0], X.dims[0], "Cmp"], self.covars),
+                         "Dimension3": ([X.dims[2], "Cmp"], self.covFacs[1]),
+                         "Dimension4": ([X.dims[3], "Cmp"], self.covFacs[2]),
+                         "Dimension5": ([X.dims[4], "Cmp"], self.covFacs[3])},
+                        coords={"Cmp": cmpCol, **coordinates})
+        
+        return cov_fac
 
     def norm_NK(self) -> jnp.ndarray:
         """Normalizes NK values to percentages"""
