@@ -2,6 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 import jax.scipy.special as jsp
 import tensorly as tl
+from tensorly.cp_tensor import cp_flip_sign
 from tqdm import tqdm
 import xarray as xa
 from sklearn.model_selection import KFold
@@ -162,6 +163,7 @@ class tensorGMM(tl.cp_tensor.CPTensor):
 
     def get_factors_xarray(self, X):
         cp_factors = tl.cp_normalize(self)
+        cp_factors = cp_flip_sign(cp_factors)
         cmpCol = [f"Cmp. {i}" for i in np.arange(1, cp_factors.rank + 1)]
         coordinates = {"Cluster": np.arange(1, cp_factors.shape[0] + 1),
                        X.dims[0]: X.coords[X.dims[0]],
