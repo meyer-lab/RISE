@@ -21,17 +21,19 @@ def makeFigure():
     # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
     cellperexp = 300
+    all = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
     marks = ["Foxp3", "CD25", "pSTAT5"]
     flowXA, celltypeXA = smallDF(cellperexp)
     flowXA = flowXA.loc[marks, :, :, :, :]
 
-    rank = 6
+    rank = 7
     n_cluster = 8
 
-    _, _, fit = optimal_seed(5, flowXA, rank=rank, n_cluster=n_cluster)
+    _, _, fit = optimal_seed(10, flowXA, rank=rank, n_cluster=n_cluster)
     fac = fit[0]
 
     ax[0].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK(), color="k")
+    ax[0].set(xticks = np.arange(1, n_cluster + 1))
     ax[0].set(xlabel="Cluster", ylabel="Cell Abundance")
 
     # CP factors
@@ -47,19 +49,23 @@ def makeFigure():
 
 def plotFactors_IL2(facXA, ax):
     """Plots factors for ligand, time, dose, and cluster"""
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
     for i, key in enumerate(facXA):
         data = facXA[key]
         sns.heatmap(
             data=data,
             xticklabels=data.coords[data.dims[1]].values,
             yticklabels=data.coords[data.dims[0]].values,
-            ax=ax[i + 1],
+            ax=ax[i + 1], cmap=cmap,
+            vmin=-1,vmax=1
         )
+        ax[i+1].set_xticklabels(ax[i+1].get_xticklabels(), rotation=90, ha="right")
         ax[i + 1].set_title("Mean Factors")
 
 
 def plotCovarFactors_IL2(fac, dataXA, n_cluster, ax):
     """Plots covariance factors for ligand, time, dose, and cluster"""
+    cmap = sns.cubehelix_palette(as_cmap=True)
     cov_fac = fac.get_covariance_factors(dataXA)
     DimCol = [f"Dimension{i}" for i in np.arange(1, len(cov_fac) + 1)]
     covSig = cov_fac[DimCol[1]].to_numpy()
@@ -69,8 +75,9 @@ def plotCovarFactors_IL2(fac, dataXA, n_cluster, ax):
         covSig[:, :, i] @ covSig[:, :, i].T,
         columns=dataXA.coords[dataXA.dims[0]],
         index=dataXA.coords[dataXA.dims[0]])
-        sns.heatmap(data=cov_signal, ax=ax[i + 10])
-        ax[i + 10].set(title="Covariance: Rank - " + str(i + 1))
+        sns.heatmap(data=cov_signal, ax=ax[i + 10],cmap=cmap,
+                    vmin=0,vmax=1)
+        ax[i + 10].set(title="Covariance Factors: Rank - " + str(i + 1))
 
     for i in range(len(fac.covFacs)):
         if i == 0:
@@ -78,7 +85,7 @@ def plotCovarFactors_IL2(fac, dataXA, n_cluster, ax):
                 data=fac.covFacs[i],
                 xticklabels=cov_fac[DimCol[i]].coords[cov_fac[DimCol[i]].dims[1]].values,
                 yticklabels=cov_fac[DimCol[i]].coords[cov_fac[DimCol[i]].dims[0]].values,
-                ax=ax[i + 6],
+                ax=ax[i + 6], cmap=cmap, vmin=0,vmax=1
             )
         else:
             sns.heatmap(
@@ -87,7 +94,7 @@ def plotCovarFactors_IL2(fac, dataXA, n_cluster, ax):
                 yticklabels=cov_fac[DimCol[i+1]]
                 .coords[cov_fac[DimCol[i+1]].dims[0]]
                 .values,
-                ax=ax[i + 6],
+                ax=ax[i + 6], cmap=cmap, vmin=0,vmax=1
             )
         ax[i + 6].set_title("Covariance Factors")
 
@@ -169,6 +176,6 @@ def cluster_type(flowXA, fac, typeXA, ax, clusteringtype):
         )
         clustDF = clustDF.div(clustDF.sum(axis=0))
         assert np.isfinite(clustDF.to_numpy().all())
-        sns.heatmap(data=clustDF, ax=ax)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
+        cmap = sns.light_palette("seagreen", as_cmap=True)
+        sns.heatmap(data=clustDF, ax=ax,cmap=cmap)
         ax.set(title="Soft Clustering: Cell %")

@@ -16,6 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
     blob_DF = make_synth_pic(magnitude=60)
+    
 
     # for i in np.arange(0, 3):
     #     plot_synth_pic(blob_DF, t=i * 3, ax=ax[i])
@@ -24,12 +25,13 @@ def makeFigure():
     n_cluster = 6
     blobXA = make_blob_tensor(blob_DF)
 
-    _, _, fit = optimal_seed(18, blobXA, rank=rank, n_cluster=n_cluster)
+    _, _, fit = optimal_seed(30, blobXA, rank=rank, n_cluster=n_cluster)
     fac = fit[0]
 
     points_all, points_y = fac.sample(n_samples=200)
 
     ax[0].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK(), color="k")
+    ax[0].set(xticks = np.arange(1, n_cluster + 1))
     ax[0].set(xlabel="Cluster", ylabel="Cell Abundance")
 
     # CP factors
@@ -40,6 +42,7 @@ def makeFigure():
     plotFactors(facXA, DimCol, n_cluster, ax)
     plotCovFactors(fac, blobXA, DimCol, n_cluster, ax)
 
+
     return f
 
 
@@ -47,6 +50,7 @@ def make_blob_art(mean, cov, size, time, label):
     """Makes a labeled DF for storing blob art"""
     X = np.random.multivariate_normal(mean=mean, cov=cov, size=size) / 10
     return pd.DataFrame({"X": X[:, 0], "Y": X[:, 1], "Time": time, "Label": label})
+
 
 
 def make_synth_pic(magnitude):
@@ -198,25 +202,25 @@ def scatterRecapitulated(points_all, points_y, n_cluster, fac, ax):
 
 def plotFactors(XA, DimCol, n_cluster, ax):
     """Plots factor for dimension, time, and cluster"""
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    
     for i in range(0, 3):
         if i == 0:
             sns.heatmap(
                 data=XA[DimCol[i]],
                 xticklabels=XA[DimCol[i]].coords[XA[DimCol[i]].dims[1]].values,
-                yticklabels=[f"Clst:{i}" for i in np.arange(1, n_cluster + 1)],
-                ax=ax[i + 1],
-                vmin=-1,
-                vmax=1,
+                yticklabels=[f"Clst: {i}" for i in np.arange(1, n_cluster + 1)],
+                ax=ax[i + 1],cmap=cmap,vmin=-1,vmax=1
             )
             ax[i + 1].set_title("Mean Factors")
         elif i == 2:
             sns.heatmap(
                 data=XA[DimCol[i]],
                 xticklabels=XA[DimCol[i]].coords[XA[DimCol[i]].dims[1]].values,
-                yticklabels=[f"Time:{i}" for i in np.arange(0, 9 + 1)],
+                yticklabels=[f"Time: {i}" for i in np.arange(0, 9 + 1)],
                 ax=ax[i + 1],
                 vmin=-1,
-                vmax=1,
+                vmax=1, cmap=cmap
             )
             ax[i + 1].set_title("Mean Factors")
         else:
@@ -226,7 +230,7 @@ def plotFactors(XA, DimCol, n_cluster, ax):
                 yticklabels=XA[DimCol[i]].coords[XA[DimCol[i]].dims[0]].values,
                 ax=ax[i + 1],
                 vmin=-1,
-                vmax=1,
+                vmax=1, cmap=cmap
             )
             ax[i + 1].tick_params(axis="y", rotation=0)
             ax[i + 1].set_title("Mean Factors")
@@ -238,31 +242,32 @@ def plotCovFactors(fac, blobXA, DimCol, n_cluster, ax):
     """Plots covarinace factors for dimension, time, and cluster"""
     cov_fac = fac.get_covariance_factors(blobXA)
     covSig = cov_fac[DimCol[1]].to_numpy()
+    cmap = sns.cubehelix_palette(as_cmap=True)
     
     for i in range(fac.rank):
         cov_signal = pd.DataFrame(
         covSig[:, :, i] @ covSig[:, :, i].T,
         columns=blobXA.coords[blobXA.dims[0]],
         index=blobXA.coords[blobXA.dims[0]])
-        sns.heatmap(data=cov_signal, ax=ax[i + 4])
-        ax[i + 4].set(title="Covariance: Rank - " + str(i + 1))
+        sns.heatmap(data=cov_signal, ax=ax[i + 4],cmap=cmap, vmin=0,vmax=1)
+        ax[i + 4].set(title="Covariance Factor - Cmp. " + str(i + 1))
 
-
+    
     for i in range(2):
         if i == 0:
             sns.heatmap(
                 data=cov_fac[DimCol[i]],
                 xticklabels=cov_fac[DimCol[i]].coords[cov_fac[DimCol[i]].dims[1]].values,
-                yticklabels=[f"Clst:{i}" for i in np.arange(1, n_cluster + 1)],
-                ax=ax[7],
+                yticklabels=[f"Clst: {i}" for i in np.arange(1, n_cluster + 1)],
+                ax=ax[7],cmap=cmap, vmin=0,vmax=1
             )
             ax[7].set_title("Covariance Factors")
         else:
             sns.heatmap(
                 data=cov_fac[DimCol[i+1]],
                 xticklabels=cov_fac[DimCol[i+1]].coords[cov_fac[DimCol[i+1]].dims[1]].values,
-                yticklabels=[f"Time:{i}" for i in np.arange(0, 9 + 1)],
-                ax=ax[11],
+                yticklabels=[f"Time: {i}" for i in np.arange(0, 9 + 1)],
+                ax=ax[11],cmap=cmap, vmin=0,vmax=1
             )
             ax[11].set_title("Covariance Factors")
 
