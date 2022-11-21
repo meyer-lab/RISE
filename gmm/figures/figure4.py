@@ -4,7 +4,7 @@ Investigating NK, covariance, and factors from tGMM for IL-2 dataset
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from .common import subplotLabel, getSetup
+from .common import subplotLabel, getSetup, add_ellipse
 from gmm.imports import smallDF
 from gmm.tensor import optimal_seed, cell_assignment
 from sklearn.metrics import adjusted_rand_score, confusion_matrix
@@ -13,7 +13,7 @@ from sklearn.metrics import adjusted_rand_score, confusion_matrix
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 20), (7, 3))
+    ax, f = getSetup((10, 20), (8, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -26,10 +26,10 @@ def makeFigure():
     flowXA, celltypeXA = smallDF(cellperexp)
     flowXA = flowXA.loc[marks, :, :, :, :]
 
-    rank = 7
-    n_cluster = 8
+    rank = 4
+    n_cluster = 10
 
-    _, _, fit = optimal_seed(10, flowXA, rank=rank, n_cluster=n_cluster)
+    _, _, fit = optimal_seed(5, flowXA, rank=rank, n_cluster=n_cluster)
     fac = fit[0]
 
     ax[0].bar(np.arange(1, fac.nk.size + 1), fac.norm_NK(), color="k")
@@ -41,9 +41,12 @@ def makeFigure():
 
     plotFactors_IL2(facXA, ax)
     plotCovarFactors_IL2(fac, flowXA, n_cluster, ax)
+    
+    time = 4.0; ligand = "WT C-term-1"
+    recapIL2(fac, flowXA, time, ligand, marks, n_cluster, ax)
 
-    cluster_type(flowXA, fac, celltypeXA[1], ax[20], "Soft")
-
+    cluster_type(flowXA, fac, celltypeXA[1], ax[23], "Soft")
+    
     return f
 
 
@@ -179,3 +182,79 @@ def cluster_type(flowXA, fac, typeXA, ax, clusteringtype):
         cmap = sns.light_palette("seagreen", as_cmap=True)
         sns.heatmap(data=clustDF, ax=ax,cmap=cmap)
         ax.set(title="Soft Clustering: Cell %")
+
+def recapIL2(fac, flowXA, time, ligand, marks, n_cluster, ax):
+    """Comparing synthetic based data from output of tGMM to original IL-2 dataset"""
+    timei = np.where(flowXA["Time"].values == time)[0][0]
+    ligandi = np.where(flowXA["Ligand"].values == ligand)[0]
+    
+    markertotal = pd.DataFrame()
+    for mark in marks:
+        markDF = flowXA.loc[mark, :, time, :, ligand]
+        markDF = markDF.to_dataframe(mark).reset_index()
+        markertotal[mark] = markDF[mark].values
+
+    markertotal["Dose"] = markDF["Dose"].values
+    markertotal["Cell"] = markDF["Cell"].values
+    dose_unique = np.unique(markDF["Dose"].values)
+
+    colorpal = sns.color_palette("tab10", n_cluster)
+
+    points_all, points_y = fac.sample(n_samples=500)
+
+    for i in range(1, 4):
+        points = np.squeeze(points_all[:, :, timei, i*3, ligandi]).T
+        pointsDF = pd.DataFrame(
+            {
+                "Cluster": np.squeeze(points_y[:, timei, i*3, ligandi]),
+                "Foxp3": points[:, 0],
+                "CD25": points[:, 1],
+                "pSTAT5": points[:, 2]
+            }
+        )
+        sns.scatterplot(
+            data=pointsDF,
+            x=marks[1],
+            y=marks[2],
+            hue="Cluster",
+            palette="tab10",
+            ax=ax[15 + (i * 2)],
+            s=3,alpha=.5
+        )
+        add_ellipse(
+            timei,
+            i*3,
+            ligandi,
+            fac,
+            marks[1],
+            marks[2],
+            n_cluster,
+            ax[15 + (i * 2)],
+            colorpal,"IL2",marks)
+        sns.scatterplot(
+            data=markertotal.loc[markertotal["Dose"] == dose_unique[i*3]],
+            x=marks[1],
+            y=marks[2],
+            ax=ax[(i * 2) + 16],
+            s=3,alpha=.5
+        )
+        ax[15 + (i * 2)].set(
+            xlim=(-5, 5),
+            ylim=(-5, 5),
+            title=ligand
+            + "-Time:"
+            + str(time)
+            + "-nM:"
+            + str(flowXA.Dose.values[i*3])
+            + "-ULTRA"
+        )
+        ax[(i * 2) + 16].set(
+            xlim=(-5, 5),
+            ylim=(-5, 5),
+            title=ligand
+            + "-Time:"
+            + str(time)
+            + "-nM:"
+            + str(flowXA["Dose"].values[i*3])
+            + "-Original Data",
+        )
