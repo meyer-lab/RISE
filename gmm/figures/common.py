@@ -131,3 +131,9 @@ def add_ellipse(
         ax.add_artist(elipse)
 
     return
+
+def plotCellAbundance(fac, n_cluster, ax):
+    """Plots barplot of cell abundance for every cluster"""
+    ax.bar(np.arange(1, fac.nk.size + 1), fac.norm_NK(), color="k")
+    ax.set(xticks = np.arange(1, n_cluster + 1))
+    ax.set(xlabel="Cluster", ylabel="Cell Abundance")

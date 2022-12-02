@@ -1,41 +1,41 @@
 """
-Determining how well the IL-2 dataset is able to fit the output of the GMM
+Creating synthetic data and running ULTRA to calculate factors and recapitulated moving covariance
 """
-from .common import subplotLabel, getSetup
-from gmm.imports import smallDF
-from gmm.GMM import cvGMM
-
+import numpy as np
+from .common import subplotLabel, getSetup, add_ellipse, plotCellAbundance
+from gmm.tensor import optimal_seed
+from .commonsynthetic import (make_synth_pic, plot_synth_pic, make_blob_tensor, scatterRecapitulated, 
+                              plotFactors_synthetic, plotCovFactors_synthetic)
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((8, 4), (1, 3))
+    ax, f = getSetup((12, 12), (5, 4))
 
     # Add subplot labels
     subplotLabel(ax)
+    blob_DF = make_synth_pic(magnitude=100, type="dividingclusters")
+    
+    for i in np.arange(0, 3):
+        plot_synth_pic(blob_DF, t=i * 3, palette=palette, ax=ax[i])
 
-    # smallDF(Amount of cells per experiment): Xarray of each marker, cell and condition
-    # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
-    cellperexp = 50
-    flowXA, experimentalcells = smallDF(cellperexp)
+    rank = 3; n_cluster = 6
+    blobXA = make_blob_tensor(blob_DF)
 
-    ax[0].hist(experimentalcells[0], bins=20)
-    xlabel = "Number of Cells per Experiment"
-    ylabel = "Events"
-    ax[0].set(xlabel=xlabel, ylabel=ylabel)
+    _, _, fit = optimal_seed(30, blobXA, rank=rank, n_cluster=n_cluster)
+    fac = fit[0]
+    
+    plotCellAbundance(fac, n_cluster, ax[3])
 
-    # scoreDF(Xarray, maxcluster, cell types): DF(Cluster #,Score, Rand Score)
-    # Determines rand_score/score for GMM
-    maxcluster = 18
-    scoreDF = cvGMM(flowXA, maxcluster, experimentalcells[1])
+    facXA = fac.get_factors_xarray(blobXA)
+    DimCol = [f"Dimension{i}" for i in np.arange(1, len(facXA) + 1)]
 
-    for i in range(maxcluster):
-        ax[1].plot(scoreDF["Cluster"].values, scoreDF["rand_score"].values)
-        ax[2].plot(scoreDF["Cluster"].values, scoreDF["ll_score"].values)
-
-    xlabel = "Cluster Number"
-    ylabel = "Score"
-    ax[1].set(xlabel=xlabel, ylabel=ylabel)
-    ax[2].set(xlabel=xlabel, ylabel=ylabel)
+    scatterRecapitulated(fac, n_cluster, ax)
+    plotFactors_synthetic(facXA, DimCol, n_cluster, ax)
+    plotCovFactors_synthetic(fac, blobXA, DimCol, n_cluster, ax)
 
     return f
+
+
+palette = {"Planet1": "lightcoral", "Planet2": "gray", "Planet3": "darkgoldenrod", 
+           "Planet4": "magenta", "Planet5": "teal", "Planet6": "deeppink"}

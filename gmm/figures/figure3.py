@@ -1,5 +1,5 @@
 """
-Creating synthetic data and running ULTRA to calculate factors and recapitulated beach scene data
+Creating synthetic data and running ULTRA to calculate factors and recapitulated moving covariance
 """
 import numpy as np
 from .common import subplotLabel, getSetup, add_ellipse, plotCellAbundance
@@ -10,16 +10,16 @@ from .commonsynthetic import (make_synth_pic, plot_synth_pic, make_blob_tensor, 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 12), (5, 4))
-
+    ax, f = getSetup((12, 12), (4, 4))
+    
     # Add subplot labels
     subplotLabel(ax)
-    blob_DF = make_synth_pic(magnitude=100, type="beach")
+    blob_DF = make_synth_pic(magnitude=100, type="movingcovariance")
     
     for i in np.arange(0, 3):
-        plot_synth_pic(blob_DF, t=i*3, palette=palette, ax=ax[i])
+        plot_synth_pic(blob_DF, t=i * 3, palette=palette, ax=ax[i])
 
-    rank = 3; n_cluster = 6
+    rank = 3; n_cluster = 5
     blobXA = make_blob_tensor(blob_DF)
 
     _, _, fit = optimal_seed(30, blobXA, rank=rank, n_cluster=n_cluster)
@@ -36,4 +36,4 @@ def makeFigure():
 
     return f
 
-palette = {"Ground": "khaki", "Trunk": "sienna", "Leaf": "limegreen", "Sun": "yellow"}
+palette = {"Planet1": "red", "Planet2": "green", "Planet3": "blue", "Planet4": "magenta", "Planet5": "orange"}
