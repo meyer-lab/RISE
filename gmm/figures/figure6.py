@@ -25,6 +25,7 @@ def makeFigure():
     _, _, fit = optimal_seed(30, blobXA, rank=rank, n_cluster=n_cluster)
     fac = fit[0]
     
+    
     plotCellAbundance(fac, n_cluster, ax[3])
 
     facXA = fac.get_factors_xarray(blobXA)

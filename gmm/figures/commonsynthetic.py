@@ -25,7 +25,7 @@ def make_synth_pic(magnitude, type):
                 else: 
                     blob_DF = pd.concat(
                     [blob_DF,make_blob_art((0, 8 * np.sin(t * 2 * np.pi / (25))),
-                    cov=[[0.5, 0], [0, 0.5]],
+                    cov=[[0.5 + 0.5*t, 0], [0, 0.5 + 0.5*t]],
                     size=int(1 * magnitude),time=t,label="Sun")])
     elif type == "movingcovariance":
         blob_means = [(-5, -5), (5, 5), (-5, 5), (5, -5)]
@@ -40,7 +40,7 @@ def make_synth_pic(magnitude, type):
                     size=int(1 * magnitude),time=t,label=blob_planet[i])])
                 elif i == 2 or i == 3:
                     blob_DF = pd.concat(
-                    [blob_DF,make_blob_art(blob_means[i],cov=[[0.5 + 0.5*t, 0], [0, 0.5 + 0.5*t]],
+                    [blob_DF,make_blob_art(blob_means[i],cov=[[0.5 + 0.75*t, 0], [0, 0.5 + 0.75*t]],
                     size=int(1 * magnitude),time=t,label=blob_planet[i])])
                 else: 
                     blob_DF = pd.concat(
