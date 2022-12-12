@@ -11,7 +11,7 @@ def make_synth_pic(magnitude, type):
     ts = np.arange(10)
     blob_DF = None
     if type == "beach":
-        blob_means = [(0, -8), (-6, -4), (6, -4), (-6, -0), (6, 0)]
+        blob_means = [(0, -8), (-6, -4), (2, -4), (-6, 0), (6, 0)]
         blob_covar = [[[20, 0], [0, 0.5]], [[0.05, 0], [0, 2]], [[0.05, 0], [0, 2]], 
                   [[1, 0], [0, 1]],[[1, 0], [0, 1]]]
         blob_label = ["Ground", "Trunk", "Trunk", "Leaf", "Leaf"]
@@ -28,7 +28,7 @@ def make_synth_pic(magnitude, type):
                     cov=[[0.5 + 0.5*t, 0], [0, 0.5 + 0.5*t]],
                     size=int(1 * magnitude),time=t,label="Sun")])
     elif type == "movingcovariance":
-        blob_means = [(-5, -5), (5, 5), (-5, 5), (5, -5)]
+        blob_means = [(-5, -5), (3, 3), (-5, 5), (2, -5)]
         blob_covar = [[3, 0], [0, 3]]
         blob_planet = ["Planet1", "Planet2", "Planet3", "Planet4", "Planet5"]
     
@@ -49,7 +49,7 @@ def make_synth_pic(magnitude, type):
                     size=int(1 * magnitude),time=t,label=blob_planet[i])])
                     
     elif type == "dividingclusters":
-        blob_means = [(-4, 0), (4, 0), (0, 8), (0,-8)]
+        blob_means = [(-3, 0), (7, 0), (0, 8), (0,-5)]
         blob_covar = [[2, 0], [0, 2]]
         blob_planet = ["Planet1", "Planet2", "Planet3", "Planet4", "Planet5", "Planet6"]
                     

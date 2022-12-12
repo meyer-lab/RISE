@@ -10,7 +10,7 @@ from .commonsynthetic import (make_synth_pic, plot_synth_pic, make_blob_tensor, 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 12), (5, 4))
+    ax, f = getSetup((12, 12), (4, 4))
 
     # Add subplot labels
     subplotLabel(ax)

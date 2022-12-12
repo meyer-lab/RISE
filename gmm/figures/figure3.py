@@ -15,7 +15,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
     blob_DF = make_synth_pic(magnitude=100, type="movingcovariance")
-    
+
     for i in np.arange(0, 3):
         plot_synth_pic(blob_DF, t=i * 3, palette=palette, ax=ax[i])
 
