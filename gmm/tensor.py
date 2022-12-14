@@ -11,7 +11,6 @@ from jax.lax.linalg import triangular_solve
 from scipy.optimize import minimize, Bounds
 from copy import copy
 
-
 markerslist = ["Foxp3", "CD25", "CD45RA", "CD4", "pSTAT5"]
 
 
@@ -22,14 +21,17 @@ def infer_rank(length: int, shape: tuple[int, ...], nk_rearrange: bool = False):
             length
             / (np.sum(shape) + 2 * shape[0] + shape[2] + np.sum(shape[2::]) + int(shape[1] * (shape[1] - 1) / 2 + shape[1]))
         )
-
+        
+    # Rank = Length - NK values
     length -= shape[0]
-    return int(length / (np.sum(shape) + shape[0] + np.sum(shape[2::]) + int(shape[1] * (shape[1] - 1) / 2 + shape[1])))
 
+    # Rank = Length / (Mean factors for each condition + covariance non-signal factors + covariance signal factors
+    return int(length / (np.sum(shape) + shape[0] + np.sum(shape[2::]) + int(shape[1] * (shape[1] - 1) / 2 + shape[1])))
 
 def sample_GMM(
     weights: jnp.ndarray, means: jnp.ndarray, covars: jnp.ndarray, n_samples: int
 ):
+    """Calculates random values based on the factors and samples"""
     n_samples_comp = np.random.multinomial(n_samples, weights)
 
     X = np.vstack(
@@ -51,6 +53,8 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         """Build factor matrices from vector and shapes."""
         rank = infer_rank(vectorIn.size, shape, nk_rearrange)
         self.nk_rearrange = nk_rearrange
+        
+        # Setting NK values
         if nk_rearrange:
             self.nk = vectorIn[0: (shape[0] * rank)]
             self.nk = jnp.reshape(self.nk, (shape[0], rank))
@@ -62,10 +66,11 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             self.nk = vectorIn[0: shape[0]]
             vectorIn = vectorIn[shape[0]::]
 
-        # Shape of tensor for means or precision matrix
+        # Total length of tensor for covariance and means factors starting at 0
         nN = np.cumsum(np.array(shape) * rank)
         nN = np.insert(nN, 0, 0)
 
+        # Reshaping vector for means factors
         super().__init__(
             (
                 None,
@@ -77,22 +82,24 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         )
         
         # Reshapes non-signal covariance factors from vector
-        vectorIn = vectorIn[nN[-1]::]
-        nN[2::] -= rank * shape[1]
-        nN = np.delete(nN, 2)
-        covarFacS = list(shape)
-        covarFacS.pop(1)
+        vectorIn = vectorIn[nN[-1]::] # Keep vector terms after mean factors
+        nN[2::] -= rank * shape[1] # Removing number of cluster factors
+        nN = np.delete(nN, 2) # Removing duplicate numbers
+        covarFacS = list(shape) # [Cluster, Signal, C1, C2, C3]
+        covarFacS.pop(1) # [Cluster, C1, C2, C3]
         covFacs = []
-
+        
         for ii in range(len(covarFacS)):
             covFacs.append(jnp.exp(jnp.reshape(vectorIn[nN[ii]: nN[ii + 1]], (covarFacS[ii], rank))))
-
         self.covFacs = covFacs
-        covars = jnp.zeros((shape[1], shape[1], rank))
-        ai, bi = jnp.tril_indices(shape[1])
-        pVec = vectorIn[nN[-1]::].reshape(-1, rank)
+        
+        # Retrieving lower triangular values for singal covariance factors 
+        covars = jnp.zeros((shape[1], shape[1], rank)) # [Signal, Signal, Rank]
+        ai, bi = jnp.tril_indices(shape[1]) # Indices for the lower-triangle  
+        pVec = vectorIn[nN[-1]::].reshape(-1, rank) 
         self.covars = covars.at[ai, bi, :].set(jnp.exp(pVec))
 
+        # Normalizing factors for covariance
         self.covars, self.covFacs, self.covWeights = norm_covariances(self.covars, self.covFacs)
 
     def get_precisions(self) -> jnp.ndarray:
@@ -108,7 +115,7 @@ class tensorGMM(tl.cp_tensor.CPTensor):
         return prec_chol
 
     def get_covariances(self) -> jnp.ndarray:
-        """Return covariance matrices."""
+        """Return covariance tensor using Einstein summation."""
         return jnp.einsum(
             "ax,bcx,dx,ex,fx->abcdef",
             self.covFacs[0],
@@ -116,7 +123,7 @@ class tensorGMM(tl.cp_tensor.CPTensor):
             *self.covFacs[1::],)
 
     def get_covariances_xarray(self, X):
-        """Return covariance matrices."""
+        """Return covariance tensor using Einstein summation with labels."""
         covar = self.get_covariances()
 
         coordinates = {"Cluster": np.arange(1, self.shape[0] + 1),
@@ -250,9 +257,14 @@ def vector_guess(
 
 
 def comparingGMMjax(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
-    """Obtains the GMM means, convariances and NK values along with zflowDF mean marker values
+    """Obtains the GMM means, convariances and NK values along with tensor values
     to determine the max log-likelihood"""
+    # Loglik = -(0.5 * n) * log(2 * pi) - (0.5 * n) * log(det(Σ)) -
+    # 0.5 Σ((x-μ)T * (Σ^-1) * (x-μ))
+    
+    # tPrecision = [Cluster, Signal, Signal, C1, C2, C3]
     tPrecision = facBuild.get_precisions()
+    # log_det = [Cluster, C1, C2, C3]
     log_det = facBuild.log_det_prec()
     nk = facBuild.nk
 
@@ -267,20 +279,28 @@ def comparingGMMjax(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
         nkl = jnp.log(nk / jnp.sum(nk))
         nkl = nkl[jnp.newaxis, :, jnp.newaxis, jnp.newaxis, jnp.newaxis]
 
+    # Builds means tensor with tPrecision [Cluster, Signal, C1, C2, C3]
     mp = jnp.einsum("iz,jz,kz,lz,mz,ijoklm->ioklm", *facBuild.factors, tPrecision)
 
     n_markers = tPrecision.shape[1]
+    # Builds mean based on data with tPrecision [Cell, Cluster, Signal, C1, C2, C3]
     Xp = jnp.einsum("ji...,njo...->ino...", X, tPrecision)
+    # log_prob Part 1: (sqrt((X-Xmodel)^2))^2 [Cell, Cluster, C1, C2, C3]
     log_prob = jnp.square(jnp.linalg.norm(Xp - mp[jnp.newaxis, ...], axis=2))
+    # log_prob Part 2: -(0.5 * n) * log(2 * pi) + log_prob [Cell, Cluster, C1, C2, C3]
     log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob)
 
     # Since we are using the precision of the Cholesky decomposition,
     # `- 0.5 * log_det_precision` becomes `+ log_det_precision_chol`
-    return jnp.sum(jsp.logsumexp(log_prob + log_det[jnp.newaxis, ...] + nkl, axis=1))
+    # Computes log of the sum of the exponentials for all signals [Cell, C1, C2, C3]
+    log_sum = jsp.logsumexp(log_prob + log_det[jnp.newaxis, ...] + nkl, axis=1)
+
+    # Adds log-likelihood for all cells and conditions
+    return jnp.sum(log_sum)
 
 
 def cell_assignment(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
-    """Provides the cell assignmens to each cluster, given the dataset and factors."""
+    """Provides the cell assignments to each cluster, given the dataset and factors."""
     tPrecision = facBuild.get_precisions()
     nk = facBuild.nk
 
@@ -303,6 +323,7 @@ def cell_assignment(X: np.ndarray, facBuild: tensorGMM) -> jnp.ndarray:
     log_prob = -0.5 * (n_markers * jnp.log(2 * jnp.pi) + log_prob) + nkl
 
     log_sum = jsp.logsumexp(log_prob, axis=1)
+    # Solving for the respsonsibility for each cluster
     log_resp = log_prob - log_sum[:, np.newaxis, ...]
     return jnp.exp(log_resp)
 
@@ -316,7 +337,7 @@ def maxll(
     """Function used to rebuild tMeans from factors and maximize log-likelihood"""
     facBuild = tensorGMM(vec, shape, nk_rearrange=nk_r)
 
-    # Creating function that we want to minimize
+    # Creating function that we want to minimize between data and model
     return -comparingGMMjax(X, facBuild) / X.shape[1]
 
 
@@ -331,18 +352,21 @@ def minimize_func(
     seed=None,
 ):
     """Function used to minimize loglikelihood to obtain NK, factors and core of Cp and Pt"""
+    # Shape = [Cluster, Signal, C1, C2, C3]
     meanShape = (n_cluster, X.shape[0], *X.shape[2::])
-
     args = (meanShape, X.to_numpy(), nk_rearrange)
+    # Ealuates both function and the gradient of function 
     func = jit(value_and_grad(maxll), static_argnums=(1, 3))
 
     def ffunc(*arrgs):
         a, b = func(*arrgs)
         return a, np.array(b, dtype=float)
 
+    # Estimates factors for NK values, mean factors, and covariance factors
     if x0 is None:
         x0 = vector_guess(meanShape, rank, seed=seed, nk_rearrange=nk_rearrange)
 
+    # Creates progress bars
     tq = tqdm(total=maxiter, delay=0.1, disable=(verbose is False))
 
     def callback(xk):
@@ -353,7 +377,7 @@ def minimize_func(
 
     opts = {"maxiter": maxiter, "disp": False}
 
-    # Add bounds
+    # Add bounds for initialization of factors and NK values
     lb = np.full_like(x0, -np.inf)
     ub = copy(-lb)
     if nk_rearrange:
@@ -365,7 +389,7 @@ def minimize_func(
 
     bounds = Bounds(lb, ub, keep_feasible=False)
 
-
+    # Minimization function using optimization algorithm
     opt = minimize(
         ffunc,
         x0,
