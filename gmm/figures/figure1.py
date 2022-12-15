@@ -27,12 +27,9 @@ def makeFigure():
     
     plotCellAbundance(fac, n_cluster, ax[3])
 
-    facXA = fac.get_factors_xarray(blobXA)
-    DimCol = [f"Dimension{i}" for i in np.arange(1, len(facXA) + 1)]
-
     scatterRecapitulated(fac, n_cluster, ax)
-    plotFactors_synthetic(facXA, DimCol, n_cluster, ax)
-    plotCovFactors_synthetic(fac, blobXA, DimCol, n_cluster, ax)
+    plotFactors_synthetic(fac, blobXA, n_cluster, ax)
+    plotCovFactors_synthetic(fac, blobXA, n_cluster, ax)
 
     return f
 

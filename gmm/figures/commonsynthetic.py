@@ -6,6 +6,8 @@ import pandas as pd
 import seaborn as sns
 from .common import add_ellipse
 
+DimCol = [f"Dimension{i}" for i in np.arange(1, 6)]
+
 def make_synth_pic(magnitude, type):
     """Makes blob of points depicting beach scene with sinusoidally moving sun"""
     ts = np.arange(10)
@@ -146,8 +148,9 @@ def scatterRecapitulated(fac, n_cluster, ax):
     return
 
 
-def plotFactors_synthetic(facXA, DimCol, n_cluster, ax):
+def plotFactors_synthetic(fac, blobXA, n_cluster, ax):
     """Plots factor for dimension, time, and cluster"""
+    facXA = fac.get_factors_xarray(blobXA)
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     yticks = [[f"Clst: {i}" for i in np.arange(1, n_cluster + 1)],
                ["X", "Y"],
@@ -166,7 +169,7 @@ def plotFactors_synthetic(facXA, DimCol, n_cluster, ax):
     return
 
 
-def plotCovFactors_synthetic(fac, blobXA, DimCol, n_cluster, ax):
+def plotCovFactors_synthetic(fac, blobXA, n_cluster, ax):
     """Plots covarinace factors for dimension, time, and cluster"""
     cov_fac = fac.get_covariance_factors(blobXA)
     covSig = cov_fac[DimCol[1]].to_numpy()
