@@ -14,8 +14,8 @@ seaborn = "^0.11.2"
 pyarrow = "^7.0.0"
 tensorly = "0.7.0"
 xarray = "^2022.3.0"
-jaxlib = {url = "https://storage.googleapis.com/jax-releases/cuda11/jaxlib-0.3.24+cuda11.cudnn82-cp310-cp310-manylinux2014_x86_64.whl"}
-jax = "0.3.24"
+jaxlib = {url = "https://storage.googleapis.com/jax-releases/cuda11/jaxlib-0.4.1+cuda11.cudnn82-cp310-cp310-manylinux2014_x86_64.whl"}
+jax = "0.4.1"
 tqdm = "^4.64.0"
 igraph = "^0.9.11"
 louvain = "^0.7.1"
