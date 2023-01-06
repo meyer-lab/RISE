@@ -7,7 +7,7 @@ import time
 import seaborn as sns
 import matplotlib
 from matplotlib import gridspec, pyplot as plt
-
+import numpy as np
 
 matplotlib.use("AGG")
 
@@ -71,3 +71,22 @@ def genFigure():
     ff.savefig(fdir + nameOut + ".svg", dpi=300, bbox_inches="tight", pad_inches=0)
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
+
+    
+def plotSCCP_factors(rank, factors, data_xarray, ax):
+    """Plots parafac2 factors"""
+    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+
+    for i in range(0, 3):
+        sns.heatmap(
+            data=factors[i],
+            xticklabels=xticks,
+            ax=ax[i],
+            cmap=cmap,
+            vmax=1,
+            vmin=-1,
+        )
+
+        ax[i].set_title("Mean Factors")
+        ax[i].tick_params(axis="y", rotation=0)

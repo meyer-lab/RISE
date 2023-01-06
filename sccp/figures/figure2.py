@@ -1,8 +1,9 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
+Parafac2 implementation on PBMCs treated across IL2 treatments, times, and doses
 """
+import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
-from ..imports.scRNA import ThompsonXA_SCGenes
+from ..imports.cytok import IL2_flowXA
 from tensorly.decomposition import parafac2
 
 def makeFigure():
@@ -14,19 +15,21 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Gene, Cell, Drug]
-    drugXA = ThompsonXA_SCGenes()
-
+    FlowXA, _ = IL2_flowXA(numCells=500)
+    
+    flattenFlowXA = np.reshape(FlowXA.to_numpy(), (FlowXA.shape[0], FlowXA.shape[1], -1))
+    
     # Performing parafac2 on single-cell Xarray
     rank = 5
     weights, factors, _ = parafac2(
-        drugXA.to_numpy(),
+        flattenFlowXA,
         rank=rank,
         tol=1e-8,
         nn_modes=(0, 2),
         normalize_factors=True,
         verbose=True
     )
-    
-    plotSCCP_factors(rank, factors, drugXA, ax)
-    
+
+    plotSCCP_factors(rank, factors, FlowXA, ax)
+
     return f
