@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 import csv
 import xarray as xa
-import seaborn as sns
-from sklearn.decomposition import NMF
 from scipy.io import mmread
 from scipy.stats import linregress
 
@@ -21,11 +19,11 @@ def import_thompson_drug():
     metafile : str Path to a metadata file. Must contains `cell_barcodes` and `sample_id` columns
     genes : str Path to a .tsv 10X gene file"""
 
-    metafile = pd.read_csv("gmm/data/meta.csv")  # Cell barcodes, sample id of treatment and sample number (33482,3)
+    metafile = pd.read_csv("scCP/data/meta.csv")  # Cell barcodes, sample id of treatment and sample number (33482,3)
     drugScreen = mmread("/opt/andrew/drugscreen.mtx").toarray()  # Sparse matrix of each cell/genes (32738,33482)-(Genes,Cell)
     drugScreen = drugScreen.astype(np.float64)
-    barcodes = np.array([row[0] for row in csv.reader(open("gmm/data/barcodes.tsv"), delimiter="\t")])  # Cell barcodes(33482)
-    genes = np.array([row[1].upper() for row in csv.reader(open("gmm/data/features.tsv"), delimiter="\t")])  # Gene Names (32738)
+    barcodes = np.array([row[0] for row in csv.reader(open("scCP/data/barcodes.tsv"), delimiter="\t")])  # Cell barcodes(33482)
+    genes = np.array([row[1].upper() for row in csv.reader(open("scCP/data/features.tsv"), delimiter="\t")])  # Gene Names (32738)
 
     bc_idx = {}
     for i, bc in enumerate(barcodes):  # Attaching each barcode with an index
@@ -108,17 +106,6 @@ def gene_filter(geneDF, mean, std, offset_value=1.0):
     return finalDF, above_idx
 
 
-def geneNNMF(X, k=14, verbose=0, maxiteration=50000):
-    """Turn gene expression into cells X components"""
-    model = NMF(n_components=k, verbose=verbose, max_iter=maxiteration, tol=1e-6)
-    X = X.drop("Drug", axis=1)
-    W = model.fit_transform(X.to_numpy())
-
-    sse_error = model.reconstruction_err_
-
-    return model.components_, W, sse_error
-
-
 def gene_import(offset=1.0, filter=False):
     """Imports gene data from PopAlign and perfroms gene filtering process"""
     genesDF, _ = import_thompson_drug()
@@ -128,48 +115,21 @@ def gene_import(offset=1.0, filter=False):
     return filteredGeneDF
 
 
-def ThompsonDrugXA(rank: int = 20, runFacts=False):
-    """Converts DF to Xarray given number of cells, factor number, and max iter: Factor, CellNumb, Drug, Empty, Empty"""
-    rank_vec = np.arange(1, rank + 1)
-    sse_error = np.empty(len(rank_vec))
-    numCells = 290  # Minimum amount in an experiment
-    cell_types = pd.read_csv(join(path_here, "gmm/data/ThompsonCellTypes.csv"), index_col=0)
+def ThompsonXA_RawGenes():
+    """Turns filtered and normalized cells into an Xarray."""
+    df = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
+    df.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
+    df = df.sort_values(by=["Drug"])
 
-    if runFacts:
-        finalDF = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
-        finalDF.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
-        columns = finalDF.drop("Drug", axis=1).columns
+    # Assign cells a count per-experiment so we can reindex
+    cellCount = df.groupby(by=["Drug"]).size().values
+    df["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
 
-        for i in range(len(rank_vec)):
-            print(i)
-            loadings, geneFactors, sse_error[i] = geneNNMF(finalDF, k=rank_vec[i], verbose=0)
-            loadingsDF = pd.DataFrame(data=loadings, columns=columns)
-            loadingsDF["Component"] = np.arange(1, rank_vec[i] + 1)
-            geneFactors = np.append(geneFactors, np.reshape(finalDF["Drug"].values, (-1, 1)), 1)
-            np.save(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Scores.npy"), geneFactors)
-            loadingsDF.to_csv(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank_vec[i]) + "_Loadings.csv"))
-        np.save(join(path_here, "gmm/data/NNMF_Errors.npy"), sse_error)
-    else:
-        geneFactors = np.load(join(path_here, "gmm/data/NNMF_Facts/NNMF_" + str(rank) + "_Scores.npy"), allow_pickle=True)
-        sse_error = np.load(join(path_here, "gmm/data/NNMF_Errors.npy"), allow_pickle=True)[0:rank]
+    xarr = df.set_index(["Cell", "Drug"]).to_xarray()
+    xarr = xarr.to_array(dim="Gene")
 
-    cmpCol = [f"Fac. {i}" for i in np.arange(1, rank + 1)]
-    PopAlignDF = pd.DataFrame(data=geneFactors, columns=cmpCol + ["Drug"])
-    PopAlignDF["Cell Type"] = cell_types.values
-    PopAlignDF = PopAlignDF.groupby(by="Drug").sample(n=numCells, random_state=1).reset_index(drop=True)
-    PopAlignDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(PopAlignDF.shape[0] / numCells))
+    ### I *believe* that padding with zeros does not affect PARAFAC2 results.
+    ### We should check this though.
+    xarr.values = np.nan_to_num(xarr.values)
 
-    PopAlignXA = PopAlignDF.set_index(["Cell", "Drug"]).to_xarray()
-    cellTypeXA = PopAlignXA["Cell Type"]
-    PopAlignXA = PopAlignXA[cmpCol].to_array(dim="Factor")
-
-    npPopAlign = np.reshape(PopAlignXA.to_numpy(), (PopAlignXA.shape[0], PopAlignXA.shape[1], -1, 1, 1)).astype('float64')
-    npCellType = np.reshape(cellTypeXA.to_numpy(), (1, PopAlignXA.shape[1], -1, 1, 1)).astype('str')
-    PopAlignXA = xa.DataArray(npPopAlign, dims=("Factor", "Cell", "Drug", "Throwaway 1", "Throwaway 2"),
-                              coords={"Factor": cmpCol, "Cell": np.arange(1, numCells + 1),
-                                      "Drug": PopAlignDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"], },)
-    CellTypeXA = xa.DataArray(npCellType, dims=("Cell Type", "Cell", "Drug", "Throwaway 1", "Throwaway 2"),
-                              coords={"Cell Type": ["Cell Type"], "Cell": np.arange(1, numCells + 1),
-                                      "Drug": PopAlignDF["Drug"].unique(), "Throwaway 1": ["Throwaway"], "Throwaway 2": ["Throwaway"], },)
-
-    return PopAlignXA, CellTypeXA, rank_vec, sse_error
+    return xarr

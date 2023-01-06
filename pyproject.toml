@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gmm"
+name = "scCP"
 version = "0.1.0"
 description = ""
 authors = ["Andrew Ramirez", "Aaron Meyer <git@asmlab.org>"]
@@ -7,16 +7,13 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-numpy = "^1.24.1"
+numpy = "1.24.1"
 scipy = "1.10.0"
 scikit-learn = "^1.2.0"
 seaborn = "^0.11.2"
 pyarrow = "^7.0.0"
 tensorly = "0.7.0"
 xarray = "^2022.3.0"
-jaxlib = {url = "https://storage.googleapis.com/jax-releases/cuda11/jaxlib-0.4.1+cuda11.cudnn82-cp310-cp310-manylinux2014_x86_64.whl"}
-jax = "0.4.1"
-tqdm = "^4.64.0"
 igraph = "^0.9.11"
 louvain = "^0.7.1"
 leidenalg = "^0.8.10"
@@ -31,4 +28,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]                                                           
-fbuild = "gmm.figures.common:genFigure"
+fbuild = "scCP.figures.common:genFigure"

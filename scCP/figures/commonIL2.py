@@ -2,12 +2,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from .common import add_ellipse
-from gmm.tensor import markerslist, cell_assignment
+from scCP.tensor import markerslist, cell_assignment
 from sklearn.metrics import adjusted_rand_score, confusion_matrix
 
 DimCol = [f"Dimension{i}" for i in np.arange(1, 6)]
-
-def plotFactors_IL2(fac, dataXA, n_cluster, ax):
     """Plots mean and covariance factors for ligand, time, dose, and cluster"""
     # Mean Factors 
     facXA = fac.get_factors_xarray(dataXA)

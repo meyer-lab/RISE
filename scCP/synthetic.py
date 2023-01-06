@@ -4,7 +4,6 @@ Common functions to plot and create synethetic data for ULTRA
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from .common import add_ellipse
 
 DimCol = [f"Dimension{i}" for i in np.arange(1, 6)]
 
@@ -115,37 +114,6 @@ def make_blob_tensor(blob_DF):
     )
 
     return blob_xa
-
-
-def scatterRecapitulated(fac, n_cluster, ax):
-    """Plots recapitulated data points based on factors"""
-    colorpal = sns.color_palette("tab10", n_cluster)
-    points_all, points_y = fac.sample(n_samples=200)
-    for i in np.arange(0, 3):
-        points_DF = pd.DataFrame(
-            {
-                "Cluster": points_y[:, i * 3, 0, 0].astype(int),
-                "X": points_all[0, :, i * 3, 0, 0],
-                "Y": points_all[1, :, i * 3, 0, 0],
-            }
-        )
-
-        sns.scatterplot(
-            data=points_DF,
-            x="X",
-            y="Y",
-            hue="Cluster",
-            palette="tab10",
-            ax=ax[i + 9],
-            s=5,
-        )
-
-        add_ellipse(i * 3, 0, 0, fac, "X", "Y", n_cluster, ax[i + 9], colorpal, "synthetic")
-        ax[i + 9].set(
-            xlim=(-1.2, 1.2), ylim=(-1.2, 1.2), title="Time: " + str(i * 3) + " - ULTRA"
-        )
-
-    return
 
 
 def plotFactors_synthetic(fac, blobXA, n_cluster, ax):

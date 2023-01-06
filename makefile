@@ -2,25 +2,25 @@ SHELL := /bin/bash
 
 .PHONY: clean test
 
-flist = $(wildcard gmm/figures/figure*.py)
+flist = $(wildcard scCP/figures/figure*.py)
 
-all: $(patsubst gmm/figures/figure%.py, output/figure%.svg, $(flist))
+all: $(patsubst scCP/figures/figure%.py, output/figure%.svg, $(flist))
 
-output/figure%.svg: gmm/figures/figure%.py
+output/figure%.svg: scCP/figures/figure%.py
 	@ mkdir -p ./output
-	XLA_PYTHON_CLIENT_MEM_FRACTION=0.3 poetry run fbuild $*
+	poetry run fbuild $*
 
 test:
-	XLA_PYTHON_CLIENT_MEM_FRACTION=0.1 poetry run pytest -s -x -v
+	poetry run pytest -s -x -v
 
 coverage.xml:
-	XLA_PYTHON_CLIENT_MEM_FRACTION=0.1 poetry run pytest --cov=gmm --cov-report=xml
+	poetry run pytest --cov=scCP --cov-report=xml
 
 clean:
 	rm -rf output
 
 testprofile:
-	XLA_PYTHON_CLIENT_MEM_FRACTION=0.1 poetry run python3 -m cProfile -o profile -m pytest -s -v -x
+	poetry run python3 -m cProfile -o profile -m pytest -s -v -x
 
 mypy:
-	poetry run mypy --install-types --non-interactive --ignore-missing-imports gmm
+	poetry run mypy --install-types --non-interactive --ignore-missing-imports scCP
