@@ -4,7 +4,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def IL2_flowXA(numCells: int):
+def IL2_flowXA():
     """Creates Xarray of a specific # of experiments
     Zscores all markers per experiment but pSTAT5 normalized over all experiments
     Outputs amount of experiments and cell types as an Xarray"""
@@ -22,11 +22,9 @@ def IL2_flowXA(numCells: int):
     flowDF = flowArrow.to_pandas()
 
     # Group and subset
-    experimentcells = flowDF.groupby(by=gVars).size()
     for mark in transCols:
         flowDF = flowDF[flowDF[mark] < flowDF[mark].quantile(0.995)]  # Getting rid of outlier values
     flowDF[tCols] = flowDF.groupby(by=gVars)[tCols].transform(lambda x: x / np.std(x))  # Dividing by std per experiement
-    flowDF = flowDF.groupby(by=gVars).sample(n=numCells, random_state=1).reset_index(drop=True)
 
     # Add valency to the name
     flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].apply(lambda x: f"{x:.0f}")
@@ -39,12 +37,14 @@ def IL2_flowXA(numCells: int):
     # Filter out problematic ligands
     flowDF = flowDF.loc[flowDF["Time"] != 0.5]
 
-    flowDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(flowDF.shape[0] / numCells))
+    cellCount = flowDF.groupby(by=["Time", "Dose", "Ligand"]).size().values
+    flowDF["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
+    
     flowXA = flowDF.set_index(["Cell", "Time", "Dose", "Ligand"]).to_xarray()
     celltypeXA = flowXA["Cell Type"]
     flowXA = flowXA.drop_vars(["Cell Type"])
     flowXA = flowXA[transCols].to_array(dim="Marker")
+    flowXA.values = np.nan_to_num(flowXA.values)
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
   
-    assert np.all(np.isfinite(flowXA.to_numpy()))
-    return flowXA, (experimentcells, celltypeXA)
+    return flowXA, celltypeXA

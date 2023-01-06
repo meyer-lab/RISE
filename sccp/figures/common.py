@@ -82,7 +82,6 @@ def plotSCCP_factors(rank, factors, data_xarray, ax):
         sns.heatmap(
             data=factors[i],
             xticklabels=xticks,
-            yticklabels=data_xarray.coords[data_xarray.dims[i]].values,
             ax=ax[i],
             cmap=cmap,
             vmax=1,

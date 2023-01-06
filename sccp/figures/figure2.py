@@ -19,7 +19,6 @@ def makeFigure():
     
     flattenFlowXA = np.reshape(FlowXA.to_numpy(), (FlowXA.shape[0], FlowXA.shape[1], -1))
     
-
     # Performing parafac2 on single-cell Xarray
     rank = 5
     weights, factors, _ = parafac2(

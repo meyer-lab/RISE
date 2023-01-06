@@ -21,7 +21,7 @@ def makeFigure():
     weights, factors, _ = parafac2(
         drugXA.to_numpy(),
         rank=rank,
-        tol=1e-9,
+        tol=1e-8,
         nn_modes=(0, 2),
         normalize_factors=True,
         verbose=True
@@ -30,5 +30,3 @@ def makeFigure():
     plotSCCP_factors(rank, factors, drugXA, ax)
     
     return f
-
-# git commit -a -m "Creating functions to plot and implementing Parafac2 for IL2 dataset"
