@@ -68,6 +68,7 @@ def parafac2(
         weights, factors = cp_normalize((weights, factors))
 
         errs.append(cp_error[-1] / norm_tensor)
+        # FIX: The error should be calculated from the original data. I think this is wrong.
 
         if iter >= 1:
             if verbose:
