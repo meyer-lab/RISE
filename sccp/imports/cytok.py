@@ -4,7 +4,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def smallDF(numCells: int):
+def IL2_flowXA(numCells: int):
     """Creates Xarray of a specific # of experiments
     Zscores all markers per experiment but pSTAT5 normalized over all experiments
     Outputs amount of experiments and cell types as an Xarray"""

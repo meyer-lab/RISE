@@ -115,7 +115,7 @@ def gene_import(offset=1.0, filter=False):
     return filteredGeneDF
 
 
-def ThompsonXA_RawGenes():
+def ThompsonXA_SCGenes():
     """Turns filtered and normalized cells into an Xarray."""
     df = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
     df.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
