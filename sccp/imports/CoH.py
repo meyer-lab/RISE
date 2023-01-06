@@ -12,7 +12,7 @@ path_here = os.path.dirname(os.path.dirname(__file__))
 def CoH_df(numCells: int = 100, markers=None):
     """"Reducing CoH dataframe with experiments consistent across patients into XA"""
     scCoH_DF = pd.read_csv('/opt/andrew/CoH_Flow_SC_NoMissingnessV1.csv').reset_index(drop=True).drop("Unnamed: 0", axis=1)
-    status_DF = pd.read_csv('scCP/data/CoH_Patient_Status.csv').reset_index(drop=True).drop("Unnamed: 0", axis=1)
+    status_DF = pd.read_csv('sccp/data/CoH_Patient_Status.csv').reset_index(drop=True).drop("Unnamed: 0", axis=1)
     
     #Renaming patients
     healthy = 0; bc = 0; health = []; cancer = []
@@ -50,7 +50,7 @@ def CoH_df(numCells: int = 100, markers=None):
     scDF = scDF.groupby(by=["Treatment", "Patient"]).sample(n=numCells, random_state=1).reset_index(drop=True)
     scDF["Cell"] = np.tile(np.arange(1, numCells + 1), int(scDF.shape[0] / numCells))
     
-    scDF.to_csv(join(path_here, "scCP/data/CoH_SC_DF_V2.csv"))
+    scDF.to_csv(join(path_here, "sccp/data/CoH_SC_DF_V2.csv"))
     
     return scDF
 

@@ -33,7 +33,7 @@ def CoH_LogReg_plot(ax, tFac, CoH_Array, numComps):
     coord = CoH_Array.dims.index("Patient")
     mode_facs = tFac[1][coord]
     status_DF = pd.read_csv(
-        join(path_here, "scCP/data/CoH_Patient_Status.csv"), index_col=0
+        join(path_here, "sccp/data/CoH_Patient_Status.csv"), index_col=0
     )
     Donor_CoH_y = preprocessing.label_binarize(
         status_DF["Status"], classes=["Healthy", "BC"]
@@ -50,7 +50,7 @@ def BC_status_plot(cohXA, rank, n_cluster, seed, ax):
     """Plot 5 fold CV by # components"""
     accDF = pd.DataFrame([])
     status_DF = pd.read_csv(
-        join(path_here, "scCP/data/CoH_Patient_Status.csv"), index_col=0
+        join(path_here, "sccp/data/CoH_Patient_Status.csv"), index_col=0
     )
     Donor_CoH_y = preprocessing.label_binarize(
         status_DF["Status"], classes=["Healthy", "BC"]

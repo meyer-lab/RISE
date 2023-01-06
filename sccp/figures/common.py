@@ -6,11 +6,7 @@ import sys
 import time
 import seaborn as sns
 import matplotlib
-import numpy as np
-import tensorly as tl
 from matplotlib import gridspec, pyplot as plt
-from matplotlib.patches import Ellipse
-from gmm.tensor import markerslist, tensorGMM
 
 
 matplotlib.use("AGG")
@@ -70,70 +66,8 @@ def genFigure():
     start = time.time()
     nameOut = "figure" + sys.argv[1]
 
-    exec("from gmm.figures." + nameOut + " import makeFigure", globals())
+    exec("from sccp.figures." + nameOut + " import makeFigure", globals())
     ff = makeFigure()
     ff.savefig(fdir + nameOut + ".svg", dpi=300, bbox_inches="tight", pad_inches=0)
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
-
-
-def add_ellipse(
-    timei: int,
-    dosei: int,
-    ligandi: int,
-    fac: tensorGMM,
-    marker1,
-    marker2,
-    n_cluster: int,
-    ax,
-    colorpal,
-    datatype, totalmarkers=markerslist):
-    """Adding necessary conditons to form elipse around clusters for data points based on factors with respect to sns."""
-    if datatype == "IL2":
-        markerVec = np.zeros(len(totalmarkers), dtype=bool)
-        markerVec[totalmarkers.index(marker1)] = 1
-        markerVec[totalmarkers.index(marker2)] = 1
-
-        markerProj = np.zeros((2, len(totalmarkers)), dtype=bool)
-        markerProj[0, totalmarkers.index(marker1)] = 1
-        markerProj[1, totalmarkers.index(marker2)] = 1
-    else:
-        markerVec = np.ones(2, dtype=bool)
-        markerProj = np.eye(2, dtype=bool)
-
-    means = tl.cp_to_tensor(fac)
-    means = means[:, markerVec, timei, dosei, ligandi]
-    coVars = fac.get_covariances()
-    coVars = np.squeeze(np.array(coVars[:, :, :, timei, dosei, ligandi]))
-
-    if datatype == "IL2":
-        if totalmarkers.index(marker2) < totalmarkers.index(marker1):
-            means = np.fliplr(means)
-
-    for i in range(n_cluster):
-        cholCov = coVars[i, :, :]
-        covar = cholCov @ cholCov.T
-        covar = markerProj @ covar @ markerProj.T
-        S, U = np.linalg.eigh(covar)
-        S = np.sqrt(S)
-        angle = np.angle(U[0, 0] + U[1, 0] * 1j, deg=True)
-
-        elipse = Ellipse(
-            xy=means[i],
-            width=3 * S[0],
-            height=3 * S[1],
-            edgecolor=colorpal[i],
-            fill=False,
-            facecolor=None,
-            angle=angle,
-        )
-
-        ax.add_artist(elipse)
-
-    return
-
-def plotCellAbundance(fac, n_cluster, ax):
-    """Plots barplot of cell abundance for every cluster"""
-    ax.bar(np.arange(1, fac.nk.size + 1), fac.norm_NK(), color="k")
-    ax.set(xticks = np.arange(1, n_cluster + 1))
-    ax.set(xlabel="Cluster", ylabel="Cell Abundance")

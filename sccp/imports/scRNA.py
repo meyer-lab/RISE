@@ -19,11 +19,11 @@ def import_thompson_drug():
     metafile : str Path to a metadata file. Must contains `cell_barcodes` and `sample_id` columns
     genes : str Path to a .tsv 10X gene file"""
 
-    metafile = pd.read_csv("scCP/data/meta.csv")  # Cell barcodes, sample id of treatment and sample number (33482,3)
+    metafile = pd.read_csv("sccp/data/meta.csv")  # Cell barcodes, sample id of treatment and sample number (33482,3)
     drugScreen = mmread("/opt/andrew/drugscreen.mtx").toarray()  # Sparse matrix of each cell/genes (32738,33482)-(Genes,Cell)
     drugScreen = drugScreen.astype(np.float64)
-    barcodes = np.array([row[0] for row in csv.reader(open("scCP/data/barcodes.tsv"), delimiter="\t")])  # Cell barcodes(33482)
-    genes = np.array([row[1].upper() for row in csv.reader(open("scCP/data/features.tsv"), delimiter="\t")])  # Gene Names (32738)
+    barcodes = np.array([row[0] for row in csv.reader(open("sccp/data/barcodes.tsv"), delimiter="\t")])  # Cell barcodes(33482)
+    genes = np.array([row[1].upper() for row in csv.reader(open("sccp/data/features.tsv"), delimiter="\t")])  # Gene Names (32738)
 
     bc_idx = {}
     for i, bc in enumerate(barcodes):  # Attaching each barcode with an index
