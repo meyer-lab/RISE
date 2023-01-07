@@ -47,4 +47,4 @@ def IL2_flowXA():
     flowXA.values = np.nan_to_num(flowXA.values)
     # Final Xarray has dimensions [Marker, Cell Number, Time, Dose, Ligand]
   
-    return flowXA, celltypeXA
+    return flowXA.tranpose(), celltypeXA.tranpose()

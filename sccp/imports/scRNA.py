@@ -132,4 +132,4 @@ def ThompsonXA_SCGenes():
     ### We should check this though.
     xarr.values = np.nan_to_num(xarr.values)
 
-    return xarr
+    return xarr.transpose()
