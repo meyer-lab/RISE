@@ -1,26 +1,26 @@
+"""
+# This creates Figure 12, typing Thompson drug data.
 # """
-# # This creates Figure 12, typing Thompson drug data.
-# # """
-# import pandas as pd
-# from .common import subplotLabel, getSetup
-# from sccp.scImport import gene_import
+import pandas as pd
+from .common import subplotLabel, getSetup
+from imports.scRNA import gene_import
 # import scanpy as sc
-# import numpy as np
-# from copy import copy
-# from sklearn.pipeline import make_pipeline
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.svm import SVC
-# from sklearn import preprocessing
+import numpy as np
+from copy import copy
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn import preprocessing
 
 
-# def makeFigure():
-#     """Get a list of the axis objects and create a figure."""
-#     # Get list of axis objects
-#     ax, f = getSetup((15, 15), (3, 3))
-#     subplotLabel(ax)
+def makeFigure():
+    """Get a list of the axis objects and create a figure."""
+    # Get list of axis objects
+    ax, f = getSetup((15, 15), (3, 3))
+    subplotLabel(ax)
 
-#     # Add subplot labels
-#     geneDF = gene_import(offset=1, filter=False)
+    # Add subplot labels
+    geneDF = gene_import(offset=1, filter=False)
 #     drugCol = geneDF.Drug
 #     geneDF.drop(columns=["Drug"], axis=1, inplace=True)
 #     genes_list = geneDF.columns
@@ -51,7 +51,7 @@
 #     sc.pl.umap(adata, color=['IL2RA'], ax=ax[7])
 #     sc.pl.umap(adata, color=['NKG7'], ax=ax[8])
 
-#     return f
+    return f
 
 
 # def drug_SVM(save_data, genes):
