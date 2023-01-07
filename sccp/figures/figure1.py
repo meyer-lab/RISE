@@ -3,7 +3,7 @@ Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
 from .common import subplotLabel, getSetup, plotSCCP_factors
 from ..imports.scRNA import ThompsonXA_SCGenes
-from parafac2 import parafac2 as pf2
+from ..parafac2 import parafac2 as pf2
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""

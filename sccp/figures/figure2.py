@@ -5,7 +5,7 @@ import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
 from ..imports.cytok import IL2_flowXA
 from tensorly.decomposition import parafac2
-from parafac2 import parafac2 as pf2
+from ..parafac2 import parafac2 as pf2
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
