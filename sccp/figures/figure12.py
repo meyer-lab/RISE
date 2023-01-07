@@ -3,7 +3,7 @@
 # """
 import pandas as pd
 from .common import subplotLabel, getSetup
-from imports.scRNA import gene_import
+from ..imports.scRNA import gene_import
 # import scanpy as sc
 import numpy as np
 from copy import copy
