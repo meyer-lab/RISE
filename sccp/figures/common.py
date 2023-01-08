@@ -27,7 +27,13 @@ matplotlib.rcParams["svg.fonttype"] = "none"
 
 def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
     """Establish figure set-up with subplots."""
-    sns.set(style="whitegrid", font_scale=0.7, color_codes=True, palette="colorblind", rc={"grid.linestyle": "dotted", "axes.linewidth": 0.6})
+    sns.set(
+        style="whitegrid",
+        font_scale=0.7,
+        color_codes=True,
+        palette="colorblind",
+        rc={"grid.linestyle": "dotted", "axes.linewidth": 0.6},
+    )
 
     # create empty list if empts isn't specified
     if empts is None:
@@ -47,7 +53,7 @@ def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
         if x not in empts and x not in multz.keys():  # If this is just a normal subplot
             ax.append(f.add_subplot(gs1[x]))
         elif x in multz.keys():  # If this is a subplot that spans grid elements
-            ax.append(f.add_subplot(gs1[x: x + multz[x] + 1]))
+            ax.append(f.add_subplot(gs1[x : x + multz[x] + 1]))
             x += multz[x]
         x += 1
 
@@ -57,7 +63,14 @@ def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
 def subplotLabel(axs):
     """Place subplot labels on figure."""
     for ii, ax in enumerate(axs):
-        ax.text(-0.2, 1.2, ascii_lowercase[ii], transform=ax.transAxes, fontweight="bold", va="top")
+        ax.text(
+            -0.2,
+            1.2,
+            ascii_lowercase[ii],
+            transform=ax.transAxes,
+            fontweight="bold",
+            va="top",
+        )
 
 
 def genFigure():
@@ -72,16 +85,24 @@ def genFigure():
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
-    
-def plotSCCP_factors(rank, factors, data_xarray, ax):
+
+def plotSCCP_factors(factors, data_xarray, ax):
     """Plots parafac2 factors"""
+    rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
-    for i in range(0, 3):
+    for i in range(0, len(factors)):
+        # The single cell mode has a square factors matrix
+        if i == len(factors) - 2:
+            yt = xticks
+        else:
+            yt = data_xarray.coords[data_xarray.dims[i]].values
+
         sns.heatmap(
             data=factors[i],
             xticklabels=xticks,
+            yticklabels=yt,
             ax=ax[i],
             cmap=cmap,
             vmax=1,

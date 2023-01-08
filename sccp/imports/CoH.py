@@ -1,11 +1,9 @@
 import xarray as xa
 import numpy as np
-import seaborn as sns
 import pandas as pd
 from collections import Counter
 import os
-from os.path import dirname, join
-from pathlib import Path
+from os.path import join
 
 path_here = os.path.dirname(os.path.dirname(__file__))
 
@@ -15,7 +13,7 @@ def CoH_df(numCells: int = 100, markers=None):
     status_DF = pd.read_csv('sccp/data/CoH_Patient_Status.csv').reset_index(drop=True).drop("Unnamed: 0", axis=1)
     
     #Renaming patients
-    healthy = 0; bc = 0; health = []; cancer = []
+    healthy = 0; bc = 0;
     for i, stat in enumerate(status_DF["Patient"].values):
         statDF = status_DF.loc[status_DF["Patient"] == stat]
         if statDF["Status"].values == "Healthy":
@@ -84,7 +82,6 @@ def CoH_xarray(numCells, cond, allmarkers):
 
     # Final Xarray has dimensions [Marker, Cell Number, Treatment, Patient, 1]
     assert np.all(np.isfinite(finalCoH.to_numpy()))
-    
 
     return finalCoH.sel(Patient=patients), scDF, celltypeXA
 

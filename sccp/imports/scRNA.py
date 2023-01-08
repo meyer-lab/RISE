@@ -60,10 +60,8 @@ def mu_sigma_normalize(geneDF, scalingfactor=1000):
     filteredGenes = filtDF[filtDF.columns[inplaceDF.mean(axis=0) > 0.001]]
     sumGenes = filteredGenes.sum(axis=0)
 
-    assert np.isnan(filteredGenes.to_numpy()).all() == False
-    assert np.isfinite(filteredGenes.to_numpy()).all() == True
-    assert np.isnan(sumGenes).all() == False
-    assert np.isfinite(sumGenes).all() == True
+    assert np.all(np.isfinite(filteredGenes.to_numpy()))
+    assert np.all(np.isfinite(sumGenes))
 
     indices_nonzero = []
     for i in range(len(sumGenes.values)):
