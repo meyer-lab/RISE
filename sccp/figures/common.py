@@ -8,6 +8,8 @@ import seaborn as sns
 import matplotlib
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
+import scipy.cluster.hierarchy as sch
+import pandas as pd
 
 matplotlib.use("AGG")
 
@@ -86,8 +88,8 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotSCCP_factors(factors, data_xarray, ax):
-    """Plots parafac2 factors"""
+def plotSCCP_factors(factors, data_xarray, projs, ax):
+    """Plots parafac2 factors and projection matrix"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
@@ -108,6 +110,27 @@ def plotSCCP_factors(factors, data_xarray, ax):
             vmax=1,
             vmin=-1,
         )
-
+        
         ax[i].set_title("Mean Factors")
         ax[i].tick_params(axis="y", rotation=0)
+
+
+    for i in range(projs.shape[1]):
+        reordered_projs, ind = reorder_table(projs[:, i], xticks, ax[2*i + len(factors)])
+        sns.heatmap(data=reordered_projs.to_numpy(),
+            xticklabels = [xticks[i]],
+            yticklabels= ind,
+            ax=ax[1 + 2*i + len(factors)],
+            cmap=cmap,
+            vmax=1,
+            vmin=-1,
+        )
+
+def reorder_table(projs, xticks, ax):
+    """Reorder a table's rows using heirarchical clustering"""
+    df = pd.DataFrame(data = projs)
+    y = sch.linkage(df.to_numpy(), method="centroid") 
+    index = sch.dendrogram(y, orientation="top", ax=ax)["leaves"] 
+
+    return df.iloc[index, :], index 
+
