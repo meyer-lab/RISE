@@ -9,7 +9,7 @@ from tensorly.decomposition import parafac2
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 12), (4, 5))
+    ax, f = getSetup((12, 12), (5, 4))
 
     # Add subplot labels
     subplotLabel(ax)
