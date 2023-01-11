@@ -14,8 +14,8 @@ def test_n_way():
     rcp = random_cp((10, 50, 30), rank=3, full=True)
     rcpStack = np.stack([rcp, rcp, rcp, rcp, rcp, rcp], axis=0)
 
-    # _, factors, _ = pf2(rcp, rank=3, normalize_factors=True)
-    # _, facStack, _ = parafac2(rcp, rank=3, n_iter_max=1000, verbose=True, tol=1e-10)
+    _, factors, _ = pf2(rcp, rank=3, normalize_factors=True)
+    _, facStack, _ = parafac2(rcpStack, rank=3, n_iter_max=10, tol=1e-10)
 
     # assert np.testing.assert_allclose(factors[0], facStack[0])
 
