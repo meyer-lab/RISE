@@ -26,7 +26,6 @@ matplotlib.rcParams["legend.markerscale"] = 0.7
 matplotlib.rcParams["legend.borderpad"] = 0.35
 matplotlib.rcParams["svg.fonttype"] = "none"
 
-
 def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
     """Establish figure set-up with subplots."""
     sns.set(
