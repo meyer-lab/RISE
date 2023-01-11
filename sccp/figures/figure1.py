@@ -15,7 +15,7 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
-    drugXA = ThompsonXA_SCGenes()
+    drugXA = ThompsonXA_SCGenes(saveXA=False)
 
     # Performing parafac2 on single-cell Xarray
     _, factors, projs = parafac2(

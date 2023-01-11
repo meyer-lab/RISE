@@ -113,21 +113,28 @@ def gene_import(offset=1.0, filter=False):
     return filteredGeneDF
 
 
-def ThompsonXA_SCGenes():
+def ThompsonXA_SCGenes(saveXA=False):
     """Turns filtered and normalized cells into an Xarray."""
-    df = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
-    df.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
-    df = df.sort_values(by=["Drug"])
+    if saveXA == True:
+        df = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
+        df.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
+        df = df.sort_values(by=["Drug"])
 
-    # Assign cells a count per-experiment so we can reindex
-    cellCount = df.groupby(by=["Drug"]).size().values
-    df["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
+        # Assign cells a count per-experiment so we can reindex
+        cellCount = df.groupby(by=["Drug"]).size().values
+        df["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
 
-    xarr = df.set_index(["Cell", "Drug"]).to_xarray()
-    xarr = xarr.to_array(dim="Gene")
+        xarr = df.set_index(["Cell", "Drug"]).to_xarray()
+        xarr = xarr.to_array(dim="Gene")
 
-    ### I *believe* that padding with zeros does not affect PARAFAC2 results.
-    ### We should check this though.
-    xarr.values = np.nan_to_num(xarr.values)
+        ### I *believe* that padding with zeros does not affect PARAFAC2 results.
+        ### We should check this though.
+        xarr.values = np.nan_to_num(xarr.values)
+        xarr = xarr.transpose()
+        
+        xarr.to_netcdf(join(path_here, "data/scRNA_drugXA.nc"))
+    
+    else:
+        xarr = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA.nc"))
 
-    return xarr.transpose()
+    return xarr
