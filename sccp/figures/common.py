@@ -9,7 +9,6 @@ import matplotlib
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
-import pandas as pd
 
 matplotlib.use("AGG")
 
@@ -25,7 +24,6 @@ matplotlib.rcParams["legend.framealpha"] = 0.5
 matplotlib.rcParams["legend.markerscale"] = 0.7
 matplotlib.rcParams["legend.borderpad"] = 0.35
 matplotlib.rcParams["svg.fonttype"] = "none"
-
 
 def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
     """Establish figure set-up with subplots."""
@@ -116,8 +114,8 @@ def plotSCCP_factors(factors, data_xarray, projs, ax):
 
 
     for i in range(projs.shape[1]):
-        reordered_projs, ind = reorder_table(projs[:, i], xticks, ax[2*i + len(factors)])
-        sns.heatmap(data=reordered_projs.to_numpy(),
+        reordered_projs, ind = reorder_table(projs[:, i], ax[2*i + len(factors)])
+        sns.heatmap(data=reordered_projs,
             xticklabels = [xticks[i]],
             yticklabels= ind,
             ax=ax[1 + 2*i + len(factors)],
@@ -126,11 +124,9 @@ def plotSCCP_factors(factors, data_xarray, projs, ax):
             vmin=-1,
         )
 
-def reorder_table(projs, xticks, ax):
+def reorder_table(projs, ax):
     """Reorder a table's rows using heirarchical clustering"""
-    df = pd.DataFrame(data = projs)
-    y = sch.linkage(df.to_numpy(), method="centroid") 
+    projs = np.reshape(projs,(-1,1))
+    y = sch.linkage(projs, method="centroid") 
     index = sch.dendrogram(y, orientation="top", ax=ax)["leaves"] 
-
-    return df.iloc[index, :], index 
-
+    return projs[index, :], index
