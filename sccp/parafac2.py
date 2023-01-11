@@ -99,4 +99,5 @@ def parafac2(
                 print(f"iteration 1: error={errs[-1]}.")
 
     weights, factors = cp_normalize((None, factors))
+    projections = np.reshape(projections, (*X_slices.shape[0:-1], rank))
     return weights, factors, projections
