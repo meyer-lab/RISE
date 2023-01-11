@@ -26,6 +26,6 @@ def makeFigure():
         verbose=True,
     )
 
-    plotSCCP_factors(factors, drugXA, projs[0][:][:], ax)
+    plotSCCP_factors(factors, drugXA, projs[0], ax)
 
     return f
