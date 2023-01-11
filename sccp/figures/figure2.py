@@ -4,6 +4,7 @@ Parafac2 implementation on PBMCs treated across IL2 treatments, times, and doses
 from .common import subplotLabel, getSetup, plotSCCP_factors
 from ..imports.cytok import IL2_flowXA
 from ..parafac2 import parafac2
+import numpy as np
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -25,6 +26,6 @@ def makeFigure():
         verbose=True
     )
 
-    plotSCCP_factors(factors, flowXA, projs[0,:,:], ax)
+    plotSCCP_factors(factors, flowXA, projs[0,0,0,:,:], ax)
 
     return f
