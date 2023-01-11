@@ -21,7 +21,7 @@ def makeFigure():
     _, factors, projs = parafac2(
         drugXA.to_numpy(),
         rank=5,
-        n_iter_max=1,
+        n_iter_max=10,
         normalize_factors=True,
         verbose=True,
     )

@@ -20,7 +20,7 @@ def makeFigure():
     _, factors, projs = parafac2(
         flowXA.to_numpy(),
         rank=2,
-        n_iter_max=1,
+        n_iter_max=10,
         nn_modes=(0, 1, 2),
         verbose=True
     )
