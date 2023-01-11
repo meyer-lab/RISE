@@ -28,8 +28,9 @@ def plotR2X(tensor, rank, datatype, ax, runPf2 = False):
                     n_iter_max=10,
                     nn_modes=(0, 1, 2),
                     verbose=True)
-            
-            pf2_error[i] = _parafac2_rec_error(tensor, [weights, factors, projs])
+                
+            tErr  =  _parafac2_rec_error(tensor.to_numpy(), [weights, factors, projs], rearrangeProjs=True)
+            pf2_error = 1.0 - tErr / np.nanvar(tensor.to_numpy())
                  
         if datatype == "IL2":
             np.save(join(path_here, "sccp/data/IL2_Pf2_Errors.npy"), pf2_error)  

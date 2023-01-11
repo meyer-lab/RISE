@@ -41,8 +41,10 @@ def _compute_projections(X, factors):
     return projections, proj_tensor_reshape
 
 
-def _parafac2_rec_error(X, decomposition):
+def _parafac2_rec_error(X, decomposition, rearrangeProjs = False):
     X_r, new_factors = to_three_mode(X, decomposition[1])
+    if rearrangeProjs == True:
+        decomposition[2] = _compute_projections_fused(X_r, new_factors)
     new_decomp = (decomposition[0], new_factors, decomposition[2])
     _validate_parafac2_tensor(new_decomp)
 
