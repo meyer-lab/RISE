@@ -7,12 +7,12 @@ import seaborn as sns
 
 DimCol = [f"Dimension{i}" for i in np.arange(1, 6)]
 
-def make_synth_pic(magnitude, type):
+def synthXA(magnitude, type):
     """Makes blob of points depicting beach scene with sinusoidally moving sun"""
     ts = np.arange(10)
     blob_DF = None
     if type == "beach":
-        blob_means = [(0, -8), (-6, -4), (2, -4), (-6, 0), (6, 0)]
+        blob_means = [(5, -8), (0, -5), (8, -5), (0, -2), (8, -2)]
         blob_covar = [[[20, 0], [0, 0.5]], [[0.05, 0], [0, 2]], [[0.05, 0], [0, 2]], 
                   [[1, 0], [0, 1]],[[1, 0], [0, 1]]]
         blob_label = ["Ground", "Trunk", "Trunk", "Leaf", "Leaf"]
@@ -25,8 +25,8 @@ def make_synth_pic(magnitude, type):
                     size=int(1 * magnitude),time=t,label=blob_label[i])])
                 else: 
                     blob_DF = pd.concat(
-                    [blob_DF,make_blob_art((0, 8 * np.sin(t * 2 * np.pi / (25))),
-                    cov=[[0.5 + 0.5*t, 0], [0, 0.5 + 0.5*t]],
+                    [blob_DF,make_blob_art((4, 8 * np.sin(t * 2 * np.pi / (25))),
+                    cov=[[1, 0], [0, 1]],
                     size=int(1 * magnitude),time=t,label="Sun")])
     elif type == "movingcovariance":
         blob_means = [(-5, -5), (3, 3), (-5, 5), (2, -5)]
@@ -70,8 +70,8 @@ def make_synth_pic(magnitude, type):
                         [blob_DF,make_blob_art((0, -2*np.sin(t * 2 * np.pi / (25))),
                         cov=blob_covar,
                         size=int(1 * magnitude),time=t,label=blob_planet[i])])
-            
-    return blob_DF
+    
+    return make_blob_tensor(blob_DF), blob_DF
 
 
 def make_blob_art(mean, cov, size, time, label):
@@ -93,7 +93,7 @@ def plot_synth_pic(blob_DF, t, palette, ax):
         s=5,
     )
     ax.set(
-        xlim=(-1.2, 1.2),
+        xlim=(-.5, 1.5),
         ylim=(-1.2, 1.2),
         title="Time: " + str(t) + " - Synthetic Scene",
     )
@@ -103,16 +103,12 @@ def make_blob_tensor(blob_DF):
     """Makes blob art into 3D tensor with points x coordinate x time as dimensions"""
     times = len(blob_DF.Time.unique())
     points = blob_DF.shape[0] / times
-    blob_DF["Points"] = np.tile(np.arange(points, dtype=int), times)
+    blob_DF["Cell"] = np.tile(np.arange(points, dtype=int), times)
     blob_DF = blob_DF.drop("Label", axis=1)
     blob_xa = (
-        blob_DF.set_index(["Points", "Time"]).to_xarray().to_array(dim="Dimension")
+        blob_DF.set_index(["Time", "Cell"]).to_xarray().to_array(dim="Dimension")
     )
-    blob_xa = blob_xa.expand_dims(["Throwaway 1", "Throwaway 2"])
-    blob_xa = blob_xa.transpose(
-        "Dimension", "Points", "Time", "Throwaway 1", "Throwaway 2"
-    )
-
+    
     return blob_xa
 
 
