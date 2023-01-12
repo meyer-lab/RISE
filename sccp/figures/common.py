@@ -113,22 +113,20 @@ def plotSCCP_factors(factors, data_xarray, projs, ax):
         ax[i].set_title("Mean Factors")
         ax[i].tick_params(axis="y", rotation=0)
 
-    for i in range(projs.shape[1]):
-        reordered_projs, ind = reorder_table(projs[:, i], ax[2 * i + len(factors)])
+    for i, ps in enumerate(projs):
+        reordered_projs, ind = reorder_table(ps)
         sns.heatmap(
             data=reordered_projs,
-            xticklabels=[xticks[i]],
+            xticklabels=xticks,
             yticklabels=ind,
             ax=ax[1 + 2 * i + len(factors)],
             cmap=cmap,
-            vmax=1,
-            vmin=-1,
         )
 
 
-def reorder_table(projs, ax):
+def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
-    projs = np.reshape(projs, (-1, 1))
-    y = sch.linkage(projs, method="centroid")
-    index = sch.dendrogram(y, orientation="top", ax=ax)["leaves"]
+    assert projs.ndim == 2
+    Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
+    index = sch.leaves_list(Z)
     return projs[index, :], index

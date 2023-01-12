@@ -59,7 +59,7 @@ def parafac2(
     X_slices,
     rank,
     n_iter_max=150,
-    tol=1e-8,
+    tol=1e-6,
     nn_modes=None,
     verbose=False,
 ):
@@ -77,7 +77,7 @@ def parafac2(
         _, factors = non_negative_parafac_hals(
             projected_tensor,
             rank,
-            n_iter_max=50,
+            n_iter_max=10,
             init=(None, factors),
             nn_modes=nn_modes,
             verbose=False,
