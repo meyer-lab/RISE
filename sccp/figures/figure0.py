@@ -4,7 +4,7 @@ Creating synthetic data and implementation of parafac2
 import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
 from ..synthetic import synthXA, plot_synth_pic
-from tensorly.decomposition import parafac2
+from ..parafac2 import parafac2
 
 
 def makeFigure():
@@ -15,17 +15,15 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    blobXA, blobDF = synthXA(magnitude=100, type="beach")
+    blobXA, blobDF = synthXA(magnitude=200, type="beach")
 
-    weights, factors, projs = parafac2(
+    _, factors, projs = parafac2(
         blobXA.to_numpy(),
         rank=3,
-        n_iter_max=1,
-        normalize_factors=True,
         verbose=True,
     )
 
-    plotSCCP_factors(factors, blobXA, projs[0], ax)
+    plotSCCP_factors(factors, blobXA, projs[0:2], ax)
 
     for i in np.arange(0, 3):
         plot_synth_pic(blobDF, t=i * 3, palette=palette, ax=ax[i + 12])
