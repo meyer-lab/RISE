@@ -9,10 +9,10 @@ from os.path import join
 path_here = os.path.dirname(os.path.dirname(__file__))
 
 
-def IL2_flowXA(saveXA = False):
-    """Rearranges and normlizes data as an Xarray of 
+def IL2_flowXA(saveXA=False):
+    """Rearranges and normlizes data as an Xarray of
     dimensions of [Ligand, Dose, Time, Cell, Marker]"""
-    if saveXA == True: 
+    if saveXA == True:
         flowArrow = pq.read_table("/opt/andrew/FlowDataGMM_hlog.pq")
         gVars = ["Time", "Dose", "Ligand", "Valency"]
         # Columns that should be trasformed
@@ -27,15 +27,25 @@ def IL2_flowXA(saveXA = False):
 
         # Group and subset
         for mark in transCols:
-            flowDF = flowDF[flowDF[mark] < flowDF[mark].quantile(0.995)]  # Getting rid of outlier values
-        flowDF[tCols] = flowDF.groupby(by=gVars)[tCols].transform(lambda x: x / np.std(x))  # Dividing by std per experiement
+            flowDF = flowDF[
+                flowDF[mark] < flowDF[mark].quantile(0.995)
+            ]  # Getting rid of outlier values
+        flowDF[tCols] = flowDF.groupby(by=gVars)[tCols].transform(
+            lambda x: x / np.std(x)
+        )  # Dividing by std per experiement
 
         # Add valency to the name
-        flowDF["Ligand"] = flowDF["Ligand"] + "-" + flowDF["Valency"].apply(lambda x: f"{x:.0f}")
+        flowDF["Ligand"] = (
+            flowDF["Ligand"] + "-" + flowDF["Valency"].apply(lambda x: f"{x:.0f}")
+        )
         flowDF.drop(columns=["Valency"], axis=1, inplace=True)
 
-        flowDF["Cell Type"] = flowDF["Cell Type"].replace({"None": 1, "Treg": 2, "Thelper": 3})
-        flowDF["pSTAT5"] /= np.std(flowDF["pSTAT5"])  # For pSTAT5 only, dividing my std of all experiments
+        flowDF["Cell Type"] = flowDF["Cell Type"].replace(
+            {"None": 1, "Treg": 2, "Thelper": 3}
+        )
+        flowDF["pSTAT5"] /= np.std(
+            flowDF["pSTAT5"]
+        )  # For pSTAT5 only, dividing my std of all experiments
         flowDF.sort_values(by=["Time", "Dose", "Ligand"], inplace=True)
 
         # Filter out problematic ligands
@@ -43,21 +53,21 @@ def IL2_flowXA(saveXA = False):
 
         cellCount = flowDF.groupby(by=["Time", "Dose", "Ligand"]).size().values
         flowDF["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
-        
+
         flowXA = flowDF.set_index(["Cell", "Time", "Dose", "Ligand"]).to_xarray()
         celltypeXA = flowXA["Cell Type"]
         flowXA = flowXA.drop_vars(["Cell Type"])
         flowXA = flowXA[transCols].to_array(dim="Marker")
         flowXA.values = np.nan_to_num(flowXA.values)
         # Final Xarray has dimensions [Ligand, Dose, Time, Cell, Marker]
-        
+
         flowXA = flowXA.transpose()
         celltypeXA = celltypeXA.transpose()
         flowXA.to_netcdf(join(path_here, "data/IL2_flowXA.nc"))
         celltypeXA.to_netcdf(join(path_here, "data/IL2_celltypeXA.nc"))
-        
+
     else:
         flowXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_flowXA.nc"))
         celltypeXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_celltypeXA.nc"))
-  
+
     return flowXA, celltypeXA

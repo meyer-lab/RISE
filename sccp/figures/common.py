@@ -25,6 +25,7 @@ matplotlib.rcParams["legend.markerscale"] = 0.7
 matplotlib.rcParams["legend.borderpad"] = 0.35
 matplotlib.rcParams["svg.fonttype"] = "none"
 
+
 def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
     """Establish figure set-up with subplots."""
     sns.set(
@@ -108,25 +109,26 @@ def plotSCCP_factors(factors, data_xarray, projs, ax):
             vmax=1,
             vmin=-1,
         )
-        
+
         ax[i].set_title("Mean Factors")
         ax[i].tick_params(axis="y", rotation=0)
 
-
     for i in range(projs.shape[1]):
-        reordered_projs, ind = reorder_table(projs[:, i], ax[2*i + len(factors)])
-        sns.heatmap(data=reordered_projs,
-            xticklabels = [xticks[i]],
-            yticklabels= ind,
-            ax=ax[1 + 2*i + len(factors)],
+        reordered_projs, ind = reorder_table(projs[:, i], ax[2 * i + len(factors)])
+        sns.heatmap(
+            data=reordered_projs,
+            xticklabels=[xticks[i]],
+            yticklabels=ind,
+            ax=ax[1 + 2 * i + len(factors)],
             cmap=cmap,
             vmax=1,
             vmin=-1,
         )
 
+
 def reorder_table(projs, ax):
     """Reorder a table's rows using heirarchical clustering"""
-    projs = np.reshape(projs,(-1,1))
-    y = sch.linkage(projs, method="centroid") 
-    index = sch.dendrogram(y, orientation="top", ax=ax)["leaves"] 
+    projs = np.reshape(projs, (-1, 1))
+    y = sch.linkage(projs, method="centroid")
+    index = sch.dendrogram(y, orientation="top", ax=ax)["leaves"]
     return projs[index, :], index

@@ -19,11 +19,22 @@ def import_thompson_drug():
     metafile : str Path to a metadata file. Must contains `cell_barcodes` and `sample_id` columns
     genes : str Path to a .tsv 10X gene file"""
 
-    metafile = pd.read_csv("sccp/data/meta.csv")  # Cell barcodes, sample id of treatment and sample number (33482,3)
-    drugScreen = mmread("/opt/andrew/drugscreen.mtx").toarray()  # Sparse matrix of each cell/genes (32738,33482)-(Genes,Cell)
+    metafile = pd.read_csv(
+        "sccp/data/meta.csv"
+    )  # Cell barcodes, sample id of treatment and sample number (33482,3)
+    drugScreen = mmread(
+        "/opt/andrew/drugscreen.mtx"
+    ).toarray()  # Sparse matrix of each cell/genes (32738,33482)-(Genes,Cell)
     drugScreen = drugScreen.astype(np.float64)
-    barcodes = np.array([row[0] for row in csv.reader(open("sccp/data/barcodes.tsv"), delimiter="\t")])  # Cell barcodes(33482)
-    genes = np.array([row[1].upper() for row in csv.reader(open("sccp/data/features.tsv"), delimiter="\t")])  # Gene Names (32738)
+    barcodes = np.array(
+        [row[0] for row in csv.reader(open("sccp/data/barcodes.tsv"), delimiter="\t")]
+    )  # Cell barcodes(33482)
+    genes = np.array(
+        [
+            row[1].upper()
+            for row in csv.reader(open("sccp/data/features.tsv"), delimiter="\t")
+        ]
+    )  # Gene Names (32738)
 
     bc_idx = {}
     for i, bc in enumerate(barcodes):  # Attaching each barcode with an index
@@ -32,13 +43,23 @@ def import_thompson_drug():
     namingList = np.append(genes, ["Drug"])  # Forming column name list
     totalGenes = pd.DataFrame()
     drugNames = []
-    for i, cellID in enumerate(metafile["sample_id"].dropna().unique()):  # Enumerating each experiment/drug
-        sample_bcs = metafile[metafile.sample_id == cellID].cell_barcode.values  # Obtaining cell bar code values for a specific experiment
-        idx = [bc_idx[bc] for bc in sample_bcs]  # Ensuring barcodes match metafile for an expriment
-        geneExpression = drugScreen[:, idx].T  # Obtaining all cells associated with a specific experiment (Cells, Gene)
+    for i, cellID in enumerate(
+        metafile["sample_id"].dropna().unique()
+    ):  # Enumerating each experiment/drug
+        sample_bcs = metafile[
+            metafile.sample_id == cellID
+        ].cell_barcode.values  # Obtaining cell bar code values for a specific experiment
+        idx = [
+            bc_idx[bc] for bc in sample_bcs
+        ]  # Ensuring barcodes match metafile for an expriment
+        geneExpression = drugScreen[
+            :, idx
+        ].T  # Obtaining all cells associated with a specific experiment (Cells, Gene)
         cellIdx = np.repeat(cellID, len(sample_bcs))  # Connecting drug name with cell
         drugNames = np.append(drugNames, cellIdx)
-        totalGenes = pd.concat([totalGenes, pd.DataFrame(data=geneExpression)])  # Setting in a DF
+        totalGenes = pd.concat(
+            [totalGenes, pd.DataFrame(data=geneExpression)]
+        )  # Setting in a DF
 
     totalGenes.columns = genes  # Attaching gene name to each column
     totalGenes["Drug"] = drugNames  # Attaching drug name to each cell
@@ -99,7 +120,9 @@ def gene_filter(geneDF, mean, std, offset_value=1.0):
     inter = intercept + np.log10(offset_value)
 
     above_idx = np.where(std > mean * slope + inter)
-    finalDF = geneDF.iloc[:, np.append(np.asarray(above_idx).flatten(), geneDF.shape[1] - 1)]
+    finalDF = geneDF.iloc[
+        :, np.append(np.asarray(above_idx).flatten(), geneDF.shape[1] - 1)
+    ]
 
     return finalDF, above_idx
 
@@ -109,7 +132,9 @@ def gene_import(offset=1.0, filter=False):
     genesDF, _ = import_thompson_drug()
     filteredGeneDF, logmean, logstd = mu_sigma_normalize(genesDF, scalingfactor=1000)
     if filter == True:
-        filteredGeneDF, _ = gene_filter(filteredGeneDF, logmean, logstd, offset_value=offset)
+        filteredGeneDF, _ = gene_filter(
+            filteredGeneDF, logmean, logstd, offset_value=offset
+        )
     return filteredGeneDF
 
 
@@ -131,9 +156,9 @@ def ThompsonXA_SCGenes(saveXA=False):
         ### We should check this though.
         xarr.values = np.nan_to_num(xarr.values)
         xarr = xarr.transpose()
-        
+
         xarr.to_netcdf(join(path_here, "data/scRNA_drugXA.nc"))
-    
+
     else:
         xarr = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA.nc"))
 

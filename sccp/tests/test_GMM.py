@@ -6,7 +6,8 @@ import numpy as np
 from ..imports.cytok import IL2_flowXA
 from ..imports.CoH import CoH_xarray
 
-IL2data_import, _= IL2_flowXA()
+IL2data_import, _ = IL2_flowXA()
+
 
 @pytest.mark.parametrize("cells", [5, 100])
 def test_import_CoH(cells):
@@ -16,7 +17,7 @@ def test_import_CoH(cells):
     cohXA_import, _, _ = CoH_xarray(numCell, cond, allmarkers=True)
     assert np.isfinite(cohXA_import.to_numpy()).all()
 
+
 def test_finite_data():
     """Test that all values in tensor has no NaN"""
     assert np.isfinite(IL2data_import.to_numpy()).all()
-

@@ -6,6 +6,7 @@ from ..imports.cytok import IL2_flowXA
 from ..parafac2 import parafac2
 import numpy as np
 
+
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
@@ -17,15 +18,14 @@ def makeFigure():
     # Import of single cells: [Ligand, Dose, Time, Cell, Marker]
     flowXA, _ = IL2_flowXA()
 
+    # Shrink dataset
+    flowXA = flowXA.loc[:, :, :, :2000, :]
+
     # Performing parafac2 on single-cell Xarray
     _, factors, projs = parafac2(
-        flowXA.to_numpy(),
-        rank=2,
-        n_iter_max=10,
-        nn_modes=(0, 1, 2),
-        verbose=True
+        flowXA.to_numpy(), rank=3, nn_modes=(0, 1, 2), verbose=True
     )
 
-    plotSCCP_factors(factors, flowXA, projs[0,0,0,:,:], ax)
+    plotSCCP_factors(factors, flowXA, projs[0, 0, 0, :, :], ax)
 
     return f

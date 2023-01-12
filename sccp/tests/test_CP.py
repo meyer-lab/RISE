@@ -3,10 +3,17 @@ Test the data import.
 """
 import tensorly as tl
 import numpy as np
-from ..parafac2 import parafac2, _project_tensor_slices_fused, _compute_projections_fused
+from ..parafac2 import (
+    parafac2,
+    _project_tensor_slices_fused,
+    _compute_projections_fused,
+)
 from tensorly.decomposition import parafac2 as pf2
 from tensorly.random import random_cp
-from tensorly.decomposition._parafac2 import _project_tensor_slices, _compute_projections
+from tensorly.decomposition._parafac2 import (
+    _project_tensor_slices,
+    _compute_projections,
+)
 
 
 def test_n_way():
