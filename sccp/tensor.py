@@ -20,6 +20,8 @@ def plotR2X(tensor, rank, datatype, ax, runPf2 = False):
                     n_iter_max=10,
                     normalize_factors=True,
                     verbose=True)
+    
+                rearrange = False
             
             else: 
                 weights, factors, projs = pf2(
@@ -29,7 +31,9 @@ def plotR2X(tensor, rank, datatype, ax, runPf2 = False):
                     nn_modes=(0, 1, 2),
                     verbose=True)
                 
-            pf2_error[i] =  _parafac2_rec_error(tensor.to_numpy(), [weights, factors, projs], rearrangeProjs=True)
+                rearrange = True
+                
+            pf2_error[i] = _parafac2_rec_error(tensor.to_numpy(), [weights, factors, projs], rearrangeProjs=rearrange)
                  
         if datatype == "IL2":
             np.save(join(path_here, "sccp/data/IL2_Pf2_Errors.npy"), pf2_error)  
@@ -48,7 +52,7 @@ def plotR2X(tensor, rank, datatype, ax, runPf2 = False):
 
         rank_vec = np.arange(1, len(pf2_error) + 1)
         ax.scatter(rank_vec, pf2_error, c='k', s=20.)
-        ax.set(title="R2X", ylabel="Variance Explained", xlabel="Number of Components", ylim=(0, 1), xlim=(0, rank + 0.5), xticks=np.arange(0, rank + 1))
+        ax.set(title="R2X", ylabel="Variance Explained", xlabel="Number of Components", xticks=np.arange(0, rank + 1))
     
     
     
