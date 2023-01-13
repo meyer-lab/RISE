@@ -179,9 +179,9 @@ def make_blob_tensor(blob_DF):
     points = blob_DF.shape[0] / times
     blob_DF["Cell"] = np.tile(np.arange(points, dtype=int), times)
     blob_DF = blob_DF.drop("Label", axis=1)
-    blob_xa = blob_DF.set_index(["Time", "Cell"]).to_xarray().to_array(dim="Dimension")
+    blob_xa = blob_DF.set_index(["Cell", "Time"]).to_xarray().to_array(dim="Dimension")
 
-    return blob_xa
+    return blob_xa.transpose()
 
 
 def plotFactors_synthetic(fac, blobXA, n_cluster, ax):
