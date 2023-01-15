@@ -21,8 +21,7 @@ def makeFigure():
     _, factors, projs = parafac2(
         drugXA.to_numpy(),
         rank=5,
-        n_iter_max=1,
-        verbose=True,
+        verbose=False,
     )
 
     plotSCCP_factors(factors, drugXA, projs[:3, :, :], ax)
