@@ -20,7 +20,7 @@ def makeFigure():
     subplotLabel(ax)
 
     # Add subplot labels
-    geneDF = gene_import(offset=1, filter=False)
+    #     geneDF = gene_import(offset=1, filter=False)
     #     drugCol = geneDF.Drug
     #     geneDF.drop(columns=["Drug"], axis=1, inplace=True)
     #     genes_list = geneDF.columns

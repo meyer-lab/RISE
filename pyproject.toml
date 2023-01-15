@@ -7,13 +7,13 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-numpy = "1.24.1"
-scipy = "1.10.0"
+numpy = "^1.24.1"
+scipy = "^1.10.0"
 scikit-learn = "^1.2.0"
 seaborn = "^0.11.2"
 pyarrow = "^7.0.0"
-tensorly = "0.7.0"
-xarray = "^2022.3.0"
+tensorly = { git = "https://github.com/tensorly/tensorly.git", branch = "main" }
+xarray = "^2022.12.0"
 igraph = "^0.9.11"
 louvain = "^0.7.1"
 leidenalg = "^0.8.10"

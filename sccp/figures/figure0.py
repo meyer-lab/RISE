@@ -4,7 +4,7 @@ Creating synthetic data and implementation of parafac2
 import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
 from ..synthetic import synthXA, plot_synth_pic
-from ..parafac2 import parafac2
+from ..parafac2 import parafac2_nd
 
 
 def makeFigure():
@@ -17,12 +17,11 @@ def makeFigure():
 
     blobXA, blobDF = synthXA(magnitude=200, type="beach")
 
-    _, factors, projs = parafac2(
+    _, factors, projs = parafac2_nd(
         blobXA.to_numpy(),
-        rank=3,
-        verbose=True,
+        rank=2,
     )
-    
+
     plotSCCP_factors(factors, blobXA, projs[0:2], ax)
 
     for i in np.arange(0, 3):
