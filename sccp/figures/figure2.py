@@ -9,7 +9,7 @@ from ..parafac2 import parafac2
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 12), (5, 4))
+    ax, f = getSetup((10, 8), (3, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -22,7 +22,8 @@ def makeFigure():
 
     # Performing parafac2 on single-cell Xarray
     _, factors, projs = parafac2(
-        flowXA.to_numpy(), rank=3, nn_modes=(0, 1, 2), verbose=True
+        flowXA.to_numpy(), rank=3, nn_modes=(0, 1, 2),
+        verbose=True
     )
 
     plotSCCP_factors(factors, flowXA, projs[0, 0, :, :, :], ax)

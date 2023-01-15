@@ -9,7 +9,7 @@ from ..parafac2 import parafac2
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 12), (5, 4))
+    ax, f = getSetup((10, 10), (2, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -21,7 +21,7 @@ def makeFigure():
     _, factors, projs = parafac2(
         drugXA.to_numpy(),
         rank=5,
-        n_iter_max=20,
+        n_iter_max=1,
         verbose=True,
     )
 
