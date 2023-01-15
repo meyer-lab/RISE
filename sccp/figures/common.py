@@ -87,7 +87,7 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotSCCP_factors(factors, data_xarray, projs, ax):
+def plotSCCP_factors(factors, data_xarray, projs, ax, reorder=tuple()):
     """Plots parafac2 factors and projection matrix"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -100,8 +100,14 @@ def plotSCCP_factors(factors, data_xarray, projs, ax):
         else:
             yt = data_xarray.coords[data_xarray.dims[i]].values
 
+        if i in reorder:
+            reordered_projs, ind = reorder_table(factors[i])
+            yt = yt[ind]
+        else:
+            reordered_projs = factors[i]
+
         sns.heatmap(
-            data=factors[i],
+            data=reordered_projs,
             xticklabels=xticks,
             yticklabels=yt,
             ax=ax[i],

@@ -23,6 +23,6 @@ def makeFigure():
         rank=5,
     )
 
-    plotSCCP_factors(factors, drugXA, projs[:3, :, :], ax)
+    plotSCCP_factors(factors, drugXA, projs[:3, :, :], ax, reorder=(0, 2))
 
     return f
