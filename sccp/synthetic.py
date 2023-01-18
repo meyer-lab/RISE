@@ -21,7 +21,7 @@ def synthXA(magnitude, type):
             [[1, 0], [0, 1]],
             [[1, 0], [0, 1]],
         ]
-        blob_label = ["Ground", "Trunk", "Trunk", "Leaf", "Leaf"]
+        blob_label = ["Ground", "Trunk1", "Trunk2", "Leaf1", "Leaf2"]
 
         for t in ts:
             for i in range(6):
@@ -144,8 +144,10 @@ def synthXA(magnitude, type):
                             ),
                         ]
                     )
+                    
+    blobXA, celltypeXA = make_blob_tensor(blob_DF)
 
-    return make_blob_tensor(blob_DF), blob_DF
+    return blobXA, blob_DF, celltypeXA
 
 
 def make_blob_art(mean, cov, size, time, label):
@@ -178,10 +180,12 @@ def make_blob_tensor(blob_DF):
     times = len(blob_DF.Time.unique())
     points = blob_DF.shape[0] / times
     blob_DF["Cell"] = np.tile(np.arange(points, dtype=int), times)
-    blob_DF = blob_DF.drop("Label", axis=1)
-    blob_xa = blob_DF.set_index(["Cell", "Time"]).to_xarray().to_array(dim="Dimension")
+    blob_xa = blob_DF.set_index(["Cell", "Time"]).to_xarray()
+    celltypeXA = blob_xa["Label"]
+    blob_xa = blob_xa.drop_vars(["Label"])
+    blob_xa = blob_xa.to_array(dim="Dimension")
 
-    return blob_xa.transpose()
+    return blob_xa.transpose(), celltypeXA.transpose()
 
 
 def plotFactors_synthetic(fac, blobXA, n_cluster, ax):
