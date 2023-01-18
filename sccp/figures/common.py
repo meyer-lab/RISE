@@ -87,7 +87,7 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotSCCP_factors(factors, data_xarray, celltypeXA, projs, ax, color_palette, reorder=tuple()):
+def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_palette=None, plot_celltype=False, reorder=tuple()):
     """Plots parafac2 factors and projection matrix"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -109,7 +109,7 @@ def plotSCCP_factors(factors, data_xarray, celltypeXA, projs, ax, color_palette,
         sns.heatmap(
             data=reordered_projs,
             xticklabels=xticks,
-            yticklabels=False,
+            yticklabels=yt,
             ax=ax[i],
             cmap=cmap,
         )
@@ -123,31 +123,31 @@ def plotSCCP_factors(factors, data_xarray, celltypeXA, projs, ax, color_palette,
         sns.heatmap(
             data=reordered_projs,
             xticklabels=xticks,
-            yticklabels=False,
+            yticklabels=ind,
             ax=ax[2*i + len(factors)],
             cmap=cmap,
         )
 
-        true_celltypes = celltypeXA[i, ind].to_dataframe().reset_index().drop(columns=["Cell","Time"]).set_index("Label")
-        true_celltypes["Type"] = 0
-        label_colorbar = []
-        colorbar_numbers = np.arange(0, len(np.unique(celltypeXA)))
-        for j, label in enumerate(np.unique(celltypeXA)):
-            true_celltypes[true_celltypes.index == label] = j
-            label_colorbar = np.append(label_colorbar, label)   
+        if plot_celltype == True:
+            true_celltypes = celltypeXA[i, ind].to_dataframe().reset_index().drop(columns=["Cell","Time"]).set_index("Label")
+            true_celltypes["Type"] = 0
+            label_colorbar = []
+            colorbar_numbers = np.arange(0, len(np.unique(celltypeXA)))
+            for j, label in enumerate(np.unique(celltypeXA)):
+                true_celltypes[true_celltypes.index == label] = j
+                label_colorbar = np.append(label_colorbar, label)   
     
-        sns.heatmap(
-            data=true_celltypes.to_numpy(),
-            xticklabels=False,
-            yticklabels=False,
-            ax=ax[2*i + len(factors) + 1],
-            cmap=color_palette,
-            )
+            sns.heatmap(
+                data=true_celltypes.to_numpy(),
+                xticklabels=False,
+                yticklabels=False,
+                ax=ax[2*i + len(factors) + 1],
+                cmap=color_palette,
+                )
         
-        cbar = ax[2*i + len(factors) + 1].collections[0].colorbar
-        cbar.set_ticks(colorbar_numbers)
-        cbar.set_ticklabels(label_colorbar)
-
+            cbar = ax[2*i + len(factors) + 1].collections[0].colorbar
+            cbar.set_ticks(colorbar_numbers)
+            cbar.set_ticklabels(label_colorbar)
 
 
 def reorder_table(projs):

@@ -23,14 +23,12 @@ def makeFigure():
         rank=2,
     )
     
-    plotSCCP_factors(factors, blobXA, celltypeXA, projs[0:2], ax, color_palette)
+    plotSCCP_factors(factors, blobXA, projs[0:2], ax, celltypeXA, color_palette, plot_celltype=True)
     
     for i in np.arange(0, 3):
         plot_synth_pic(blobDF, t=i * 3, palette=palette, ax=ax[i + 7])
 
     return f
-
-
 
 
 palette = {"Ground": "khaki", "Leaf1": "limegreen", "Leaf2": "darkgreen", "Sun": "yellow", "Trunk1": "sienna", "Trunk2": "chocolate"}
