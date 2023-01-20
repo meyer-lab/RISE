@@ -40,9 +40,6 @@ def IL2_flowXA(saveXA=False):
         )
         flowDF.drop(columns=["Valency"], axis=1, inplace=True)
 
-        flowDF["Cell Type"] = flowDF["Cell Type"].replace(
-            {"None": 1, "Treg": 2, "Thelper": 3}
-        )
         flowDF["pSTAT5"] /= np.std(
             flowDF["pSTAT5"]
         )  # For pSTAT5 only, dividing my std of all experiments

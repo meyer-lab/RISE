@@ -16,17 +16,20 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Ligand, Dose, Time, Cell, Marker]
-    flowXA, _ = IL2_flowXA()
+    flowXA, celltypeXA = IL2_flowXA(saveXA=False)
 
-    flowXA -= np.mean(flowXA, axis=(0, 1, 2, 3))
-    flowXA /= np.std(flowXA, axis=(0, 1, 2, 3))
+    # flowXA -= np.mean(flowXA, axis=(0, 1, 2, 3))
+    # flowXA /= np.std(flowXA, axis=(0, 1, 2, 3))
 
     # Shrink dataset
-    flowXA = flowXA.loc[:, :, :, ::50, :]
+    flowXA = flowXA.loc[:, :, :, :50, :]
+    celltypeXA = celltypeXA.loc[:, :, :, :50]
 
     # Performing parafac2 on single-cell Xarray
-    _, factors, projs = parafac2_nd(flowXA.to_numpy(), rank=3, verbose=True)
+    _, factors, projs = parafac2_nd(flowXA.to_numpy(), rank=3, verbose=True) 
 
-    plotSCCP_factors(factors, flowXA, projs[0, 0, :, :, :], ax)
-
+    plotSCCP_factors(factors, flowXA, projs[0, 0, :, :, :], ax, celltypeXA[0, 0, :, :], color_palette, plot_celltype=True)
+    
     return f
+
+color_palette = ["red", "blue", "green"]
