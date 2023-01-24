@@ -6,6 +6,10 @@ import csv
 import xarray as xa
 from scipy.io import mmread
 from scipy.stats import linregress
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn import preprocessing
 
 
 path_here = os.path.dirname(os.path.dirname(__file__))
@@ -127,39 +131,180 @@ def gene_filter(geneDF, mean, std, offset_value=1.0):
     return finalDF, above_idx
 
 
-def gene_import(offset=1.0, filter=False):
+def gene_import(offset=1.0):
     """Imports gene data from PopAlign and perfroms gene filtering process"""
     genesDF, _ = import_thompson_drug()
     filteredGeneDF, logmean, logstd = mu_sigma_normalize(genesDF, scalingfactor=1000)
-    if filter == True:
+    if offset != 1.0:
         filteredGeneDF, _ = gene_filter(
             filteredGeneDF, logmean, logstd, offset_value=offset
         )
     return filteredGeneDF
 
 
-def ThompsonXA_SCGenes(saveXA=False):
+def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
     """Turns filtered and normalized cells into an Xarray."""
-    if saveXA == True:
-        df = pd.read_csv("/opt/andrew/FilteredLogDrugs_Offset_1.1.csv", sep=",")
-        df.drop(columns=["Unnamed: 0"], axis=1, inplace=True)
-        df = df.sort_values(by=["Drug"])
+    if saveXA is True:
+        if offset == 1.0:
+            df = pd.read_csv("/opt/andrew/scRNA_drugDF_NoOffset.csv")
+            # df = df.iloc[:100, :]
+            print(df)
+            df = df.drop(columns=["Unnamed: 0"], axis=1)
+        else:
+            df = gene_import(offset=offset)
 
+        df = df.sort_values(by=["Drug"])
+        df = assign_celltype(df)
+            
         # Assign cells a count per-experiment so we can reindex
         cellCount = df.groupby(by=["Drug"]).size().values
         df["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
 
-        xarr = df.set_index(["Cell", "Drug"]).to_xarray()
-        xarr = xarr.to_array(dim="Gene")
+        XA = df.set_index(["Cell", "Drug"]).to_xarray()
+        celltypeXA = XA["Cell Type"]
+        XA = XA.drop_vars(["Cell Type"])
+        XA = XA.to_array(dim="Gene")
 
         ### I *believe* that padding with zeros does not affect PARAFAC2 results.
         ### We should check this though.
-        xarr.values = np.nan_to_num(xarr.values)
-        xarr = xarr.transpose()
+        XA.values = np.nan_to_num(XA.values)
+        XA = XA.transpose()
+        celltypeXA = celltypeXA.transpose()
 
-        xarr.to_netcdf(join(path_here, "data/scRNA_drugXA.nc"))
-
+        XA.to_netcdf(join(path_here, "data/scRNA_drugXA.nc"))
+        celltypeXA.to_netcdf(join(path_here, "data/scRNA_celltypeXA.nc"))
+        
     else:
-        xarr = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA.nc"))
+        if offset == 1.0:
+            XA = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA_NoOffset.nc"))
+            celltypeXA = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_celltypeXA_NoOffset.nc"))
+        else:
+            XA = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA.nc"))
 
-    return xarr
+    return XA, celltypeXA
+
+
+
+def assign_celltype(df):
+    """Assignign cell types via scanpy and SVM"""
+    import scanpy as sc
+    celltypeDF = df.drop(columns=["Drug"], axis=1)
+    genes_list = celltypeDF.columns
+    adata = sc.AnnData(celltypeDF)
+    sc.pp.pca(adata, svd_solver='arpack')
+    sc.pp.neighbors(adata)
+    sc.tl.leiden(adata, resolution=0.75)
+    sc.tl.rank_genes_groups(adata, groupby='leiden')
+    marker_matches = sc.tl.marker_gene_overlap(adata, marker_genes)
+    sc.tl.umap(adata)
+    adata.obs = adata.obs.replace(clust_names)
+    adata.obs.columns = ["Cell Type"]
+    adata = drug_SVM(adata, genes_list)
+    
+    df["Cell Type"] = adata.obs.values  
+     
+    return df.reset_index(drop=True)
+    
+def drug_SVM(save_data, genes):
+    """Retrieves cell types from perturbed data"""
+    completeDF = pd.DataFrame(data=save_data.X)
+    completeDF.columns = genes
+    completeDF["Cell Type"] = save_data.obs.values
+    drugDF = completeDF.loc[
+        (completeDF["Cell Type"] == "T Helpers") | (completeDF["Cell Type"] == "None")
+    ]
+    trainingDF = pd.DataFrame()
+    for key in training_markers:
+        cell_weight = (
+            completeDF.loc[completeDF["Cell Type"] == key].shape[0]
+            / completeDF.shape[0]
+        )
+        concatDF = drugDF.sort_values(by=training_markers[key]).tail(
+            n=int(np.ceil(50 * cell_weight) + 5)
+        )
+        concatDF["Cell Type"] = key
+        trainingDF = pd.concat([trainingDF, concatDF])
+
+    le = preprocessing.LabelEncoder()
+    le.fit(trainingDF["Cell Type"].values)
+    svm = make_pipeline(StandardScaler(), SVC(gamma="auto"))
+    svm.fit(
+        trainingDF.drop("Cell Type", axis=1),
+        le.transform(trainingDF["Cell Type"].values),
+    )
+    drugDF = drugDF.drop("Cell Type", axis=1)
+    drugDF["Cell Type"] = le.inverse_transform(svm.predict(drugDF.values))
+    save_data.obs.loc[
+        (save_data.obs["Cell Type"] == "T Helpers")
+        | (save_data.obs["Cell Type"] == "None"),
+        "Cell Type",
+    ] = drugDF["Cell Type"].values
+    return save_data
+
+
+clust_names = {
+    "0": "NK",
+    "1": "Monocytes",
+    "2": "Monocytes",
+    "3": "Monocytes",
+    "4": "None",
+    "5": "T Cells",
+    "6": "CD8 T Cells",
+    "7": "NK",
+    "8": "T Cells",
+    "9": "T Helpers",
+    "10": "Dendritic Cells",
+    "11": "B Cells",
+    "12": "Monocytes",
+    "13": "Monocytes",
+    "14": "Monocytes",
+}
+
+
+clust_list = [
+    "NK",
+    "Monocytes ",
+    "Monocytes  ",
+    "Monocytes   ",
+    "None",
+    "T Cells",
+    "CD8 T Cells",
+    "NK ",
+    "T Cells ",
+    "T helpers",
+    "Dendritic Cells",
+    "B Cells",
+    " Monocytes",
+    "  Monocytes",
+    "   Monocytes",
+]
+
+
+marker_genes = {
+    "Monocytes": ["CD14", "CD33", "LYZ", "LGALS3", "CSF1R", "ITGAX", "HLA-DRB1"],
+    "Dendritic Cells": ["LAD1", "LAMP3", "TSPAN13", "CLIC2", "FLT3"],
+    "B-cells": ["MS4A1", "CD19", "CD79A"],
+    "T-helpers": ["TNF", "TNFRSF18", "IFNG", "IL2RA", "BATF"],
+    "T cells": [
+        "CD27",
+        "CD69",
+        "CD2",
+        "CD3D",
+        "CXCR3",
+        "CCL5",
+        "IL7R",
+        "CXCL8",
+        "GZMK",
+    ],
+    "Natural Killers": ["NKG7", "GNLY", "PRF1", "FCGR3A", "NCAM1", "TYROBP"],
+    "CD8": ["CD8A", "CD8B"],
+}
+
+training_markers = {
+    "Monocytes": ["CD14"],
+    "Dendritic Cells": ["LAD1"],
+    "B Cells": ["MS4A1"],
+    "T Cells": ["CD3D"],
+    "NK": ["NKG7"],
+    "CD8 T Cells": ["CD8A"],
+}
