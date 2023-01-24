@@ -17,7 +17,6 @@ def plotR2X(tensor, rank, datatype, ax, runPf2=False):
             weights, factors, projs = parafac2_nd(
                     tensor,
                     rank=rank,
-                    n_iter_max=10,
                     verbose=True,
                 )
 
@@ -25,7 +24,7 @@ def plotR2X(tensor, rank, datatype, ax, runPf2=False):
                 projs = np.reshape(projs, (-1, tensor.shape[-2], rank))
                 factors = [khatri_rao(factors[:-2]), factors[-2], factors[-1]]
 
-            pf2_error[i] = _parafac2_reconstruction_error(
+            pf2_error[i] = 1 - _parafac2_reconstruction_error(
                 tensor, (weights, factors, projs))/ np.linalg.norm(tensor) ** 2
 
         if datatype == "IL2":
