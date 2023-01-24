@@ -22,11 +22,34 @@ def makeFigure():
         drugXA.to_numpy(),
         rank=5,
     )
-    
-    plotSCCP_factors(factors, drugXA, projs[:3, :, :], ax, celltypeXA[:3, :], color_palette, plot_celltype=True, reorder=(0, 2))
+
+    plotSCCP_factors(
+        factors,
+        drugXA,
+        projs[:3, :, :],
+        ax,
+        celltypeXA[:3, :],
+        color_palette,
+        plot_celltype=True,
+        reorder=(0, 2),
+    )
 
     return f
 
-color_palette = ["black", "lightcoral", "red", "darkorange", "yellow", "green",
-           "turquoise", "blue", "blueviolet", "plum", "pink", "saddlebrown",
-           "gold", "grey"]
+
+color_palette = [
+    "black",
+    "lightcoral",
+    "red",
+    "darkorange",
+    "yellow",
+    "green",
+    "turquoise",
+    "blue",
+    "blueviolet",
+    "plum",
+    "pink",
+    "saddlebrown",
+    "gold",
+    "grey",
+]

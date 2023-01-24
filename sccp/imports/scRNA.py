@@ -6,8 +6,6 @@ import csv
 import xarray as xa
 from scipy.io import mmread
 from scipy.stats import linregress
-import scanpy as sc
-from copy import copy
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -189,6 +187,7 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
 
 def assign_celltype(df):
     """Assignign cell types via scanpy and SVM"""
+    import scanpy as sc
     celltypeDF = df.drop(columns=["Drug"], axis=1)
     genes_list = celltypeDF.columns
     adata = sc.AnnData(celltypeDF)
