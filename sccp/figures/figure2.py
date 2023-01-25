@@ -1,10 +1,11 @@
 """
-Parafac2 implementation on PBMCs treated across IL2 treatments, times, and doses
+Creating synthetic data and implementation of parafac2
 """
 import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
-from ..imports.cytok import IL2_flowXA
+from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
+from ..tensor import plotR2X
 
 
 def makeFigure():
@@ -15,21 +16,26 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # Import of single cells: [Ligand, Dose, Time, Cell, Marker]
-    flowXA, celltypeXA = IL2_flowXA(saveXA=False)
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=200 , type="dividingclusters")
 
-    # flowXA -= np.mean(flowXA, axis=(0, 1, 2, 3))
-    # flowXA /= np.std(flowXA, axis=(0, 1, 2, 3))
-
-    # Shrink dataset
-    flowXA = flowXA.loc[:, :, :, :50, :]
-    celltypeXA = celltypeXA.loc[:, :, :, :50]
-
-    # Performing parafac2 on single-cell Xarray
-    _, factors, projs = parafac2_nd(flowXA.to_numpy(), rank=3, verbose=True) 
-
-    plotSCCP_factors(factors, flowXA, projs[0, 0, :, :, :], ax, celltypeXA[0, 0, :, :], color_palette, plot_celltype=True)
+    rank = 2
+    weight, factors, projs = parafac2_nd(
+        blobXA.to_numpy(),
+        rank=rank, verbose=True
+    )
     
+    plotSCCP_factors(factors, blobXA, projs[0:2], ax, celltypeXA, color_palette, plot_celltype=True)
+    
+    for i in np.arange(0, 3):
+        plot_synth_pic(blobDF, t=i * 3, palette=palette, type="dividingclusters", ax=ax[i + 7])
+    
+    plotR2X(blobXA.to_numpy(), rank, "Synthetic3", ax[11], runPf2=False)
+
     return f
 
-color_palette = ["red", "blue", "green"]
+
+
+palette = {"Planet1": "lightcoral", "Planet2": "gray", "Planet3": "darkgoldenrod", 
+           "Planet4": "magenta", "Planet5": "teal", "Planet6": "deeppink"}
+
+color_palette = ["lightcoral", "gray", "darkgoldenrod", "magenta", "teal", "deeppink"]

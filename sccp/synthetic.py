@@ -154,7 +154,7 @@ def make_blob_art(mean, cov, size, time, label):
     return pd.DataFrame({"X": X[:, 0], "Y": X[:, 1], "Time": time, "Cell Type": label})
 
 
-def plot_synth_pic(blob_DF, t, palette, ax):
+def plot_synth_pic(blob_DF, t, palette, type, ax):
     """Plots snthetic data at a time point"""
     sns.scatterplot(
         data=blob_DF.loc[blob_DF["Time"] == t],
@@ -165,9 +165,19 @@ def plot_synth_pic(blob_DF, t, palette, ax):
         ax=ax,
         s=5,
     )
+    if type == "beach":
+        xlim=(-0.5, 1.5)
+        ylim=(-1.2, 1.2) 
+    elif type == "movingcovariance":
+        xlim=(-1.2, 1.2)
+        ylim=(-1.2, 1.5)
+    elif type == "dividingclusters":
+        xlim=(-0.8, 1.2)
+        ylim=(-1.0, 1.3)
+        
     ax.set(
-        xlim=(-0.5, 1.5),
-        ylim=(-1.2, 1.2),
+        xlim=xlim,
+        ylim=ylim,
         title="Time: " + str(t) + " - Synthetic Scene",
     )
 
