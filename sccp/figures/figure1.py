@@ -1,55 +1,38 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
+Creating synthetic data and implementation of parafac2
 """
+import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
-from ..imports.scRNA import ThompsonXA_SCGenes
+from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
+from ..tensor import plotR2X
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 20), (3, 3))
+    ax, f = getSetup((10, 8), (4, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
-    # Import of single cells: [Drug, Cell, Gene]
-    drugXA, celltypeXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=200 , type="movingcovariance")
 
-    # Performing parafac2 on single-cell Xarray
-    _, factors, projs = parafac2_nd(
-        drugXA.to_numpy(),
-        rank=5,
+    rank = 2
+    weight, factors, projs = parafac2_nd(
+        blobXA.to_numpy(),
+        rank=rank, verbose=True
     )
-
-    plotSCCP_factors(
-        factors,
-        drugXA,
-        projs[:3, :, :],
-        ax,
-        celltypeXA[:3, :],
-        color_palette,
-        plot_celltype=True,
-        reorder=(0, 2),
-    )
+    
+    plotSCCP_factors(factors, blobXA, projs[0:2], ax, celltypeXA, color_palette, plot_celltype=True)
+    
+    for i in np.arange(0, 3):
+        plot_synth_pic(blobDF, t=i * 3, palette=palette, type="movingcovariance", ax=ax[i + 7])
+    
+    plotR2X(blobXA.to_numpy(), rank, "Synthetic2", ax[11], runPf2=False)
 
     return f
 
+palette = {"Planet1": "red", "Planet2": "green", "Planet3": "blue", "Planet4": "magenta", "Planet5": "orange"}
+color_palette = ["red", "green","blue", "magenta", "orange"]
 
-color_palette = [
-    "black",
-    "lightcoral",
-    "red",
-    "darkorange",
-    "yellow",
-    "green",
-    "turquoise",
-    "blue",
-    "blueviolet",
-    "plum",
-    "pink",
-    "saddlebrown",
-    "gold",
-    "grey",
-]
