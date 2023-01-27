@@ -16,7 +16,7 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Ligand, Dose, Time, Cell, Marker]
-    flowXA, celltypeXA = IL2_flowXA(saveXA=False)
+    flowXA, celltypeXA = IL2_flowXA(saveXA=False, IncludeNoneCells=False)
 
     # flowXA -= np.mean(flowXA, axis=(0, 1, 2, 3))
     # flowXA /= np.std(flowXA, axis=(0, 1, 2, 3))

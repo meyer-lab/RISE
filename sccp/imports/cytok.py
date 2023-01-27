@@ -9,7 +9,7 @@ from os.path import join
 path_here = os.path.dirname(os.path.dirname(__file__))
 
 
-def IL2_flowXA(saveXA=False):
+def IL2_flowXA(saveXA=False, IncludeNoneCells=True):
     """Rearranges and normlizes data as an Xarray of
     dimensions of [Ligand, Dose, Time, Cell, Marker]"""
     if saveXA == True:
@@ -41,8 +41,12 @@ def IL2_flowXA(saveXA=False):
         flowDF.drop(columns=["Valency"], axis=1, inplace=True)
 
         flowDF["pSTAT5"] /= np.std(
-            flowDF["pSTAT5"]
-        )  # For pSTAT5 only, dividing my std of all experiments
+            flowDF["pSTAT5"])  
+        # For pSTAT5 only, dividing my std of all experiments
+        
+        if IncludeNoneCells is False:
+            flowDF = flowDF.loc[flowDF['Cell Type'].isin(["Thelper", "Treg"])]
+
         flowDF.sort_values(by=["Time", "Dose", "Ligand"], inplace=True)
 
         # Filter out problematic ligands
@@ -60,11 +64,19 @@ def IL2_flowXA(saveXA=False):
 
         flowXA = flowXA.transpose()
         celltypeXA = celltypeXA.transpose()
-        flowXA.to_netcdf(join(path_here, "data/IL2_flowXA.nc"))
-        celltypeXA.to_netcdf(join(path_here, "data/IL2_celltypeXA.nc"))
+        if IncludeNoneCells == True:
+            flowXA.to_netcdf(join(path_here, "data/IL2_flowXA.nc"))
+            celltypeXA.to_netcdf(join(path_here, "data/IL2_celltypeXA.nc"))
+        else:
+            flowXA.to_netcdf(join(path_here, "data/IL2_flowXA_WO_NoneCells.nc"))
+            celltypeXA.to_netcdf(join(path_here, "data/IL2_celltypeXA_WO_NoneCells.nc"))
 
     else:
-        flowXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_flowXA.nc"))
-        celltypeXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_celltypeXA.nc"))
+        if IncludeNoneCells == True:
+            flowXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_flowXA.nc"))
+            celltypeXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_celltypeXA.nc"))
+        else:    
+            flowXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_flowXA_WO_NoneCells.nc"))
+            celltypeXA = xa.open_dataarray(join(path_here, "/opt/andrew/IL2_celltypeXA_WO_NoneCells.nc"))
 
     return flowXA, celltypeXA
