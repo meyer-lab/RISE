@@ -5,7 +5,7 @@ import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
-from ..tensor import plotR2X
+from ..decomposition import plotR2X
 
 
 def makeFigure():
@@ -29,7 +29,7 @@ def makeFigure():
     for i in np.arange(0, 3):
         plot_synth_pic(blobDF, t=i * 3, palette=palette, type="beach", ax=ax[i + 7])
     
-    plotR2X(blobXA.to_numpy(), rank, "Synthetic1", ax[11], runPf2=False)
+    plotR2X(blobXA.to_numpy(), rank, "Synthetic1", ax[11], run_decomp=False)
 
     return f
 
