@@ -1,7 +1,7 @@
 """
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
-from .common import subplotLabel, getSetup, plotSCCP_factors
+from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotscRNA
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
 
@@ -20,7 +20,7 @@ def makeFigure():
     # Performing parafac2 on single-cell Xarray
     _, factors, projs = parafac2_nd(
         drugXA.to_numpy(),
-        rank=5,
+        rank=5
     )
 
     plotSCCP_factors(
@@ -33,6 +33,8 @@ def makeFigure():
         plot_celltype=True,
         reorder=(0, 2),
     )
+    
+    renamePlotscRNA(ax)
 
     return f
 

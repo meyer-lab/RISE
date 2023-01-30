@@ -2,7 +2,7 @@
 Creating synthetic data and implementation of parafac2
 """
 import numpy as np
-from .common import subplotLabel, getSetup, plotSCCP_factors
+from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotSynthetic
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X
@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    blobXA, blobDF, celltypeXA = synthXA(magnitude=200 , type="movingcovariance")
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="movingcovariance")
 
     rank = 2
     weight, factors, projs = parafac2_nd(
@@ -24,12 +24,14 @@ def makeFigure():
         rank=rank, verbose=True
     )
     
-    plotSCCP_factors(factors, blobXA, projs[0:2], ax, celltypeXA, color_palette, plot_celltype=True)
+    plotSCCP_factors(factors, blobXA, projs[0:9:5], ax, celltypeXA, color_palette, plot_celltype=True)
     
     for i in np.arange(0, 3):
         plot_synth_pic(blobDF, t=i * 3, palette=palette, type="movingcovariance", ax=ax[i + 7])
     
     plotR2X(blobXA.to_numpy(), rank, "Synthetic2", ax[11], run_decomp=False)
+    renamePlotSynthetic(blobXA, ax)
+
 
     return f
 
