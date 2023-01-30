@@ -11,7 +11,7 @@ from ..decomposition import plotR2X
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 8), (4, 3))
+    ax, f = getSetup((12, 12), (4, 3))
 
     # Add subplot labels
     subplotLabel(ax)
