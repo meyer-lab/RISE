@@ -21,7 +21,7 @@ def plotR2X(tensor, rank, datatype, ax, run_decomp=False, Inlclude_NNMF=False):
             weights, factors, projs = parafac2_nd(
                     tensor,
                     rank=i+1,
-                    verbose=True
+                    verbose=True, n_iter_max=1
                 )
 
             if len(tensor) > 3:
@@ -34,14 +34,12 @@ def plotR2X(tensor, rank, datatype, ax, run_decomp=False, Inlclude_NNMF=False):
             decomp = Decomposition(tensor, max_rr=i+1)
             decomp.perform_PCA(flattenon=2)
             
-            pcaError = decomp.PCAR2X
-            pca_error[i] = pcaError[-1]
-            
             if Inlclude_NNMF == True:
                 flat_tensor = np.reshape(np.moveaxis(tensor, 2, 0), (tensor.shape[2], -1))
                 nnmf = NMF(n_components=i+1)
                 nnmf.fit(flat_tensor)
 
+        pca_error = decomp.PCAR2X
         total_error = np.vstack((pf2_error, pca_error))  
         
         if Inlclude_NNMF == True:
