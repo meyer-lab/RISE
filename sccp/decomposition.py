@@ -21,7 +21,7 @@ def plotR2X(tensor, rank, datatype, ax, run_decomp=False, Inlclude_NNMF=False):
             weights, factors, projs = parafac2_nd(
                     tensor,
                     rank=i+1,
-                    verbose=True, n_iter_max=1
+                    verbose=True
                 )
 
             if len(tensor) > 3:
