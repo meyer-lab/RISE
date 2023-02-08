@@ -91,7 +91,7 @@ def plotR2X(tensor, rank, datatype, ax, run_decomp=False, Inlclude_NNMF=False):
         if Inlclude_NNMF == True:
                 name_decomp = ["Pf2", "NNMF", "PCA"]
         for i in range(total_error.shape[0]):
-            ax.scatter(rank_vec, total_error[i, :len(rank_vec)], label=name_decomp[i], marker=mark[i], s=20.0)
+            ax.scatter(rank_vec, total_error[i, :], label=name_decomp[i], marker=mark[i], s=20.0)
         ax.set(
             title="R2X",
             ylabel="Variance Explained",
