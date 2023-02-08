@@ -151,7 +151,13 @@ def synthXA(magnitude, type):
 def make_blob_art(mean, cov, size, time, label):
     """Makes a labeled DF for storing blob art"""
     X = np.random.multivariate_normal(mean=mean, cov=cov, size=size) / 10
-    return pd.DataFrame({"X": X[:, 0], "Y": X[:, 1], "Time": time, "Cell Type": label})
+    return pd.DataFrame({"X": X[:, 0], "Y": X[:, 1],
+                         "A": X[:, 0], "B": X[:, 0], 
+                         "C": X[:, 0], "D": X[:, 0], 
+                         "E": X[:, 0], "F": X[:, 0], 
+                         "G": X[:, 0], "H": X[:, 0], 
+                         "I": X[:, 0], "J": X[:, 0], 
+                         "Time": time, "Cell Type": label})
 
 
 def plot_synth_pic(blob_DF, t, palette, type, ax):
