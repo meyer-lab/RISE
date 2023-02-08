@@ -18,7 +18,7 @@ def makeFigure():
 
     blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="beach")
     
-    rank = 1
+    rank = 2
     weight, factors, projs = parafac2_nd(
         blobXA.to_numpy(),
         rank=rank, verbose=True,
