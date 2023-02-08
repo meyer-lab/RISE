@@ -28,8 +28,8 @@ def plotR2X(tensor, rank, datatype, ax, run_decomp=False, Inlclude_NNMF=False):
                 projs = np.reshape(projs, (-1, tensor.shape[-2], i+1))
                 factors = [khatri_rao(factors[:-2]), factors[-2], factors[-1]]
 
-            pf2_error[i] = 1 - _parafac2_reconstruction_error(
-                tensor, (weights, factors, projs))/ np.linalg.norm(tensor) ** 2
+            pf2_error[i] = 1 - np.square(_parafac2_reconstruction_error(
+                tensor, (weights, factors, projs))) / np.square(np.linalg.norm(tensor))
             
             decomp = Decomposition(tensor, max_rr=i+1)
             decomp.perform_PCA(flattenon=2)
