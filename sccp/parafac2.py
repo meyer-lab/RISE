@@ -5,17 +5,36 @@ from tensorly.decomposition import non_negative_parafac_hals
 from tensorly.decomposition._parafac2 import (
     _project_tensor_slices,
     _compute_projections,
-    _parafac2_reconstruction_error,
     initialize_decomposition,
 )
+
+
+def parafac2_to_slice(parafac2_tensor, slice_idx):
+    r"""Generate a single slice along the first mode from the PARAFAC2 tensor."""
+    weights, (A, B, C), projections = parafac2_tensor
+    a = A[slice_idx]
+    if weights is not None:
+        a = a * weights
+
+    B_i = np.dot(projections[slice_idx], B)
+    return np.dot(B_i * a, C.T)
+
+
+def _parafac2_reconstruction_error(tensor_slices, decomposition):
+    squared_error = 0
+    for idx, tensor_slice in enumerate(tensor_slices):
+        reconstruction = parafac2_to_slice(decomposition, idx)
+        squared_error += np.sum((tensor_slice - reconstruction) ** 2)
+    return np.sqrt(squared_error)
+
 
 
 def parafac2_nd(
     X_nd,
     rank,
-    n_iter_max=1000,
+    n_iter_max=100,
     init="svd",
-    svd="truncated_svd",
+    svd="randomized_svd",
     tol=1e-8,
     nn_modes=None,
     random_state=None,

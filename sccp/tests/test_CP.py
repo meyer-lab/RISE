@@ -6,6 +6,7 @@ from tensorly.decomposition import parafac2
 from tensorly.random import random_parafac2
 from tensorly.metrics import correlation_index
 from ..parafac2 import parafac2_nd
+from ..imports.scRNA import ThompsonXA_SCGenes
 
 
 def test_n_way():
@@ -30,3 +31,10 @@ def test_n_way():
         )
         < 0.1
     )
+
+
+def test_pf2_speed():
+    """Compare run time for different SVD initialization """
+    drugXA, _ = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
+    
+    _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=5, svd="randomized_svd", n_iter_max=10, verbose=True)
