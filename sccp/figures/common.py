@@ -87,7 +87,7 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_palette=None, plot_celltype=False, reorder=tuple()):
+def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_palette=None, plot_celltype=False, reorder=tuple(), trim=tuple()):
     """Plots parafac2 factors and projection matrix"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -100,17 +100,24 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_pal
         else:
             yt = data_xarray.coords[data_xarray.dims[i]].values
 
+        X = factors[i]
+
+        if i in trim:
+            max_weight = np.max(np.abs(X), axis=1)
+            kept_idxs = max_weight > 0.08
+            X = X[kept_idxs]
+            yt = yt[kept_idxs]
+
         if i in reorder:
-            reordered_projs, ind = reorder_table(factors[i])
+            X, ind = reorder_table(X)
             yt = yt[ind]
-        else:
-            reordered_projs = factors[i]
 
         sns.heatmap(
-            data=reordered_projs,
+            data=X,
             xticklabels=xticks,
             yticklabels=yt,
             ax=ax[i],
+            center=0,
             cmap=cmap,
         )
 
@@ -121,9 +128,10 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_pal
     for i, ps in enumerate(projs):
         reordered_projs, ind = reorder_table(ps)
         sns.heatmap(
-            data=reordered_projs,
+            data=ps[ind],
             xticklabels=xticks,
             yticklabels=ind,
+            center=0,
             ax=ax[2*i + len(factors)],
             cmap=cmap,
         )

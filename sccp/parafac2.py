@@ -1,6 +1,7 @@
 import numpy as np
 from tensorly.tenalg import khatri_rao
-from tensorly.cp_tensor import cp_normalize, cp_flip_sign
+from opt_einsum import contract
+from tensorly.cp_tensor import cp_flip_sign
 from tensorly.decomposition import non_negative_parafac_hals
 from tensorly.decomposition._parafac2 import (
     _project_tensor_slices,
@@ -9,24 +10,12 @@ from tensorly.decomposition._parafac2 import (
 )
 
 
-def parafac2_to_slice(parafac2_tensor, slice_idx):
-    r"""Generate a single slice along the first mode from the PARAFAC2 tensor."""
-    weights, (A, B, C), projections = parafac2_tensor
-    a = A[slice_idx]
-    if weights is not None:
-        a = a * weights
+def _parafac2_reconstruction_error(X, decomposition):
+    weights, (A, B, C), projections = decomposition
+    proj = np.stack(projections, axis=0)
 
-    B_i = np.dot(projections[slice_idx], B)
-    return np.dot(B_i * a, C.T)
-
-
-def _parafac2_reconstruction_error(tensor_slices, decomposition):
-    squared_error = 0
-    for idx, tensor_slice in enumerate(tensor_slices):
-        reconstruction = parafac2_to_slice(decomposition, idx)
-        squared_error += np.sum((tensor_slice - reconstruction) ** 2)
-    return np.sqrt(squared_error)
-
+    reconstruction = contract("k,ijm,mk,ik,lk->ijl", weights, proj, B, A, C)
+    return np.linalg.norm(X - reconstruction)
 
 
 def parafac2_nd(
@@ -35,11 +24,11 @@ def parafac2_nd(
     n_iter_max=100,
     init="svd",
     svd="randomized_svd",
-    tol=1e-8,
+    tol=1e-4,
     nn_modes=None,
     random_state=None,
     verbose=False,
-    n_iter_parafac=20,
+    n_iter_parafac=30,
 ):
     r"""The same interface as regular PARAFAC2."""
     # *** THIS IMPLEMENTATION REQUIRES A SINGLE ZERO-PADDED TENSOR. ***
@@ -65,18 +54,16 @@ def parafac2_nd(
             projected_tensor, (*X_nd.shape[0:-2], rank, X_nd.shape[-1])
         )
 
-        factors_nD = non_negative_parafac_hals(
+        weights, factors_nD = non_negative_parafac_hals(
             projected_tensor_nD,
             rank,
             n_iter_max=n_iter_parafac,
             init=init if iter == 0 else (weights, factors_nD),
             svd=svd,
             nn_modes=nn_modes,
-            verbose=False,
-            return_errors=False,
-            tol=1e-100,
-        )[1]
-        weights, factors_nD = cp_normalize((None, factors_nD))
+            normalize_factors=iter > 0,
+            tol=False,
+        )
         weights, factors_nD = cp_flip_sign((weights, factors_nD), mode=1)
 
         # Convert factors to 3D
