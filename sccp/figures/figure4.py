@@ -20,7 +20,7 @@ def makeFigure():
     # Performing parafac2 on single-cell Xarray
     _, factors, projs = parafac2_nd(
         drugXA.to_numpy(),
-        rank=5,
+        rank=6,
         n_iter_max=20,
         tol=1e-7,
         verbose=True

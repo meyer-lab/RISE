@@ -37,4 +37,4 @@ def test_pf2_speed():
     """Compare run time for different SVD initialization """
     drugXA, _ = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
     
-    _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=5, svd="randomized_svd", n_iter_max=10, verbose=True)
+    _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=6, svd="randomized_svd", n_iter_max=10, verbose=True)

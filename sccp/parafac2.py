@@ -8,6 +8,7 @@ from tensorly.decomposition._parafac2 import (
     _compute_projections,
     initialize_decomposition,
 )
+import tlviz
 
 
 def _parafac2_reconstruction_error(X, decomposition):
@@ -86,5 +87,8 @@ def parafac2_nd(
         else:
             if verbose:
                 print(f"iteration 1: error={errs[-1]}.")
+
+    consistency = tlviz.model_evaluation.core_consistency((weights, factors_nD), projected_tensor_nD, normalised=True)
+    print(f"Core consistency = {consistency}.")
 
     return weights, factors_nD, projections_nD
