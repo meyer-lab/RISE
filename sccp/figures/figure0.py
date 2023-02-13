@@ -17,7 +17,7 @@ def makeFigure():
     subplotLabel(ax)
 
     blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="beach")
-
+    
     rank = 2
     weight, factors, projs = parafac2_nd(
         blobXA.to_numpy(),
@@ -27,7 +27,7 @@ def makeFigure():
     plotSCCP_factors(factors, blobXA, projs[0:9:5], ax, celltypeXA, color_palette, plot_celltype=True)
     
     for i in np.arange(0, 3):
-        plot_synth_pic(blobDF, t=i * 3, palette=palette, type="beach", ax=ax[i + 7])
+        plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i * 3, palette=palette, type="beach", ax=ax[i + 7])
     
     plotR2X(blobXA.to_numpy(), rank, ax[11])
     renamePlotSynthetic(blobXA, ax)
