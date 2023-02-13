@@ -4,7 +4,7 @@ Parafac2 implementation on PBMCs treated across IL2 treatments, times, and doses
 from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotIL2
 from ..imports.cytok import IL2_flowXA
 from ..parafac2 import parafac2_nd
-from ..decomposition import plotR2X
+from ..decomposition import plotR2X_CC
 
 
 def makeFigure():
@@ -23,8 +23,8 @@ def makeFigure():
 
 
     # Shrink dataset
-    flowXA = flowXA.loc[:, :, :, :200, :]
-    celltypeXA = celltypeXA.loc[:, :, :, :200]
+    flowXA = flowXA.loc[:, :, :, :10, :]
+    celltypeXA = celltypeXA.loc[:, :, :, :10]
 
     # Performing parafac2 on single-cell Xarray
     rank = 3
@@ -33,8 +33,9 @@ def makeFigure():
     plotSCCP_factors(factors, flowXA, projs[7:9, 0, 0, :, :], ax, celltypeXA[7:9, 0, 0, :], color_palette, plot_celltype=True)
     renamePlotIL2(ax)
     
-    plotR2X(flowXA.to_numpy(), rank, ax[11])
+    plotR2X_CC(flowXA.to_numpy(), rank, ax[10], ax[11])
+
 
     return f
 
-color_palette = ["red", "blue", "green"]
+color_palette = ["turquoise", "blueviolet", "green"]

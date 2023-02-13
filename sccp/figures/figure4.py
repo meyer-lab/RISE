@@ -29,9 +29,9 @@ def makeFigure():
     plotSCCP_factors(
         factors,
         drugXA,
-        projs[:3, :, :],
+        projs[:2, :, :],
         ax,
-        celltypeXA[:3, :],
+        celltypeXA[:2, :],
         color_palette,
         plot_celltype=True,
         reorder=(0, 2),
