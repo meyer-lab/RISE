@@ -29,6 +29,7 @@ def plotR2X_CC(tensor, rank, ax1, ax2):
         
         # Core consistency 
         tensor_3d = np.reshape(tensor, (-1, tensor.shape[-2], tensor.shape[-1]))
+        projs = np.reshape(projs, (-1, tensor.shape[-2], i+1))
         projected_tensor = _project_tensor_slices(tensor_3d, projs)
         projected_tensor_nD = np.reshape(
             projected_tensor, (*tensor.shape[0:-2], i+1, tensor.shape[-1])
@@ -37,7 +38,7 @@ def plotR2X_CC(tensor, rank, ax1, ax2):
         core_consist[i] = tlviz.model_evaluation.core_consistency((weights, factors), projected_tensor_nD, normalised=True)
         
         if len(tensor) > 3:
-            projs = np.reshape(projs, (-1, tensor.shape[-2], i+1))
+            
             factors = [khatri_rao(factors[:-2]), factors[-2], factors[-1]]
 
         # R2X Pf2
@@ -71,6 +72,6 @@ def plotR2X_CC(tensor, rank, ax1, ax2):
         ylabel="Core Consistency",
         xlabel="Number of Components",
         xticks=np.arange(0, rank + 1),
-        ylim=(0, 1.05)
+        ylim=(-.05, 1.05)
     )
     

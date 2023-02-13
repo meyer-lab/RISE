@@ -23,8 +23,8 @@ def makeFigure():
 
 
     # Shrink dataset
-    flowXA = flowXA.loc[:, :, :, :200, :]
-    celltypeXA = celltypeXA.loc[:, :, :, :200]
+    flowXA = flowXA.loc[:, :, :, :10, :]
+    celltypeXA = celltypeXA.loc[:, :, :, :10]
 
     # Performing parafac2 on single-cell Xarray
     rank = 3
@@ -35,6 +35,7 @@ def makeFigure():
     
     plotR2X_CC(flowXA.to_numpy(), rank, ax[10], ax[11])
 
+
     return f
 
-color_palette = ["red", "blue", "green"]
+color_palette = ["turquoise", "blueviolet", "green"]

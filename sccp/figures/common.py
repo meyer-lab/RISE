@@ -178,8 +178,7 @@ def renamePlotIL2(ax):
     ax[2].set_yticklabels([f"Time:{i}" for i in [1, 2, 4]])
     ax[5].set_title("Projection Matrix - " + "Time:1")
     ax[7].set_title("Projection Matrix - " + "Time:2")
-    ax[9].set_title("Projection Matrix - " + "Time:4")
-    
+        
 def renamePlotscRNA(ax):
-    ax[3].set_title("Projection Matrix - " + "Drug1")
-    ax[5].set_title("Projection Matrix - " + "Drug2")
+    ax[3].set_title("Projection Matrix - " + "Acetylcysteine")
+    ax[5].set_title("Projection Matrix - " + "Adapalene")
