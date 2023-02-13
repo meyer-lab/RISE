@@ -5,7 +5,7 @@ import numpy as np
 from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotSynthetic
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
-from ..decomposition import plotR2X
+from ..decomposition import plotR2X_CC
 
 
 def makeFigure():
@@ -29,7 +29,7 @@ def makeFigure():
     for i in np.arange(0, 3):
         plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i * 3, palette=palette, type="dividingclusters", ax=ax[i + 7])
     
-    plotR2X(blobXA.to_numpy(), rank, ax[11])
+    plotR2X_CC(blobXA.to_numpy(), rank, ax[10], ax[11])
     renamePlotSynthetic(blobXA, ax)
 
 
