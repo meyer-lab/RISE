@@ -126,7 +126,8 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_pal
 
 
     for i, ps in enumerate(projs):
-        reordered_projs, ind = reorder_table(ps)
+        pps = ps[~np.all(ps == 0, axis=1)]
+        reordered_projs, ind = reorder_table(pps)
         sns.heatmap(
             data=ps[ind],
             xticklabels=xticks,
@@ -182,3 +183,8 @@ def renamePlotIL2(ax):
 def renamePlotscRNA(ax):
     ax[3].set_title("Projection Matrix - " + "Acetylcysteine")
     ax[5].set_title("Projection Matrix - " + "Adapalene")
+    
+def renamePlotsCoH(ax):
+    ax[5].set_title("Projection Matrix - " + "Patient 0 - IFN")
+    ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
+    ax[7].set_title("Projection Matrix - " + "Patient 0 - IL2")

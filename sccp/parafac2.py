@@ -25,7 +25,7 @@ def parafac2_nd(
     n_iter_max=100,
     init="svd",
     svd="randomized_svd",
-    tol=1e-4,
+    tol=1e-6,
     nn_modes=None,
     random_state=None,
     verbose=False,
