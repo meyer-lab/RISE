@@ -16,7 +16,7 @@ def test_n_way():
     rcpStack = np.stack([X, X, X], axis=0)
 
     _, factors, projections = parafac2(X, rank=3, normalize_factors=True, init="svd")
-    _, facStack, projStack = parafac2_nd(rcpStack, rank=3)
+    _, facStack, projStack, _, _ = parafac2_nd(rcpStack, rank=3)
 
     # More similar is closer to 0 with corrIndex
     assert correlation_index(factors, facStack[1::], method="min_score") < 0.1
@@ -37,4 +37,4 @@ def test_pf2_speed():
     """Compare run time for different SVD initialization """
     drugXA, _ = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
     
-    _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=6, svd="randomized_svd", n_iter_max=10, verbose=True)
+    _, _, _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=6, svd="randomized_svd", n_iter_max=10, verbose=True)

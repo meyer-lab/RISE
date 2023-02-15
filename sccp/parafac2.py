@@ -83,10 +83,13 @@ def parafac2_nd(
             if verbose:
                 print(f"iteration 1: error={errs[-1]}.")
 
+    r2x = 1 - np.square(_parafac2_reconstruction_error(
+            X, (factors, projections))) / np.square(np.linalg.norm(X))
+    
     weights, factors_nD = cp_normalize((None, factors_nD))
     weights, factors_nD = cp_flip_sign((weights, factors_nD), mode=1)
 
-    consistency = tlviz.model_evaluation.core_consistency((weights, factors_nD), projected_tensor_nD, normalised=True)
-    print(f"Core consistency = {consistency}.")
+    coreC = tlviz.model_evaluation.core_consistency((weights, factors_nD), projected_tensor_nD, normalised=True)
+    print(f"Core consistency = {coreC}.")
 
-    return weights, factors_nD, projections_nD
+    return weights, factors_nD, projections_nD, r2x, coreC

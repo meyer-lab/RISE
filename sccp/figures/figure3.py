@@ -28,7 +28,7 @@ def makeFigure():
 
     # Performing parafac2 on single-cell Xarray
     rank = 3
-    _, factors, projs = parafac2_nd(flowXA.to_numpy(), rank=rank, verbose=True) 
+    _, factors, projs, _, _ = parafac2_nd(flowXA.to_numpy(), rank=rank, verbose=True) 
 
     plotSCCP_factors(factors, flowXA, projs[7:9, 0, 0, :, :], ax, celltypeXA[7:9, 0, 0, :], color_palette, plot_celltype=True)
     renamePlotIL2(ax)

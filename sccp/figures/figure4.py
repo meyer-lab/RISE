@@ -18,7 +18,7 @@ def makeFigure():
     drugXA, celltypeXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
 
     # Performing parafac2 on single-cell Xarray
-    _, factors, projs = parafac2_nd(
+    _, factors, projs, _, _  = parafac2_nd(
         drugXA.to_numpy(),
         rank=6,
         n_iter_max=20,
