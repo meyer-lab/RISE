@@ -2,7 +2,7 @@ import numpy as np
 from tensorly.tenalg import khatri_rao
 from opt_einsum import contract
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
-from tensorly.decomposition import non_negative_parafac_hals
+from tensorly.decomposition import parafac
 from tensorly.decomposition._parafac2 import (
     _project_tensor_slices,
     _compute_projections,
@@ -22,14 +22,13 @@ def _parafac2_reconstruction_error(X, decomposition):
 def parafac2_nd(
     X_nd,
     rank,
-    n_iter_max=100,
+    n_iter_max=50,
     init="svd",
     svd="randomized_svd",
     tol=1e-6,
-    nn_modes=None,
     random_state=None,
     verbose=False,
-    n_iter_parafac=30,
+    n_iter_parafac=50,
 ):
     r"""The same interface as regular PARAFAC2."""
     # *** THIS IMPLEMENTATION REQUIRES A SINGLE ZERO-PADDED TENSOR. ***
@@ -52,20 +51,19 @@ def parafac2_nd(
             projected_tensor, (*X_nd.shape[0:-2], rank, X_nd.shape[-1])
         )
 
-        _, factors_nD = non_negative_parafac_hals(
+        _, factors_nD = parafac(
             projected_tensor_nD,
             rank,
             n_iter_max=n_iter_parafac,
             init=init if iter == 0 else (None, factors_nD),
             svd=svd,
-            nn_modes=nn_modes,
             tol=False,
         )
 
         # Convert factors to 3D
         factors = [khatri_rao(factors_nD[:-2]), factors_nD[-2], factors_nD[-1]]
 
-        rec_error = _parafac2_reconstruction_error(X, (factors, projections))
+        rec_error = _parafac2_reconstruction_error(X, (factors, projections)) ** 2
 
         errs.append(rec_error / norm_tensor)
 
@@ -82,14 +80,14 @@ def parafac2_nd(
         else:
             if verbose:
                 print(f"iteration 1: error={errs[-1]}.")
-
-    r2x = 1 - np.square(_parafac2_reconstruction_error(
-            X, (factors, projections))) / np.square(np.linalg.norm(X))
     
     weights, factors_nD = cp_normalize((None, factors_nD))
     weights, factors_nD = cp_flip_sign((weights, factors_nD), mode=1)
 
     coreC = tlviz.model_evaluation.core_consistency((weights, factors_nD), projected_tensor_nD, normalised=True)
     print(f"Core consistency = {coreC}.")
+
+    r2x = 1 - errs[-1]
+    print(f"R2X = {r2x}.")
 
     return weights, factors_nD, projections_nD, r2x, coreC
