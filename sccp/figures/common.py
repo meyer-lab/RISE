@@ -190,3 +190,4 @@ def renamePlotsCoH(ax):
     ax[5].set_title("Projection Matrix - " + "Patient 0 - IFN")
     ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
     ax[9].set_title("Projection Matrix - " + "Patient 0 - IL2")
+    
