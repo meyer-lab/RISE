@@ -24,7 +24,7 @@ def makeFigure():
         rank=rank, verbose=True
     )
     
-    plotSCCP_factors(factors, blobXA, projs[0:9:5], ax, celltypeXA, color_palette, plot_celltype=True)
+    plotSCCP_factors(factors, blobXA, projs[0:9:6], ax, celltypeXA, color_palette)
     
     for i in np.arange(0, 3):
         plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i * 3, palette=palette, type="dividingclusters", ax=ax[i + 7])

@@ -22,7 +22,8 @@ def makeFigure():
     _, factors, projs, _, _ = parafac2_nd(
         drugXA.to_numpy(),
         rank=6,
-        verbose=True
+        verbose=True, 
+        n_iter_max=1
     )
 
     plotSCCP_factors(
@@ -32,7 +33,6 @@ def makeFigure():
         ax,
         celltypeXA[:2, :],
         color_palette,
-        plot_celltype=True,
         reorder=(0, 2),
         trim=(2, ),
     )

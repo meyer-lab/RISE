@@ -41,7 +41,7 @@ def plotR2X_CC(tensor, rank, ax1, ax2):
     total_error = np.vstack((pf2_error, pca_error))  
 
     name_decomp = ["Pf2", "PCA"]
-    mark = ["x", "o", "*"]
+    mark = ["x", "o"]
 
     for i in range(total_error.shape[0]):
         ax1.scatter(rank_vec, total_error[i, :], label=name_decomp[i], marker=mark[i], s=20.0)
@@ -50,7 +50,7 @@ def plotR2X_CC(tensor, rank, ax1, ax2):
         ylabel="Variance Explained",
         xlabel="Number of Components",
         xticks=np.arange(0, rank + 1),
-        ylim=(0, 1.05)
+        ylim=(-.05, 1.05)
     )
     ax1.legend()
     

@@ -40,7 +40,6 @@ def makeFigure():
         ax,
         celltypeXA[0, :3, :],
         color_palette,
-        plot_celltype=True,
     )
     renamePlotsCoH(ax)
 

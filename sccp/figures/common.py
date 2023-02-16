@@ -87,7 +87,7 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_palette=None, plot_celltype=False, reorder=tuple(), trim=tuple()):
+def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette, reorder=tuple(), trim=tuple()):
     """Plots parafac2 factors and projection matrix"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -126,41 +126,44 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA=None, color_pal
 
 
     for i, ps in enumerate(projs):
-        pps = ps[~np.all(ps == 0, axis=1)]
-        reordered_projs, ind = reorder_table(pps)
+        nonzero = ~np.all(ps == 0, axis=1)
+        pps = ps[nonzero]
+        ctDF = celltypeXA[i,nonzero].to_dataframe().reset_index()
+        ctDF.sort_values(by=["Cell Type"], inplace=True)
+        ind = ctDF.index.values
+            
         sns.heatmap(
-            data=ps[ind],
+            data=np.flip(pps[ind]),
             xticklabels=xticks,
-            yticklabels=ind,
+            yticklabels=False,
             center=0,
             ax=ax[2*i + len(factors)],
             cmap=cmap,
         )
-
-        if plot_celltype == True:
-            true_celltypes = celltypeXA[i, ind].to_dataframe().reset_index().set_index("Cell Type")
-            celltypesDF = true_celltypes.drop(columns=true_celltypes.columns)
-            allcelltypes = celltypesDF.copy()
-            celltypesDF["Cell Type"] = 0
-            label_colorbar = []
-            choose_color_palette = []
-            colorbar_numbers = np.arange(0, len(np.unique(allcelltypes.index)))
-            for j, label in enumerate(np.unique(allcelltypes.index)):
-                celltypesDF[celltypesDF.index == label] = j
-                choose_color_palette = np.append(choose_color_palette, color_palette[j])
-                label_colorbar = np.append(label_colorbar, label) 
-
-            sns.heatmap(
-                data=celltypesDF.to_numpy(),
-                xticklabels=False,
-                yticklabels=False,
-                ax=ax[2*i + len(factors) + 1],
-                cmap=list(choose_color_palette),
-                )
         
-            cbar = ax[2*i + len(factors) + 1].collections[0].colorbar
-            cbar.set_ticks(colorbar_numbers)
-            cbar.set_ticklabels(np.unique(allcelltypes.index))
+        true_celltypes = ctDF.loc[ind].set_index("Cell Type")
+        celltypesDF = true_celltypes.drop(columns=true_celltypes.columns)
+        allcelltypes = celltypesDF.copy()
+        celltypesDF["Cell Type"] = 0
+        label_colorbar = []
+        choose_color_palette = []
+        colorbar_numbers = np.arange(0, len(np.unique(allcelltypes.index)))
+        for j, label in enumerate(np.unique(allcelltypes.index)):
+            celltypesDF[celltypesDF.index == label] = j
+            choose_color_palette = np.append(choose_color_palette, color_palette[j])
+            label_colorbar = np.append(label_colorbar, label) 
+
+        sns.heatmap(
+            data=np.flip(celltypesDF.to_numpy()),
+            xticklabels=False,
+            yticklabels=False,
+            ax=ax[2*i + len(factors) + 1],
+            cmap=list(choose_color_palette),
+            )
+        
+        cbar = ax[2*i + len(factors) + 1].collections[0].colorbar
+        cbar.set_ticks(colorbar_numbers)
+        cbar.set_ticklabels(label_colorbar)
 
 def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
@@ -173,7 +176,7 @@ def reorder_table(projs):
 def renamePlotSynthetic(xarray, ax):
     ax[0].set_yticklabels([f"Time:{i}" for i in np.arange(1, xarray.shape[0] + 1)])
     ax[3].set_title("Projection Matrix - " + "Time:0")
-    ax[5].set_title("Projection Matrix - " + "Time:5")
+    ax[5].set_title("Projection Matrix - " + "Time:6")
 
 def renamePlotIL2(ax):
     ax[2].set_yticklabels([f"Time:{i}" for i in [1, 2, 4]])

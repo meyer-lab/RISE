@@ -30,7 +30,7 @@ def makeFigure():
     rank = 3
     _, factors, projs, _, _ = parafac2_nd(flowXA.to_numpy(), rank=rank, verbose=True) 
 
-    plotSCCP_factors(factors, flowXA, projs[7:9, 0, 0, :, :], ax, celltypeXA[7:9, 0, 0, :], color_palette, plot_celltype=True)
+    plotSCCP_factors(factors, flowXA, projs[7:9, 0, 0, :, :], ax, celltypeXA[7:9, 0, 0, :], color_palette)
     renamePlotIL2(ax)
     
     plotR2X_CC(flowXA.to_numpy(), rank, ax[10], ax[11])
