@@ -93,39 +93,38 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette,
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
+    iter = 0
     for i in range(0, len(factors)):
         # The single cell mode has a square factors matrix
-        if i == len(factors) - 2:
-            yt = xticks
-        else:
+        if i != len(factors)-2:
             yt = data_xarray.coords[data_xarray.dims[i]].values
+            X = factors[i]
 
-        X = factors[i]
+            if i in trim:
+                max_weight = np.max(np.abs(X), axis=1)
+                kept_idxs = max_weight > 0.08
+                X = X[kept_idxs]
+                yt = yt[kept_idxs]
 
-        if i in trim:
-            max_weight = np.max(np.abs(X), axis=1)
-            kept_idxs = max_weight > 0.08
-            X = X[kept_idxs]
-            yt = yt[kept_idxs]
+            if i in reorder:
+                X, ind = reorder_table(X)
+                yt = yt[ind]
 
-        if i in reorder:
-            X, ind = reorder_table(X)
-            yt = yt[ind]
+            sns.heatmap(
+                data=X,
+                xticklabels=xticks,
+                yticklabels=yt,
+                ax=ax[iter],
+                center=0,
+                cmap=cmap,
+            )
 
-        sns.heatmap(
-            data=X,
-            xticklabels=xticks,
-            yticklabels=yt,
-            ax=ax[i],
-            center=0,
-            cmap=cmap,
-        )
-
-        ax[i].set_title("Mean Factors")
-        ax[i].tick_params(axis="y", rotation=0)
-
+            ax[iter].set_title("Mean Factors")
+            ax[iter].tick_params(axis="y", rotation=0)
+            iter += 1
 
     for i, ps in enumerate(projs):
+        ps = np.dot(ps, factors[-2])
         nonzero = ~np.all(ps == 0, axis=1)
         pps = ps[nonzero]
         ctDF = celltypeXA[i,nonzero].to_dataframe().reset_index()
@@ -190,4 +189,4 @@ def renamePlotscRNA(ax):
 def renamePlotsCoH(ax):
     ax[5].set_title("Projection Matrix - " + "Patient 0 - IFN")
     ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
-    ax[7].set_title("Projection Matrix - " + "Patient 0 - IL2")
+    ax[9].set_title("Projection Matrix - " + "Patient 0 - IL2")
