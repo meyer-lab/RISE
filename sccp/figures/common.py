@@ -164,6 +164,7 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette,
         cbar.set_ticks(colorbar_numbers)
         cbar.set_ticklabels(label_colorbar)
 
+
 def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2
@@ -177,17 +178,19 @@ def renamePlotSynthetic(xarray, ax):
     ax[3].set_title("Projection Matrix - " + "Time:0")
     ax[5].set_title("Projection Matrix - " + "Time:6")
 
+
 def renamePlotIL2(ax):
     ax[2].set_yticklabels([f"Time:{i}" for i in [1, 2, 4]])
     ax[5].set_title("Projection Matrix - " + "Time:1")
     ax[7].set_title("Projection Matrix - " + "Time:2")
-        
+
+
 def renamePlotscRNA(ax):
     ax[3].set_title("Projection Matrix - " + "Acetylcysteine")
     ax[5].set_title("Projection Matrix - " + "Adapalene")
-    
+
+
 def renamePlotsCoH(ax):
     ax[5].set_title("Projection Matrix - " + "Patient 0 - IFN")
     ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
     ax[9].set_title("Projection Matrix - " + "Patient 0 - IL2")
-    
