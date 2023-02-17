@@ -26,8 +26,8 @@ def makeFigure():
     
     plotSCCP_factors(factors, blobXA, projs[0:9:6], ax, celltypeXA, color_palette)
     
-    for i in np.arange(0, 3):
-        plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i * 3, palette=palette, type="movingcovariance", ax=ax[i + 7])
+    for i in np.arange(0, 1):
+        plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i*6, palette=palette, type="movingcovariance", ax=ax[i+9])
     
     plotR2X_CC(blobXA.to_numpy(), rank, ax[10], ax[11])
     renamePlotSynthetic(blobXA, ax)

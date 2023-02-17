@@ -11,7 +11,7 @@ from ..decomposition import plotR2X_CC
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 20), (4, 3))
+    ax, f = getSetup((15, 15), (4, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -30,15 +30,15 @@ def makeFigure():
     celltypeXA = celltypeXA.loc[:, :, ::2000]
 
     # Performing parafac2 on single-cell Xarray
-    rank = 5
+    rank = 2
     _, factors, projs, _, _ = parafac2_nd(cohXA.to_numpy(), rank=rank, verbose=True)
 
     plotSCCP_factors(
         factors,
         cohXA,
-        projs[0, :3, :, :],
+        projs[0, :2, :, :],
         ax,
-        celltypeXA[0, :3, :],
+        celltypeXA[0, :2, :],
         color_palette,
     )
     renamePlotsCoH(ax)

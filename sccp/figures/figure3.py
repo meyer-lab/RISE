@@ -10,7 +10,7 @@ from ..decomposition import plotR2X_CC
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 8), (4, 3))
+    ax, f = getSetup((12, 12), (4, 4))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -21,10 +21,9 @@ def makeFigure():
     # flowXA -= np.mean(flowXA, axis=(0, 1, 2, 3))
     # flowXA /= np.std(flowXA, axis=(0, 1, 2, 3))
 
-
     # Shrink dataset
-    flowXA = flowXA.loc[:, :, :, :10, :]
-    celltypeXA = celltypeXA.loc[:, :, :, :10]
+    flowXA = flowXA.loc[:, :, :, :100, :]
+    celltypeXA = celltypeXA.loc[:, :, :, :100]
 
     # Performing parafac2 on single-cell Xarray
     rank = 3
@@ -33,7 +32,7 @@ def makeFigure():
     plotSCCP_factors(factors, flowXA, projs[7:9, 0, 0, :, :], ax, celltypeXA[7:9, 0, 0, :], color_palette)
     renamePlotIL2(ax)
     
-    plotR2X_CC(flowXA.to_numpy(), rank, ax[10], ax[11])
+    plotR2X_CC(flowXA.to_numpy(), rank, ax[11], ax[12])
 
 
     return f
