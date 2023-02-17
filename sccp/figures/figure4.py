@@ -19,7 +19,7 @@ def makeFigure():
     drugXA, celltypeXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
     
     # Performing parafac2 on single-cell Xarray
-    rank=6
+    rank=2
     _, factors, projs, _, _ = parafac2_nd(
         drugXA.to_numpy(),
         rank=rank,
@@ -34,12 +34,13 @@ def makeFigure():
         celltypeXA[:2, :],
         color_palette,
         reorder=(0, 2),
-        trim=(2, ),
+        # trim=(2, ),
     )
     
     renamePlotscRNA(ax)
 
-    plotR2X_CC(drugXA.to_numpy(), rank, ax[10], ax[11])
+
+    plotR2X_CC(drugXA.to_numpy(), rank, ax[9], ax[10])
 
     return f
 

@@ -43,7 +43,7 @@ def makeFigure():
     )
     renamePlotsCoH(ax)
 
-    plotR2X_CC(cohXA.to_numpy(), rank, ax[10], ax[11])
+    plotR2X_CC(cohXA.to_numpy(), rank, ax[9], ax[10])
 
     return f
 
