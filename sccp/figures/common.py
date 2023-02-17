@@ -5,10 +5,12 @@ from string import ascii_lowercase
 import sys
 import time
 import seaborn as sns
+import pandas as pd
 import matplotlib
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
+from sklearn.metrics import silhouette_samples
 
 matplotlib.use("AGG")
 
@@ -123,24 +125,25 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette,
 
         ax[i].set_title("Mean Factors")
         ax[i].tick_params(axis="y", rotation=0)
+        
 
-
+    silhouetteDF =  pd.DataFrame([])
     for i, ps in enumerate(projs):
         nonzero = ~np.all(ps == 0, axis=1)
         pps = ps[nonzero]
         ctDF = celltypeXA[i,nonzero].to_dataframe().reset_index()
         ctDF.sort_values(by=["Cell Type"], inplace=True)
         ind = ctDF.index.values
-            
+        
         sns.heatmap(
-            data=np.flip(pps[ind]),
+            data=pps[ind],
             xticklabels=xticks,
             yticklabels=False,
             center=0,
             ax=ax[2*i + len(factors)],
             cmap=cmap,
         )
-        
+    
         true_celltypes = ctDF.loc[ind].set_index("Cell Type")
         celltypesDF = true_celltypes.drop(columns=true_celltypes.columns)
         allcelltypes = celltypesDF.copy()
@@ -153,17 +156,31 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette,
             choose_color_palette = np.append(choose_color_palette, color_palette[j])
             label_colorbar = np.append(label_colorbar, label) 
 
+
         sns.heatmap(
-            data=np.flip(celltypesDF.to_numpy()),
+            data=celltypesDF.to_numpy(),
             xticklabels=False,
             yticklabels=False,
             ax=ax[2*i + len(factors) + 1],
             cmap=list(choose_color_palette),
             )
-        
+
         cbar = ax[2*i + len(factors) + 1].collections[0].colorbar
         cbar.set_ticks(colorbar_numbers)
         cbar.set_ticklabels(label_colorbar)
+        
+        celltype_values = celltypesDF.to_numpy().ravel()
+
+    
+        for k in range(factors[1].shape[1]):
+            ss = silhouette_samples(pps[ind, k].reshape(-1, 1), celltype_values) 
+            for l, label in enumerate(np.unique(allcelltypes.index)):
+                ss_score = np.mean(ss[celltype_values == l])
+                silhouetteDF = pd.concat([silhouetteDF , pd.DataFrame({"Projs": i, "Silhoutte Score": ss_score, "Cell Type": [label], "Cmp.": [xticks[k]]})]) 
+                
+    sns.barplot(data=silhouetteDF.loc[silhouetteDF["Projs"] == 0], x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[2*i + len(factors) + 2])
+    sns.barplot(data=silhouetteDF.loc[silhouetteDF["Projs"] == 1], x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[2*i + len(factors) + 3])
+
 
 def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
@@ -177,17 +194,24 @@ def renamePlotSynthetic(xarray, ax):
     ax[0].set_yticklabels([f"Time:{i}" for i in np.arange(1, xarray.shape[0] + 1)])
     ax[3].set_title("Projection Matrix - " + "Time:0")
     ax[5].set_title("Projection Matrix - " + "Time:6")
+    ax[7].set_title("Time:0")
+    ax[8].set_title("Time:6")
 
 def renamePlotIL2(ax):
     ax[2].set_yticklabels([f"Time:{i}" for i in [1, 2, 4]])
     ax[5].set_title("Projection Matrix - " + "Time:1")
     ax[7].set_title("Projection Matrix - " + "Time:2")
+    ax[9].set_title("Time:1")
+    ax[10].set_title("Time:2")
         
 def renamePlotscRNA(ax):
     ax[3].set_title("Projection Matrix - " + "Acetylcysteine")
     ax[5].set_title("Projection Matrix - " + "Adapalene")
+    ax[7].set_title("Acetylcysteine")
+    ax[8].set_title("Adapalene")
     
 def renamePlotsCoH(ax):
-    ax[5].set_title("Projection Matrix - " + "Patient 0 - IFN")
-    ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
-    ax[7].set_title("Projection Matrix - " + "Patient 0 - IL2")
+    ax[4].set_title("Projection Matrix - " + "Patient 0 - IFN")
+    ax[6].set_title("Projection Matrix - " + "Patient 0 - IL10")
+    ax[8].set_title("Projection Matrix - " + "Patient 0 - IL10")
+    ax[9].set_title("Projection Matrix - " + "Patient 0 - IL2")

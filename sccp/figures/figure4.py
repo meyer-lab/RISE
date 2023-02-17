@@ -10,20 +10,20 @@ from ..decomposition import plotR2X_CC
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 20), (4, 3))
+    ax, f = getSetup((15, 20), (4, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
     drugXA, celltypeXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
-
+    
     # Performing parafac2 on single-cell Xarray
+    rank=6
     _, factors, projs, _, _ = parafac2_nd(
         drugXA.to_numpy(),
-        rank=6,
+        rank=rank,
         verbose=True, 
-        n_iter_max=1
     )
 
     plotSCCP_factors(
@@ -39,7 +39,7 @@ def makeFigure():
     
     renamePlotscRNA(ax)
 
-    plotR2X_CC(drugXA.to_numpy(), 8, ax[10], ax[11])
+    plotR2X_CC(drugXA.to_numpy(), rank, ax[10], ax[11])
 
     return f
 
