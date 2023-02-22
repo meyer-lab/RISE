@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    blobXA, blobDF, celltypeXA = synthXA(magnitude=10, type="beach")
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="beach")
     
     rank = 2
     _, factors, projs, _, _= parafac2_nd(
