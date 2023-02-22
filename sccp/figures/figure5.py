@@ -23,12 +23,17 @@ def makeFigure():
         dim="Marker",
     )
 
+    cohXA = cohXA.drop(
+        labels=("SSC-H", "SSC-A", "FSC-H", "FSC-A", "SSC-B-H", "SSC-B-A", "Live/Dead"),
+        dim="Marker",
+    )
+
     # Normalize here
     cohXA.values -= np.nanmean(cohXA.values, axis=(0, 1, 2), keepdims=True)
 
     # Then finish off missing values with zero
     cohXA.values = np.nan_to_num(cohXA.values)
-    
+
     # Shrink dataset
     cohXA = cohXA.loc[:, :, ::300, :]
     celltypeXA = celltypeXA.loc[:, :, ::300]

@@ -20,11 +20,11 @@ def makeFigure():
     drugXA = drugXA[:,:,:10]
     
     # Performing parafac2 on single-cell Xarray
-    rank=2
+    rank=6
     _, factors, projs, _, _ = parafac2_nd(
         drugXA.to_numpy(),
         rank=rank,
-        verbose=True, 
+        verbose=True,
     )
     
     plotFactors(factors, drugXA, ax, reorder=(0,))
