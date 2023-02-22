@@ -124,6 +124,13 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
             ax[iter].set_title("Mean Factors")
             ax[iter].tick_params(axis="y", rotation=0)
             iter += 1
+              
+            if i == 2 and len(yt) > 50:
+                sort_idx = np.argsort(X, axis=0)
+                for j in range(rank):
+                    sort_data = yt[sort_idx[:, j]]
+                    print("Bottom 10 Genes Cmp." + str(j+1) + ":", sort_data[:10])
+                    print("Top 10 Genes Cmp." + str(j+1) + ":", np.flip(sort_data[-10:]))  
     
     
 def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
