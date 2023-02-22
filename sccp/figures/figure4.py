@@ -1,7 +1,7 @@
 """
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
-from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotscRNA
+from .common import subplotLabel, getSetup, plotFactors, plotProjs_SS, renamePlotscRNA
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X_CC
@@ -17,6 +17,7 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     drugXA, celltypeXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
+    drugXA = drugXA[:,:,:10]
     
     # Performing parafac2 on single-cell Xarray
     rank=2
@@ -25,20 +26,10 @@ def makeFigure():
         rank=rank,
         verbose=True, 
     )
-
-    plotSCCP_factors(
-        factors,
-        drugXA,
-        projs[:2, :, :],
-        ax,
-        celltypeXA[:2, :],
-        color_palette,
-        reorder=(0, 2),
-        # trim=(2, ),
-    )
     
+    plotFactors(factors, drugXA, ax, reorder=(0,))
+    plotProjs_SS(factors, projs[:2, :, :], celltypeXA[:2, :], color_palette, ax)
     renamePlotscRNA(ax)
-
 
     plotR2X_CC(drugXA.to_numpy(), rank, ax[9], ax[10])
 

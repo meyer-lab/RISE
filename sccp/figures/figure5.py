@@ -2,7 +2,7 @@
 Parafac2 implementation on PBMCs treated across treatments and patients
 """
 import numpy as np
-from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotsCoH
+from .common import subplotLabel, getSetup, plotFactors, plotProjs_SS, renamePlotsCoH
 from ..imports.CoH import CoH_xarray
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X_CC
@@ -33,14 +33,8 @@ def makeFigure():
     rank = 2
     _, factors, projs, _, _ = parafac2_nd(cohXA.to_numpy(), rank=rank, verbose=True)
 
-    plotSCCP_factors(
-        factors,
-        cohXA,
-        projs[0, :2, :, :],
-        ax,
-        celltypeXA[0, :2, :],
-        color_palette,
-    )
+    plotFactors(factors, cohXA, ax, reorder=(0, 2))
+    plotProjs_SS(factors, projs[0, :2, :, :], celltypeXA[0, :2, :], color_palette, ax)
     renamePlotsCoH(ax)
 
     plotR2X_CC(cohXA.to_numpy(), rank, ax[9], ax[10])
