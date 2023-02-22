@@ -17,17 +17,16 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     drugXA, celltypeXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
-    drugXA = drugXA[:,:,:10]
-    
+
     # Performing parafac2 on single-cell Xarray
-    rank=6
+    rank = 6
     _, factors, projs, _, _ = parafac2_nd(
         drugXA.to_numpy(),
         rank=rank,
         verbose=True,
     )
-    
-    plotFactors(factors, drugXA, ax, reorder=(0,))
+
+    plotFactors(factors, drugXA, ax, reorder=(0,), trim=(2,))
     plotProjs_SS(factors, projs[:2, :, :], celltypeXA[:2, :], color_palette, ax)
     renamePlotscRNA(ax)
 
