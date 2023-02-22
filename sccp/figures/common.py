@@ -89,8 +89,8 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette, reorder=tuple(), trim=tuple()):
-    """Plots parafac2 factors and projection matrix"""
+def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
+    """Plots parafac2 factors"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
@@ -124,7 +124,13 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette,
             ax[iter].set_title("Mean Factors")
             ax[iter].tick_params(axis="y", rotation=0)
             iter += 1
-
+    
+    
+def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax):
+    """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
+    rank = factors[0].shape[1]
+    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
     silhouetteDF =  pd.DataFrame([])
     for i, ps in enumerate(projs):
         ps = np.dot(ps, factors[-2])
@@ -154,7 +160,6 @@ def plotSCCP_factors(factors, data_xarray, projs, ax, celltypeXA, color_palette,
             celltypesDF[celltypesDF.index == label] = j
             choose_color_palette = np.append(choose_color_palette, color_palette[j])
             label_colorbar = np.append(label_colorbar, label) 
-
 
         sns.heatmap(
             data=np.flip(celltypesDF.to_numpy()),

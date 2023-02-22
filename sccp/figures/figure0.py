@@ -2,7 +2,7 @@
 Creating synthetic data and implementation of parafac2
 """
 import numpy as np
-from .common import subplotLabel, getSetup, plotSCCP_factors, renamePlotSynthetic
+from .common import subplotLabel, getSetup, plotFactors, plotProjs_SS, renamePlotSynthetic
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X_CC
@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="beach")
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=10, type="beach")
     
     rank = 2
     _, factors, projs, _, _= parafac2_nd(
@@ -24,7 +24,8 @@ def makeFigure():
         rank=rank, verbose=True,
     )
     
-    plotSCCP_factors(factors, blobXA, projs[0:9:6], ax, celltypeXA, color_palette)
+    plotFactors(factors, blobXA, ax)
+    plotProjs_SS(factors, projs[0:9:6], celltypeXA, color_palette, ax)
     
     for i in np.arange(0, 2):
         plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i*6, palette=palette, type="beach", ax=ax[i+8])
