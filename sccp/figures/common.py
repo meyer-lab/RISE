@@ -126,7 +126,7 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
             iter += 1
     
     
-def plotProjs_SS(factors, projs, celltypeXA, color_palette, size=100, ax):
+def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
     """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
