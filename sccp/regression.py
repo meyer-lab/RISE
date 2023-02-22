@@ -15,7 +15,7 @@ def BC_prediction(factors: np.ndarray, patients_dim: list, rng=None):
     crossval = RepeatedStratifiedKFold(n_splits=10, random_state=rng)
     LR = LogisticRegression(random_state=rng)
 
-    score = cross_val_score(LR, TFAC_X, Donor_CoH_y, cv=crossval)
+    score = cross_val_score(LR, factors, y, cv=crossval)
     LR.fit(factors, y)
 
     return LR.coef_, score
