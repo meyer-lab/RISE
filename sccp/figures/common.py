@@ -126,7 +126,7 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
             iter += 1
     
     
-def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax):
+def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
     """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -139,9 +139,11 @@ def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax):
         ctDF = celltypeXA[i,nonzero].to_dataframe().reset_index()
         ctDF.sort_values(by=["Cell Type"], inplace=True)
         ind = ctDF.index.values
-        
+        reordered_projs = pps[ind]
+        random_index = np.sort(np.random.choice(reordered_projs.shape[0], size=size, replace=False))
+    
         sns.heatmap(
-            data=np.flip(pps[ind],axis=0),
+            data=np.flip(reordered_projs[random_index],axis=0),
             xticklabels=xticks,
             yticklabels=False,
             center=0,
@@ -161,8 +163,9 @@ def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax):
             choose_color_palette = np.append(choose_color_palette, color_palette[j])
             label_colorbar = np.append(label_colorbar, label) 
 
+        celltypes_matrix = celltypesDF.to_numpy()
         sns.heatmap(
-            data=np.flip(celltypesDF.to_numpy()),
+            data=np.flip(celltypes_matrix[random_index]),
             xticklabels=False,
             yticklabels=False,
             ax=ax[2*i + len(factors)],
@@ -172,7 +175,7 @@ def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax):
         cbar = ax[2*i + len(factors)].collections[0].colorbar
         cbar.set_ticks(colorbar_numbers)
         cbar.set_ticklabels(label_colorbar)
-        celltype_values = celltypesDF.to_numpy().ravel()
+        celltype_values = celltypes_matrix.ravel()
 
         for k in range(factors[1].shape[1]):
             ss = silhouette_samples(pps[ind, k].reshape(-1, 1), celltype_values) 
