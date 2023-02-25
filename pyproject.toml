@@ -17,6 +17,7 @@ xarray = "^2022.12.0"
 igraph = "^0.9.11"
 louvain = "^0.7.1"
 leidenalg = "^0.8.10"
+opt-einsum = "^3.3.0"
 tensorly-viz = "^0.1.7"
 tqdm = "^4.64.1"
 

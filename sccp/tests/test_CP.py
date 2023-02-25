@@ -20,7 +20,10 @@ def test_n_way():
 
     # More similar is closer to 0 with corrIndex
     assert correlation_index(factors, facStack[1::], method="min_score") < 0.1
-
+    
+    # Should just be a flat set of factors
+    np.testing.assert_allclose(facStack[0], np.full((3, 3), 1.0 / np.sqrt(3.0)))
+    
     # Compare projection matrices, too
     assert (
         correlation_index(
@@ -34,4 +37,4 @@ def test_pf2_speed():
     """Compare run time for different SVD initialization """
     drugXA, _ = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
     
-    _, _, _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=6, n_iter_max=10, verbose=True)
+    _, _, _, _, _ = parafac2_nd(drugXA.to_numpy(), rank=6, n_iter_max=10, svd="randomized_svd", verbose=True)
