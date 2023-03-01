@@ -1,5 +1,4 @@
-import os
-from os.path import join
+from os.path import join, dirname
 import numpy as np
 import pandas as pd
 import csv
@@ -10,9 +9,44 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn import preprocessing
+import anndata
 
 
-path_here = os.path.dirname(os.path.dirname(__file__))
+path_here = dirname(dirname(__file__))
+
+
+def import_perturb_RPE(limit_cells=100):
+    ds_disk = anndata.read_h5ad("/opt/andrew/rpe1_normalized_singlecell_01.h5ad")
+
+    sgRNAs = ds_disk.obs_vector("sgID_AB")
+    sgUnique, sgIndex, sgCounts = np.unique(sgRNAs, return_inverse=True, return_counts=True)
+
+    X = xa.DataArray(
+        data=np.zeros((len(sgUnique), limit_cells, ds_disk.shape[1]), dtype=np.float32),
+        dims=["sgRNA", "Cells", "Genes"],
+        coords=[
+            sgUnique,
+            np.arange(limit_cells),
+            ds_disk.var_vector("gene_name"),
+        ],
+    )
+
+    for sgi in range(len(sgUnique)):
+        x_temp = ds_disk[sgIndex == sgi, :]
+        assert x_temp.shape[0] == sgCounts[sgi]
+
+        if x_temp.shape[0] > limit_cells:
+            x_temp = x_temp[:limit_cells, :]
+
+        X[sgi, 0:x_temp.shape[0], :] = x_temp.X.toarray()
+
+    # These genes have nans for some reason
+    X = xa.concat([X[:, :, 0:773], X[:, :, 774:]], dim="Genes")
+    X = xa.concat([X[:, :, 0:7002], X[:, :, 7003:]], dim="Genes")
+
+    # Do not allow problematic values
+    assert np.all(np.isfinite(X))
+    return X
 
 
 def import_thompson_drug():
@@ -176,10 +210,10 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
         
     else:
         if offset == 1.0:
-            XA = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA_NoOffset.nc"))
-            celltypeXA = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_celltypeXA_NoOffset.nc"))
+            XA = xa.open_dataarray("/opt/andrew/scRNA_drugXA_NoOffset.nc")
+            celltypeXA = xa.open_dataarray("/opt/andrew/scRNA_celltypeXA_NoOffset.nc")
         else:
-            XA = xa.open_dataarray(join(path_here, "/opt/andrew/scRNA_drugXA.nc"))
+            XA = xa.open_dataarray("/opt/andrew/scRNA_drugXA.nc")
 
     return XA, celltypeXA
 

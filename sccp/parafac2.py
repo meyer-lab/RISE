@@ -50,7 +50,7 @@ def parafac2_nd(
     # Initialization
     unfolded = tl.unfold(X, 2)
     assert tl.shape(unfolded)[0] > rank
-    C = tl.svd_interface(unfolded, n_eigenvecs=rank, method="randomized_svd")[0]
+    C = torch.svd_lowrank(unfolded, rank)[0]
     factors = [tl.ones((X.shape[0], rank)).cuda(), tl.eye(rank).cuda(), C]
     projections = _compute_projections(X, factors, "truncated_svd")
 

@@ -19,12 +19,17 @@ louvain = "^0.7.1"
 leidenalg = "^0.8.10"
 tensorly-viz = "^0.1.7"
 tqdm = "^4.64.1"
+h5netcdf = "^1.1.0"
+anndata = "^0.8.0"
 torch = "^1.13.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 mypy = "^0.950"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.21.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
