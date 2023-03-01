@@ -21,7 +21,7 @@ def makeFigure():
     rank = 2
     _, factors, projs, _, _  = parafac2_nd(
         blobXA.to_numpy(),
-        rank=rank, verbose=True
+        rank=rank,
     )
     
     plotFactors(factors, blobXA, ax)
