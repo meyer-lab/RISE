@@ -5,7 +5,6 @@ from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg import khatri_rao
 from tensorly.decomposition import parafac
 from tensorly.decomposition._parafac2 import (
-    _project_tensor_slices,
     _compute_projections,
     _parafac2_reconstruction_error
 )
@@ -30,7 +29,6 @@ def initialize_cp(tensor, rank):
         factors.append(U[:, :rank])
 
     return (None, factors)
-
 
 
 @torch.inference_mode()
@@ -63,12 +61,11 @@ def parafac2_nd(
     tq = tqdm(range(n_iter_max), disable=(not verbose))
     for iter in tq:
         projections = _compute_projections(X, factors, "truncated_svd")
-        projected_X = _project_tensor_slices(X, projections)
+        projections = tl.stack(projections, axis=0)
+        projections_nD = tl.reshape(projections, (*X_nd.shape[0:-1], rank))
 
-        # Convert projections and projected tensor to nD
-        projected_X_nD = tl.reshape(
-            projected_X, (*X_nd.shape[0:-2], rank, X_nd.shape[-1])
-        )
+        # Project tensor slices
+        projected_X_nD = tl.einsum("...ji,...jk->...ik", projections_nD, X_nd)
 
         if iter == 0:
             CP_nD = initialize_cp(projected_X_nD, rank)
@@ -101,13 +98,10 @@ def parafac2_nd(
     coreC = core_consistency(CP_nD, projected_X_nD, normalised=True)
     print(f"Core consistency = {coreC}.")
 
-    projections = tl.stack(projections, axis=0)
-    projections_nD = tl.reshape(projections, (*X_nd.shape[0:-1], rank))
-    projections_nD = tl.to_numpy(projections_nD.cpu())
-
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
     weights = tl.to_numpy(CP_nD[0].cpu())
     factors_nD = [tl.to_numpy(f.cpu()) for f in CP_nD[1]]
+    projections_nD = tl.to_numpy(projections_nD.cpu())
     return weights, factors_nD, projections_nD, R2X, coreC
