@@ -263,17 +263,15 @@ def renamePlotsCoH(ax):
     
     
     
-def plotAllProjs(factors, projs, celltypeXA, color_palette, ax, size=50):
+def plotAllProjs(factors, projs, celltypeXA, color_palette, ax1, ax2, size=100):
     """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     silhouetteDF =  pd.DataFrame([])
     conditons = projs.shape[0]
-    # print(conditons)
     total_celltypes = np.zeros([conditons*size, 1])
     total_projections = np.zeros([conditons*size, rank])
-    # print(np.shape(total_celltypes))
     
     for i, ps in enumerate(projs):
         ps = np.dot(ps, factors[-2])
@@ -284,16 +282,6 @@ def plotAllProjs(factors, projs, celltypeXA, color_palette, ax, size=50):
         ind = ctDF.index.values
         reordered_projs = pps[ind]
         random_index = np.sort(np.random.choice(reordered_projs.shape[0], size=size, replace=False))
-        # print(np.shape(reordered_projs[random_index]))
-
-        # sns.heatmap(
-        #     data=np.flip(reordered_projs[random_index],axis=0),
-        #     xticklabels=xticks,
-        #     yticklabels=False,
-        #     center=0,
-        #     ax=ax[2*i + len(factors)-1],
-        #     cmap=cmap,
-        # )
     
         true_celltypes = ctDF.loc[ind].set_index("Cell Type")
         celltypesDF = true_celltypes.drop(columns=true_celltypes.columns)
@@ -308,41 +296,29 @@ def plotAllProjs(factors, projs, celltypeXA, color_palette, ax, size=50):
             label_colorbar = np.append(label_colorbar, label) 
 
         celltypes_matrix = celltypesDF.to_numpy()
-        
-        print(np.shape(choose_color_palette))
         total_celltypes[i*size:(i+1)*size, :] = celltypes_matrix[random_index]
         total_projections[i*size:(i+1)*size, :] = reordered_projs[random_index]
-        # print(total_celltypes)
-        # print(np.shape(celltypes_matrix[random_index]))
-        # sns.heatmap(
-        #     data=np.flip(celltypes_matrix[random_index]),
-        #     xticklabels=False,
-        #     yticklabels=False,
-        #     ax=ax[2*i + len(factors)],
-        #     cmap=list(choose_color_palette),
-        #     )
-
-        # cbar = ax[2*i + len(factors)].collections[0].colorbar
-        # cbar.set_ticks(colorbar_numbers)
-        # cbar.set_ticklabels(label_colorbar)
-        # celltype_values = celltypes_matrix.ravel()
         
-    print(np.shape(total_projections))
-    print(np.sort(total_celltypes))
-    print(np.argsort(total_celltypes))
+    total_celltypes = np.sort(np.ravel(total_celltypes))
+    total_projections = total_projections[np.argsort(total_celltypes),:]
+    
     sns.heatmap(
-        data=total_projections,
+        data=np.flip(total_projections),
         xticklabels=xticks,
         yticklabels=False,
         center=0,
-        ax=ax[2*i + len(factors)-1],
+        ax=ax1,
         cmap=cmap,
         )
     
     sns.heatmap(
-        data=total_celltypes,
+        data=np.flip(np.reshape(total_celltypes,(-1,1))),
         xticklabels=False,
         yticklabels=False,
-        ax=ax[2*i + len(factors)],
+        ax=ax2,
         cmap=list(choose_color_palette),
             )
+    
+    cbar = ax2.collections[0].colorbar
+    cbar.set_ticks(colorbar_numbers)
+    cbar.set_ticklabels(label_colorbar)

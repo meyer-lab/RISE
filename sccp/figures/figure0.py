@@ -16,24 +16,17 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    blobXA, blobDF, celltypeXA = synthXA(magnitude=100, type="beach")
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="beach")
     
     rank = 2
     _, factors, projs, _, _= parafac2_nd(
         blobXA.to_numpy(),
         rank=rank,
     )
-    
-    
-    
-    
-    
-    
-    
+
     # plotFactorsSynthetic(factors, blobXA, ax)
     # plotProjs_SS(factors, projs[0:9:6], celltypeXA, color_palette, ax)
-    plotAllProjs(factors, projs[0:9:6], celltypeXA, color_palette, ax)
-    a
+    plotAllProjs(factors, projs, celltypeXA, color_palette, ax[4], ax[5])
     
     # for i in np.arange(0, 2):
     #     plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i*6, palette=palette, type="beach", ax=ax[i+8])
