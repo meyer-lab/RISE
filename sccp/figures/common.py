@@ -263,7 +263,7 @@ def renamePlotsCoH(ax):
     
     
     
-def plotAllProjs(factors, projs, celltypeXA, color_palette, ax1, ax2, size=100):
+def plotAllProjs(factors, projs, celltypeXA, color_palette, ax1, ax2, ax3, size=100):
     """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -302,6 +302,13 @@ def plotAllProjs(factors, projs, celltypeXA, color_palette, ax1, ax2, size=100):
     total_celltypes = np.sort(np.ravel(total_celltypes))
     total_projections = total_projections[np.argsort(total_celltypes),:]
     
+    
+    for k in range(factors[1].shape[1]):
+        ss = silhouette_samples(total_projections[:, k].reshape(-1, 1), total_celltypes) 
+        for l, label in enumerate(np.unique(allcelltypes.index)):
+            ss_score = np.mean(ss[total_celltypes == l])
+            silhouetteDF = pd.concat([silhouetteDF , pd.DataFrame({"Silhoutte Score": ss_score, "Cell Type": [label], "Cmp.": [xticks[k]]})]) 
+    
     sns.heatmap(
         data=np.flip(total_projections),
         xticklabels=xticks,
@@ -322,3 +329,5 @@ def plotAllProjs(factors, projs, celltypeXA, color_palette, ax1, ax2, size=100):
     cbar = ax2.collections[0].colorbar
     cbar.set_ticks(colorbar_numbers)
     cbar.set_ticklabels(label_colorbar)
+    
+    sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax3)

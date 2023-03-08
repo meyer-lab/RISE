@@ -26,7 +26,7 @@ def makeFigure():
 
     # plotFactorsSynthetic(factors, blobXA, ax)
     # plotProjs_SS(factors, projs[0:9:6], celltypeXA, color_palette, ax)
-    plotAllProjs(factors, projs, celltypeXA, color_palette, ax[4], ax[5])
+    plotAllProjs(factors, projs, celltypeXA, color_palette, ax[4], ax[5], ax[6])
     
     # for i in np.arange(0, 2):
     #     plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i*6, palette=palette, type="beach", ax=ax[i+8])
