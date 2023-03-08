@@ -2,7 +2,7 @@
 Creating synthetic data and implementation of parafac2
 """
 import numpy as np
-from .common import subplotLabel, getSetup, plotFactorsSynthetic, plotProjs_SS, renamePlotSynthetic
+from .common import subplotLabel, getSetup, plotFactorsSynthetic, plotProjs_SS, renamePlotSynthetic, plotAllProjs
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X_CC
@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    blobXA, blobDF, celltypeXA = synthXA(magnitude=200, type="beach")
+    blobXA, blobDF, celltypeXA = synthXA(magnitude=100, type="beach")
     
     rank = 2
     _, factors, projs, _, _= parafac2_nd(
@@ -24,14 +24,22 @@ def makeFigure():
         rank=rank,
     )
     
-    plotFactorsSynthetic(factors, blobXA, ax)
-    plotProjs_SS(factors, projs[0:9:6], celltypeXA, color_palette, ax)
     
-    for i in np.arange(0, 2):
-        plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i*6, palette=palette, type="beach", ax=ax[i+8])
     
-    plotR2X_CC(blobXA.to_numpy(), rank, ax[10], ax[11])
-    renamePlotSynthetic(blobXA, ax)
+    
+    
+    
+    
+    # plotFactorsSynthetic(factors, blobXA, ax)
+    # plotProjs_SS(factors, projs[0:9:6], celltypeXA, color_palette, ax)
+    plotAllProjs(factors, projs[0:9:6], celltypeXA, color_palette, ax)
+    a
+    
+    # for i in np.arange(0, 2):
+    #     plot_synth_pic(blobDF[["X","Y","Time","Cell Type"]], t=i*6, palette=palette, type="beach", ax=ax[i+8])
+    
+    # plotR2X_CC(blobXA.to_numpy(), rank, ax[10], ax[11])
+    # renamePlotSynthetic(blobXA, ax)
 
     return f
     
