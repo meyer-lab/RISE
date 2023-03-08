@@ -89,12 +89,45 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
-    """Plots parafac2 factors"""
+def plotFactorsSynthetic(factors, data_xarray, ax):
+    """Plots parafac2 factors for synthetic data"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    iter = 0
+    for i in range(0, len(factors)):
+        if i != len(factors)-2:
+            if i == 0:
+                timeDF = pd.DataFrame(factors[i], columns = xticks)
+                timeDF["Time"] = np.arange(1, data_xarray.shape[i] + 1)
+                sns.lineplot(data=timeDF[xticks], ax=ax[iter])
+                ax[iter].set(
+                    ylabel="Cmp. Weight",
+                    xlabel="Time",
+                    xticks=np.arange(0, data_xarray.shape[i]))
+                
+            else:       
+                yt = data_xarray.coords[data_xarray.dims[i]].values
+                X = factors[i]
+                sns.heatmap(
+                    data=X,
+                    xticklabels=xticks,
+                    yticklabels=yt,
+                    ax=ax[iter],
+                    center=0,
+                    cmap=cmap,
+                )
 
+            ax[iter].set_title("Factors")
+            ax[iter].tick_params(axis="y", rotation=0)
+            iter += 1
+
+                    
+def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
+    """Plots parafac2 factors for synthetic data"""
+    rank = factors[0].shape[1]
+    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
     iter = 0
     for i in range(0, len(factors)):
         # The single cell mode has a square factors matrix
@@ -121,7 +154,7 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
                 cmap=cmap,
             )
 
-            ax[iter].set_title("Mean Factors")
+            ax[iter].set_title("Factors")
             ax[iter].tick_params(axis="y", rotation=0)
             iter += 1
               
@@ -131,7 +164,6 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
                     sort_data = yt[sort_idx[:, j]]
                     print("Bottom 10 Genes Cmp." + str(j+1) + ":", sort_data[:10])
                     print("Top 10 Genes Cmp." + str(j+1) + ":", np.flip(sort_data[-10:]))  
-    
     
 def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
     """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
@@ -203,7 +235,6 @@ def reorder_table(projs):
 
 
 def renamePlotSynthetic(xarray, ax):
-    ax[0].set_yticklabels([f"Time:{i}" for i in np.arange(1, xarray.shape[0] + 1)])
     ax[2].set_title("Projection Matrix - " + "Time:0")
     ax[4].set_title("Projection Matrix - " + "Time:6")
     ax[6].set_title("Time:0")
