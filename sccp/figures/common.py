@@ -165,66 +165,85 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
                     print("Bottom 10 Genes Cmp." + str(j+1) + ":", sort_data[:10])
                     print("Top 10 Genes Cmp." + str(j+1) + ":", np.flip(sort_data[-10:]))  
     
+
 def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
-    """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
+    """Plots parafac2 projections matrix with compenent weights and silhoutte scores for each condition"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
-    silhouetteDF =  pd.DataFrame([])
     for i, ps in enumerate(projs):
-        ps = np.dot(ps, factors[-2])
-        nonzero = ~np.all(ps == 0, axis=1)
-        pps = ps[nonzero]
-        ctDF = celltypeXA[i,nonzero].to_dataframe().reset_index()
-        ctDF.sort_values(by=["Cell Type"], inplace=True)
-        ind = ctDF.index.values
-        reordered_projs = pps[ind]
-        random_index = np.sort(np.random.choice(reordered_projs.shape[0], size=size, replace=False))
-    
+        ReorderedProjs, celltypeDF, random_index = ReorderProjsCellTypes(ps, i, factors, celltypeXA, size)
+        CelltypeNames, CelltypeMatrix, ColorPalette, ColorbarNames = LabelCellTypes(celltypeDF, color_palette)
+
         sns.heatmap(
-            data=np.flip(reordered_projs[random_index],axis=0),
+            data=np.flip(ReorderedProjs[random_index],axis=0),
             xticklabels=xticks,
             yticklabels=False,
             center=0,
             ax=ax[2*i + len(factors)-1],
             cmap=cmap,
         )
-    
-        true_celltypes = ctDF.loc[ind].set_index("Cell Type")
-        celltypesDF = true_celltypes.drop(columns=true_celltypes.columns)
-        allcelltypes = celltypesDF.copy()
-        celltypesDF["Cell Type"] = 0
-        label_colorbar = []
-        choose_color_palette = []
-        colorbar_numbers = np.arange(0, len(np.unique(allcelltypes.index)))
-        for j, label in enumerate(np.unique(allcelltypes.index)):
-            celltypesDF[celltypesDF.index == label] = j
-            choose_color_palette = np.append(choose_color_palette, color_palette[j])
-            label_colorbar = np.append(label_colorbar, label) 
-
-        celltypes_matrix = celltypesDF.to_numpy()
+        
+        silhouetteDF = CalculateSS(rank, ReorderedProjs, CelltypeMatrix, CelltypeNames, xticks)
+        sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[i + len(factors)+ 3])
+        
         sns.heatmap(
-            data=np.flip(celltypes_matrix[random_index]),
+            data=np.flip(CelltypeMatrix[random_index]),
             xticklabels=False,
             yticklabels=False,
             ax=ax[2*i + len(factors)],
-            cmap=list(choose_color_palette),
+            cmap=list(ColorPalette),
             )
+        
+        FixProjsLegend(CelltypeNames, ax[2*i + len(factors)], ColorbarNames)
 
-        cbar = ax[2*i + len(factors)].collections[0].colorbar
-        cbar.set_ticks(colorbar_numbers)
-        cbar.set_ticklabels(label_colorbar)
-        celltype_values = celltypes_matrix.ravel()
+def ReorderProjsCellTypes(projs, iter, factors, celltypeXA, size):
+    """Reorders projections and cell types"""
+    ps = np.dot(projs, factors[-2])
+    nonzero_index = ~np.all(ps == 0, axis=1)
+    pps = ps[nonzero_index]
+    ctDF = celltypeXA[iter, nonzero_index].to_dataframe().reset_index()
+    ctDF.sort_values(by=["Cell Type"], inplace=True)
+    reorder_index = ctDF.index.values
+    reordered_projs = pps[reorder_index]
+    random_index = np.sort(np.random.choice(reordered_projs.shape[0], size=size, replace=False))
+    ctDF = ctDF.loc[reorder_index].set_index("Cell Type")
+    ctDF = ctDF.drop(columns= ctDF.columns)
+        
+    return reordered_projs, ctDF, random_index
+    
+    
+def LabelCellTypes(celltypesDF, color_palette):
+    """Convert cell types to a number and create color palette"""
+    CelltypeNames = np.unique(celltypesDF.index)
+    celltypesDF["Cell Type"] = 0
+    ColorbarNames = []; ColorPalette = []
+    for j, label in enumerate(CelltypeNames):
+        celltypesDF[celltypesDF.index == label] = j
+        ColorPalette= np.append(ColorPalette, color_palette[j])
+        ColorbarNames = np.append(ColorbarNames, label) 
 
-        for k in range(factors[1].shape[1]):
-            ss = silhouette_samples(pps[ind, k].reshape(-1, 1), celltype_values) 
-            for l, label in enumerate(np.unique(allcelltypes.index)):
-                ss_score = np.mean(ss[celltype_values == l])
-                silhouetteDF = pd.concat([silhouetteDF , pd.DataFrame({"Projs": i, "Silhoutte Score": ss_score, "Cell Type": [label], "Cmp.": [xticks[k]]})]) 
+    CelltypesMatrix = celltypesDF.to_numpy()
+    
+    return CelltypeNames, CelltypesMatrix, ColorPalette, ColorbarNames
+
+def CalculateSS(rank, reordered_projs, celltype_matrix, CellTypeNames, xticks):
+    """Calculate silhouette score for projectoins"""
+    silhouetteDF =  pd.DataFrame([])
+    for k in range(rank):
+        ss = silhouette_samples(reordered_projs[:, k].reshape(-1, 1), celltype_matrix.ravel()) 
+        for l, label in enumerate(CellTypeNames):
+            ss_score = np.mean(ss[celltype_matrix.ravel() == l])
+            silhouetteDF = pd.concat([silhouetteDF , pd.DataFrame({"Silhoutte Score": ss_score, "Cell Type": [label], "Cmp.": [xticks[k]]})]) 
                 
-    sns.barplot(data=silhouetteDF.loc[silhouetteDF["Projs"] == 0], x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[2*i + len(factors) + 1])
-    sns.barplot(data=silhouetteDF.loc[silhouetteDF["Projs"] == 1], x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[2*i + len(factors) + 2])
+    return silhouetteDF
 
+def FixProjsLegend(CellTypeNames, ax1, label_colorbar):
+    """Change the nomenclature for colorbar legend"""
+    colorbar_numbers = np.arange(0, len(CellTypeNames))
+    cbar = ax1.collections[0].colorbar
+    cbar.set_ticks(colorbar_numbers)
+    cbar.set_ticklabels(label_colorbar)
 
 def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
@@ -260,3 +279,45 @@ def renamePlotsCoH(ax):
     ax[5].set_title("Projection Matrix - " + "Patient 0 - IL10")
     ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
     ax[8].set_title("Projection Matrix - " + "Patient 0 - IL2")
+    
+    
+def plotAllProjs_SS(factors, projs, celltypeXA, color_palette, ax1, ax2, ax3, size=100):
+    """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
+    rank = factors[0].shape[1]
+    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    silhouetteDF =  pd.DataFrame([])
+    total_celltypes = np.zeros([projs.shape[0]*size, 1])
+    total_projections = np.zeros([projs.shape[0]*size, rank])
+    
+    for i, ps in enumerate(projs):
+        ReorderedProjs, celltypeDF, random_index = ReorderProjsCellTypes(ps, i, factors, celltypeXA, size)
+        CelltypeNames, CelltypeMatrix, ColorPalette, ColorbarNames = LabelCellTypes(celltypeDF, color_palette)
+        total_projections[i*size:(i+1)*size, :] = ReorderedProjs[random_index]
+        total_celltypes[i*size:(i+1)*size, :] = CelltypeMatrix[random_index]
+        
+    total_celltypes = np.sort(np.ravel(total_celltypes))
+    total_projections = total_projections[np.argsort(total_celltypes),:]
+    
+    silhouetteDF = CalculateSS(rank, ReorderedProjs, CelltypeMatrix, CelltypeNames, xticks)
+    
+    sns.heatmap(
+        data=np.flip(total_projections),
+        xticklabels=xticks,
+        yticklabels=False,
+        center=0,
+        ax=ax1,
+        cmap=cmap,
+        )
+    
+    sns.heatmap(
+        data=np.flip(np.reshape(total_celltypes,(-1,1))),
+        xticklabels=False,
+        yticklabels=False,
+        ax=ax2,
+        cmap=list(ColorPalette),
+            )
+    
+    FixProjsLegend(CelltypeNames, ax2, ColorbarNames)
+    
+    sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax3)
