@@ -186,6 +186,7 @@ def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
         
         silhouetteDF = CalculateSS(rank, ReorderedProjs, CelltypeMatrix, CelltypeNames, xticks)
         sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[i + len(factors)+ 3])
+        ax[i + len(factors)+ 3].tick_params(axis="x", rotation=45)
         
         sns.heatmap(
             data=np.flip(CelltypeMatrix[random_index]),
@@ -268,10 +269,10 @@ def renamePlotIL2(ax):
     ax[9].set_title("Time:2")
       
 def renamePlotscRNA(ax):
-    ax[2].set_title("Projection Matrix - " + "Acetylcysteine")
-    ax[4].set_title("Projection Matrix - " + "Adapalene")
-    ax[6].set_title("Acetylcysteine")
-    ax[7].set_title("Adapalene")
+    ax[2].set_title("Projection Matrix - " + "Alprostadil")
+    ax[4].set_title("Projection Matrix - " + "Betamethasone Valerate")
+    ax[6].set_title("Alprostadil")
+    ax[7].set_title("Betamethasone Valerate")
 
 
 def renamePlotsCoH(ax):
@@ -308,7 +309,7 @@ def plotAllProjs_SS(factors, projs, celltypeXA, color_palette, ax1, ax2, ax3, si
         center=0,
         ax=ax1,
         cmap=cmap,
-        )
+        ).set_title("All Condition Projections")
     
     sns.heatmap(
         data=np.flip(np.reshape(total_celltypes,(-1,1))),
@@ -320,4 +321,5 @@ def plotAllProjs_SS(factors, projs, celltypeXA, color_palette, ax1, ax2, ax3, si
     
     FixProjsLegend(CelltypeNames, ax2, ColorbarNames)
     
-    sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax3)
+    sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax3).set_title("All Condition Projections")
+    ax3.tick_params(axis="x", rotation=45)
