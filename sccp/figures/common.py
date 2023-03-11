@@ -296,9 +296,11 @@ def plotAllProjs_SS(factors, projs, celltypeXA, color_palette, ax1, ax2, ax3, si
         CelltypeNames, CelltypeMatrix, ColorPalette, ColorbarNames = LabelCellTypes(celltypeDF, color_palette)
         total_projections[i*size:(i+1)*size, :] = ReorderedProjs[random_index]
         total_celltypes[i*size:(i+1)*size, :] = CelltypeMatrix[random_index]
-        
-    total_celltypes = np.sort(np.ravel(total_celltypes))
-    total_projections = total_projections[np.argsort(total_celltypes),:]
+    
+    total_celltypes = total_celltypes.ravel()
+    idxx = np.argsort(total_celltypes)
+    total_celltypes = total_celltypes[idxx]
+    total_projections = total_projections[idxx, :]
     
     silhouetteDF = CalculateSS(rank, ReorderedProjs, CelltypeMatrix, CelltypeNames, xticks)
     
