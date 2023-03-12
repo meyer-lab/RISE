@@ -4,10 +4,7 @@ import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg import khatri_rao
 from tensorly.decomposition import parafac
-from tensorly.decomposition._parafac2 import (
-    _compute_projections,
-    _parafac2_reconstruction_error
-)
+from tensorly.decomposition._parafac2 import _compute_projections
 from tlviz.model_evaluation import core_consistency
 
 
@@ -31,12 +28,28 @@ def initialize_cp(tensor, rank):
     return (None, factors)
 
 
+def _cmf_reconstruction_error(matrices, decomposition, norm_X_sq):
+    (A, B, C), projections = decomposition
+
+    norm_cmf_sq = 0
+    inner_product = 0
+    CtC = C.T @ C
+
+    for i, proj in enumerate(projections):
+        B_i = tl.dot(proj, B) * A[i]
+        # trace of the multiplication products
+        inner_product += tl.einsum("ji,jk,ki", B_i, matrices[i], C)
+        norm_cmf_sq += tl.sum((B_i.T @ B_i) * CtC)
+
+    return norm_X_sq - 2 * inner_product + norm_cmf_sq
+
+
 @torch.inference_mode()
 def parafac2_nd(
     X_nd,
     rank: int,
     n_iter_max: int=100,
-    tol=1e-7,
+    tol=1e-9,
     verbose=False,
 ):
     r"""The same interface as regular PARAFAC2."""
@@ -55,7 +68,7 @@ def parafac2_nd(
     errs = []
     norm_tensor = tl.norm(X) ** 2
 
-    err = _parafac2_reconstruction_error(X, (None, factors, projections)) ** 2
+    err = _cmf_reconstruction_error(X, (factors, projections), norm_tensor)
     errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
     tq = tqdm(range(n_iter_max), disable=(not verbose))
@@ -73,17 +86,17 @@ def parafac2_nd(
         CP_nD = parafac(
             projected_X_nD,
             rank,
-            n_iter_max=5,
+            n_iter_max=10,
             init=CP_nD,
             svd="no svd",
-            tol=False,
+            tol=1e-100,
             normalize_factors=False,
         )
 
         # Convert factors to 3D
         factors = [khatri_rao(CP_nD.factors[:-2]), CP_nD.factors[-2], CP_nD.factors[-1]]
 
-        err = _parafac2_reconstruction_error(X, (None, factors, projections)) ** 2
+        err = _cmf_reconstruction_error(X, (factors, projections), norm_tensor)
         errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
         delta = errs[-2] - errs[-1]
