@@ -39,7 +39,7 @@ def _cmf_reconstruction_error(matrices, decomposition, norm_X_sq):
 
 @torch.inference_mode()
 def parafac2_nd(
-    X_nd,
+    X,
     rank: int,
     n_iter_max: int=100,
     tol=1e-9,
@@ -48,8 +48,7 @@ def parafac2_nd(
     r"""The same interface as regular PARAFAC2."""
     # *** THIS IMPLEMENTATION REQUIRES A SINGLE ZERO-PADDED TENSOR. ***
     tl.set_backend("pytorch")
-    X_nd = tl.tensor(X_nd).cuda()
-    X = tl.reshape(X_nd, (-1, X_nd.shape[-2], X_nd.shape[-1]))
+    X = tl.tensor(X).cuda()
 
     # Initialization
     unfolded = tl.unfold(X, 2)
@@ -64,30 +63,25 @@ def parafac2_nd(
     err = _cmf_reconstruction_error(X, (factors, projections), norm_tensor)
     errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
-    CP_nD = "svd"
+    CP = "svd"
 
     tq = tqdm(range(n_iter_max), disable=(not verbose))
     for _ in tq:
         projections = _compute_projections(X, factors)
         projections = tl.stack(projections, axis=0)
-        projections_nD = tl.reshape(projections, (*X_nd.shape[0:-1], rank))
-
         # Project tensor slices
-        projected_X_nD = tl.einsum("...ji,...jk->...ik", projections_nD, X_nd)
+        projected_X = tl.einsum("...ji,...jk->...ik", projections, X)
 
-        CP_nD = parafac(
-            projected_X_nD,
+        CP = parafac(
+            projected_X,
             rank,
             n_iter_max=10,
-            init=CP_nD,
+            init=CP,
             tol=1e-100,
             normalize_factors=False,
         )
 
-        # Convert factors to 3D
-        factors = [khatri_rao(CP_nD.factors[:-2]), CP_nD.factors[-2], CP_nD.factors[-1]]
-
-        err = _cmf_reconstruction_error(X, (factors, projections), norm_tensor)
+        err = _cmf_reconstruction_error(X, (CP[1], projections), norm_tensor)
         errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
         delta = errs[-2] - errs[-1]
@@ -96,16 +90,16 @@ def parafac2_nd(
         if delta < tol:
             break
 
-    CP_nD = cp_normalize(CP_nD)
-    CP_nD = cp_flip_sign(CP_nD, mode=1)
+    CP = cp_normalize(CP)
+    CP = cp_flip_sign(CP, mode=1)
 
-    coreC = core_consistency(CP_nD, projected_X_nD, normalised=True)
+    coreC = core_consistency(CP, projected_X, normalised=True)
     print(f"Core consistency = {coreC}.")
 
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
-    weights = tl.to_numpy(CP_nD[0].cpu())
-    factors_nD = [tl.to_numpy(f.cpu()) for f in CP_nD[1]]
-    projections_nD = tl.to_numpy(projections_nD.cpu())
-    return weights, factors_nD, projections_nD, R2X, coreC
+    weights = tl.to_numpy(CP[0].cpu())
+    factors = [tl.to_numpy(f.cpu()) for f in CP[1]]
+    projections = tl.to_numpy(projections.cpu())
+    return weights, factors, projections, R2X, coreC

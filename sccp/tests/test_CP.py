@@ -16,7 +16,7 @@ def test_n_way():
     rcpStack = np.stack([X, X, X], axis=0)
 
     _, factors, projections = parafac2(X, rank=3, normalize_factors=True, init="svd")
-    _, facStack, projStack, _, _ = parafac2_nd(rcpStack, rank=3)
+    _, facStack, projStack, _, _ = parafac2_nd(X, rank=3)
 
     # More similar is closer to 0 with corrIndex
     assert correlation_index(factors, facStack[1::], method="min_score") < 0.1
