@@ -9,7 +9,7 @@ from .common import (
 )
 from ..imports.scRNA import import_perturb_RPE
 from ..parafac2 import parafac2_nd
-from ..decomposition import plotR2X_CC
+from ..decomposition import plotR2X
 import seaborn as sns
 
 
@@ -29,13 +29,13 @@ def makeFigure():
     X = X[:1200, :, :]
 
     # Performing parafac2 on single-cell Xarray
-    _, factors, projs, _, _ = parafac2_nd(
+    _, factors, projs, _ = parafac2_nd(
         X.to_numpy(),
         rank=24,
         verbose=True,
     )
 
-    plotFactors(factors, X, ax, reorder=(0, 2), trim=(2, ))
+    plotFactors(factors, X, ax, reorder=(0, 2), trim=(2,))
 
     sns.heatmap(
         data=reorder_table(projs[0, :, :])[0],
@@ -44,6 +44,6 @@ def makeFigure():
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
 
-    plotR2X_CC(X.to_numpy(), 6, ax[2], ax[3])
+    plotR2X(X.to_numpy(), 6, ax[2])
 
     return f

@@ -143,11 +143,11 @@ def synthXA(magnitude, type):
                             ),
                         ]
                     )
-                    
+
     blobXA, celltypeXA = make_blob_tensor(blob_DF)
     blobXA.name = "data"
     celltypeXA.name = "Cell Type"
-    
+
     return xa.merge([blobXA, celltypeXA], compat="no_conflicts"), blob_DF
 
 
@@ -157,14 +157,25 @@ def make_blob_art(mean, cov, size, time, label):
     for i in range(11):
         X = np.random.multivariate_normal(mean=mean, cov=cov, size=size) / 10
         total_synth[i, :] = X[:, 0].flatten()
-        
-    return pd.DataFrame({"A": total_synth[0, :], "B": total_synth[1, :], 
-                         "C": total_synth[2, :], "D": total_synth[3, :], 
-                         "E": total_synth[4, :], "F": total_synth[5, :], 
-                         "G": total_synth[6, :], "H": total_synth[7, :], 
-                         "I": total_synth[8, :], "J": total_synth[9, :], 
-                         "X": total_synth[10, :], "Y": X[:, 1],
-                         "Time": time, "Cell Type": label})
+
+    return pd.DataFrame(
+        {
+            "A": total_synth[0, :],
+            "B": total_synth[1, :],
+            "C": total_synth[2, :],
+            "D": total_synth[3, :],
+            "E": total_synth[4, :],
+            "F": total_synth[5, :],
+            "G": total_synth[6, :],
+            "H": total_synth[7, :],
+            "I": total_synth[8, :],
+            "J": total_synth[9, :],
+            "X": total_synth[10, :],
+            "Y": X[:, 1],
+            "Time": time,
+            "Cell Type": label,
+        }
+    )
 
 
 def plot_synth_pic(blob_DF, t, palette, type, ax):
@@ -179,15 +190,15 @@ def plot_synth_pic(blob_DF, t, palette, type, ax):
         s=5,
     )
     if type == "beach":
-        xlim=(-0.5, 1.5)
-        ylim=(-1.2, 1.2) 
+        xlim = (-0.5, 1.5)
+        ylim = (-1.2, 1.2)
     elif type == "movingcovariance":
-        xlim=(-1.2, 1.2)
-        ylim=(-1.2, 1.5)
+        xlim = (-1.2, 1.2)
+        ylim = (-1.2, 1.5)
     elif type == "dividingclusters":
-        xlim=(-0.8, 1.2)
-        ylim=(-1.0, 1.3)
-        
+        xlim = (-0.8, 1.2)
+        ylim = (-1.0, 1.3)
+
     ax.set(
         xlim=xlim,
         ylim=ylim,

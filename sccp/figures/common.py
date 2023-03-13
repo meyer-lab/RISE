@@ -98,17 +98,18 @@ def plotFactorsSynthetic(factors, data_xarray, ax):
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     iter = 0
     for i in range(0, len(factors)):
-        if i != len(factors)-2:
+        if i != len(factors) - 2:
             if i == 0:
-                timeDF = pd.DataFrame(factors[i], columns = xticks)
+                timeDF = pd.DataFrame(factors[i], columns=xticks)
                 timeDF["Time"] = np.arange(1, data_xarray.shape[i] + 1)
                 sns.lineplot(data=timeDF[xticks], ax=ax[iter])
                 ax[iter].set(
                     ylabel="Cmp. Weight",
                     xlabel="Time",
-                    xticks=np.arange(0, data_xarray.shape[i]))
-                
-            else:       
+                    xticks=np.arange(0, data_xarray.shape[i]),
+                )
+
+            else:
                 yt = data_xarray.coords[data_xarray.dims[i]].values
                 X = factors[i]
                 sns.heatmap(
@@ -124,7 +125,7 @@ def plotFactorsSynthetic(factors, data_xarray, ax):
             ax[iter].tick_params(axis="y", rotation=0)
             iter += 1
 
-                    
+
 def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
     """Plots parafac2 factors for synthetic data"""
     rank = factors[0].shape[1]
@@ -133,7 +134,7 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
     iter = 0
     for i in range(0, len(factors)):
         # The single cell mode has a square factors matrix
-        if i != len(factors)-2:
+        if i != len(factors) - 2:
             yt = data_xarray.coords[data_xarray.dims[i]].values
             X = factors[i]
 
@@ -159,13 +160,15 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
             ax[iter].set_title("Factors")
             ax[iter].tick_params(axis="y", rotation=0)
             iter += 1
-              
+
             if i == 2 and len(yt) > 50:
                 sort_idx = np.argsort(X, axis=0)
                 for j in range(rank):
                     sort_data = yt[sort_idx[:, j]]
-                    print("Bottom 10 Genes Cmp." + str(j+1) + ":", sort_data[:10])
-                    print("Top 10 Genes Cmp." + str(j+1) + ":", np.flip(sort_data[-10:]))  
+                    print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
+                    print(
+                        "Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:])
+                    )
 
 
 def reorder_table(projs):
@@ -174,7 +177,7 @@ def reorder_table(projs):
     Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
     index = sch.leaves_list(Z)
     return projs[index, :], index
-    
+
 
 def plotSS(projs: xa.Dataset, ax: matplotlib.axes._axes.Axes):
     proj_data = projs["projections"].to_numpy()
@@ -184,15 +187,21 @@ def plotSS(projs: xa.Dataset, ax: matplotlib.axes._axes.Axes):
     le = preprocessing.LabelEncoder()
     celltypes = le.fit_transform(celltypeDF["Cell Type"])
 
-    df =  pd.DataFrame([])
+    df = pd.DataFrame([])
     for k in range(proj_data.shape[0]):
         ss = silhouette_samples(proj_data[k, :].reshape(-1, 1), celltypes)
         ss_scores = [np.mean(ss[celltypes == l]) for l in range(len(le.classes_))]
 
-        ddf = pd.DataFrame({"Silhoutte Score": ss_scores, "Cell Type": le.classes_, "Cmp.": [f"Cmp. {k}"]*len(le.classes_)})
+        ddf = pd.DataFrame(
+            {
+                "Silhoutte Score": ss_scores,
+                "Cell Type": le.classes_,
+                "Cmp.": [f"Cmp. {k}"] * len(le.classes_),
+            }
+        )
         df = pd.concat([df, ddf])
 
-    sns.barplot(data=df, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax)
+    sns.barplot(data=df, x="Cell Type", y="Silhoutte Score", hue="Cmp.", ax=ax)
     ax.set_title("All Condition Projections")
     ax.tick_params(axis="x", rotation=45)
 

@@ -2,9 +2,7 @@ import torch
 from tqdm import tqdm
 import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
-from tensorly.tenalg import khatri_rao
 from tensorly.decomposition import parafac
-from tlviz.model_evaluation import core_consistency
 
 
 def _compute_projections(tensor_slices, factors):
@@ -41,7 +39,7 @@ def _cmf_reconstruction_error(matrices, decomposition, norm_X_sq):
 def parafac2_nd(
     X,
     rank: int,
-    n_iter_max: int=100,
+    n_iter_max: int = 200,
     tol=1e-9,
     verbose=False,
 ):
@@ -93,13 +91,10 @@ def parafac2_nd(
     CP = cp_normalize(CP)
     CP = cp_flip_sign(CP, mode=1)
 
-    coreC = core_consistency(CP, projected_X, normalised=True)
-    print(f"Core consistency = {coreC}.")
-
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
     weights = tl.to_numpy(CP[0].cpu())
     factors = [tl.to_numpy(f.cpu()) for f in CP[1]]
     projections = tl.to_numpy(projections.cpu())
-    return weights, factors, projections, R2X, coreC
+    return weights, factors, projections, R2X

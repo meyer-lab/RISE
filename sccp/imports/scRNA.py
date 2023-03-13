@@ -19,7 +19,9 @@ def import_perturb_RPE(limit_cells=100):
     ds_disk = anndata.read_h5ad("/opt/andrew/rpe1_normalized_singlecell_01.h5ad")
 
     sgRNAs = ds_disk.obs_vector("sgID_AB")
-    sgUnique, sgIndex, sgCounts = np.unique(sgRNAs, return_inverse=True, return_counts=True)
+    sgUnique, sgIndex, sgCounts = np.unique(
+        sgRNAs, return_inverse=True, return_counts=True
+    )
 
     X = xa.DataArray(
         data=np.zeros((len(sgUnique), limit_cells, ds_disk.shape[1]), dtype=np.float32),
@@ -38,7 +40,7 @@ def import_perturb_RPE(limit_cells=100):
         if x_temp.shape[0] > limit_cells:
             x_temp = x_temp[:limit_cells, :]
 
-        X[sgi, 0:x_temp.shape[0], :] = x_temp.X.toarray()
+        X[sgi, 0 : x_temp.shape[0], :] = x_temp.X.toarray()
 
     # These genes have nans for some reason
     X = xa.concat([X[:, :, 0:773], X[:, :, 774:]], dim="Genes")
@@ -189,7 +191,7 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
 
         df = df.sort_values(by=["Drug"])
         df = assign_celltype(df)
-            
+
         # Assign cells a count per-experiment so we can reindex
         cellCount = df.groupby(by=["Drug"]).size().values
         df["Cell"] = np.concatenate([np.arange(int(cnt)) for cnt in cellCount])
@@ -207,7 +209,7 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
 
         XA.to_netcdf(join(path_here, "data/scRNA_drugXA.nc"))
         celltypeXA.to_netcdf(join(path_here, "data/scRNA_celltypeXA.nc"))
-        
+
     else:
         if offset == 1.0:
             XA = xa.open_dataarray("/opt/andrew/scRNA_drugXA_NoOffset.nc")
@@ -223,23 +225,25 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
 def assign_celltype(df):
     """Assignign cell types via scanpy and SVM"""
     import scanpy as sc
+
     celltypeDF = df.drop(columns=["Drug"], axis=1)
     genes_list = celltypeDF.columns
     adata = sc.AnnData(celltypeDF)
-    sc.pp.pca(adata, svd_solver='arpack')
+    sc.pp.pca(adata, svd_solver="arpack")
     sc.pp.neighbors(adata)
     sc.tl.leiden(adata, resolution=0.75)
-    sc.tl.rank_genes_groups(adata, groupby='leiden')
+    sc.tl.rank_genes_groups(adata, groupby="leiden")
     marker_matches = sc.tl.marker_gene_overlap(adata, marker_genes)
     sc.tl.umap(adata)
     adata.obs = adata.obs.replace(clust_names)
     adata.obs.columns = ["Cell Type"]
     adata = drug_SVM(adata, genes_list)
-    
-    df["Cell Type"] = adata.obs.values  
-     
+
+    df["Cell Type"] = adata.obs.values
+
     return df.reset_index(drop=True)
-    
+
+
 def drug_SVM(save_data, genes):
     """Retrieves cell types from perturbed data"""
     completeDF = pd.DataFrame(data=save_data.X)
