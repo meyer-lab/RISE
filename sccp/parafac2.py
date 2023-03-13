@@ -4,28 +4,21 @@ import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg import khatri_rao
 from tensorly.decomposition import parafac
-from tensorly.decomposition._parafac2 import _compute_projections
 from tlviz.model_evaluation import core_consistency
 
 
-def initialize_cp(tensor, rank):
-    factors = []
-    for mode in range(tl.ndim(tensor)):
-        U, S, _ = tl.truncated_svd(tl.unfold(tensor, mode), rank)
+def _compute_projections(tensor_slices, factors):
+    n_eig = factors[0].shape[1]
+    out = []
 
-        # Put SVD initialization on the same scaling as the tensor in case normalize_factors=False
-        if mode == 0:
-            idx = min(rank, tl.shape(S)[0])
-            U = tl.index_update(U, tl.index[:, :idx], U[:, :idx] * S[:idx])
+    for A, tensor_slice in zip(factors[0], tensor_slices):
+        lhs = factors[1] @ (A * factors[2]).T
+        rhs = tensor_slice.T
+        U, _, Vh = tl.truncated_svd(lhs @ rhs, n_eigenvecs=n_eig)
 
-        if tensor.shape[mode] < rank:
-            # TODO: this is a hack but it seems to do the job for now
-            random_part = torch.randn(U.shape[0], rank - tl.shape(tensor)[mode]).cuda()
-            U = tl.concatenate([U, random_part], axis=1)
+        out.append((U @ Vh).T)
 
-        factors.append(U[:, :rank])
-
-    return (None, factors)
+    return out
 
 
 def _cmf_reconstruction_error(matrices, decomposition, norm_X_sq):
@@ -63,7 +56,7 @@ def parafac2_nd(
     assert tl.shape(unfolded)[0] > rank
     C = torch.svd_lowrank(unfolded, rank)[0]
     factors = [tl.ones((X.shape[0], rank)).cuda(), tl.eye(rank).cuda(), C]
-    projections = _compute_projections(X, factors, "truncated_svd")
+    projections = _compute_projections(X, factors)
 
     errs = []
     norm_tensor = tl.norm(X) ** 2
@@ -71,24 +64,22 @@ def parafac2_nd(
     err = _cmf_reconstruction_error(X, (factors, projections), norm_tensor)
     errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
+    CP_nD = "svd"
+
     tq = tqdm(range(n_iter_max), disable=(not verbose))
-    for iter in tq:
-        projections = _compute_projections(X, factors, "truncated_svd")
+    for _ in tq:
+        projections = _compute_projections(X, factors)
         projections = tl.stack(projections, axis=0)
         projections_nD = tl.reshape(projections, (*X_nd.shape[0:-1], rank))
 
         # Project tensor slices
         projected_X_nD = tl.einsum("...ji,...jk->...ik", projections_nD, X_nd)
 
-        if iter == 0:
-            CP_nD = initialize_cp(projected_X_nD, rank)
-
         CP_nD = parafac(
             projected_X_nD,
             rank,
             n_iter_max=10,
             init=CP_nD,
-            svd="no svd",
             tol=1e-100,
             normalize_factors=False,
         )
