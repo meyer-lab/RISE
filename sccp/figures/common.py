@@ -2,11 +2,13 @@
 This file contains functions that are used in multiple figures.
 """
 from string import ascii_lowercase
+import xarray as xa
 import sys
 import time
 import seaborn as sns
 import pandas as pd
 import matplotlib
+from sklearn import preprocessing
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
@@ -164,87 +166,7 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
                     sort_data = yt[sort_idx[:, j]]
                     print("Bottom 10 Genes Cmp." + str(j+1) + ":", sort_data[:10])
                     print("Top 10 Genes Cmp." + str(j+1) + ":", np.flip(sort_data[-10:]))  
-    
 
-def plotProjs_SS(factors, projs, celltypeXA, color_palette, ax, size=100):
-    """Plots parafac2 projections matrix with compenent weights and silhoutte scores for each condition"""
-    rank = factors[0].shape[1]
-    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    cmap = sns.diverging_palette(240, 10, as_cmap=True)
-    for i, ps in enumerate(projs):
-        ReorderedProjs, celltypeDF, random_index = ReorderProjsCellTypes(ps, i, factors, celltypeXA, size)
-        CelltypeNames, CelltypeMatrix, ColorPalette, ColorbarNames = LabelCellTypes(celltypeDF, color_palette)
-
-        sns.heatmap(
-            data=np.flip(ReorderedProjs[random_index],axis=0),
-            xticklabels=xticks,
-            yticklabels=False,
-            center=0,
-            ax=ax[2*i + len(factors)-1],
-            cmap=cmap,
-        )
-        
-        silhouetteDF = CalculateSS(rank, ReorderedProjs, CelltypeMatrix, CelltypeNames, xticks)
-        sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax[i + len(factors)+ 3])
-        ax[i + len(factors)+ 3].tick_params(axis="x", rotation=45)
-        
-        sns.heatmap(
-            data=np.flip(CelltypeMatrix[random_index]),
-            xticklabels=False,
-            yticklabels=False,
-            ax=ax[2*i + len(factors)],
-            cmap=list(ColorPalette),
-            )
-        
-        FixProjsLegend(CelltypeNames, ax[2*i + len(factors)], ColorbarNames)
-
-def ReorderProjsCellTypes(projs, iter, factors, celltypeXA, size):
-    """Reorders projections and cell types"""
-    ps = np.dot(projs, factors[-2])
-    nonzero_index = ~np.all(ps == 0, axis=1)
-    pps = ps[nonzero_index]
-    ctDF = celltypeXA[iter, nonzero_index].to_dataframe().reset_index()
-    ctDF.sort_values(by=["Cell Type"], inplace=True)
-    reorder_index = ctDF.index.values
-    reordered_projs = pps[reorder_index]
-    random_index = np.sort(np.random.choice(reordered_projs.shape[0], size=size, replace=False))
-    ctDF = ctDF.loc[reorder_index].set_index("Cell Type")
-    ctDF = ctDF.drop(columns= ctDF.columns)
-        
-    return reordered_projs, ctDF, random_index
-    
-    
-def LabelCellTypes(celltypesDF, color_palette):
-    """Convert cell types to a number and create color palette"""
-    CelltypeNames = np.unique(celltypesDF.index)
-    celltypesDF["Cell Type"] = 0
-    ColorbarNames = []; ColorPalette = []
-    for j, label in enumerate(CelltypeNames):
-        celltypesDF[celltypesDF.index == label] = j
-        ColorPalette= np.append(ColorPalette, color_palette[j])
-        ColorbarNames = np.append(ColorbarNames, label) 
-
-    CelltypesMatrix = celltypesDF.to_numpy()
-    
-    return CelltypeNames, CelltypesMatrix, ColorPalette, ColorbarNames
-
-def CalculateSS(rank, reordered_projs, celltype_matrix, CellTypeNames, xticks):
-    """Calculate silhouette score for projectoins"""
-    silhouetteDF =  pd.DataFrame([])
-    for k in range(rank):
-        ss = silhouette_samples(reordered_projs[:, k].reshape(-1, 1), celltype_matrix.ravel()) 
-        for l, label in enumerate(CellTypeNames):
-            ss_score = np.mean(ss[celltype_matrix.ravel() == l])
-            silhouetteDF = pd.concat([silhouetteDF , pd.DataFrame({"Silhoutte Score": ss_score, "Cell Type": [label], "Cmp.": [xticks[k]]})]) 
-                
-    return silhouetteDF
-
-def FixProjsLegend(CellTypeNames, ax1, label_colorbar):
-    """Change the nomenclature for colorbar legend"""
-    colorbar_numbers = np.arange(0, len(CellTypeNames))
-    cbar = ax1.collections[0].colorbar
-    cbar.set_ticks(colorbar_numbers)
-    cbar.set_ticklabels(label_colorbar)
 
 def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
@@ -252,76 +174,57 @@ def reorder_table(projs):
     Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
     index = sch.leaves_list(Z)
     return projs[index, :], index
+    
+
+def plotSS(projs: xa.Dataset, ax: matplotlib.axes._axes.Axes):
+    proj_data = projs["projections"].to_numpy()
+    assert proj_data.ndim == 2
+    celltypeDF = projs["Cell Type"].to_dataframe()
+
+    le = preprocessing.LabelEncoder()
+    celltypes = le.fit_transform(celltypeDF["Cell Type"])
+
+    df =  pd.DataFrame([])
+    for k in range(proj_data.shape[0]):
+        ss = silhouette_samples(proj_data[k, :].reshape(-1, 1), celltypes)
+        ss_scores = [np.mean(ss[celltypes == l]) for l in range(len(le.classes_))]
+
+        ddf = pd.DataFrame({"Silhoutte Score": ss_scores, "Cell Type": le.classes_, "Cmp.": [f"Cmp. {k}"]*len(le.classes_)})
+        df = pd.concat([df, ddf])
+
+    sns.barplot(data=df, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax)
+    ax.set_title("All Condition Projections")
+    ax.tick_params(axis="x", rotation=45)
 
 
-def renamePlotSynthetic(xarray, ax):
-    ax[2].set_title("Projection Matrix - " + "Time:0")
-    ax[4].set_title("Projection Matrix - " + "Time:6")
-    ax[6].set_title("Time:0")
-    ax[7].set_title("Time:6")
+def plotProj(projs, axs):
+    """Plot a projection matrix along with cell type annotations."""
+    celltypeDF = projs["Cell Type"].to_dataframe()
+    pjArr = projs["projections"].to_numpy().T
 
+    le = preprocessing.LabelEncoder()
+    celltypes = le.fit_transform(celltypeDF["Cell Type"])
 
-def renamePlotIL2(ax):
-    ax[2].set_yticklabels([f"Time:{i}" for i in [1, 2, 4]])
-    ax[4].set_title("Projection Matrix - " + "Time:1")
-    ax[6].set_title("Projection Matrix - " + "Time:2")
-    ax[8].set_title("Time:1")
-    ax[9].set_title("Time:2")
-      
-def renamePlotscRNA(ax):
-    ax[2].set_title("Projection Matrix - " + "Alprostadil")
-    ax[4].set_title("Projection Matrix - " + "Betamethasone Valerate")
-    ax[6].set_title("Alprostadil")
-    ax[7].set_title("Betamethasone Valerate")
+    idxx = np.argsort(celltypes)
 
-
-def renamePlotsCoH(ax):
-    ax[3].set_title("Projection Matrix - " + "Patient 0 - IFN")
-    ax[5].set_title("Projection Matrix - " + "Patient 0 - IL10")
-    ax[7].set_title("Projection Matrix - " + "Patient 0 - IL10")
-    ax[8].set_title("Projection Matrix - " + "Patient 0 - IL2")
-    
-    
-def plotAllProjs_SS(factors, projs, celltypeXA, color_palette, ax1, ax2, ax3, size=100):
-    """Plots parafac2 projections matrix with compenent weights and silhoutte scores"""
-    rank = factors[0].shape[1]
-    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    cmap = sns.diverging_palette(240, 10, as_cmap=True)
-    silhouetteDF =  pd.DataFrame([])
-    total_celltypes = np.zeros([projs.shape[0]*size, 1])
-    total_projections = np.zeros([projs.shape[0]*size, rank])
-    
-    for i, ps in enumerate(projs):
-        ReorderedProjs, celltypeDF, random_index = ReorderProjsCellTypes(ps, i, factors, celltypeXA, size)
-        CelltypeNames, CelltypeMatrix, ColorPalette, ColorbarNames = LabelCellTypes(celltypeDF, color_palette)
-        total_projections[i*size:(i+1)*size, :] = ReorderedProjs[random_index]
-        total_celltypes[i*size:(i+1)*size, :] = CelltypeMatrix[random_index]
-    
-    total_celltypes = total_celltypes.ravel()
-    idxx = np.argsort(total_celltypes)
-    total_celltypes = total_celltypes[idxx]
-    total_projections = total_projections[idxx, :]
-    
-    silhouetteDF = CalculateSS(rank, ReorderedProjs, CelltypeMatrix, CelltypeNames, xticks)
-    
     sns.heatmap(
-        data=np.flip(total_projections),
-        xticklabels=xticks,
+        data=pjArr[idxx, :],
+        xticklabels=projs["projections"].coords["Cmp"].values,
         yticklabels=False,
         center=0,
-        ax=ax1,
-        cmap=cmap,
-        ).set_title("All Condition Projections")
-    
+        ax=axs[0],
+        cmap=sns.diverging_palette(240, 10, as_cmap=True),
+    )
+
     sns.heatmap(
-        data=np.flip(np.reshape(total_celltypes,(-1,1))),
+        data=celltypes[idxx].reshape((-1, 1)),
         xticklabels=False,
         yticklabels=False,
-        ax=ax2,
-        cmap=list(ColorPalette),
-            )
-    
-    FixProjsLegend(CelltypeNames, ax2, ColorbarNames)
-    
-    sns.barplot(data=silhouetteDF, x="Cell Type", y = "Silhoutte Score", hue = "Cmp.", ax=ax3).set_title("All Condition Projections")
-    ax3.tick_params(axis="x", rotation=45)
+        ax=axs[1],
+        cmap=sns.color_palette("tab10"),
+    )
+
+    # colorbar_numbers = np.arange(0, len(CellTypeNames))
+    # cbar = ax1.collections[0].colorbar
+    # cbar.set_ticks(colorbar_numbers)
+    # cbar.set_ticklabels(label_colorbar)

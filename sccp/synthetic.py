@@ -4,6 +4,7 @@ Common functions to plot and create synethetic data for Parafac2
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import xarray as xa
 
 
 def synthXA(magnitude, type):
@@ -144,8 +145,10 @@ def synthXA(magnitude, type):
                     )
                     
     blobXA, celltypeXA = make_blob_tensor(blob_DF)
-
-    return blobXA, blob_DF, celltypeXA
+    blobXA.name = "data"
+    celltypeXA.name = "Cell Type"
+    
+    return xa.merge([blobXA, celltypeXA], compat="no_conflicts"), blob_DF
 
 
 def make_blob_art(mean, cov, size, time, label):

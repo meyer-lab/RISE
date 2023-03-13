@@ -215,8 +215,9 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
         else:
             XA = xa.open_dataarray("/opt/andrew/scRNA_drugXA.nc")
 
-    return XA, celltypeXA
-
+    XA.name = "data"
+    celltypeXA.name = "Cell Type"
+    return xa.merge([XA, celltypeXA], compat="no_conflicts")
 
 
 def assign_celltype(df):

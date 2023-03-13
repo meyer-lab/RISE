@@ -1,7 +1,12 @@
 """
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
-from .common import subplotLabel, getSetup, plotFactors, reorder_table
+from .common import (
+    subplotLabel,
+    getSetup,
+    reorder_table,
+    plotFactors,
+)
 from ..imports.scRNA import import_perturb_RPE
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X_CC
