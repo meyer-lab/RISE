@@ -36,5 +36,6 @@ def makeFigure():
 
     return f
     
+    
 palette = {"Ground": "khaki", "Leaf1": "limegreen", "Leaf2": "darkgreen", "Sun": "yellow", "Trunk1": "sienna", "Trunk2": "chocolate"}
 color_palette = ["khaki", "limegreen", "darkgreen", "yellow", "sienna", "chocolate"]
