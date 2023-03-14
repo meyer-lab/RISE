@@ -213,11 +213,12 @@ def plotProj(projs, axs):
 
     le = preprocessing.LabelEncoder()
     celltypes = le.fit_transform(celltypeDF["Cell Type"])
+    celltypesName = np.unique(celltypeDF["Cell Type"])
 
     idxx = np.argsort(celltypes)
 
     sns.heatmap(
-        data=pjArr[idxx, :],
+        data=np.flip(pjArr[idxx, :],axis=0),
         xticklabels=projs["projections"].coords["Cmp"].values,
         yticklabels=False,
         center=0,
@@ -226,14 +227,14 @@ def plotProj(projs, axs):
     )
 
     sns.heatmap(
-        data=celltypes[idxx].reshape((-1, 1)),
+        data=np.flip(celltypes[idxx].reshape((-1, 1))),
         xticklabels=False,
         yticklabels=False,
         ax=axs[1],
-        cmap=sns.color_palette("tab10"),
+        cmap=sns.color_palette("tab10", len(celltypesName)),
     )
 
-    # colorbar_numbers = np.arange(0, len(CellTypeNames))
-    # cbar = ax1.collections[0].colorbar
-    # cbar.set_ticks(colorbar_numbers)
-    # cbar.set_ticklabels(label_colorbar)
+    colorbar_numbers = np.arange(0, len(celltypesName))
+    cbar = axs[1].collections[0].colorbar
+    cbar.set_ticks(colorbar_numbers)
+    cbar.set_ticklabels(celltypesName)
