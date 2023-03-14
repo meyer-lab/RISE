@@ -67,7 +67,7 @@ def plotCrossVal(tensor, rank,  ax1, trainPerc=0.75):
 
     # Collect Pf2 results
     for i in range(len(rank_vec)):
-        cv_err = crossvalidate(tensor, rank=i+1, trainPerc=trainPerc)
+        cv_error[i] = crossvalidate(tensor, rank=i+1, trainPerc=trainPerc)
 
     ax1.scatter(rank_vec, cv_error, marker="x", s=20.0)
 
