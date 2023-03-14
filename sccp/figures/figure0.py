@@ -13,6 +13,7 @@ from .common import (
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X
+from ..crossVal import plotCrossVal
 
 
 def makeFigure():
@@ -60,6 +61,7 @@ def makeFigure():
     plotProj(flattened_projs.isel(AllCells=idxx), ax[4:6])
 
     plotR2X(blobInfo["data"].to_numpy(), 3, ax[7])
+    plotCrossVal(blobInfo["data"].to_numpy(), 3,  ax[8], trainPerc=0.75)
 
     return f
 

@@ -58,3 +58,22 @@ def crossvalidate(X, rank, trainPerc=0.75, verbose=False):
     total_var = np.linalg.norm(X[:, X_B_idx:, X_C_idx:]) ** 2
 
     return 1.0 - recon_error / total_var
+
+
+def plotCrossVal(tensor, rank,  ax1, trainPerc=0.75):
+    """Creates cross validation accuracy plot for parafac2"""
+    rank_vec = np.arange(1, rank + 1)
+    cv_error = np.empty(len(rank_vec))
+
+    # Collect Pf2 results
+    for i in range(len(rank_vec)):
+        cv_err = crossvalidate(tensor, rank=i+1, trainPerc=trainPerc)
+
+    ax1.scatter(rank_vec, cv_error, marker="x", s=20.0)
+
+    ax1.set(
+        ylabel="CV Accuracy",
+        xlabel="Number of Components",
+        xticks=np.arange(0, rank + 1),
+        ylim=(-0.05, 1.05),
+    )
