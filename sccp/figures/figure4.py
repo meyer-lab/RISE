@@ -29,7 +29,7 @@ def makeFigure():
     # Performing parafac2 on single-cell Xarray
     _, factors, projs, _ = parafac2_nd(
         data["data"].to_numpy(),
-        rank=3,
+        rank=13,
         verbose=True,
     )
 

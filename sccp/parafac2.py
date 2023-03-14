@@ -2,21 +2,9 @@ import torch
 from tqdm import tqdm
 import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
+from tensorly.tenalg.svd import randomized_svd
 from tensorly.decomposition import parafac
-
-
-def _compute_projections(tensor_slices, factors):
-    n_eig = factors[0].shape[1]
-    out = []
-
-    for A, tensor_slice in zip(factors[0], tensor_slices):
-        lhs = factors[1] @ (A * factors[2]).T
-        rhs = tensor_slice.T
-        U, _, Vh = tl.truncated_svd(lhs @ rhs, n_eigenvecs=n_eig)
-
-        out.append((U @ Vh).T)
-
-    return out
+from tensorly.decomposition._parafac2 import _project_tensor_slices, _compute_projections
 
 
 def _cmf_reconstruction_error(matrices, decomposition, norm_X_sq):
@@ -51,9 +39,9 @@ def parafac2_nd(
     # Initialization
     unfolded = tl.unfold(X, 2)
     assert tl.shape(unfolded)[0] > rank
-    C = torch.svd_lowrank(unfolded, rank)[0]
+    C = randomized_svd(unfolded, rank)[0]
     factors = [tl.ones((X.shape[0], rank)).cuda(), tl.eye(rank).cuda(), C]
-    projections = _compute_projections(X, factors)
+    projections = _compute_projections(X, factors, "truncated_svd")
 
     errs = []
     norm_tensor = tl.norm(X) ** 2
@@ -64,11 +52,15 @@ def parafac2_nd(
     CP = "svd"
 
     tq = tqdm(range(n_iter_max), disable=(not verbose))
-    for _ in tq:
-        projections = _compute_projections(X, factors)
-        projections = tl.stack(projections, axis=0)
+    for iter in tq:
+        projections = _compute_projections(X, factors, "truncated_svd")
+
         # Project tensor slices
-        projected_X = tl.einsum("...ji,...jk->...ik", projections, X)
+        projected_X = _project_tensor_slices(X, projections)
+
+        # Push the genes factors to be orthogonal
+        if iter > 0:
+            CP.factors[2] = tl.qr(CP.factors[2])[0]
 
         CP = parafac(
             projected_X,
@@ -90,6 +82,7 @@ def parafac2_nd(
 
     CP = cp_normalize(CP)
     CP = cp_flip_sign(CP, mode=1)
+    projections = tl.stack(projections, axis=0)
 
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")

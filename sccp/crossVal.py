@@ -14,7 +14,25 @@ def parafac2_to_tensor(parafac2_tensor):
     return tensor
 
 
+def shuffle_X(X):
+    X = np.copy(X)
+
+    A_idx = np.random.permutation(np.arange(X.shape[0]))
+    X = X[A_idx, :, :]
+
+    C_idx = np.random.permutation(np.arange(X.shape[2]))
+    X = X[:, :, C_idx]
+
+    for i in range(X.shape[0]):
+        B_idx = np.random.permutation(np.arange(X.shape[1]))
+        X[i, :, :] = X[i, B_idx, :]
+
+    return X
+
+
 def crossvalidate(X, rank, trainPerc=0.75, verbose=False):
+    X = shuffle_X(X)
+
     X_B_idx = int(X.shape[1] * trainPerc)
     B_train = X[:, :X_B_idx, :]
 
@@ -36,7 +54,7 @@ def crossvalidate(X, rank, trainPerc=0.75, verbose=False):
     X_reconst = np.stack(X_reconst, axis=0)
     X_err = X_reconst - X
 
-    recon_error = np.linalg.norm(X_err[:, X_B_idx:, X_C_idx:])
-    total_var = np.linalg.norm(X[:, X_B_idx:, X_C_idx:])
+    recon_error = np.linalg.norm(X_err[:, X_B_idx:, X_C_idx:]) ** 2
+    total_var = np.linalg.norm(X[:, X_B_idx:, X_C_idx:]) ** 2
 
     return 1.0 - recon_error / total_var
