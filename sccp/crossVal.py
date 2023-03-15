@@ -75,5 +75,5 @@ def plotCrossVal(tensor, rank,  ax1, trainPerc=0.75):
         ylabel="CV Accuracy",
         xlabel="Number of Components",
         xticks=np.arange(0, rank + 1),
-        ylim=(-0.05, 1.05),
+        ylim=(-0.05, np.max(cv_error)+0.05),
     )

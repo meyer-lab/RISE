@@ -19,10 +19,11 @@ def plotR2X(tensor, rank, ax1):
     # Collect the PCA results
     pc = PCA(n_components=rank)
     pc.fit(tl.unfold(tensor, tensor.ndim - 2))
+    pca_error = np.cumsum(pc.explained_variance_ratio_)
 
     ax1.scatter(
         rank_vec,
-        np.cumsum(pc.explained_variance_ratio_),
+        pca_error,
         label="PCA",
         marker="o",
         s=20.0,
@@ -32,6 +33,6 @@ def plotR2X(tensor, rank, ax1):
         ylabel="Variance Explained",
         xlabel="Number of Components",
         xticks=np.arange(0, rank + 1),
-        ylim=(-0.05, 1.05),
+        ylim=(-0.05, np.max(np.append(pf2_error, pca_error) + 0.05))
     )
     ax1.legend()

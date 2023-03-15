@@ -19,7 +19,7 @@ from ..crossVal import plotCrossVal
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((18, 25), (4, 4))
+    ax, f = getSetup((18, 25), (2, 4))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -50,19 +50,20 @@ def makeFigure():
 
     # Remove empty slots
     nonzero_index = np.any(flattened_projs["projections"].to_numpy() != 0, axis=0)
-    flattened_projs = flattened_projs.isel(AllCells=nonzero_index)
-
-    plotSS(flattened_projs, ax[4])
+    flattened_projs = flattened_projs.isel(AllCells=nonzero_index) 
 
     idxx = np.random.choice(
         len(flattened_projs.coords["AllCells"]), size=200, replace=False
     )
-    plotProj(flattened_projs.isel(AllCells=idxx), ax[5:7])
-
-    plotFactors(factors, data["data"], ax, reorder=(0, 2), trim=(2,))
-
-    plotR2X(data["data"].to_numpy(), 8, ax[11])
     
-    plotCrossVal(data["data"].to_numpy(), 13, ax[12], trainPerc=0.75)
+    plotFactors(factors, data["data"], ax[0:2], reorder=(0, 2), trim=(2,))
+    
+    plotSS(flattened_projs, ax[2])
+    
+    plotProj(flattened_projs.isel(AllCells=idxx), ax[3:5])
+
+    plotR2X(data["data"].to_numpy(), 13, ax[5])
+    
+    plotCrossVal(data["data"].to_numpy(), 13, ax[6], trainPerc=0.75)
 
     return f
