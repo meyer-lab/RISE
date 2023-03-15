@@ -216,10 +216,14 @@ def plotProj(projs, axs):
     celltypesName = np.unique(celltypeDF["Cell Type"])
 
     idxx = np.argsort(celltypes)
-
+    gini_index = giniIndex(pjArr)
+    
+    pjArr = pjArr[idxx, :]
+    xticks = projs["projections"].coords["Cmp"].values
+    
     sns.heatmap(
-        data=np.flip(pjArr[idxx, :],axis=0),
-        xticklabels=projs["projections"].coords["Cmp"].values,
+        data=np.flip(pjArr[:, gini_index],axis=0),
+        xticklabels=xticks[gini_index],
         yticklabels=False,
         center=0,
         ax=axs[0],
@@ -238,3 +242,19 @@ def plotProj(projs, axs):
     cbar = axs[1].collections[0].colorbar
     cbar.set_ticks(colorbar_numbers)
     cbar.set_ticklabels(celltypesName)
+    
+    
+def giniIndex(proj_data):
+    """Calculates the Gini Coeff for each component and saves index rearrangment"""
+    gini = np.empty(proj_data.shape[1])
+    for i in range(proj_data.shape[1]):
+        projComp = np.sort(proj_data[:, i])
+        if np.amin(projComp) < 0:
+            projComp -= np.amin(projComp)
+            
+        index = np.arange(1, projComp.shape[0]+1)
+        gini[i] = (np.sum((2 * index - projComp.shape[0]  - 1) * projComp)) / (projComp.shape[0] * np.sum(projComp))
+   
+    giniIndex = np.argsort(gini)
+    
+    return giniIndex
