@@ -126,7 +126,7 @@ def plotFactorsSynthetic(factors, data_xarray, ax):
             iter += 1
 
 
-def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
+def plotFactors(factors, data_xarray, axs, reorder=tuple(), trim=tuple()):
     """Plots parafac2 factors for synthetic data"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -152,13 +152,13 @@ def plotFactors(factors, data_xarray, ax, reorder=tuple(), trim=tuple()):
                 data=X,
                 xticklabels=xticks,
                 yticklabels=yt,
-                ax=ax[iter],
+                ax=axs[iter],
                 center=0,
                 cmap=cmap,
             )
 
-            ax[iter].set_title("Factors")
-            ax[iter].tick_params(axis="y", rotation=0)
+            axs[iter].set_title("Factors")
+            axs[iter].tick_params(axis="y", rotation=0)
             iter += 1
 
             if i == 2 and len(yt) > 50:
@@ -202,7 +202,6 @@ def plotSS(projs: xa.Dataset, ax: matplotlib.axes._axes.Axes):
         df = pd.concat([df, ddf])
 
     sns.barplot(data=df, x="Cell Type", y="Silhoutte Score", hue="Cmp.", ax=ax)
-    ax.set_title("All Condition Projections")
     ax.tick_params(axis="x", rotation=45)
 
 

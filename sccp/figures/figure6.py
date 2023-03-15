@@ -35,7 +35,7 @@ def makeFigure():
         verbose=True,
     )
 
-    plotFactors(factors, X, ax, reorder=(0, 2), trim=(2,))
+    plotFactors(factors, X, ax[0:2], reorder=(0, 2), trim=(2,))
 
     sns.heatmap(
         data=reorder_table(projs[0, :, :])[0],

@@ -6,7 +6,7 @@ import xarray as xa
 from .common import (
     subplotLabel,
     getSetup,
-    plotFactors,
+    plotFactorsSynthetic,
     plotProj,
     plotSS,
 )
@@ -33,7 +33,7 @@ def makeFigure():
         verbose=True,
     )
 
-    plotFactors(factors, blobInfo["data"], ax)
+    plotFactorsSynthetic(factors, blobInfo["data"], ax[0:2])
 
     projs = xa.DataArray(
         projs,
@@ -52,19 +52,32 @@ def makeFigure():
     # Remove empty slots
     nonzero_index = np.any(flattened_projs["projections"].to_numpy() != 0, axis=0)
     flattened_projs = flattened_projs.isel(AllCells=nonzero_index)
+    
+    # Projections for one condition
+    projCond = flattened_projs.sel(Time=6)
+    idxxCond = np.random.choice(
+        len(projCond.coords["Cell"]), size=100, replace=False)
+    
+    plotProj(projCond.isel(Cell=idxxCond), ax[2:4])
 
-    plotSS(flattened_projs, ax[3])
-
+    # Projections across all conditinos
     idxx = np.random.choice(
-        len(flattened_projs.coords["AllCells"]), size=200, replace=False
-    )
+        len(flattened_projs.coords["AllCells"]), size=200, replace=False)
+     
     plotProj(flattened_projs.isel(AllCells=idxx), ax[4:6])
+    plotSS(flattened_projs, ax[6])
 
     plotR2X(blobInfo["data"].to_numpy(), 3, ax[7])
     plotCrossVal(blobInfo["data"].to_numpy(), 3,  ax[8], trainPerc=0.75)
+    
+    renamePlotSynthetic(ax)
 
     return f
 
+def renamePlotSynthetic(ax):
+    ax[2].set_title("Projections: Time=6")
+    ax[4].set_title("Projections: All Conditions")
+    ax[6].set_title("All Conditions")
 
 palette = {
     "Ground": "khaki",
