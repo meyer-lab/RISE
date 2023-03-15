@@ -5,12 +5,13 @@ import numpy as np
 from tensorly.decomposition import parafac2
 from tensorly.random import random_parafac2
 from tensorly.metrics import correlation_index
-from ..parafac2 import parafac2_nd
+from ..parafac2 import parafac2_nd, _cmf_reconstruction_error
 from ..crossVal import crossvalidate
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..crossVal import crossvalidate
 from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
 import tensorly as tl
+
 
 def test_parafac():
     """Test for equivalence to TensorLy's PARAFAC2."""
@@ -37,27 +38,18 @@ def test_pf2_speed():
     crossvalidate(X, rank=3)
 
     _, _, _, _ = parafac2_nd(X, rank=4, verbose=True)
-    
 
-def test_pf2_speed():
-    """Compare run time for different SVD initialization"""
-    drugXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
-    X = drugXA["data"].to_numpy()
-
-    crossvalidate(X, rank=3)
-
-    _, _, _, _ = parafac2_nd(X, rank=4, verbose=True) 
 
 def test_pf2_r2x():
     """Compare R2X values to tensorly implementation"""
-    X = random_parafac2([(10, 30)] * 5, rank=3, full=True, random_state=1)
-    X = np.stack(X, axis=0)
-    
+    w, f, p = random_parafac2(
+        [(10, 20)] * 5, rank=3, random_state=1, normalise_factors=False
+    )
+    X = random_parafac2([(10, 20)] * 5, rank=3, full=True, random_state=2)
+
     norm_tensor = tl.norm(X) ** 2
 
-    weights, factors, projs, r2x = parafac2_nd(X, rank=3)
-    
-    err = _parafac2_reconstruction_error(X, (weights, factors, projs)) ** 2
-    err = 1 - tl.to_numpy((err / norm_tensor))
-    
-    np.testing.assert_allclose(r2x, err, rtol=1e-3)
+    errCMF = _cmf_reconstruction_error(X, (f, p), norm_tensor)
+    err = _parafac2_reconstruction_error(X, (w, f, p)) ** 2
+
+    np.testing.assert_almost_equal(err, errCMF)
