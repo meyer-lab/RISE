@@ -183,8 +183,6 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
     if saveXA is True:
         if offset == 1.0:
             df = pd.read_csv("/opt/andrew/scRNA_drugDF_NoOffset.csv")
-            # df = df.iloc[:100, :]
-            print(df)
             df = df.drop(columns=["Unnamed: 0"], axis=1)
         else:
             df = gene_import(offset=offset)
@@ -201,9 +199,6 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
         XA = XA.drop_vars(["Cell Type"])
         XA = XA.to_array(dim="Gene")
 
-        ### I *believe* that padding with zeros does not affect PARAFAC2 results.
-        ### We should check this though.
-        XA.values = np.nan_to_num(XA.values)
         XA = XA.transpose()
         celltypeXA = celltypeXA.transpose()
 
@@ -216,7 +211,11 @@ def ThompsonXA_SCGenes(saveXA=False, offset=1.0):
             celltypeXA = xa.open_dataarray("/opt/andrew/scRNA_celltypeXA_NoOffset.nc")
         else:
             XA = xa.open_dataarray("/opt/andrew/scRNA_drugXA.nc")
-
+    
+    ### I *believe* that padding with zeros does not affect PARAFAC2 results.
+    ### We should check this though.
+    XA.values -= np.nanmean(XA.values, axis=(0,1), keepdims=True)       
+    XA.values = np.nan_to_num(XA.values)       
     XA.name = "data"
     celltypeXA.name = "Cell Type"
     return xa.merge([XA, celltypeXA], compat="no_conflicts")

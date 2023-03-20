@@ -196,7 +196,7 @@ def plotSS(projs: xa.Dataset, ax: matplotlib.axes._axes.Axes):
             {
                 "Silhoutte Score": ss_scores,
                 "Cell Type": le.classes_,
-                "Cmp.": [f"Cmp. {k}"] * len(le.classes_),
+                "Cmp.": [f"Cmp. {k+1}"] * len(le.classes_),
             }
         )
         df = pd.concat([df, ddf])
