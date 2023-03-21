@@ -31,7 +31,6 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         data["data"].to_numpy(),
         rank=13,
-        verbose=True,
     )
 
     projs = xa.DataArray(

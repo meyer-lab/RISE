@@ -18,7 +18,7 @@ def plotR2X(tensor, rank, ax1):
 
     # Collect the PCA results
     pc = PCA(n_components=rank)
-    pc.fit(tl.unfold(tensor, tensor.ndim - 2))
+    pc.fit(tl.unfold(tensor, tensor.ndim - 1))
     pca_error = np.cumsum(pc.explained_variance_ratio_)
 
     ax1.scatter(
