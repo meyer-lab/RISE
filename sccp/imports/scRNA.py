@@ -6,7 +6,6 @@ import xarray as xa
 from scipy.io import mmread
 from scipy.stats import linregress
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn import preprocessing
 import anndata
@@ -265,7 +264,7 @@ def drug_SVM(save_data, genes):
 
     le = preprocessing.LabelEncoder()
     le.fit(trainingDF["Cell Type"].values)
-    svm = make_pipeline(StandardScaler(), SVC(gamma="auto"))
+    svm = make_pipeline(preprocessing.StandardScaler(), SVC(gamma="auto"))
     svm.fit(
         trainingDF.drop("Cell Type", axis=1),
         le.transform(trainingDF["Cell Type"].values),
