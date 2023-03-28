@@ -58,54 +58,25 @@ def import_thompson_drug():
     metafile : str Path to a metadata file. Must contains `cell_barcodes` and `sample_id` columns
     genes : str Path to a .tsv 10X gene file"""
 
-    metafile = pd.read_csv(
-        "sccp/data/meta.csv"
-    )  # Cell barcodes, sample id of treatment and sample number (33482,3)
-    drugScreen = mmread(
-        "/opt/andrew/drugscreen.mtx"
-    ).toarray()  # Sparse matrix of each cell/genes (32738,33482)-(Genes,Cell)
+    # Cell barcodes, sample id of treatment and sample number (33482, 3)
+    metafile = pd.read_csv("sccp/data/meta.csv")
+    # Cell barcodes (33482)
+    barcodes = pd.read_csv("sccp/data/barcodes.tsv", sep="\t", header=None, names=("cell_barcode", )).reset_index()
+
+    genes = pd.read_csv("sccp/data/features.tsv", sep="\t", names=("ENSG", "Name", "Null"))  # Gene Names (32738)
+
+    metafile = pd.merge(metafile, barcodes, on="cell_barcode", how='left', validate="one_to_one")
+
+    # Sparse matrix of each cell/genes (32738,33482)-(Genes,Cell)
+    drugScreen = mmread("/opt/andrew/drugscreen.mtx").toarray()  
     drugScreen = drugScreen.astype(np.float64)
-    barcodes = np.array(
-        [row[0] for row in csv.reader(open("sccp/data/barcodes.tsv"), delimiter="\t")]
-    )  # Cell barcodes(33482)
-    genes = np.array(
-        [
-            row[1].upper()
-            for row in csv.reader(open("sccp/data/features.tsv"), delimiter="\t")
-        ]
-    )  # Gene Names (32738)
 
-    bc_idx = {}
-    for i, bc in enumerate(barcodes):  # Attaching each barcode with an index
-        bc_idx[bc] = i
+    df = pd.DataFrame(drugScreen.T, index=np.arange(drugScreen.shape[1]), columns=genes["Name"]).reset_index()
 
-    namingList = np.append(genes, ["Drug"])  # Forming column name list
-    totalGenes = pd.DataFrame()
-    drugNames = []
-    for i, cellID in enumerate(
-        metafile["sample_id"].dropna().unique()
-    ):  # Enumerating each experiment/drug
-        sample_bcs = metafile[
-            metafile.sample_id == cellID
-        ].cell_barcode.values  # Obtaining cell bar code values for a specific experiment
-        idx = [
-            bc_idx[bc] for bc in sample_bcs
-        ]  # Ensuring barcodes match metafile for an expriment
-        geneExpression = drugScreen[
-            :, idx
-        ].T  # Obtaining all cells associated with a specific experiment (Cells, Gene)
-        cellIdx = np.repeat(cellID, len(sample_bcs))  # Connecting drug name with cell
-        drugNames = np.append(drugNames, cellIdx)
-        totalGenes = pd.concat(
-            [totalGenes, pd.DataFrame(data=geneExpression)]
-        )  # Setting in a DF
+    df_full = pd.merge(df, metafile, on="index", how='left', validate="one_to_one")
+    df_full = df_full.rename(columns={"sample_id": "Drug"})
 
-    totalGenes.columns = genes  # Attaching gene name to each column
-    totalGenes["Drug"] = drugNames  # Attaching drug name to each cell
-    totalGenes = totalGenes.reset_index(drop=True)
-    totalGenes = totalGenes.loc[:, ~totalGenes.columns.duplicated()].copy()
-
-    return totalGenes, genes
+    return df_full.drop(columns=["cell_barcode", "sample_number", "index"])
 
 
 def mu_sigma_normalize(geneDF, scalingfactor=1000):
@@ -168,7 +139,7 @@ def gene_filter(geneDF, mean, std, offset_value=1.0):
 
 def gene_import(offset=1.0):
     """Imports gene data from PopAlign and perfroms gene filtering process"""
-    genesDF, _ = import_thompson_drug()
+    genesDF = import_thompson_drug()
     filteredGeneDF, logmean, logstd = mu_sigma_normalize(genesDF, scalingfactor=1000)
     if offset != 1.0:
         filteredGeneDF, _ = gene_filter(
