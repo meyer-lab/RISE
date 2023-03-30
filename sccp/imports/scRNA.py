@@ -79,47 +79,23 @@ def import_thompson_drug():
     return df_full.drop(columns=["cell_barcode", "sample_number", "index"])
 
 
-def mu_sigma_normalize(geneDF, scalingfactor=1000):
-    """Calculates the mu and sigma for every gene and returns means, sigmas, and dataframe filtered for genes expressed in > 0.1% of cells"""
-    drugNames = geneDF["Drug"].values
-    filtDF = geneDF.drop("Drug", axis=1)
+def mu_sigma_normalize(df, scalingfactor=1000):
+    """Calculates the mu and sigma for every gene and returns
+    means, sigmas, and dataframe filtered for genes expressed
+    in > 0.1% of cells."""
+    X = df.drop("Drug", axis=1).to_numpy()
+    assert np.all(np.isfinite(X))
 
-    assert np.isnan(filtDF.to_numpy()).all() == False
-    assert np.isfinite(filtDF.to_numpy()).all() == True
+    keepGenes = np.mean(X > 0, axis=0) > 0.001
+    normG = X / np.sum(X, axis=0, keepdims=True)
 
-    inplaceDF = filtDF.where(filtDF <= 0, 1, inplace=False)
-    filteredGenes = filtDF[filtDF.columns[inplaceDF.mean(axis=0) > 0.001]]
-    sumGenes = filteredGenes.sum(axis=0)
-
-    assert np.all(np.isfinite(filteredGenes.to_numpy()))
-    assert np.all(np.isfinite(sumGenes))
-
-    indices_nonzero = []
-    for i in range(len(sumGenes.values)):
-        if sumGenes.values[i] != 0:
-            indices_nonzero = np.append(indices_nonzero, int(i))
-
-    nonZeroGenes = filteredGenes.iloc[:, indices_nonzero]
-    genes = nonZeroGenes.columns.values
-
-    sumGenes = sumGenes.iloc[indices_nonzero].to_numpy()
-    assert sumGenes.all() != 0
-
-    normG = np.divide(nonZeroGenes.to_numpy(), sumGenes)
-
-    assert np.isnan(normG).all() == False
-    assert np.isfinite(normG).all() == True
-
-    logG = np.log10((scalingfactor * (normG)) + 1)
-
+    logG = np.log10((scalingfactor * normG) + 1)
     means = np.mean(logG, axis=0)
-    std = np.std(logG, axis=0)
+    cv = np.std(logG, axis=0) / means
 
-    cv = np.divide(std, means, out=np.zeros_like(std), where=means != 0)
-
-    normDF = pd.DataFrame(data=logG, columns=genes)  # Setting in a DF
-    normDF["Drug"] = drugNames  # Attaching drug name to each cell
-    normDF = normDF.reset_index(drop=True)
+    normDF = logG.iloc[:, np.append(keepGenes, True)]
+    means = means[keepGenes]
+    cv = cv[keepGenes]
 
     return normDF, np.log10(means + 1e-10), np.log10(cv + 1e-10)
 
