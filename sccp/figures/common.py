@@ -2,7 +2,6 @@
 This file contains functions that are used in multiple figures.
 """
 from string import ascii_lowercase
-import xarray as xa
 import sys
 import time
 import seaborn as sns
@@ -12,7 +11,6 @@ from sklearn import preprocessing
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
-from sklearn.metrics import silhouette_samples
 
 matplotlib.use("AGG")
 
@@ -177,32 +175,6 @@ def reorder_table(projs):
     Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
     index = sch.leaves_list(Z)
     return projs[index, :], index
-
-
-def plotSS(projs: xa.Dataset, ax: matplotlib.axes._axes.Axes):
-    proj_data = projs["projections"].to_numpy()
-    assert proj_data.ndim == 2
-    celltypeDF = projs["Cell Type"].to_dataframe()
-
-    le = preprocessing.LabelEncoder()
-    celltypes = le.fit_transform(celltypeDF["Cell Type"])
-
-    df = pd.DataFrame([])
-    for k in range(proj_data.shape[0]):
-        ss = silhouette_samples(proj_data[k, :].reshape(-1, 1), celltypes)
-        ss_scores = [np.mean(ss[celltypes == l]) for l in range(len(le.classes_))]
-
-        ddf = pd.DataFrame(
-            {
-                "Silhoutte Score": ss_scores,
-                "Cell Type": le.classes_,
-                "Cmp.": [f"Cmp. {k+1}"] * len(le.classes_),
-            }
-        )
-        df = pd.concat([df, ddf])
-
-    sns.barplot(data=df, x="Cell Type", y="Silhoutte Score", hue="Cmp.", ax=ax)
-    ax.tick_params(axis="x", rotation=45)
 
 
 def plotProj(projs, axs):

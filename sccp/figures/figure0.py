@@ -8,7 +8,6 @@ from .common import (
     getSetup,
     plotFactorsSynthetic,
     plotProj,
-    plotSS,
 )
 from ..synthetic import synthXA, plot_synth_pic
 from ..parafac2 import parafac2_nd
@@ -65,7 +64,6 @@ def makeFigure():
         len(flattened_projs.coords["AllCells"]), size=200, replace=False)
      
     plotProj(flattened_projs.isel(AllCells=idxx), ax[4:6])
-    plotSS(flattened_projs, ax[6])
 
     plotR2X(blobInfo["data"].to_numpy(), 3, ax[7])
     plotCrossVal(blobInfo["data"].to_numpy(), 3,  ax[8], trainPerc=0.75)
