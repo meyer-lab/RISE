@@ -4,7 +4,7 @@ Common functions to plot and create synethetic data for Parafac2
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import xarray as xa
+from .parafac2 import Pf2X
 
 
 def synthXA(magnitude, type):
@@ -144,11 +144,13 @@ def synthXA(magnitude, type):
                         ]
                     )
 
-    blobXA, celltypeXA = make_blob_tensor(blob_DF)
-    blobXA.name = "data"
-    celltypeXA.name = "Cell Type"
+    blob_DF = blob_DF.drop("Cell Type", axis=1)
 
-    return xa.merge([blobXA, celltypeXA], compat="no_conflicts"), blob_DF
+    X_list = []
+    for _, group in blob_DF.groupby("Time"):
+        X_list.append(group.to_numpy())
+
+    return Pf2X(X_list, ts, blob_DF.columns)
 
 
 def make_blob_art(mean, cov, size, time, label):
@@ -204,16 +206,3 @@ def plot_synth_pic(blob_DF, t, palette, type, ax):
         ylim=ylim,
         title="Time: " + str(t) + " - Synthetic Scene",
     )
-
-
-def make_blob_tensor(blob_DF):
-    """Makes blob art into 3D tensor with points x coordinate x time as dimensions"""
-    times = len(blob_DF.Time.unique())
-    points = blob_DF.shape[0] / times
-    blob_DF["Cell"] = np.tile(np.arange(points, dtype=int), times)
-    blob_xa = blob_DF.set_index(["Cell", "Time"]).to_xarray()
-    celltypeXA = blob_xa["Cell Type"]
-    blob_xa = blob_xa.drop_vars(["Cell Type"])
-    blob_xa = blob_xa.to_array(dim="Dimension")
-
-    return blob_xa.transpose(), celltypeXA.transpose()

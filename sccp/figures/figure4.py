@@ -2,7 +2,6 @@
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
 import numpy as np
-import xarray as xa
 from .common import (
     subplotLabel,
     getSetup,
@@ -24,42 +23,22 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
-    data = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
+    data = ThompsonXA_SCGenes(offset=1.0)
 
-    # Performing parafac2 on single-cell Xarray
     _, factors, projs, _ = parafac2_nd(
-        data["data"].to_numpy(),
+        data,
         rank=13,
     )
 
-    projs = xa.DataArray(
-        projs,
-        dims=["Drug", "Cell", "Cmp"],
-        coords=dict(
-            Drug=data.coords["Drug"],
-            Cell=data.coords["Cell"],
-            Cmp=[f"Cmp. {i}" for i in np.arange(1, projs.shape[2] + 1)],
-        ),
-        name="projections",
-    )
-    projs = xa.merge([projs, data["Cell Type"]], compat="no_conflicts")
+    flattened_projs = np.concatenate(projs, axis=0)
+    idxx = np.random.choice(flattened_projs.shape[0], size=200, replace=False)
 
-    flattened_projs = projs.stack(AllCells=("Drug", "Cell"))
+    plotFactors(factors, data, ax[0:2], reorder=(0, 2), trim=(2,))
 
-    # Remove empty slots
-    nonzero_index = np.any(flattened_projs["projections"].to_numpy() != 0, axis=0)
-    flattened_projs = flattened_projs.isel(AllCells=nonzero_index) 
+    plotProj(flattened_projs[idxx, :], ax[3:5])
 
-    idxx = np.random.choice(
-        len(flattened_projs.coords["AllCells"]), size=200, replace=False
-    )
-    
-    plotFactors(factors, data["data"], ax[0:2], reorder=(0, 2), trim=(2,))
-    
-    plotProj(flattened_projs.isel(AllCells=idxx), ax[3:5])
+    plotR2X(data, 13, ax[5])
 
-    plotR2X(data["data"].to_numpy(), 13, ax[5])
-    
-    plotCrossVal(data["data"].to_numpy(), 13, ax[6], trainPerc=0.75)
+    plotCrossVal(data.X_list, 13, ax[6], trainPerc=0.75)
 
     return f

@@ -7,6 +7,7 @@ from .common import (
     reorder_table,
     plotFactors,
 )
+import numpy as np
 from ..imports.scRNA import import_perturb_RPE
 from ..parafac2 import parafac2_nd
 from ..decomposition import plotR2X
@@ -23,14 +24,15 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     X = import_perturb_RPE()
-    print(X.shape)
 
-    # Only have memory for some genes
-    X = X[:1200, :, :]
+    # Filter out sgRNAs with few cells
+    delidx = np.array([xx.shape[0] > 200 for xx in X.X_list], dtype=bool)
+    X.X_list = [X.X_list[ii] for ii in range(delidx.size) if delidx[ii]]
+    X.condition_labels = X.condition_labels[delidx]
 
     # Performing parafac2 on single-cell Xarray
     _, factors, projs, _ = parafac2_nd(
-        X.to_numpy(),
+        X,
         rank=24,
         verbose=True,
     )
@@ -38,12 +40,12 @@ def makeFigure():
     plotFactors(factors, X, ax[0:2], reorder=(0, 2), trim=(2,))
 
     sns.heatmap(
-        data=reorder_table(projs[0, :, :])[0],
+        data=reorder_table(projs[0])[0],
         center=0,
         ax=ax[2],
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
 
-    plotR2X(X.to_numpy(), 6, ax[2])
+    plotR2X(X, 6, ax[3])
 
     return f

@@ -8,7 +8,6 @@ from tensorly.metrics import correlation_index
 from ..parafac2 import parafac2_nd, _cmf_reconstruction_error
 from ..crossVal import crossvalidate
 from ..imports.scRNA import ThompsonXA_SCGenes
-from ..crossVal import crossvalidate
 from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
 import tensorly as tl
 
@@ -32,12 +31,11 @@ def test_parafac():
 
 def test_pf2_speed():
     """Compare run time for different SVD initialization"""
-    drugXA = ThompsonXA_SCGenes(saveXA=False, offset=1.0)
-    X = drugXA["data"].to_numpy()
+    drugXA = ThompsonXA_SCGenes(offset=1.0)
 
-    crossvalidate(X, rank=3)
+    # crossvalidate(X, rank=3)
 
-    _, _, _, _ = parafac2_nd(X, rank=4, verbose=True)
+    _, _, _, _ = parafac2_nd(drugXA, rank=4, verbose=True)
 
 
 def test_pf2_r2x():

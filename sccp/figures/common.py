@@ -7,10 +7,11 @@ import time
 import seaborn as sns
 import pandas as pd
 import matplotlib
-from sklearn import preprocessing
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
+from ..parafac2 import Pf2X
+
 
 matplotlib.use("AGG")
 
@@ -89,7 +90,7 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotFactorsSynthetic(factors, data_xarray, ax):
+def plotFactorsSynthetic(factors, data_xarray: Pf2X, ax):
     """Plots parafac2 factors for synthetic data"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -99,16 +100,16 @@ def plotFactorsSynthetic(factors, data_xarray, ax):
         if i != len(factors) - 2:
             if i == 0:
                 timeDF = pd.DataFrame(factors[i], columns=xticks)
-                timeDF["Time"] = np.arange(1, data_xarray.shape[i] + 1)
+                timeDF["Time"] = np.arange(1, factors[0].shape[0] + 1)
                 sns.lineplot(data=timeDF[xticks], ax=ax[iter])
                 ax[iter].set(
                     ylabel="Cmp. Weight",
                     xlabel="Time",
-                    xticks=np.arange(0, data_xarray.shape[i]),
+                    xticks=np.arange(0, factors[0].shape[0]),
                 )
 
             else:
-                yt = data_xarray.coords[data_xarray.dims[i]].values
+                yt = data_xarray.variable_labels
                 X = factors[i]
                 sns.heatmap(
                     data=X,
@@ -124,49 +125,52 @@ def plotFactorsSynthetic(factors, data_xarray, ax):
             iter += 1
 
 
-def plotFactors(factors, data_xarray, axs, reorder=tuple(), trim=tuple()):
+def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple()):
     """Plots parafac2 factors for synthetic data"""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     iter = 0
-    for i in range(0, len(factors)):
+    for i in (0, 2):
         # The single cell mode has a square factors matrix
-        if i != len(factors) - 2:
-            yt = data_xarray.coords[data_xarray.dims[i]].values
-            X = factors[i]
+        if i == 0:
+            yt = data.condition_labels
+        else:
+            yt = data.variable_labels
 
-            if i in trim:
-                max_weight = np.max(np.abs(X), axis=1)
-                kept_idxs = max_weight > 0.08
-                X = X[kept_idxs]
-                yt = yt[kept_idxs]
+        X = factors[i]
 
-            if i in reorder:
-                X, ind = reorder_table(X)
-                yt = yt[ind]
+        if i in trim:
+            max_weight = np.max(np.abs(X), axis=1)
+            kept_idxs = max_weight > 0.08
+            X = X[kept_idxs]
+            yt = yt[kept_idxs]
 
-            sns.heatmap(
-                data=X,
-                xticklabels=xticks,
-                yticklabels=yt,
-                ax=axs[iter],
-                center=0,
-                cmap=cmap,
-            )
+        if i in reorder:
+            X, ind = reorder_table(X)
+            yt = yt[ind]
 
-            axs[iter].set_title("Factors")
-            axs[iter].tick_params(axis="y", rotation=0)
-            iter += 1
+        sns.heatmap(
+            data=X,
+            xticklabels=xticks,
+            yticklabels=yt,
+            ax=axs[iter],
+            center=0,
+            cmap=cmap,
+        )
 
-            if i == 2 and len(yt) > 50:
-                sort_idx = np.argsort(X, axis=0)
-                for j in range(rank):
-                    sort_data = yt[sort_idx[:, j]]
-                    print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
-                    print(
-                        "Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:])
-                    )
+        axs[iter].set_title("Factors")
+        axs[iter].tick_params(axis="y", rotation=0)
+        iter += 1
+
+        if i == 2 and len(yt) > 50:
+            sort_idx = np.argsort(X, axis=0)
+            for j in range(rank):
+                sort_data = yt[sort_idx[:, j]]
+                print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
+                print(
+                    "Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:])
+                )
 
 
 def reorder_table(projs):
@@ -179,40 +183,14 @@ def reorder_table(projs):
 
 def plotProj(projs, axs):
     """Plot a projection matrix along with cell type annotations."""
-    celltypeDF = projs["Cell Type"].to_dataframe()
-    pjArr = projs["projections"].to_numpy().T
-
-    le = preprocessing.LabelEncoder()
-    celltypes = le.fit_transform(celltypeDF["Cell Type"])
-    celltypesName = np.unique(celltypeDF["Cell Type"])
-
-    idxx = np.argsort(celltypes)
-    gini_index = giniIndex(pjArr)
-    
-    pjArr = pjArr[idxx, :]
-    xticks = projs["projections"].coords["Cmp"].values
-    
     sns.heatmap(
-        data=np.flip(pjArr[:, gini_index],axis=0),
-        xticklabels=xticks[gini_index],
+        data=projs,
+        xticklabels=[f"Cmp. {i}" for i in np.arange(1, projs.shape[1] + 1)],
         yticklabels=False,
         center=0,
         ax=axs[0],
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
-
-    sns.heatmap(
-        data=np.flip(celltypes[idxx].reshape((-1, 1))),
-        xticklabels=False,
-        yticklabels=False,
-        ax=axs[1],
-        cmap=sns.color_palette("tab10", len(celltypesName)),
-    )
-
-    colorbar_numbers = np.arange(0, len(celltypesName))
-    cbar = axs[1].collections[0].colorbar
-    cbar.set_ticks(colorbar_numbers)
-    cbar.set_ticklabels(celltypesName)
     
     
 def giniIndex(proj_data):
