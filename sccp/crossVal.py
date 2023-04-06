@@ -20,8 +20,8 @@ def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float=0.75):
     pc = PCA(n_components=rank)
 
     # Shuffle so that we take a different subset each time
-    X = X[np.random.permutation(np.arange(X.shape[0])), :]
-    X = X[:, np.random.permutation(np.arange(X.shape[1]))]
+    X = X[np.random.permutation(X.shape[0]), :]
+    X = X[:, np.random.permutation(X.shape[1])]
 
     # Indices where we will split
     X_B_idx = int(X.shape[0] * trainPerc)
@@ -46,7 +46,7 @@ def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float=0.75):
 
 def crossvalidate(X, rank: int, trainPerc: float=0.75, verbose=True):
     # Shuffle, rnd.shuffle handles the cell axis
-    var_idx = np.random.permutation(np.arange(X[0].shape[1]))
+    var_idx = np.random.permutation(X[0].shape[1])
     X = [xx[:, var_idx] for xx in X]
     for xx in X:
         np.random.shuffle(xx)

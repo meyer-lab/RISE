@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "sccp"
 version = "0.1.0"
-description = ""
+description = "Single cell analysis across conditions using PARAFAC2."
 authors = ["Andrew Ramirez", "Aaron Meyer <git@asmlab.org>"]
 license = "MIT"
 
@@ -27,9 +27,6 @@ scanpy = "^1.9.3"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 mypy = "^0.950"
-
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.21.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

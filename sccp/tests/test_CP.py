@@ -31,9 +31,9 @@ def test_parafac():
 
 def test_pf2_speed():
     """Compare run time for different SVD initialization"""
-    drugXA = ThompsonXA_SCGenes(offset=1.0)
+    drugXA = ThompsonXA_SCGenes()
 
-    # crossvalidate(X, rank=3)
+    crossvalidate(drugXA.X_list, rank=3)
 
     _, _, _, _ = parafac2_nd(drugXA, rank=4, verbose=True)
 

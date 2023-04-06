@@ -193,17 +193,10 @@ def plotProj(projs, axs):
     )
     
     
-def giniIndex(proj_data):
-    """Calculates the Gini Coeff for each component and saves index rearrangment"""
-    gini = np.empty(proj_data.shape[1])
-    for i in range(proj_data.shape[1]):
-        projComp = np.sort(proj_data[:, i])
-        if np.amin(projComp) < 0:
-            projComp -= np.amin(projComp)
-            
-        index = np.arange(1, projComp.shape[0]+1)
-        gini[i] = (np.sum((2 * index - projComp.shape[0]  - 1) * projComp)) / (projComp.shape[0] * np.sum(projComp))
-   
-    giniIndex = np.argsort(gini)
-    
-    return giniIndex
+def giniIndex(X):
+    """Calculates the Gini Coeff for each component and returns the index rearrangment"""
+    X = np.abs(X)
+    gini = np.var(X, axis=0) / np.mean(X, axis=0)
+    print(gini)
+
+    return np.argsort(gini)

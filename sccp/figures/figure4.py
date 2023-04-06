@@ -7,6 +7,7 @@ from .common import (
     getSetup,
     plotFactors,
     plotProj,
+    giniIndex,
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -23,12 +24,14 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
-    data = ThompsonXA_SCGenes(offset=1.0)
+    data = ThompsonXA_SCGenes()
 
     _, factors, projs, _ = parafac2_nd(
         data,
-        rank=13,
+        rank=30,
     )
+
+    print(giniIndex(factors[0]))
 
     flattened_projs = np.concatenate(projs, axis=0)
     idxx = np.random.choice(flattened_projs.shape[0], size=200, replace=False)
@@ -37,7 +40,7 @@ def makeFigure():
 
     plotProj(flattened_projs[idxx, :], ax[3:5])
 
-    plotR2X(data, 13, ax[5])
+    plotR2X(data, 20, ax[5])
 
     plotCrossVal(data.X_list, 13, ax[6], trainPerc=0.75)
 

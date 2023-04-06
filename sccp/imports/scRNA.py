@@ -84,6 +84,9 @@ def ThompsonXA_SCGenes(offset=1.0):
         above_idx = logstd > logmean * slope + intercept + np.log10(offset)
         X = X[:, above_idx]
 
+    # Center the genes
+    X.X -= np.mean(X.X, axis=0)
+
     # Assign cells a count per-experiment so we can reindex
     data = xarrayIfy(X, X.obs_vector("Drugs"))
     return data
