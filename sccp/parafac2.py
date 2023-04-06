@@ -102,7 +102,19 @@ def parafac2_nd(
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
-    weights = tl.to_numpy(CP[0].cpu())
     factors = [tl.to_numpy(f.cpu()) for f in CP[1]]
-    projections = [tl.to_numpy(p.cpu()) for p in projections]
+    gini_idx = giniIndex(factors[0])
+    
+    weights = tl.to_numpy(CP[0].cpu()[gini_idx])
+    factors = [tl.to_numpy(f.cpu())[:, gini_idx] for f in CP[1]]
+    projections = [tl.to_numpy(p.cpu())[:, gini_idx] for p in projections]
+    
     return weights, factors, projections, R2X
+
+def giniIndex(X):
+    """Calculates the Gini Coeff for each component and returns the index rearrangment"""
+    X = np.abs(X)
+    gini = np.var(X, axis=0) / np.mean(X, axis=0)
+
+    return np.argsort(gini)
+

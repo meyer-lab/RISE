@@ -7,7 +7,6 @@ from .common import (
     getSetup,
     plotFactors,
     plotProj,
-    giniIndex,
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -30,8 +29,6 @@ def makeFigure():
         data,
         rank=30,
     )
-
-    print(giniIndex(factors[0]))
 
     flattened_projs = np.concatenate(projs, axis=0)
     idxx = np.random.choice(flattened_projs.shape[0], size=200, replace=False)

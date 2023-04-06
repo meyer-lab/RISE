@@ -190,11 +190,3 @@ def plotProj(projs, axs):
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
 
-
-def giniIndex(X):
-    """Calculates the Gini Coeff for each component and returns the index rearrangment"""
-    X = np.abs(X)
-    gini = np.var(X, axis=0) / np.mean(X, axis=0)
-    print(gini)
-
-    return np.argsort(gini)
