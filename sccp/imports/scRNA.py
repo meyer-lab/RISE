@@ -9,17 +9,11 @@ from ..parafac2 import Pf2X
 path_here = dirname(dirname(__file__))
 
 
-def xarrayIfy(annD, obsV):
-    sgUnique, sgIndex, sgCounts = np.unique(
-        obsV, return_inverse=True, return_counts=True
-    )
+def tensorFy(annD: anndata.AnnData, obsName: str) -> Pf2X:
+    obsV = annD.obs_vector(obsName)
+    sgUnique, sgIndex = np.unique(obsV, return_inverse=True)
 
-    data = list()
-
-    for sgi in range(len(sgUnique)):
-        x_temp = annD[sgIndex == sgi, :]
-        assert x_temp.shape[0] == sgCounts[sgi]
-        data.append(x_temp.X.toarray())
+    data = [annD[sgIndex == sgi, :].X.toarray() for sgi in range(len(sgUnique))]
 
     return Pf2X(data, sgUnique, annD.var_names)
 
@@ -30,11 +24,10 @@ def import_perturb_RPE():
     # Remove NaNs
     ds_disk = ds_disk[:, np.all(np.isfinite(ds_disk.X), axis=0)]
 
-    sgRNAs = ds_disk.obs_vector("sgID_AB")
-    return xarrayIfy(ds_disk, sgRNAs)
+    return tensorFy(ds_disk, "sgID_AB")
 
 
-def import_thompson_drug():
+def import_thompson_drug() -> anndata.AnnData:
     """Imports cell readings from scRNA-seq data from PBMCs from PopAlign paper."""
 
     # Cell barcodes, sample id of treatment and sample number (33482, 3)
@@ -59,10 +52,11 @@ def import_thompson_drug():
     return data
 
 
-def mu_sigma_normalize(X: anndata.AnnData, scalingfactor: float):
-    """Calculates the mu and sigma for every gene and returns
-    means, sigmas, and dataframe filtered for genes expressed
-    in > 0.1% of cells."""
+def ThompsonXA_SCGenes(offset: float = 1.0) -> anndata.AnnData:
+    """Import Thompson lab PBMC dataset."""
+    X = import_thompson_drug()
+    scalingfactor = 1000
+
     assert np.all(np.isfinite(X.X.data))
     X.X = X.X.todense()
 
@@ -74,13 +68,8 @@ def mu_sigma_normalize(X: anndata.AnnData, scalingfactor: float):
     means = np.mean(X.X, axis=0)
     cv = np.std(X.X, axis=0) / means
 
-    return X, np.log10(means + 1e-10), np.log10(cv + 1e-10)
-
-
-def ThompsonXA_SCGenes(offset=1.0):
-    """Turns filtered and normalized cells into an Xarray."""
-    genesDF = import_thompson_drug()
-    X, logmean, logstd = mu_sigma_normalize(genesDF, scalingfactor=1000)
+    logmean = np.log10(means + 1e-10)
+    logstd = np.log10(cv + 1e-10)
 
     if offset != 1.0:
         slope, intercept, _, _, _ = linregress(logmean, logstd)
@@ -92,5 +81,4 @@ def ThompsonXA_SCGenes(offset=1.0):
     X.X -= np.mean(X.X, axis=0)
 
     # Assign cells a count per-experiment so we can reindex
-    data = xarrayIfy(X, X.obs_vector("Drugs"))
-    return data
+    return tensorFy(X, "Drugs")
