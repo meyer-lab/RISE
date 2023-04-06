@@ -168,9 +168,7 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple()):
             for j in range(rank):
                 sort_data = yt[sort_idx[:, j]]
                 print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
-                print(
-                    "Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:])
-                )
+                print("Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:]))
 
 
 def reorder_table(projs):
@@ -191,8 +189,8 @@ def plotProj(projs, axs):
         ax=axs[0],
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
-    
-    
+
+
 def giniIndex(X):
     """Calculates the Gini Coeff for each component and returns the index rearrangment"""
     X = np.abs(X)

@@ -43,8 +43,8 @@ def parafac2_nd(
     X,
     rank: int,
     n_iter_max: int = 200,
-    tol: float=1e-9,
-    verbose: bool=False,
+    tol: float = 1e-9,
+    verbose: bool = False,
 ):
     r"""The same interface as regular PARAFAC2."""
     tl.set_backend("pytorch")
@@ -58,7 +58,9 @@ def parafac2_nd(
     unfolded = tl.concatenate(list(X), axis=0).T
     assert tl.shape(unfolded)[0] > rank
     C = randomized_svd(unfolded, rank)[0]
-    CP = tl.cp_tensor.CPTensor((None, [tl.ones((len(X), rank)).cuda(), tl.eye(rank).cuda(), C]))
+    CP = tl.cp_tensor.CPTensor(
+        (None, [tl.ones((len(X), rank)).cuda(), tl.eye(rank).cuda(), C])
+    )
     projections = _compute_projections(X, CP.factors, "truncated_svd")
 
     errs = []

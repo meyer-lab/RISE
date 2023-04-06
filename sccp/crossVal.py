@@ -15,7 +15,7 @@ def permute_sign_proc(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
     return procM
 
 
-def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float=0.75):
+def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75):
     X = X.copy()
     pc = PCA(n_components=rank)
 
@@ -44,7 +44,7 @@ def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float=0.75):
     return 1.0 - recon_error / total_var
 
 
-def crossvalidate(X, rank: int, trainPerc: float=0.75, verbose=True):
+def crossvalidate(X, rank: int, trainPerc: float = 0.75, verbose: bool = True):
     # Shuffle, rnd.shuffle handles the cell axis
     var_idx = np.random.permutation(X[0].shape[1])
     X = [xx[:, var_idx] for xx in X]
@@ -62,17 +62,21 @@ def crossvalidate(X, rank: int, trainPerc: float=0.75, verbose=True):
 
     # Solve procrustes to project C onto B
     proj_B_flat = np.concatenate(proj_B, axis=0)
-    proj_C_flat = np.concatenate([proj_C[ii][:bi, :] for ii, bi in enumerate(X_B_idx)], axis=0)
+    proj_C_flat = np.concatenate(
+        [proj_C[ii][:bi, :] for ii, bi in enumerate(X_B_idx)], axis=0
+    )
     procM = permute_sign_proc(proj_B_flat, proj_C_flat)
 
     # Project projections into B space
-    X_recon = parafac2_to_slices((w_B, fac_B, [cc @ procM for cc in proj_C]), validate=False)
+    X_recon = parafac2_to_slices(
+        (w_B, fac_B, [cc @ procM for cc in proj_C]), validate=False
+    )
 
     recon_error = 0.0
     total_var = 0.0
     for ii in range(len(X_recon)):
-        xr = X_recon[ii][X_B_idx[ii]:, X_C_idx:]
-        xx = X[ii][X_B_idx[ii]:, X_C_idx:]
+        xr = X_recon[ii][X_B_idx[ii] :, X_C_idx:]
+        xx = X[ii][X_B_idx[ii] :, X_C_idx:]
 
         recon_error += np.linalg.norm(xx - xr) ** 2
         total_var += np.linalg.norm(xx) ** 2
@@ -80,7 +84,7 @@ def crossvalidate(X, rank: int, trainPerc: float=0.75, verbose=True):
     return 1.0 - recon_error / total_var
 
 
-def plotCrossVal(X, rank, ax1, trainPerc=0.75):
+def plotCrossVal(X, rank: int, ax1, trainPerc: float = 0.75):
     """Creates cross validation accuracy plot for parafac2"""
     rank_vec = np.arange(1, rank + 1)
 

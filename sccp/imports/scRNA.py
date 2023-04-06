@@ -41,10 +41,14 @@ def import_thompson_drug():
     metafile = pd.read_csv("sccp/data/meta.csv")
 
     # Cell barcodes (33482)
-    barcodes = pd.read_csv("sccp/data/barcodes.tsv", sep="\t", header=None, names=("cell_barcode", ))
+    barcodes = pd.read_csv(
+        "sccp/data/barcodes.tsv", sep="\t", header=None, names=("cell_barcode",)
+    )
 
     # Left merging should put the barcodes in order
-    metafile = pd.merge(barcodes, metafile, on="cell_barcode", how='left', validate="one_to_one")
+    metafile = pd.merge(
+        barcodes, metafile, on="cell_barcode", how="left", validate="one_to_one"
+    )
 
     # h5ad is simplified version of mtx format
     # data = sc.read_10x_mtx("/opt/andrew/Thompson", var_names='gene_symbols', make_unique=True)
