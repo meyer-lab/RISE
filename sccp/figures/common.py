@@ -189,4 +189,3 @@ def plotProj(projs, axs):
         ax=axs[0],
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
-

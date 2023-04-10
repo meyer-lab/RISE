@@ -5,7 +5,6 @@ import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg.svd import randomized_svd
 from tensorly.decomposition import parafac
-from tensorly.decomposition._parafac2 import _compute_projections
 
 
 class Pf2X:
@@ -22,20 +21,26 @@ class Pf2X:
         return tl.concatenate(self.X_list, axis=0)
 
 
-def _cmf_reconstruction_error(matrices, decomposition, norm_X_sq):
-    (A, B, C), projections = decomposition
+def _cmf_reconstruction_error(matrices, factors, norm_X_sq, rng=None):
+    A, B, C = factors
 
     norm_cmf_sq = 0
     inner_product = 0
     CtC = C.T @ C
+    projections = []
 
-    for i, proj in enumerate(projections):
+    for i, mat in enumerate(matrices):
+        lhs = B @ (A[i] * C).T
+        U, _, Vh = randomized_svd(lhs @ mat.T, A.shape[1], random_state=rng)
+        proj = (U @ Vh).T
+
         B_i = (proj @ B) * A[i]
         # trace of the multiplication products
-        inner_product += tl.einsum("ji,jk,ki", B_i, matrices[i], C)
+        inner_product += tl.einsum("ji,jk,ki", B_i, mat, C)
         norm_cmf_sq += tl.sum((B_i.T @ B_i) * CtC)
+        projections.append(proj)
 
-    return norm_X_sq - 2 * inner_product + norm_cmf_sq
+    return norm_X_sq - 2 * inner_product + norm_cmf_sq, projections
 
 
 @torch.inference_mode()
@@ -45,8 +50,10 @@ def parafac2_nd(
     n_iter_max: int = 200,
     tol: float = 1e-9,
     verbose: bool = False,
+    random_state=None,
 ):
     r"""The same interface as regular PARAFAC2."""
+    rng = np.random.RandomState(random_state)
     tl.set_backend("pytorch")
     if isinstance(X, Pf2X):
         X = X.X_list
@@ -57,15 +64,14 @@ def parafac2_nd(
     # Initialization
     unfolded = tl.concatenate(list(X), axis=0).T
     assert tl.shape(unfolded)[0] > rank
-    C = randomized_svd(unfolded, rank)[0]
+    C = randomized_svd(unfolded, rank, random_state=rng)[0]
     CP = tl.cp_tensor.CPTensor(
         (None, [tl.ones((len(X), rank)).cuda(), tl.eye(rank).cuda(), C])
     )
-    projections = _compute_projections(X, CP.factors, "truncated_svd")
 
     errs = []
 
-    err = _cmf_reconstruction_error(X, (CP.factors, projections), norm_tensor)
+    err, projections = _cmf_reconstruction_error(X, CP.factors, norm_tensor, rng=rng)
     errs.append(tl.to_numpy(err.cpu()) / norm_tensor)
 
     tq = tqdm(range(n_iter_max), disable=(not verbose), delay=1, mininterval=1)
@@ -73,21 +79,19 @@ def parafac2_nd(
         # Push the genes factors to be orthogonal
         CP.factors[2] = tl.qr(CP.factors[2])[0]
 
-        projections = _compute_projections(X, CP.factors, "truncated_svd")
-
         # Project tensor slices
         projected_X = tl.stack([p.T @ t for t, p in zip(X, projections)])
 
         CP = parafac(
             projected_X,
             rank,
-            n_iter_max=5,
+            n_iter_max=4,
             init=CP,
             tol=1e-100,
             normalize_factors=False,
         )
 
-        err = _cmf_reconstruction_error(X, (CP[1], projections), norm_tensor)
+        err, projections = _cmf_reconstruction_error(X, CP[1], norm_tensor, rng=rng)
         errs.append(tl.to_numpy(err.cpu()) / norm_tensor)
 
         delta = errs[-2] - errs[-1]
@@ -104,12 +108,13 @@ def parafac2_nd(
 
     factors = [tl.to_numpy(f.cpu()) for f in CP[1]]
     gini_idx = giniIndex(factors[0])
-    
+
     weights = tl.to_numpy(CP[0].cpu()[gini_idx])
     factors = [tl.to_numpy(f.cpu())[:, gini_idx] for f in CP[1]]
     projections = [tl.to_numpy(p.cpu())[:, gini_idx] for p in projections]
-    
+
     return weights, factors, projections, R2X
+
 
 def giniIndex(X):
     """Calculates the Gini Coeff for each component and returns the index rearrangment"""
@@ -117,4 +122,3 @@ def giniIndex(X):
     gini = np.var(X, axis=0) / np.mean(X, axis=0)
 
     return np.argsort(gini)
-
