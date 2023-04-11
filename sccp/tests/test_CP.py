@@ -16,19 +16,21 @@ X = random_parafac2(pf2shape, rank=3, full=True, random_state=2)
 
 def test_parafac2():
     """Test for equivalence to TensorLy's PARAFAC2."""
-    _, factors, pTensorly = parafac2(X, rank=3, normalize_factors=True, init="svd")
+    _, factors, pTensorly = parafac2(X, rank=3, normalize_factors=True, init="svd", n_iter_max=100)
     w1, f1, p1, _ = parafac2_nd(X, rank=3, random_state=1)
 
     # More similar is closer to 0 with corrIndex
-    assert correlation_index(factors, f1, method="min_score") < 0.1
+    assert correlation_index(factors, f1, method="min_score") < 0.01
 
     # Compare projection matrices, too
-    assert correlation_index(pTensorly, p1, method="min_score") < 0.1
+    assert correlation_index(pTensorly, p1, method="min_score") < 0.01
 
     # Test reproducibility
-    w2, f2, _, _ = parafac2_nd(X, rank=3, random_state=1)
+    w2, f2, p2, _ = parafac2_nd(X, rank=3, random_state=1)
     np.testing.assert_almost_equal(w1, w2)
-    np.testing.assert_almost_equal(f1[0], f2[0])
+    for ii in range(3):
+        np.testing.assert_almost_equal(f1[ii], f2[ii])
+        np.testing.assert_almost_equal(p1[ii], p2[ii])
 
 
 def test_pf2_r2x():
@@ -40,4 +42,4 @@ def test_pf2_r2x():
     errCMF, p = _cmf_reconstruction_error(X, f, norm_tensor)
     err = _parafac2_reconstruction_error(X, (w, f, p)) ** 2
 
-    np.testing.assert_almost_equal(err, errCMF)
+    np.testing.assert_almost_equal(err, errCMF, decimal=12)
