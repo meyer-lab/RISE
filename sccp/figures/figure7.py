@@ -66,7 +66,7 @@ def makeFigure():
 
     # Mono1, Mono2, NK, CD4, B
     genes = ["CXCL8", "IGFBP5", "EGR1", "GADD45A", "SNAPC1"]
-    plotGeneDimReduc(genes, ["UMAP1", "UMAP2"], pf2Points, dataDF, ax[0:5])
-    plotGeneDimReduc(genes, ["PCA1", "PCA2"], pcaPoints, dataDF, ax[5:10])
+    plotGeneDimReduc(genes, "Pf2", pf2Points, dataDF, f, ax[0:5])
+    plotGeneDimReduc(genes, "PCA", pcaPoints, dataDF, f, ax[5:10])
 
     return f

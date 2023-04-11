@@ -167,8 +167,8 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple()):
             sort_idx = np.argsort(X, axis=0)
             for j in range(rank):
                 sort_data = yt[sort_idx[:, j]]
-                #print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
-                #print("Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:]))
+                # print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
+                # print("Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:]))
 
 
 def reorder_table(projs):
@@ -190,6 +190,7 @@ def plotProj(projs, axs):
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
 
+
 def flattenData(data, factors, projs):
     cellCount = []
     for i in range(factors[0].shape[0]):
@@ -197,42 +198,55 @@ def flattenData(data, factors, projs):
 
     flatProjs = np.empty([int(np.sum(cellCount)), projs[0].shape[1]])
     flatData = np.empty([int(np.sum(cellCount)), len(data.variable_labels)])
-    cellStart = [0]; drugNames = []
+    cellStart = [0]
+    drugNames = []
 
     for i in range(factors[0].shape[0]):
         cellStart = np.append(cellStart, cellStart[i] + cellCount[i])
-        flatProjs[int(cellStart[i]): int(cellStart[i+1])] = projs[i]
-        flatData[int(cellStart[i]): int(cellStart[i+1])] = data.X_list[i]
-        drugNames = np.append(drugNames, np.repeat(data.condition_labels[i], cellCount[i]))
+        flatProjs[int(cellStart[i]) : int(cellStart[i + 1])] = projs[i]
+        flatData[int(cellStart[i]) : int(cellStart[i + 1])] = data.X_list[i]
+        drugNames = np.append(
+            drugNames, np.repeat(data.condition_labels[i], cellCount[i])
+        )
 
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
-    projDF = pd.DataFrame(data=flatProjs, columns = cmpNames)
-    dataDF = pd.DataFrame(data=flatData, columns = data.variable_labels)
+    projDF = pd.DataFrame(data=flatProjs, columns=cmpNames)
+    dataDF = pd.DataFrame(data=flatData, columns=data.variable_labels)
     projDF["Drug"] = drugNames
     dataDF["Drug"] = drugNames
 
     return dataDF, projDF
 
-def plotGeneDimReduc(genes, decomp, points, dataDF, axs):
+
+def plotGeneDimReduc(genes, decomp, points, dataDF, f, axs):
     for i, genez in enumerate(genes):
         geneList = dataDF[genez].to_numpy()
-        DF = pd.DataFrame({decomp[0]: points[::20, 0],
-                decomp[1]: points[::20, 1],
-                genez: geneList[::20],
-            })
-        print(DF)
-        print(DF.shape)
-        sns.scatterplot(data=DF, x=decomp[0], y=decomp[1], hue=genez, s=5, ax=axs[i])
+        tl = axs[i].scatter(
+            points[::20, 0], points[::20, 1], c=geneList[::20], cmap="viridis", s=0.2
+        )
+        f.colorbar(tl, ax=axs[i])
+        axs[i].set_xlabel("UMAP1")
+        axs[i].set_ylabel("UMAP2")
+        axs[i].set_title(genez + "-" + decomp + "-Based Decomposition")
 
-    return 
+    return
+
 
 def plotDrugDimReduc(drugs, decomp, totaldrugs, points, axs):
     for i, drugz in enumerate(drugs):
-        drugList = np.asarray(totaldrugs == drugz).astype(int)
-        DF = pd.DataFrame({decomp[0]: points[::20, 0],
-                decomp[1]: points[::20, 1],
-                drugz: drugList[::20],
-            })
-        sns.scatterplot(data=DF, x=decomp[0], y=decomp[1], hue=drugz, s=5,  palette="muted", ax=axs[i])
+        drugList = np.where(np.asarray(totaldrugs == drugz), drugz, "Other Drugs")
+        DF = pd.DataFrame(
+            {
+                "UMAP1": points[::20, 0],
+                "UMAP2": points[::20, 1],
+                "Drug": drugList[::20],
+            }
+        )
+        sns.scatterplot(
+            data=DF, x="UMAP1", y="UMAP2", hue="Drug", s=2, palette="muted", ax=axs[i]
+        )
+        handles, labels = axs[i].get_legend_handles_labels()
+        axs[i].legend(handles=handles, labels=labels)
+        axs[i].set_title(decomp + "-Based Decomposition")
 
     return
