@@ -192,6 +192,7 @@ def plotProj(projs, axs):
 
 
 def flattenData(data, factors, projs):
+    """Flattens tensor into dataframe"""
     cellCount = []
     for i in range(factors[0].shape[0]):
         cellCount = np.append(cellCount, projs[i].shape[0])
@@ -217,36 +218,63 @@ def flattenData(data, factors, projs):
 
     return dataDF, projDF
 
-
 def plotGeneDimReduc(genes, decomp, points, dataDF, f, axs):
+    """Scatterplot of UMAP visualization weighted by gene"""
+    umap1 = points[::20, 0]
+    umap2 = points[::20, 1]
     for i, genez in enumerate(genes):
         geneList = dataDF[genez].to_numpy()
+        cmap=plt.cm.get_cmap('plasma')
         tl = axs[i].scatter(
-            points[::20, 0], points[::20, 1], c=geneList[::20], cmap="viridis", s=0.2
+            umap1, umap2, c=geneList[::20], cmap=cmap.reversed(), s=1,
         )
         f.colorbar(tl, ax=axs[i])
-        axs[i].set_xlabel("UMAP1")
-        axs[i].set_ylabel("UMAP2")
-        axs[i].set_title(genez + "-" + decomp + "-Based Decomposition")
+        axs[i].set(
+            title=genez + "-" + decomp + "-Based Decomposition",
+            ylabel="UMAP2",
+            xlabel="UMAP1",
+            xticks=np.linspace(np.min(umap1), 
+                         np.max(umap1),
+                         num=5),
+            yticks=np.linspace(np.min(umap2), 
+                         np.max(umap2),
+                         num=5)
+            )
+        axs[i].axes.xaxis.set_ticklabels([])
+        axs[i].axes.yaxis.set_ticklabels([])
 
     return
 
-
 def plotDrugDimReduc(drugs, decomp, totaldrugs, points, axs):
+    """Scatterplot of UMAP visualization weighted by condition"""
+    umap1 = points[::20, 0]
+    umap2 = points[::20, 1]
     for i, drugz in enumerate(drugs):
         drugList = np.where(np.asarray(totaldrugs == drugz), drugz, "Other Drugs")
         DF = pd.DataFrame(
             {
-                "UMAP1": points[::20, 0],
-                "UMAP2": points[::20, 1],
+                "UMAP1": umap1,
+                "UMAP2": umap2,
                 "Drug": drugList[::20],
             }
         )
         sns.scatterplot(
-            data=DF, x="UMAP1", y="UMAP2", hue="Drug", s=2, palette="muted", ax=axs[i]
+            data=DF, x="UMAP1", y="UMAP2", hue="Drug", s=3, palette="muted", ax=axs[i]
         )
         handles, labels = axs[i].get_legend_handles_labels()
         axs[i].legend(handles=handles, labels=labels)
-        axs[i].set_title(decomp + "-Based Decomposition")
+        axs[i].set(
+            title=decomp + "-Based Decomposition",
+            ylabel="UMAP2",
+            xlabel="UMAP1",
+            xticks=np.linspace(np.min(umap1), 
+                         np.max(umap1),
+                         num=5),
+            yticks=np.linspace(np.min(umap2), 
+                         np.max(umap2),
+                         num=5)
+            )
+        axs[i].axes.xaxis.set_ticklabels([])
+        axs[i].axes.yaxis.set_ticklabels([])
 
     return
