@@ -6,8 +6,7 @@ from .common import (
     getSetup,
     reorder_table,
     flattenData,
-    plotDrugDimReduc,
-    plotGeneDimReduc
+    plotGeneUMAP,
 )
 import numpy as np
 from ..imports.scRNA import import_perturb_RPE
@@ -66,7 +65,7 @@ def makeFigure():
 
     # Mono1, Mono2, NK, CD4, B
     genes = ["CXCL8", "IGFBP5", "EGR1", "GADD45A", "SNAPC1"]
-    plotGeneDimReduc(genes, "Pf2", pf2Points, dataDF, f, ax[0:5])
-    plotGeneDimReduc(genes, "PCA", pcaPoints, dataDF, f, ax[5:10])
+    plotGeneUMAP(genes, "Pf2", pf2Points, dataDF, f, ax[0:5])
+    plotGeneUMAP(genes, "PCA", pcaPoints, dataDF, f, ax[5:10])
 
     return f

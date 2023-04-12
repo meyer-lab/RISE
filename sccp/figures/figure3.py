@@ -6,8 +6,9 @@ from .common import (
     subplotLabel,
     getSetup,
     flattenData,
-    plotDrugDimReduc,
-    plotGeneDimReduc,
+    plotDrugUMAP,
+    plotGeneUMAP,
+    plotCmpUMAP
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -30,11 +31,12 @@ def makeFigure():
         rank=rank,
     )
     dataDF, projDF = flattenData(data, factors, projs)
+
     # UMAP dimension reduction
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
     umapReduc = umap.UMAP()
     pf2Points = umapReduc.fit_transform(projDF[cmpNames].to_numpy())
-    
+
     # PCA dimension reduction
     pc = PCA(n_components=rank)
     pcaPoints = pc.fit_transform(dataDF[data.variable_labels].to_numpy())
@@ -42,18 +44,20 @@ def makeFigure():
      
     # NK, CD4, B, CD8
     genes = ["NKG7", "IL7R", "MS4A1", "CD8A"]
-    plotGeneDimReduc(genes, "Pf2", pf2Points, dataDF, f, ax[0:4])
-    plotGeneDimReduc(genes, "PCA", pcaPoints, dataDF, f, ax[4:8])
+    plotGeneUMAP(genes, "Pf2", pf2Points, dataDF, f, ax[0:4])
+    plotGeneUMAP(genes, "PCA", pcaPoints, dataDF, f, ax[4:8])
 
     # Find cells associated with drugs
     drugs = [
         "Triamcinolone Acetonide",
         "Alprostadil",
-        "Budesonide",
-        "Betamethasone Valerate",
     ]
+    plotDrugUMAP(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[8:10])
+    plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[10:12])
     
-    plotDrugDimReduc(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[8:12])
-    plotDrugDimReduc(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[12:16])
-
+    cmp = ["Cmp. 23", "Cmp. 25", "Cmp. 29", "Cmp. 30"]
+    plotCmpUMAP(projDF, cmp, pf2Points, f, ax[12:16])
+    
     return f
+
+

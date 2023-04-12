@@ -6,8 +6,7 @@ from .common import (
     getSetup,
     reorder_table,
     flattenData,
-    plotDrugDimReduc,
-    plotGeneDimReduc
+    plotDrugUMAP,
 )
 import numpy as np
 from ..imports.scRNA import import_perturb_RPE
@@ -66,7 +65,7 @@ def makeFigure():
 
     # Mono1, Mono2, NK, CD4, B
     drugs = ["Triamcinolone Acetonide", "Meprednisone", "Alprostadil", "Budesonide", "Betamethasone Valerate", ]
-    plotDrugDimReduc(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[0:5])
-    plotDrugDimReduc(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[5:10])
+    plotDrugUMAP(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[0:5])
+    plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[5:10])
 
     return f
