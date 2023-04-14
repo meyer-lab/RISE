@@ -17,7 +17,7 @@ coverage.xml:
 	poetry run pytest --cov=sccp --cov-report=xml
 
 clean:
-	rm -rf output
+	rm -rf output profile profile.svg
 
 testprofile:
 	poetry run python3 -m cProfile -o profile -m pytest -s -v -x

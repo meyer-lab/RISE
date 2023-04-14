@@ -36,7 +36,7 @@ def _cmf_reconstruction_error(matrices, factors, norm_X_sq, rng=None):
 
         B_i = (proj @ B) * A[i]
         # trace of the multiplication products
-        inner_product += tl.einsum("ji,jk,ki", B_i, mat, C)
+        inner_product += tl.trace(B_i.T @ mat @ C)
         norm_cmf_sq += tl.sum((B_i.T @ B_i) * CtC)
         projections.append(proj)
 
@@ -48,7 +48,7 @@ def parafac2_nd(
     X,
     rank: int,
     n_iter_max: int = 200,
-    tol: float = 1e-9,
+    tol: float = 1e-6,
     verbose: bool = False,
     random_state=None,
 ):
@@ -76,9 +76,6 @@ def parafac2_nd(
 
     tq = tqdm(range(n_iter_max), disable=(not verbose), delay=1, mininterval=1)
     for _ in tq:
-        # Push the genes factors to be orthogonal
-        CP.factors[2] = tl.qr(CP.factors[2])[0]
-
         # Project tensor slices
         projected_X = tl.stack([p.T @ t for t, p in zip(X, projections)])
 

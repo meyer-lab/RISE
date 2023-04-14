@@ -7,9 +7,9 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-numpy = "^1.23"
-scipy = "^1.10.0"
-scikit-learn = "^1.2.2"
+numpy = "^1.24"
+scipy = "^1.10"
+scikit-learn = "^1.2"
 seaborn = "^0.11.2"
 pandas = "1.5.3"
 tensorly = "0.8.0"
@@ -25,7 +25,7 @@ scanpy = "^1.9.3"
 mygene = "^3.2.2"
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.1.2"
+pytest = "^7.3"
 pytest-cov = "^3.0.0"
 mypy = "^1.0"
 
