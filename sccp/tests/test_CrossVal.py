@@ -9,7 +9,7 @@ from ..crossVal import crossvalidate, crossvalidate_PCA
 def test_crossval():
     """Test for correctness of cross validation."""
     rank = 3
-    X = random_parafac2([(100, 100)] * 8, rank=rank, full=True)
+    X = random_parafac2([(100, 200)] * 5, rank=rank, full=True)
 
     pca_err = crossvalidate_PCA(np.concatenate(X, axis=0), rank=rank, trainPerc=0.8)
     assert pca_err > 0.95

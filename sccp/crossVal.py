@@ -54,9 +54,7 @@ def crossvalidate(X, rank: int, trainPerc: float = 0.75, verbose: bool = True) -
     _, proj = _cmf_reconstruction_error(C_train, fac_C, 1.0)
 
     # Project projections into B space
-    X_recon = parafac2_to_slices(
-        (w_B, fac_B, proj), validate=False
-    )
+    X_recon = parafac2_to_slices((w_B, fac_B, proj), validate=False)
 
     recon_error = 0.0
     total_var = 0.0

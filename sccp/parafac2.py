@@ -48,7 +48,7 @@ def parafac2_nd(
     X,
     rank: int,
     n_iter_max: int = 200,
-    tol: float = 1e-6,
+    tol: float = 1e-7,
     verbose: bool = False,
     random_state=None,
 ):
@@ -71,31 +71,31 @@ def parafac2_nd(
 
     errs = []
 
-    err, projections = _cmf_reconstruction_error(X, CP.factors, norm_tensor, rng=rng)
-    errs.append(tl.to_numpy(err.cpu()) / norm_tensor)
+    tq = tqdm(range(n_iter_max), disable=(not verbose), mininterval=0.5)
+    for iter in tq:
+        err, projections = _cmf_reconstruction_error(
+            X, CP.factors, norm_tensor, rng=rng
+        )
+        errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
-    tq = tqdm(range(n_iter_max), disable=(not verbose), delay=1, mininterval=1)
-    for _ in tq:
         # Project tensor slices
-        projected_X = tl.stack([p.T @ t for t, p in zip(X, projections)])
+        projected_X = tl.stack([p.T @ t for p, t in zip(projections, X)])
 
         CP = parafac(
             projected_X,
             rank,
-            n_iter_max=4,
+            n_iter_max=2,
             init=CP,
-            tol=1e-100,
+            tol=False,
             normalize_factors=False,
         )
 
-        err, projections = _cmf_reconstruction_error(X, CP[1], norm_tensor, rng=rng)
-        errs.append(tl.to_numpy(err.cpu()) / norm_tensor)
+        if iter > 1:
+            delta = errs[-2] - errs[-1]
+            tq.set_postfix(R2X=1.0 - errs[-1], Δ=delta, refresh=False)
 
-        delta = errs[-2] - errs[-1]
-        tq.set_postfix(R2X=1.0 - errs[-1], Δ=delta, refresh=False)
-
-        if delta < tol:
-            break
+            if delta < tol:
+                break
 
     CP = cp_normalize(CP)
     CP = cp_flip_sign(CP, mode=1)

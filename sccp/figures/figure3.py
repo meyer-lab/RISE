@@ -8,7 +8,7 @@ from .common import (
     flattenData,
     plotDrugUMAP,
     plotGeneUMAP,
-    plotCmpUMAP
+    plotCmpUMAP,
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -23,12 +23,14 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
+
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes(offset=1.0)
     rank = 30
     _, factors, projs, _ = parafac2_nd(
         data,
         rank=rank,
+        verbose=True,
     )
     dataDF, projDF = flattenData(data, factors, projs)
 
@@ -41,7 +43,7 @@ def makeFigure():
     pc = PCA(n_components=rank)
     pcaPoints = pc.fit_transform(dataDF[data.variable_labels].to_numpy())
     pcaPoints = umapReduc.fit_transform(pcaPoints)
-     
+
     # NK, CD4, B, CD8
     genes = ["NKG7", "IL7R", "MS4A1", "CD8A"]
     plotGeneUMAP(genes, "Pf2", pf2Points, dataDF, f, ax[0:4])
@@ -54,10 +56,8 @@ def makeFigure():
     ]
     plotDrugUMAP(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[8:10])
     plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[10:12])
-    
+
     cmp = ["Cmp. 23", "Cmp. 25", "Cmp. 29", "Cmp. 30"]
     plotCmpUMAP(projDF, cmp, pf2Points, f, ax[12:16])
-    
+
     return f
-
-

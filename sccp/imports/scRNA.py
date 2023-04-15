@@ -58,7 +58,6 @@ def ThompsonXA_SCGenes(offset: float = 1.0) -> anndata.AnnData:
     scalingfactor = 1000
 
     assert np.all(np.isfinite(X.X.data))
-    X.X = X.X.todense()
 
     X = X[:, np.mean(X.X > 0, axis=0) > 0.001]
     X.X /= np.sum(X.X, axis=0)
