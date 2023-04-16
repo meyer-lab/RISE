@@ -30,22 +30,21 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         data,
         rank=rank,
-        verbose=True,
+        random_state=1,
     )
     dataDF, projDF = flattenData(data, factors, projs)
 
     # UMAP dimension reduction
-    cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
-    umapReduc = umap.UMAP()
-    pf2Points = umapReduc.fit_transform(projDF[cmpNames].to_numpy())
+    umapReduc = umap.UMAP(random_state=1)
+    pf2Points = umapReduc.fit_transform(np.concatenate(projs, axis=0))
 
     # PCA dimension reduction
     pc = PCA(n_components=rank)
-    pcaPoints = pc.fit_transform(dataDF[data.variable_labels].to_numpy())
+    pcaPoints = pc.fit_transform(data.unfold())
     pcaPoints = umapReduc.fit_transform(pcaPoints)
 
     # NK, CD4, B, CD8
-    genes = ["NKG7", "IL7R", "MS4A1", "CD8A"]
+    genes = ["NKG7", "IL7R", "MS4A1", "KLF1"]
     plotGeneUMAP(genes, "Pf2", pf2Points, dataDF, f, ax[0:4])
     plotGeneUMAP(genes, "PCA", pcaPoints, dataDF, f, ax[4:8])
 

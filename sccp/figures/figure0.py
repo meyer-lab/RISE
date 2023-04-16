@@ -28,7 +28,7 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         X,
         rank=2,
-        verbose=True,
+        random_state=1,
     )
     flattened_projs = np.concatenate(projs, axis=0)
 

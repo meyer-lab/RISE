@@ -71,7 +71,7 @@ def parafac2_nd(
 
     errs = []
 
-    tq = tqdm(range(n_iter_max), disable=(not verbose), mininterval=0.5)
+    tq = tqdm(range(n_iter_max), disable=(not verbose), mininterval=2)
     for iter in tq:
         err, projections = _cmf_reconstruction_error(
             X, CP.factors, norm_tensor, rng=rng

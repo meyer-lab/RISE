@@ -51,13 +51,14 @@ def makeFigure():
         X,
         rank=24,
         verbose=True,
+        random_state=1,
     )
 
     dataDF, projDF = flattenData(data, factors, projs)
 
     # UMAP dimension reduction
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
-    umapReduc = umap.UMAP()
+    umapReduc = umap.UMAP(random_state=1)
     pf2Points = umapReduc.fit_transform(projDF[cmpNames].to_numpy())
 
     pc = PCA(n_components=rank)

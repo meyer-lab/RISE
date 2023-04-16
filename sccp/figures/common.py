@@ -221,86 +221,75 @@ def flattenData(data, factors, projs):
 
 def plotGeneUMAP(genes, decomp, points, dataDF, f, axs):
     """Scatterplot of UMAP visualization weighted by gene"""
-    umap1 = points[::20, 0]
-    umap2 = points[::20, 1]
+    umap1 = points[::10, 0]
+    umap2 = points[::10, 1]
     for i, genez in enumerate(genes):
         geneList = dataDF[genez].to_numpy()
         cmap = plt.cm.get_cmap("plasma")
         tl = axs[i].scatter(
             umap1,
             umap2,
-            c=geneList[::20],
+            c=geneList[::10],
             cmap=cmap.reversed(),
-            s=1,
+            s=0.1,
         )
         f.colorbar(tl, ax=axs[i])
         axs[i].set(
             title=genez + "-" + decomp + "-Based Decomposition",
-            ylabel="UMAP2",
-            xlabel="UMAP1",
-            xticks=np.linspace(np.min(umap1), np.max(umap1), num=5),
-            yticks=np.linspace(np.min(umap2), np.max(umap2), num=5),
         )
-        axs[i].axes.xaxis.set_ticklabels([])
-        axs[i].axes.yaxis.set_ticklabels([])
+        umap_axis(umap1, umap2, axs[i])
 
     return
 
 
 def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
     """Scatterplot of UMAP visualization weighted by condition"""
-    umap1 = points[::20, 0]
-    umap2 = points[::20, 1]
+    umap1 = points[::10, 0]
+    umap2 = points[::10, 1]
     for i, drugz in enumerate(drugs):
         drugList = np.where(np.asarray(totaldrugs == drugz), drugz, "Other Drugs")
-        DF = pd.DataFrame(
-            {
-                "UMAP1": umap1,
-                "UMAP2": umap2,
-                "Drug": drugList[::20],
-            }
-        )
         sns.scatterplot(
-            data=DF, x="UMAP1", y="UMAP2", hue="Drug", s=3, palette="muted", ax=axs[i]
+            x=umap1, y=umap2, hue=drugList[::10], s=1, palette="muted", ax=axs[i]
         )
         handles, labels = axs[i].get_legend_handles_labels()
         axs[i].legend(handles=handles, labels=labels)
         axs[i].set(
             title=decomp + "-Based Decomposition",
-            ylabel="UMAP2",
-            xlabel="UMAP1",
-            xticks=np.linspace(np.min(umap1), np.max(umap1), num=5),
-            yticks=np.linspace(np.min(umap2), np.max(umap2), num=5),
         )
-        axs[i].axes.xaxis.set_ticklabels([])
-        axs[i].axes.yaxis.set_ticklabels([])
+        umap_axis(umap1, umap2, axs[i])
 
     return
 
 
 def plotCmpUMAP(projDF, projName, points, f, axs):
     """Scatterplot of UMAP visualization weighted by projections for a component"""
-    umap1 = points[::20, 0]
-    umap2 = points[::20, 1]
+    umap1 = points[::10, 0]
+    umap2 = points[::10, 1]
     for i, proj in enumerate(projName):
         projs = projDF[proj].values
         cmap = plt.cm.get_cmap("plasma")
         tl = axs[i].scatter(
             umap1,
             umap2,
-            c=projs[::20],
+            c=projs[::10],
             cmap=cmap.reversed(),
-            s=1,
+            s=0.2,
         )
         f.colorbar(tl, ax=axs[i])
         axs[i].set(
             title=proj + "-Pf2-Based Decomposition",
-            ylabel="UMAP2",
-            xlabel="UMAP1",
-            xticks=np.linspace(np.min(umap1), np.max(umap1), num=5),
-            yticks=np.linspace(np.min(umap2), np.max(umap2), num=5),
         )
-        axs[i].axes.xaxis.set_ticklabels([])
-        axs[i].axes.yaxis.set_ticklabels([])
+        umap_axis(umap1, umap2, axs[i])
 
     return
+
+
+def umap_axis(x, y, ax):
+    ax.set(
+        ylabel="UMAP2",
+        xlabel="UMAP1",
+        xticks=np.linspace(np.min(x), np.max(x), num=5),
+        yticks=np.linspace(np.min(y), np.max(y), num=5),
+    )
+    ax.axes.xaxis.set_ticklabels([])
+    ax.axes.yaxis.set_ticklabels([])

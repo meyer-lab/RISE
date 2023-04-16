@@ -28,6 +28,7 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         data,
         rank=30,
+        random_state=1,
     )
 
     flattened_projs = np.concatenate(projs, axis=0)
@@ -37,8 +38,8 @@ def makeFigure():
 
     plotProj(flattened_projs[idxx, :], ax[3:5])
 
-    plotR2X(data, 20, ax[5])
+    # plotR2X(data, 30, ax[5])
 
-    plotCrossVal(data.X_list, 13, ax[6], trainPerc=0.75)
+    # plotCrossVal(data.X_list, 30, ax[6], trainPerc=0.75)
 
     return f

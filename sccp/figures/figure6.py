@@ -44,7 +44,7 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         X,
         rank=24,
-        verbose=True,
+        random_state=1,
     )
 
     plotFactors(factors, X, ax[0:2], reorder=(0, 2), trim=(2,))
