@@ -44,9 +44,12 @@ def import_thompson_drug() -> anndata.AnnData:
     )
 
     # h5ad is simplified version of mtx format
-    # data = sc.read_10x_mtx("/opt/andrew/Thompson", var_names='gene_symbols', make_unique=True)
+    # import scanpy as sc
+    # data = sc.read_10x_mtx("./sccp/data/", var_names='gene_symbols', make_unique=True)
+    # data.X = data.X.todense()
+    # data = data[:, np.mean(data.X > 0, axis=0) > 0.001]
     # data.write('thompson.h5ad', compression="gzip")
-    data = anndata.read_h5ad("/opt/andrew/thompson.h5ad", chunk_size=12000)
+    data = anndata.read_h5ad("/opt/andrew/thompson.h5ad")
 
     data.obs["Drugs"] = pd.Categorical(metafile["sample_id"])
     return data

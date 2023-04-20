@@ -31,6 +31,7 @@ def makeFigure():
         data,
         rank=rank,
         random_state=1,
+        verbose=True,
     )
     dataDF, projDF, weightedDF = flattenData(data, factors, projs)
     

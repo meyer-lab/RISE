@@ -1,7 +1,7 @@
 """
 This file contains functions that are used in multiple figures.
 """
-from string import ascii_lowercase
+from string import ascii_letters
 import sys
 import time
 import seaborn as sns
@@ -70,7 +70,7 @@ def subplotLabel(axs):
         ax.text(
             -0.2,
             1.2,
-            ascii_lowercase[ii],
+            ascii_letters[ii],
             transform=ax.transAxes,
             fontweight="bold",
             va="top",
