@@ -197,26 +197,25 @@ def flattenData(data, factors, projs):
     for i in range(factors[0].shape[0]):
         cellCount = np.append(cellCount, projs[i].shape[0])
 
-    flatProjs = np.empty([int(np.sum(cellCount)), projs[0].shape[1]])
-    flatData = np.empty([int(np.sum(cellCount)), len(data.variable_labels)])
-    cellStart = [0]
     drugNames = []
 
     for i in range(factors[0].shape[0]):
-        cellStart = np.append(cellStart, cellStart[i] + cellCount[i])
-        flatProjs[int(cellStart[i]) : int(cellStart[i + 1])] = projs[i]
-        flatData[int(cellStart[i]) : int(cellStart[i + 1])] = data.X_list[i]
         drugNames = np.append(
             drugNames, np.repeat(data.condition_labels[i], cellCount[i])
         )
 
+    flatProjs = np.concatenate(projs, axis=0)
+    flatData = np.concatenate(data.X_list, axis=0)
+    
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
     projDF = pd.DataFrame(data=flatProjs, columns=cmpNames)
     dataDF = pd.DataFrame(data=flatData, columns=data.variable_labels)
+    weightedDF = pd.DataFrame(data=flatProjs @ factors[1], columns=cmpNames)
     projDF["Drug"] = drugNames
     dataDF["Drug"] = drugNames
+    weightedDF["Drug"] = drugNames
 
-    return dataDF, projDF
+    return dataDF, projDF, weightedDF
 
 
 def plotGeneUMAP(genes, decomp, points, dataDF, f, axs):

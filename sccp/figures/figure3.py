@@ -32,8 +32,8 @@ def makeFigure():
         rank=rank,
         random_state=1,
     )
-    dataDF, projDF = flattenData(data, factors, projs)
-
+    dataDF, projDF, weightedDF = flattenData(data, factors, projs)
+    
     # UMAP dimension reduction
     umapReduc = umap.UMAP(random_state=1)
     pf2Points = umapReduc.fit_transform(np.concatenate(projs, axis=0))
@@ -57,6 +57,6 @@ def makeFigure():
     plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[10:12])
 
     cmp = ["Cmp. 23", "Cmp. 25", "Cmp. 29", "Cmp. 30"]
-    plotCmpUMAP(projDF, cmp, pf2Points, f, ax[12:16])
+    plotCmpUMAP(weightedDF, cmp, pf2Points, f, ax[12:16])
 
     return f
