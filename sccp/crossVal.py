@@ -5,7 +5,9 @@ from .parafac2 import parafac2_nd, _cmf_reconstruction_error
 from tensorly.parafac2_tensor import parafac2_to_slices
 
 
-def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75) -> float:
+def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75) -> np.ndarray:
+    """Bi-cross-validation for PCA. Because PCA is component-by-component, this
+    provides R2X for all ranks in one pass."""
     # Shuffle so that we take a different subset each time
     X = X.copy()
     X = X[np.random.permutation(X.shape[0]), :]
@@ -24,11 +26,14 @@ def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75) -> floa
     loadings = randomized_svd(Xb - mean_, rank)[2]
     scores = (Xc - mean_[:X_C_idx]) @ loadings[:, :X_C_idx].T
 
-    # Reconstruct and get error
-    X_err = X - (scores @ loadings + mean_)
-
-    recon_error = float(np.linalg.norm(X_err[X_B_idx:, X_C_idx:]) ** 2)
     total_var = float(np.linalg.norm(X[X_B_idx:, X_C_idx:]) ** 2)
+
+    # Reconstruct and get error
+    recon_error = np.zeros(rank)
+
+    for i in range(rank):
+        X_err = X - (scores[:, :(i + 1)] @ loadings[:(i + 1), :] + mean_)
+        recon_error[i] = float(np.linalg.norm(X_err[X_B_idx:, X_C_idx:]) ** 2)
 
     return 1.0 - recon_error / total_var
 
