@@ -11,6 +11,8 @@ from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
 from ..parafac2 import Pf2X
+from ..crossVal import CrossVal
+from ..decomposition import R2X
 
 
 matplotlib.use("AGG")
@@ -292,3 +294,56 @@ def umap_axis(x, y, ax):
     )
     ax.axes.xaxis.set_ticklabels([])
     ax.axes.yaxis.set_ticklabels([])
+
+    
+def plotR2X(data, rank, ax):
+    """Creates R2X plot for parafac2 tensor decomposition"""
+    r2xError = R2X(data, rank) 
+    
+    rank_vec = np.arange(1, rank + 1)
+    labelNames = ["Fit: Pf2", "Fit: PCA"]
+    colorDecomp = ["r", "b"]
+    markerShape = ["|", "_"]
+
+    for i in range(2):
+        ax.scatter(rank_vec, 
+               r2xError[i], 
+               label=labelNames[i], 
+               marker=markerShape[i],
+               c=colorDecomp[i],
+               s=30.0)
+    
+    ax.set(
+        ylabel="Variance Explained",
+        xlabel="Number of Components",
+        xticks=np.linspace(0, rank, num=8, dtype=int),
+        yticks=np.linspace(0, np.max(np.append(r2xError[0], r2xError[1]))+0.01, num=5),
+    )
+    
+    ax.legend()
+    
+def plotCV(data, rank, trainPerc, ax):
+    """Creates variance explained plot for parafac2 tensor decomposition CV"""
+    cvError = CrossVal(data, rank, trainPerc = trainPerc)
+ 
+    rank_vec = np.arange(1, rank + 1)
+    labelNames = ["CV: Pf2", "CV: PCA"]
+    colorDecomp = ["r", "b"]
+    markerShape = ["o", "o"]
+    
+    for i in range(2):
+        ax.scatter(rank_vec, 
+               cvError[i], 
+               label=labelNames[i], 
+               marker=markerShape[i],
+               c=colorDecomp[i],
+               s=30.0)
+    
+    ax.set(
+        ylabel="Variance Explained",
+        xlabel="Number of Components",
+        xticks=np.linspace(0, rank, num=8, dtype=int),
+        yticks=np.linspace(0, np.max(np.append(cvError[0], cvError[1]))+0.01, num=5),
+    )
+    
+    ax.legend()

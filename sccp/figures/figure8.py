@@ -11,7 +11,6 @@ from .common import (
 import numpy as np
 from ..imports.scRNA import import_perturb_RPE
 from ..parafac2 import parafac2_nd
-from ..decomposition import plotR2X
 import seaborn as sns
 import mygene
 from ..parafac2 import parafac2_nd

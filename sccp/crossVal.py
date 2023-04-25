@@ -73,18 +73,12 @@ def crossvalidate(X, rank: int, trainPerc: float = 0.75, verbose: bool = True) -
     return 1.0 - recon_error / total_var
 
 
-def plotCrossVal(X, rank: int, ax1, trainPerc: float = 0.75):
+def CrossVal(X, rank: int, trainPerc: float = 0.75):
     """Creates cross validation accuracy plot for parafac2"""
     rank_vec = np.arange(1, rank + 1)
 
     # Collect Pf2 results
-    cv_error = [crossvalidate(X, rank=r, trainPerc=trainPerc) for r in rank_vec]
+    cv_pf2_error = [crossvalidate(X.X_list, rank=rank, trainPerc=trainPerc) for r in rank_vec]
+    cv_pca_error = crossvalidate_PCA(X.unfold(), rank, trainPerc = trainPerc)
 
-    ax1.scatter(rank_vec, cv_error, marker="x", s=20.0)
-
-    ax1.set(
-        ylabel="CV Accuracy",
-        xlabel="Number of Components",
-        xticks=np.arange(0, rank + 1),
-        ylim=(-0.05, np.max(cv_error) + 0.05),
-    )
+    return cv_pf2_error, cv_pca_error
