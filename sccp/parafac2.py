@@ -5,6 +5,7 @@ import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg.svd import randomized_svd
 from tensorly.decomposition import parafac
+from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
 
 
 class Pf2X:
@@ -45,7 +46,7 @@ def _cmf_reconstruction_error(matrices, factors, norm_X_sq, rng=None):
 
 @torch.inference_mode()
 def parafac2_nd(
-    X,
+    X_in,
     rank: int,
     n_iter_max: int = 200,
     tol: float = 1e-7,
@@ -55,11 +56,11 @@ def parafac2_nd(
     r"""The same interface as regular PARAFAC2."""
     rng = np.random.RandomState(random_state)
     tl.set_backend("pytorch")
-    if isinstance(X, Pf2X):
-        X = X.X_list
+    if isinstance(X_in, Pf2X):
+        X_in = X_in.X_list
 
-    norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X])
-    X = [tl.tensor(xx).cuda() for xx in X]
+    norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X_in])
+    X = [tl.tensor(xx).cuda() for xx in X_in]
 
     # Initialization
     unfolded = tl.concatenate(list(X), axis=0).T
@@ -108,7 +109,11 @@ def parafac2_nd(
 
     weights = tl.to_numpy(CP[0].cpu()[gini_idx])
     factors = [tl.to_numpy(f.cpu())[:, gini_idx] for f in CP[1]]
-    projections = [tl.to_numpy(p.cpu())[:, gini_idx] for p in projections]
+    projections = [tl.to_numpy(p.cpu()) for p in projections]
+
+    # Test that we haven't messed up the results
+    errEnd = _parafac2_reconstruction_error(X_in, (weights, factors, projections)) ** 2
+    assert errEnd < err
 
     return weights, factors, projections, R2X
 
