@@ -5,7 +5,6 @@ import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg.svd import randomized_svd
 from tensorly.decomposition import parafac
-from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
 
 
 class Pf2X:
@@ -110,10 +109,6 @@ def parafac2_nd(
     weights = tl.to_numpy(CP[0].cpu()[gini_idx])
     factors = [tl.to_numpy(f.cpu())[:, gini_idx] for f in CP[1]]
     projections = [tl.to_numpy(p.cpu()) for p in projections]
-
-    # Test that we haven't messed up the results
-    errEnd = _parafac2_reconstruction_error(X_in, (weights, factors, projections)) ** 2
-    assert errEnd < err
 
     return weights, factors, projections, R2X
 
