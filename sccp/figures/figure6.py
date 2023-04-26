@@ -46,12 +46,12 @@ def makeFigure():
         random_state=1,
     )
 
-    plotFactors(factors, X, ax[0:2], reorder=(0, 2), trim=(2,))
+    plotFactors(factors, X, ax[0:3], reorder=(0, 2), trim=(2,))
 
     sns.heatmap(
         data=reorder_table(projs[0])[0],
         center=0,
-        ax=ax[2],
+        ax=ax[3],
         cmap=sns.diverging_palette(240, 10, as_cmap=True),
     )
 

@@ -33,7 +33,7 @@ def makeFigure():
         random_state=1,
         verbose=True,
     )
-    dataDF, projDF, weightedDF = flattenData(data, factors, projs)
+    dataDF, _ , weightedDF = flattenData(data, factors, projs)
     
     # UMAP dimension reduction
     umapReduc = umap.UMAP(random_state=1)

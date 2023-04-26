@@ -52,7 +52,7 @@ def makeFigure():
         random_state=1,
     )
 
-    dataDF, projDF = flattenData(data, factors, projs)
+    dataDF, projDF, _ = flattenData(data, factors, projs)
 
     # UMAP dimension reduction
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]

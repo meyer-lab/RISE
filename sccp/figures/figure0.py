@@ -33,9 +33,9 @@ def makeFigure():
     )
     flattened_projs = np.concatenate(projs, axis=0)
 
-    plotFactorsSynthetic(factors, X, ax[0:2])
+    plotFactorsSynthetic(factors, X, ax[0:3])
 
-    plotProj(projs[7], ax[2:4])
+    # plotProj(projs[7], ax[2:4])
 
     plotProj(flattened_projs, ax[4:6])
     
