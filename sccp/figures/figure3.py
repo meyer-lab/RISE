@@ -19,21 +19,22 @@ from sklearn.decomposition import PCA
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((8, 10), (4, 4))
+    ax, f = getSetup((8, 10), (3, 4))
 
     # Add subplot labels
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes(offset=1.0)
-    rank = 30
+    rank = 25
     _, factors, projs, _ = parafac2_nd(
         data,
         rank=rank,
         random_state=1,
         verbose=True,
     )
-    dataDF, _ , weightedDF = flattenData(data, factors, projs)
+    
+    dataDF, _, _ = flattenData(data, factors, projs)
     
     # UMAP dimension reduction
     umapReduc = umap.UMAP(random_state=1)
@@ -56,8 +57,4 @@ def makeFigure():
     ]
     plotDrugUMAP(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[8:10])
     plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[10:12])
-
-    cmp = ["Cmp. 23", "Cmp. 25", "Cmp. 29", "Cmp. 30"]
-    plotCmpUMAP(weightedDF, cmp, pf2Points, f, ax[12:16])
-
     return f
