@@ -5,6 +5,7 @@ import tensorly as tl
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg.svd import randomized_svd
 from tensorly.decomposition import parafac
+from scipy.optimize import linear_sum_assignment
 
 
 class Pf2X:
@@ -30,6 +31,9 @@ def _cmf_reconstruction_error(matrices, factors, norm_X_sq, rng=None):
     projections = []
 
     for i, mat in enumerate(matrices):
+        if isinstance(mat, torch.Tensor):
+            mat = mat.double()
+
         lhs = B @ (A[i] * C).T
         U, _, Vh = randomized_svd(lhs @ mat.T, A.shape[1], random_state=rng)
         proj = (U @ Vh).T
@@ -51,7 +55,7 @@ def parafac2_nd(
     tol: float = 1e-7,
     verbose: bool = False,
     random_state=None,
-):
+) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
     rng = np.random.RandomState(random_state)
     tl.set_backend("pytorch")
@@ -64,9 +68,12 @@ def parafac2_nd(
     # Initialization
     unfolded = tl.concatenate(list(X), axis=0).T
     assert tl.shape(unfolded)[0] > rank
-    C = randomized_svd(unfolded, rank, random_state=rng)[0]
+    C = randomized_svd(unfolded, rank, random_state=rng)[0].double()
     CP = tl.cp_tensor.CPTensor(
-        (None, [tl.ones((len(X), rank)).cuda(), tl.eye(rank).cuda(), C])
+        (
+            None,
+            [tl.ones((len(X), rank)).cuda().double(), tl.eye(rank).cuda().double(), C],
+        )
     )
 
     errs = []
@@ -79,7 +86,7 @@ def parafac2_nd(
         errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
         # Project tensor slices
-        projected_X = tl.stack([p.T @ t for p, t in zip(projections, X)])
+        projected_X = tl.stack([p.T @ t.double() for p, t in zip(projections, X)])
 
         CP = parafac(
             projected_X,
@@ -97,23 +104,36 @@ def parafac2_nd(
             if delta < tol:
                 break
 
-    CP = cp_normalize(CP)
-    CP = cp_flip_sign(CP, mode=1)
-
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
-    factors = [tl.to_numpy(f.cpu()) for f in CP[1]]
-    gini_idx = giniIndex(factors[0])
+    gini_idx = giniIndex(tl.to_numpy(CP.factors[0].cpu()))
+    assert gini_idx.size == rank
 
-    weights = tl.to_numpy(CP[0].cpu()[gini_idx])
-    factors = [tl.to_numpy(f.cpu())[:, gini_idx] for f in CP[1]]
-    projections = [tl.to_numpy(p.cpu()) for p in projections]
+    CP.factors = [f.numpy(force=True)[:, gini_idx] for f in CP.factors]
+    CP.weights = CP.weights.numpy(force=True)[gini_idx]
 
-    return weights, factors, projections, R2X
+    CP = cp_normalize(cp_flip_sign(CP, mode=1))
+
+    for ii in range(3):
+        np.testing.assert_allclose(
+            np.linalg.norm(CP.factors[ii], axis=0), 1.0, rtol=1e-2
+        )
+
+    # Maximize the diagonal of B
+    _, col_ind = linear_sum_assignment(np.abs(CP.factors[1].T), maximize=True)
+    CP.factors[1] = CP.factors[1][col_ind, :]
+    projections = [p.numpy(force=True)[:, col_ind] for p in projections]
+
+    # Flip the sign based on B
+    signn = np.sign(np.diag(CP.factors[1]))
+    CP.factors[1] *= signn[np.newaxis, :]
+    projections = [p * signn for p in projections]
+
+    return CP.weights, CP.factors, projections, R2X
 
 
-def giniIndex(X):
+def giniIndex(X: np.ndarray) -> np.ndarray:
     """Calculates the Gini Coeff for each component and returns the index rearrangment"""
     X = np.abs(X)
     gini = np.var(X, axis=0) / np.mean(X, axis=0)

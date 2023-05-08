@@ -32,7 +32,7 @@ def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75) -> np.n
     recon_error = np.zeros(rank)
 
     for i in range(rank):
-        X_err = X - (scores[:, :(i + 1)] @ loadings[:(i + 1), :] + mean_)
+        X_err = X - (scores[:, : (i + 1)] @ loadings[: (i + 1), :] + mean_)
         recon_error[i] = float(np.linalg.norm(X_err[X_B_idx:, X_C_idx:]) ** 2)
 
     return 1.0 - recon_error / total_var
@@ -78,7 +78,9 @@ def CrossVal(X, rank: int, trainPerc: float = 0.75):
     rank_vec = np.arange(1, rank + 1)
 
     # Collect Pf2 results
-    cv_pf2_error = [crossvalidate(X.X_list, rank=rank, trainPerc=trainPerc) for r in rank_vec]
-    cv_pca_error = crossvalidate_PCA(X.unfold(), rank, trainPerc = trainPerc)
+    cv_pf2_error = [
+        crossvalidate(X.X_list, rank=rank, trainPerc=trainPerc) for r in rank_vec
+    ]
+    cv_pca_error = crossvalidate_PCA(X.unfold(), rank, trainPerc=trainPerc)
 
     return cv_pf2_error, cv_pca_error

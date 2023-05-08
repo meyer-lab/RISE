@@ -33,9 +33,9 @@ def makeFigure():
         random_state=1,
         verbose=True,
     )
-    
+
     dataDF, _, _ = flattenData(data, factors, projs)
-    
+
     # UMAP dimension reduction
     umapReduc = umap.UMAP(random_state=1)
     pf2Points = umapReduc.fit_transform(np.concatenate(projs, axis=0))

@@ -15,5 +15,4 @@ def R2X(tensor: Pf2X, rank: int):
     pc.fit(tensor.unfold())
     pca_error = np.cumsum(pc.explained_variance_ratio_)
 
-    return pf2_error, pca_error 
-
+    return pf2_error, pca_error

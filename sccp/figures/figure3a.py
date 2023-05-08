@@ -12,7 +12,7 @@ def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
     ax, f = getSetup((8, 10), (5, 6))
-    subplotLabel(ax) # Add subplot labels
+    subplotLabel(ax)  # Add subplot labels
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
@@ -35,7 +35,7 @@ def makeFigure():
         tl = ax[i].scatter(
             x,
             y,
-            marker='.',
+            marker=".",
             c=CompW[::10, i],
             cmap="PRGn",
             vmin=-0.3,
