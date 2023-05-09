@@ -127,7 +127,7 @@ def parafac2_nd(
 
     # Flip the sign based on B
     signn = np.sign(np.diag(CP.factors[1]))
-    CP.factors[1] *= signn[np.newaxis, :]
+    CP.factors[1] *= signn[:, np.newaxis]
     projections = [p * signn for p in projections]
 
     return CP.weights, CP.factors, projections, R2X

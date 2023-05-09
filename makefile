@@ -11,7 +11,7 @@ output/figure%.svg: sccp/figures/figure%.py
 	poetry run fbuild $*
 
 test:
-	poetry run pytest -s -x -v --full-trace
+	poetry run pytest -s -x -v
 
 coverage.xml:
 	poetry run pytest --cov=sccp --cov-report=xml

@@ -8,7 +8,7 @@ from ..parafac2 import parafac2_nd, _cmf_reconstruction_error
 from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
 
 
-pf2shape = [(100, 8000)] * 20
+pf2shape = [(100, 800)] * 4
 X = random_parafac2(pf2shape, rank=3, full=True, random_state=2)
 norm_tensor = np.linalg.norm(X) ** 2
 
@@ -16,6 +16,11 @@ norm_tensor = np.linalg.norm(X) ** 2
 def test_parafac2():
     """Test for equivalence to TensorLy's PARAFAC2."""
     w1, f1, p1, e1 = parafac2_nd(X, rank=3, random_state=1)
+
+    # Test that the model still matches the data
+    err = _parafac2_reconstruction_error(X, (w1, f1, p1)) ** 2
+    np.testing.assert_allclose(1.0 - err / norm_tensor, e1, rtol=1e-6)
+
     # Test reproducibility
     w2, f2, p2, e2 = parafac2_nd(X, rank=3, random_state=1)
     # Compare to TensorLy
@@ -40,13 +45,10 @@ def test_parafac2():
         np.testing.assert_allclose(p1[ii], p2[ii])
 
     # Compare to TensorLy
-    np.testing.assert_allclose(w1, wT, rtol=0.1)
+    np.testing.assert_allclose(w1, wT, rtol=0.01)
     for ii in range(3):
-        np.testing.assert_allclose(f1[ii], fT[ii], rtol=0.1, atol=0.01)
-        np.testing.assert_allclose(p1[ii], pT[ii], rtol=0.1, atol=0.01)
-
-    err = _parafac2_reconstruction_error(X, (w1, f1, p1)) ** 2
-    np.testing.assert_allclose(1.0 - err / norm_tensor, e1, rtol=1e-6)
+        np.testing.assert_allclose(f1[ii], fT[ii], rtol=0.01, atol=0.01)
+        np.testing.assert_allclose(p1[ii], pT[ii], rtol=0.01, atol=0.01)
 
 
 def test_pf2_r2x():
