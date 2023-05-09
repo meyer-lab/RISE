@@ -22,7 +22,7 @@ class Pf2X:
         return tl.concatenate(self.X_list, axis=0)
 
 
-def _cmf_reconstruction_error(matrices, factors, norm_X_sq, rng=None):
+def _cmf_reconstruction_error(matrices, factors: list, norm_X_sq, rng=None):
     A, B, C = factors
 
     norm_cmf_sq = 0
