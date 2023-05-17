@@ -49,7 +49,8 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         X,
         rank=24,
-        random_state=1,
+        verbose=True,
+        random_state=42
     )
 
     dataDF, projDF, _ = flattenData(data, factors, projs)
