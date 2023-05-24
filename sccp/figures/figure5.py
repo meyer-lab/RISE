@@ -21,27 +21,19 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
-    #ranks = np.arange(1, 31, step=10)
     
     ranks = [5, 15, 25, 35]
     #PCA_look(data, ranks, "NKG7", 0.1, ax[0:15])
-    dim_red_var_drug(data, ranks, "Budesonide", ax[0])
-    dim_red_var_drug(data, ranks, "Loteprednol etabonate", ax[1])
-    dim_red_var_drug(data, ranks, "Betamethasone Valerate", ax[2])
-    dim_red_var_drug(data, ranks, "Triamcinolone Acetonide", ax[3])
+    dim_red_var_drug(data, ranks, ["Budesonide", "Loteprednol etabonate", "Betamethasone Valerate", "Triamcinolone Acetonide"], ax[0:4])
+    dim_red_var_cell(data, ranks, ["NKG7", "CD79A", "CD3D", "LAD1"], 0.1, ax[4:8])
 
-    dim_red_var_cell(data, ranks, "NKG7", 0.1, ax[4])
-    dim_red_var_cell(data, ranks, "CD79A", 0.1, ax[5])
-    dim_red_var_cell(data, ranks, "CD3D", 0.1, ax[6])
-    dim_red_var_cell(data, ranks, "LAD1", 0.1, ax[7])
-
-    all_drug_dist(data, 30, ax[8])
-    all_marker_dist(data, 30, 0.1, ax[9])
+    all_drug_dist(data, 24, ax[8])
+    all_marker_dist(data, 24, 0.03, ax[9])
 
     return f
 
 
-def dim_red_var_drug(data, ranks, drug, ax):
+def dim_red_var_drug(data, ranks, drugs, ax):
     """Plots normalized variance for either a variable or for a group of cells"""
     var_DF = pd.DataFrame()
     for rank in ranks:
@@ -52,24 +44,27 @@ def dim_red_var_drug(data, ranks, drug, ax):
         verbose=True,
         )
         _, projDF, _ = flattenData(data, factors, projs)
-        Pf2_all = projDF.values[:, 0:-1]
-        Pf2_drug = projDF.loc[projDF.Drug == drug].values[:, 0:-1]
-        
-        pc = PCA(n_components=rank)
-        PC_all = pc.fit_transform(data.unfold())
-        PC_drug = PC_all[projDF.Drug == drug]
-        
-        Pf2_var = np.sum(np.var(Pf2_drug, axis=0)) / np.sum(np.var(Pf2_all, axis=0))
-        PC_var = np.sum(np.var(PC_drug, axis=0)) / np.sum(np.var(PC_all, axis=0))
-        var_DF = pd.concat([var_DF, pd.DataFrame({"Rank": [rank], "% Total Variance": Pf2_var, "Method": "PARAFAC2"})])
-        var_DF = pd.concat([var_DF, pd.DataFrame({"Rank": [rank], "% Total Variance": PC_var, "Method": "PCA"})])
+        for drug in drugs:
+            Pf2_all = projDF.values[:, 0:-1]
+            Pf2_drug = projDF.loc[projDF.Drug == drug].values[:, 0:-1]
+            
+            pc = PCA(n_components=rank)
+            PC_all = pc.fit_transform(data.unfold())
+            PC_drug = PC_all[projDF.Drug == drug]
+            
+            Pf2_var = np.sum(np.var(Pf2_drug, axis=0)) / np.sum(np.var(Pf2_all, axis=0))
+            PC_var = np.sum(np.var(PC_drug, axis=0)) / np.sum(np.var(PC_all, axis=0))
+            var_DF = pd.concat([var_DF, pd.DataFrame({"Rank": [rank], "% Total Variance": Pf2_var, "Method": "PARAFAC2", "Drug": drug})])
+            var_DF = pd.concat([var_DF, pd.DataFrame({"Rank": [rank], "% Total Variance": PC_var, "Method": "PCA", "Drug": drug})])
     
     var_DF = var_DF.reset_index(drop=True)
-    sns.lineplot(data=var_DF, x="Rank", y="% Total Variance", hue="Method", ax=ax)
-    ax.set(title=drug)
+    for i, drug in enumerate(drugs):
+        plot_DF = var_DF.loc[var_DF.Drug == drug]
+        sns.lineplot(data=plot_DF, x="Rank", y="% Total Variance", hue="Method", ax=ax[i])
+        ax[i].set(title=drug)
 
 
-def dim_red_var_cell(data, ranks, marker, cutoff, ax):
+def dim_red_var_cell(data, ranks, markers, cutoff, ax):
     """Plots normalized variance for either a variable or for a group of cells"""
     var_DF = pd.DataFrame()
     dist_DF = pd.DataFrame()
@@ -81,25 +76,26 @@ def dim_red_var_cell(data, ranks, marker, cutoff, ax):
         verbose=True,
         )
         dataDF, projDF, _ = flattenData(data, factors, projs)
-        dataDF["Cell"] = "Other"
-        dataDF.loc[dataDF[marker] > cutoff, "Cell"] = "Marker Positive"
-        Pf2_all = projDF.values[:, 0:-1]
-        Pf2_cell = projDF.loc[dataDF.Cell == "Marker Positive"].values[:, 0:-1]
-        
-        pc = PCA(n_components=rank)
-        PC_all = pc.fit_transform(data.unfold())
-        PC_cell = PC_all[dataDF.Cell == "Marker Positive"]
+        for marker in markers:
+            dataDF[marker + " status"] = "Marker Negative"
+            dataDF.loc[dataDF[marker] > cutoff, marker + " status"] = "Marker Positive"
+            Pf2_all = projDF.values[:, 0:-1]
+            Pf2_cell = projDF.loc[dataDF[marker + " status"] == "Marker Positive"].values[:, 0:-1]
+            
+            pc = PCA(n_components=rank)
+            PC_all = pc.fit_transform(data.unfold())
+            PC_cell = PC_all[dataDF[marker + " status"] == "Marker Positive"]
 
+            Pf2_pwise = centroid_dist(Pf2_cell) / np.mean(pdist(Pf2_all.tolist()))
+            PC_pwise = centroid_dist(PC_cell) / np.mean(pdist(PC_all.tolist()))
+            dist_DF = pd.concat([dist_DF, pd.DataFrame({"Rank": [rank], "Norm Centroid Distance": Pf2_pwise, "Method": "PARAFAC2", "Marker": marker})])
+            dist_DF = pd.concat([dist_DF, pd.DataFrame({"Rank": [rank], "Norm Centroid Distance": PC_pwise, "Method": "PCA", "Marker": marker})])
 
-        Pf2_pwise = centroid_dist(Pf2_cell) / np.mean(pdist(Pf2_all.tolist()))
-        PC_pwise = centroid_dist(PC_cell) / np.mean(pdist(PC_all.tolist()))
-        dist_DF = pd.concat([dist_DF, pd.DataFrame({"Rank": [rank], "Norm Centroid Distance": Pf2_pwise, "Method": "PARAFAC2"})])
-        dist_DF = pd.concat([dist_DF, pd.DataFrame({"Rank": [rank], "Norm Centroid Distance": PC_pwise, "Method": "PCA"})])
-    
-    var_DF = var_DF.reset_index(drop=True)
     dist_DF = dist_DF.reset_index(drop=True)
-    sns.lineplot(data=dist_DF, x="Rank", y="Norm Centroid Distance", hue="Method", ax=ax)
-    ax.set(title=marker)
+    for i, marker in enumerate(markers):
+        plot_DF = dist_DF.loc[dist_DF.Marker == marker]
+        sns.lineplot(data=plot_DF, x="Rank", y="Norm Centroid Distance", hue="Method", ax=ax[i])
+        ax[i].set(title=marker)
 
 
 def PCA_look(data, ranks, marker, cutoff, ax):
@@ -168,7 +164,7 @@ def all_drug_dist(data, rank, ax):
         var_DF = pd.concat([var_DF, pd.DataFrame({"Drug": [drug], "% Total Variance": PC_var, "Method": "PCA"})])
     
     var_DF = var_DF.reset_index(drop=True)
-    sns.swarmplot(data=var_DF, x="Method", y="% Total Variance", size=3, ax=ax)
+    sns.swarmplot(data=var_DF, x="Method", y="% Total Variance", size=2, ax=ax)
     ax.set(title="Rank = " + str(rank))
 
 
@@ -190,17 +186,19 @@ def all_marker_dist(data, rank, cutoff, ax):
 
     markers = [item for value in marker_genes.values() for item in (value if isinstance(value, list) else [value])]
 
+    dataDF, projDF, _ = flattenData(data, factors, projs)
+    Pf2_all = projDF.values[:, 0:-1]
+
     for marker in markers:
         if marker in dataDF_init.columns:
-            dataDF, projDF, _ = flattenData(data, factors, projs)
-            dataDF["Cell"] = "Other"
-            dataDF.loc[dataDF[marker] > cutoff, "Cell"] = "Marker Positive"
-            Pf2_all = projDF.values[:, 0:-1]
-            Pf2_cell = projDF.loc[dataDF.Cell == "Marker Positive"].values[:, 0:-1]
+            dataDF[marker + " status"] = "Marker Negative"
+            dataDF.loc[dataDF[marker] > cutoff, marker + " status"] = "Marker Positive"
             
-            pc = PCA(n_components=rank)
-            PC_all = pc.fit_transform(data.unfold())
-            PC_cell = PC_all[dataDF.Cell == "Marker Positive"]
+
+    for marker in markers:
+        if marker in dataDF_init.columns:
+            Pf2_cell = projDF.loc[dataDF[marker + " status"] == "Marker Positive"].values[:, 0: -1]
+            PC_cell = PC_all[dataDF[marker + " status"] == "Marker Positive"]
 
             Pf2_pwise = centroid_dist(Pf2_cell) / np.mean(pdist(Pf2_all.tolist()))
             PC_pwise = centroid_dist(PC_cell) / np.mean(pdist(PC_all.tolist()))
@@ -209,7 +207,7 @@ def all_marker_dist(data, rank, cutoff, ax):
 
     dist_DF = dist_DF.reset_index(drop=True)
     print(dist_DF)
-    sns.swarmplot(data=dist_DF, x="Method", y="Norm Centroid Distance", size=3, ax=ax)
+    sns.swarmplot(data=dist_DF, x="Method", y="Norm Centroid Distance", size=2, ax=ax)
     ax.set(title="Rank = " + str(rank))
 
 
