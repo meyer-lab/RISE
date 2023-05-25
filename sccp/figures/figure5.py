@@ -12,7 +12,6 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist
 
 
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
@@ -21,37 +20,41 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
-    
-    ranks = [5, 15, 25, 35]
-    #PCA_look(data, ranks, "NKG7", 0.1, ax[0:15])
-    dim_red_var_drug(data, ranks, ["Budesonide", "Loteprednol etabonate", "Betamethasone Valerate", "Triamcinolone Acetonide"], ax[0:4])
-    dim_red_var_cell(data, ranks, ["NKG7", "CD79A", "CD3D", "LAD1"], 0.1, ax[4:8])
 
-    all_drug_dist(data, 24, ax[8])
-    all_marker_dist(data, 24, 0.03, ax[9])
+    ranks = [5, 15, 25, 35]
+
+    Pf2s = [parafac2_nd(data, rank=rank, random_state=1, verbose=True) for rank in ranks]
+
+    # PCA_look(data, ranks, "NKG7", 0.1, ax[0:15])
+    dim_red_var_drug(data, ranks, Pf2s, ["Budesonide", "Loteprednol etabonate", "Betamethasone Valerate", "Triamcinolone Acetonide"], ax[0:4])
+    dim_red_var_cell(data, ranks, Pf2s, ["NKG7", "CD79A", "CD3D", "LAD1"], 0.1, ax[4:8])
+
+    rank = 24
+    Pf2 = parafac2_nd(data, rank=rank, random_state=1, verbose=True)
+    pc = PCA(n_components=rank)
+    PC = pc.fit_transform(data.unfold())
+    
+
+    all_drug_dist(data, Pf2, PC, ax[8])
+    all_marker_dist(data, Pf2, PC, 0.03, ax[9])
 
     return f
 
 
-def dim_red_var_drug(data, ranks, drugs, ax):
+def dim_red_var_drug(data, ranks, Pf2s, drugs, ax):
     """Plots normalized variance for either a variable or for a group of cells"""
     var_DF = pd.DataFrame()
-    for rank in ranks:
-        _, factors, projs, _ = parafac2_nd(
-        data,
-        rank=rank,
-        random_state=1,
-        verbose=True,
-        )
+    for ii, rank in enumerate(ranks):
+        _, factors, projs, _ = Pf2s[ii]
         _, projDF, _ = flattenData(data, factors, projs)
         for drug in drugs:
             Pf2_all = projDF.values[:, 0:-1]
             Pf2_drug = projDF.loc[projDF.Drug == drug].values[:, 0:-1]
-            
+
             pc = PCA(n_components=rank)
             PC_all = pc.fit_transform(data.unfold())
             PC_drug = PC_all[projDF.Drug == drug]
-            
+
             Pf2_var = np.sum(np.var(Pf2_drug, axis=0)) / np.sum(np.var(Pf2_all, axis=0))
             PC_var = np.sum(np.var(PC_drug, axis=0)) / np.sum(np.var(PC_all, axis=0))
             var_DF = pd.concat([var_DF, pd.DataFrame({"Rank": [rank], "% Total Variance": Pf2_var, "Method": "PARAFAC2", "Drug": drug})])
@@ -64,37 +67,36 @@ def dim_red_var_drug(data, ranks, drugs, ax):
         ax[i].set(title=drug)
 
 
-def dim_red_var_cell(data, ranks, markers, cutoff, ax):
+def dim_red_var_cell(data, ranks, Pf2s, markers, cutoff, ax):
     """Plots normalized variance for either a variable or for a group of cells"""
     var_DF = pd.DataFrame()
     dist_DF = pd.DataFrame()
-    for rank in ranks:
-        _, factors, projs, _ = parafac2_nd(
-        data,
-        rank=rank,
-        random_state=1,
-        verbose=True,
-        )
+    for ii, rank in enumerate(ranks):
+        _, factors, projs, _ = Pf2s[ii]
         dataDF, projDF, _ = flattenData(data, factors, projs)
         for marker in markers:
             dataDF[marker + " status"] = "Marker Negative"
             dataDF.loc[dataDF[marker] > cutoff, marker + " status"] = "Marker Positive"
             Pf2_all = projDF.values[:, 0:-1]
-            Pf2_cell = projDF.loc[dataDF[marker + " status"] == "Marker Positive"].values[:, 0:-1]
-            
+            Pf2_cell = projDF.loc[
+                dataDF[marker + " status"] == "Marker Positive"
+            ].values[:, 0:-1]
+
             pc = PCA(n_components=rank)
             PC_all = pc.fit_transform(data.unfold())
             PC_cell = PC_all[dataDF[marker + " status"] == "Marker Positive"]
 
-            Pf2_pwise = centroid_dist(Pf2_cell) / np.mean(pdist(Pf2_all.tolist()))
-            PC_pwise = centroid_dist(PC_cell) / np.mean(pdist(PC_all.tolist()))
+            Pf2_pwise = centroid_dist(Pf2_cell) / centroid_dist(Pf2_all)
+            PC_pwise = centroid_dist(PC_cell) / centroid_dist(PC_all)
             dist_DF = pd.concat([dist_DF, pd.DataFrame({"Rank": [rank], "Norm Centroid Distance": Pf2_pwise, "Method": "PARAFAC2", "Marker": marker})])
             dist_DF = pd.concat([dist_DF, pd.DataFrame({"Rank": [rank], "Norm Centroid Distance": PC_pwise, "Method": "PCA", "Marker": marker})])
 
     dist_DF = dist_DF.reset_index(drop=True)
     for i, marker in enumerate(markers):
         plot_DF = dist_DF.loc[dist_DF.Marker == marker]
-        sns.lineplot(data=plot_DF, x="Rank", y="Norm Centroid Distance", hue="Method", ax=ax[i])
+        sns.lineplot(
+            data=plot_DF, x="Rank", y="Norm Centroid Distance", hue="Method", ax=ax[i]
+        )
         ax[i].set(title=marker)
 
 
@@ -138,51 +140,38 @@ def centroid_dist(points):
     return np.mean(row_norms)
 
 
-def all_drug_dist(data, rank, ax):
+def all_drug_dist(data, Pf2, PC, ax):
     """Calculates mean distance between clust points and all others"""
     var_DF = pd.DataFrame()
 
-    _, factors, projs, _ = parafac2_nd(
-    data,
-    rank=rank,
-    random_state=1,
-    verbose=True,
-    )
+    factors = Pf2[1]
+    projs = Pf2[2]
     _, projDF, _ = flattenData(data, factors, projs)
     Pf2_all = projDF.values[:, 0:-1]
 
-    pc = PCA(n_components=rank)
-    PC_all = pc.fit_transform(data.unfold())
 
     for drug in projDF.Drug.unique():
         Pf2_drug = projDF.loc[projDF.Drug == drug].values[:, 0:-1]
-        PC_drug = PC_all[projDF.Drug == drug]
-            
+        PC_drug = PC[projDF.Drug == drug]
+
         Pf2_var = np.sum(np.var(Pf2_drug, axis=0)) / np.sum(np.var(Pf2_all, axis=0))
-        PC_var = np.sum(np.var(PC_drug, axis=0)) / np.sum(np.var(PC_all, axis=0))
+        PC_var = np.sum(np.var(PC_drug, axis=0)) / np.sum(np.var(PC, axis=0))
         var_DF = pd.concat([var_DF, pd.DataFrame({"Drug": [drug], "% Total Variance": Pf2_var, "Method": "PARAFAC2"})])
         var_DF = pd.concat([var_DF, pd.DataFrame({"Drug": [drug], "% Total Variance": PC_var, "Method": "PCA"})])
     
     var_DF = var_DF.reset_index(drop=True)
     sns.swarmplot(data=var_DF, x="Method", y="% Total Variance", size=2, ax=ax)
-    ax.set(title="Rank = " + str(rank))
+    ax.set(title="Rank = " + str(PC.shape[1]))
 
 
-def all_marker_dist(data, rank, cutoff, ax):
+def all_marker_dist(data, Pf2, PC, cutoff, ax):
     """Calculates mean distance between clust points and all others"""
     dist_DF = pd.DataFrame()
 
-    _, factors, projs, _ = parafac2_nd(
-    data,
-    rank=rank,
-    random_state=1,
-    verbose=True,
-    )
+    factors = Pf2[1]
+    projs = Pf2[2]
     dataDF_init, projDF, _ = flattenData(data, factors, projs)
     Pf2_all = projDF.values[:, 0:-1]
-
-    pc = PCA(n_components=rank)
-    PC_all = pc.fit_transform(data.unfold())
 
     markers = [item for value in marker_genes.values() for item in (value if isinstance(value, list) else [value])]
 
@@ -193,66 +182,39 @@ def all_marker_dist(data, rank, cutoff, ax):
         if marker in dataDF_init.columns:
             dataDF[marker + " status"] = "Marker Negative"
             dataDF.loc[dataDF[marker] > cutoff, marker + " status"] = "Marker Positive"
-            
 
     for marker in markers:
         if marker in dataDF_init.columns:
             Pf2_cell = projDF.loc[dataDF[marker + " status"] == "Marker Positive"].values[:, 0: -1]
-            PC_cell = PC_all[dataDF[marker + " status"] == "Marker Positive"]
+            PC_cell = PC[dataDF[marker + " status"] == "Marker Positive"]
 
-            Pf2_pwise = centroid_dist(Pf2_cell) / np.mean(pdist(Pf2_all.tolist()))
-            PC_pwise = centroid_dist(PC_cell) / np.mean(pdist(PC_all.tolist()))
+            Pf2_pwise = centroid_dist(Pf2_cell) / centroid_dist(Pf2_all)
+            PC_pwise = centroid_dist(PC_cell) / centroid_dist(PC)
             dist_DF = pd.concat([dist_DF, pd.DataFrame({"Marker": [marker], "Norm Centroid Distance": Pf2_pwise, "Method": "PARAFAC2"})])
             dist_DF = pd.concat([dist_DF, pd.DataFrame({"Marker": [marker], "Norm Centroid Distance": PC_pwise, "Method": "PCA"})])
 
     dist_DF = dist_DF.reset_index(drop=True)
     print(dist_DF)
     sns.swarmplot(data=dist_DF, x="Method", y="Norm Centroid Distance", size=2, ax=ax)
-    ax.set(title="Rank = " + str(rank))
+    ax.set(title="Rank = " + str(PC.shape[1]))
 
 
 marker_genes = {
-    'Monocytes': [
-        'CD14',
-        'CD33',
-        'LYZ',
-        'LGALS3',
-        'CSF1R',
-        'ITGAX',
-        'HLA-DRB1'],
-    'Dendritic Cells': [
-        'LAD1',
-        'LAMP3',
-        'TSPAN13',
-        'CLIC2',
-        'FLT3'],
-    'B-cells': [
-        'MS4A1',
-        'CD19',
-        'CD79A'],
-    'T-helpers': [
-        'TNF',
-        'TNFRSF18',
-        'IFNG',
-        'IL2RA',
-        'BATF'],
-    'T cells': [
-        'CD27',
-        'CD69',
-        'CD2',
-        'CD3D',
-        'CXCR3',
-        'CCL5',
-        'IL7R',
-        'CXCL8',
-        'GZMK'],
-    'Natural Killers': [
-        'NKG7',
-        'GNLY',
-        'PRF1',
-        'FCGR3A',
-        'NCAM1',
-        'TYROBP'],
-    'CD8': [
-        'CD8A',
-        'CD8B']}
+    "Monocytes": ["CD14", "CD33", "LYZ", "LGALS3", "CSF1R", "ITGAX", "HLA-DRB1"],
+    "Dendritic Cells": ["LAD1", "LAMP3", "TSPAN13", "CLIC2", "FLT3"],
+    "B-cells": ["MS4A1", "CD19", "CD79A"],
+    "T-helpers": ["TNF", "TNFRSF18", "IFNG", "IL2RA", "BATF"],
+    "T cells": [
+        "CD27",
+        "CD69",
+        "CD2",
+        "CD3D",
+        "CXCR3",
+        "CCL5",
+        "IL7R",
+        "CXCL8",
+        "GZMK",
+    ],
+    "Natural Killers": ["NKG7", "GNLY", "PRF1", "FCGR3A", "NCAM1", "TYROBP"],
+    "CD8": ["CD8A", "CD8B"],
+}

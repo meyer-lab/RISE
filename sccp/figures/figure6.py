@@ -64,7 +64,7 @@ def makeFigure():
         print(np.abs(factors[0])[sort_idx[:, j]])
     #CRISPR_DF.to_csv("Perturb_Comps_CR.csv")
 
-    plotFactors(factors, X, ax[0:2], reorder=(0, 2), trim=(2,))
+    plotFactors(factors, X, ax[0:3], reorder=(0, 2), trim=(2,))
 
     sns.heatmap(
         data=reorder_table(projs[0])[0],
