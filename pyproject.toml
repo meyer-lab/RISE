@@ -18,7 +18,8 @@ h5netcdf = "^1.1.0"
 anndata = "^0.9.1"
 torch = "2.0.0"
 numba = "^0.57.0"
-umap-learn = "^0.5.3"
+datashader = { git = "https://github.com/holoviz/datashader.git", rev = "c40e976b8b0c6bfc2fd1f4096c0e60d2ad10a458" }
+umap-learn = {version = "0.5.3", extras = ["plot"]}
 mygene = "^3.2.2"
 
 [tool.poetry.dev-dependencies]

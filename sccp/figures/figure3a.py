@@ -3,6 +3,7 @@ Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs: investiga
 """
 import numpy as np
 import umap
+import umap.plot as plt
 from .common import subplotLabel, getSetup, umap_axis
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -11,7 +12,7 @@ from ..parafac2 import parafac2_nd
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((8, 10), (5, 6))
+    ax, f = getSetup((8, 10), (3, 3))
     subplotLabel(ax)  # Add subplot labels
 
     # Import of single cells: [Drug, Cell, Gene]
@@ -27,24 +28,14 @@ def makeFigure():
     CompW = allP @ factors[1]
 
     # UMAP dimension reduction
-    ump = umap.UMAP(random_state=1).fit_transform(allP)
-    x = ump[::10, 0]
-    y = ump[::10, 1]
+    ump = umap.UMAP(random_state=1).fit(allP)
 
-    for i in range(rank):
-        tl = ax[i].scatter(
-            x,
-            y,
-            marker=".",
-            c=CompW[::10, i],
-            cmap="PRGn",
-            vmin=-0.3,
-            vmax=0.3,
-            linewidths=0,
-            s=2.0,
+    for i in range(2):
+        plt.points(
+            ump, values=CompW[:, i], theme="fire", ax=ax[i], width=400, height=400
         )
-        # f.colorbar(tl, ax=ax[i])
+
         ax[i].set(title=f"Component {i + 1}")
-        umap_axis(x, y, ax[i])
+        # umap_axis(x, y, ax[i])
 
     return f
