@@ -84,3 +84,26 @@ def ThompsonXA_SCGenes(offset: float = 1.0) -> anndata.AnnData:
 
     # Assign cells a count per-experiment so we can reindex
     return tensorFy(X, "Drugs")
+
+
+def import_pancreas(tensor=True, method=str()):
+    pancreas = anndata.read_h5ad("/home/brianoj/SC_data/pancreas/pancreas" + method + ".h5ad")
+
+    # Remove NaNs
+    pancreas = pancreas[:, np.all(np.isfinite(pancreas.X), axis=0)]
+
+    if tensor:
+        return tensorFy(pancreas, "batch")
+    else:
+        return pancreas
+
+
+def import_pancreas_all(tensor=True, method=str()):
+    pancreas = anndata.read_h5ad("/home/brianoj/SC_data/pancreas/pancreas.h5ad")
+    pancreas.obsm["Unintegrated"] = pancreas.obsm["X_pca"]
+    methods = ["Unintegrated", "scanorama", "mnnpy", "mnncorrect", "harmony", "cca", "bbknn_trim", "bbknn_faiss", "bbknn_ckdtree", "bbknn"]
+    for method in methods:
+        pancreas_corr = anndata.read_h5ad("/home/brianoj/SC_data/pancreas/pancreas_" + method + ".h5ad")
+        pancreas.obsm[method] = pancreas_corr.obsm["X_pca"]
+
+    return pancreas, methods
