@@ -7,8 +7,7 @@ from .common import (
     getSetup,
     flattenData,
     plotBatchUMAP,
-    plotCellUMAP,
-    plotCmpUMAP,
+    plotCellUMAP
 )
 from ..imports.scRNA import import_pancreas
 from ..parafac2 import parafac2_nd
@@ -16,7 +15,9 @@ import umap
 import scanpy as sc
 import pandas as pd
 from sklearn.decomposition import PCA
-import scib
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 def makeFigure():
@@ -26,23 +27,13 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-
-    # Import of single cells: [Drug, Cell, Gene]
     pancreas = import_pancreas(tensor=False)
     cellTypes = pancreas.obs["celltype"].values
-    sc.pp.pca(pancreas)
-    sc.pp.neighbors(pancreas)
-    sc.tl.umap(pancreas)
-    sc.pl.umap(pancreas, color=['batch'], palette=sc.pl.palettes.vega_20_scanpy, ax=ax[0])
 
-    pancreas = import_pancreas(tensor=False, method="_bbknn")
-    sc.pl.umap(pancreas, color=['batch'], palette=sc.pl.palettes.vega_20_scanpy, ax=ax[1])
-    #sc.pl.umap(pancreas, color=['celltype'], palette=sc.pl.palettes.vega_20_scanpy, ax=ax[1])
-
-    pancreas = import_pancreas(tensor=True)
+    pancreas_pf2 = import_pancreas(tensor=True)
     rank = 50
-    _, factors, projs, _ = parafac2_nd(pancreas, rank=rank, random_state=1, verbose=True)
-    dataDF, _, _ = flattenData(pancreas, factors, projs)
+    _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
+    dataDF, _, _ = flattenData(pancreas_pf2, factors, projs)
 
     # UMAP dimension reduction
     umapReduc = umap.UMAP(random_state=1)
@@ -53,4 +44,28 @@ def makeFigure():
     plotBatchUMAP(umap_DF, ax[2])
     plotCellUMAP(umap_DF, ax[3])
 
+    # Import of single cells: [Drug, Cell, Gene]
+    cellTypes = pancreas.obs["celltype"].values
+    sc.pp.pca(pancreas)
+    sc.pp.neighbors(pancreas)
+    sc.tl.umap(pancreas)
+    umap_DF = UMAP_DFify(pancreas, dataDF.Drug, cellTypes)
+    plotBatchUMAP(umap_DF, ax[0])
+    plotCellUMAP(umap_DF, ax[1])
+
+    pancreas = import_pancreas(tensor=False, method="_bbknn")
+    umap_DF = UMAP_DFify(pancreas, dataDF.Drug, cellTypes)
+    plotBatchUMAP(umap_DF, ax[4])
+    plotCellUMAP(umap_DF, ax[5])
+
+    pancreas = import_pancreas(tensor=False, method="_harmony")
+    umap_DF = UMAP_DFify(pancreas, dataDF.Drug, cellTypes)
+    plotBatchUMAP(umap_DF, ax[6])
+    plotCellUMAP(umap_DF, ax[7])
+
     return f
+
+
+def UMAP_DFify(data, drug, celltypes):
+    """Provides dataframe version of UMAP data from anndata source"""
+    return pd.DataFrame({"UMAP 1": data.obsm["X_umap"][:, 0], "UMAP 2": data.obsm["X_umap"][:, 1], "Batch": drug, "Cell Type": celltypes})
