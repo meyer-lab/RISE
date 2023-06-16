@@ -13,6 +13,10 @@ import scipy.cluster.hierarchy as sch
 from ..parafac2 import Pf2X
 from ..crossVal import CrossVal
 from ..decomposition import R2X
+import os
+from os.path import join
+
+path_here = os.path.dirname(os.path.dirname(__file__))
 
 
 matplotlib.use("AGG")
@@ -93,7 +97,7 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple()):
+def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGenes=False):
     """Plots parafac2 factors."""
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
@@ -118,7 +122,6 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple()):
         if i in reorder:
             X, ind = reorder_table(X)
             yt = yt[ind]
-
         sns.heatmap(
             data=X,
             xticklabels=xticks,
@@ -130,13 +133,13 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple()):
 
         axs[i].set_title("Factors")
         axs[i].tick_params(axis="y", rotation=0)
-
-        if i == 2 and len(yt) > 50:
-            sort_idx = np.argsort(X, axis=0)
-            for j in range(rank):
-                sort_data = yt[sort_idx[:, j]]
-                # print("Bottom 10 Genes Cmp." + str(j + 1) + ":", sort_data[:10])
-                # print("Top 10 Genes Cmp." + str(j + 1) + ":", np.flip(sort_data[-10:]))
+        
+        if saveGenes == True:
+            if i == 2 and len(yt) > 50:
+                df = pd.DataFrame(data=X, index=yt, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
+                df.to_csv(join(path_here, "data/TopBotGenes_Cmp"+str(rank)+".csv"))
+   
+                
 
 
 def reorder_table(projs):
