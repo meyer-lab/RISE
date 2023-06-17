@@ -16,22 +16,22 @@ from ..metric import distDrugDF, distGeneDF, distAllDrugDF, distAllGeneDF
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((6, 6), (2, 2))
+    ax, f = getSetup((5, 5), (2, 2))
     subplotLabel(ax)  # Add subplot labels
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
 
-    ranks = [25, 15, 10, 5]
+    ranks = [25, 20, 15, 10, 5, 2]
     
     Pf2s = [parafac2_nd(data, rank=rank, random_state=1, verbose=True) for rank in ranks]
     PCs = [PCA(n_components=rank).fit_transform(data.unfold()) for rank in ranks]
     
-    drugs = ["Triamcinolone Acetonide"]
+    drugs = ["Dexrazoxane HCl (ICRF-187, ADR-529)"]
     drugDistanceDF = distDrugDF(data, ranks, Pf2s, PCs, drugs)
     plotDistDrug(drugDistanceDF, drugs, ax[0:1])
     
-    genes = ["NKG7"]
+    genes = ["GNLY"]
     
     geneDistanceDF = distGeneDF(data, ranks, Pf2s, PCs, genes)
     plotDistGene(geneDistanceDF, genes, ax[1:2])
@@ -40,8 +40,6 @@ def makeFigure():
     plotDistAllDrug(allDrugDF, ranks[0], ax[2])
     
     allGeneDF = distAllGeneDF(data, Pf2s[0], PCs[0])
-    
-    print(allGeneDF)
     plotDistAllGene(allGeneDF, ranks[0], ax[3])
     
   

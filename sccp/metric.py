@@ -16,8 +16,8 @@ def distDrugDF(data, ranks, Pf2s, PCs, drugs):
             pf2Drug = projDF.loc[projDF.Drug == drug].values[:, 0:-1]
             pcaDrug = pcaAll[projDF.Drug == drug]
 
-            pf2Dist = centroid_dist(pf2Drug) / centroid_dist(pf2All)
-            pcaDist = centroid_dist(pcaDrug) / centroid_dist(pcaAll)
+            pf2Dist = len(projDF.Drug.unique()) * centroid_dist(pf2Drug) / centroid_dist(pf2All)
+            pcaDist = len(projDF.Drug.unique()) * centroid_dist(pcaDrug) / centroid_dist(pcaAll)
             
             distDF = pd.concat([distDF, pd.DataFrame({"Rank": [rank], "Normalized Centroid Distance": pf2Dist, "Method": "PARAFAC2", "Drug": drug})])
             distDF = pd.concat([distDF, pd.DataFrame({"Rank": [rank], "Normalized Centroid Distance": pcaDist, "Method": "PCA", "Drug": drug})])
@@ -103,8 +103,8 @@ def distAllGeneDF(data, Pf2s, PCs):
             pf2Gene = projDF.loc[dataDF[marker + " status"] == "Marker Positive"].values[:, 0: -1]
             pcaGene = pcaAll[dataDF[marker + " status"] == "Marker Positive"]
 
-            pf2Dist = len(markers) * centroid_dist(pf2Gene) / centroid_dist(pf2All)
-            pcaDist = len(markers) * centroid_dist(pcaGene) / centroid_dist(pcaAll)
+            pf2Dist = centroid_dist(pf2Gene) / centroid_dist(pf2All)
+            pcaDist = centroid_dist(pcaGene) / centroid_dist(pcaAll)
             distDF = pd.concat([distDF, pd.DataFrame({"Marker": [marker], "Normalized Centroid Distance": pf2Dist, "Method": "PARAFAC2"})])
             distDF = pd.concat([distDF, pd.DataFrame({"Marker": [marker], "Normalized Centroid Distance": pcaDist, "Method": "PCA"})])
 
