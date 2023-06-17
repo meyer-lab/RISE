@@ -341,6 +341,30 @@ def plotCV(data, rank, trainPerc, ax):
 
     ax.legend()
 
+def plotDistDrug(df, drugs, ax):
+    """Plots normalized centroid distance across PCA and Pf2 for different ranks"""
+    for i, drug in enumerate(drugs):
+        plotDF = df.loc[df.Drug == drug]
+        sns.lineplot(data=plotDF, x="Rank", y="Normalized Centroid Distance", hue="Method", ax=ax[i])
+        ax[i].set(title=drug)
+        
+def plotDistGene(df, genes, ax):
+    """Plots normalized centroid distance across PCA and Pf2 for different ranks"""
+    for i, gene in enumerate(genes):
+        plotDF = df.loc[df["Marker"] == gene]
+        sns.lineplot(data=plotDF, x="Rank", y="Normalized Centroid Distance", hue="Method", ax=ax[i])
+        ax[i].set(title=gene)
+        
+def plotDistAllDrug(df, rank, ax):
+    """Plots all Normalized Centroid Distance for all drugs for Pf2 and PCA"""
+    sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", ax=ax)
+    ax.set(title="Rank = " + str(rank))
+    
+def plotDistAllGene(df, rank, ax):
+    """Plots all Normalized Centroid Distance for all genes for Pf2 and PCA"""
+    sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", ax=ax)
+    ax.set(title="Rank = " + str(rank))
+
 def plotCombGO(GO, geneValue, axs):
     """Plots combines score for gene ontology"""
     for i, geneset in enumerate(np.unique(GO["Gene Set"])):
