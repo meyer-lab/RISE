@@ -8,6 +8,7 @@ import seaborn as sns
 import pandas as pd
 import matplotlib
 from matplotlib import gridspec, pyplot as plt
+import umap.plot
 import numpy as np
 import scipy.cluster.hierarchy as sch
 from ..parafac2 import Pf2X
@@ -189,67 +190,51 @@ def flattenData(data, factors, projs):
     return dataDF, projDF, weightedDF
 
 
-def plotGeneUMAP(genes, decomp, points, dataDF, f, axs):
+def plotGeneUMAP(genes, decomp, points, dataDF, axs):
     """Scatterplot of UMAP visualization weighted by gene"""
-    umap1 = points[::10, 0]
-    umap2 = points[::10, 1]
+    subset = np.random.choice(a=[False, True], size=np.shape(dataDF)[0], p=[.93, .07])
     for i, genez in enumerate(genes):
         geneList = dataDF[genez].to_numpy()
-        cmap = plt.cm.get_cmap("plasma")
-        tl = axs[i].scatter(
-            umap1,
-            umap2,
-            c=geneList[::10],
-            cmap=cmap.reversed(),
-            s=0.1,
-        )
-        f.colorbar(tl, ax=axs[i])
+        psm = plt.pcolormesh([geneList, geneList], cmap=matplotlib.cm.get_cmap('viridis'))
+        plot = umap.plot.points(points, values=geneList, theme='viridis', subset_points= subset, ax=axs[i])
+        colorbar= plt.colorbar(psm, ax=plot)
         axs[i].set(
             title=genez + "-" + decomp + "-Based Decomposition",
-        )
-        umap_axis(umap1, umap2, axs[i])
+            ylabel="UMAP2",
+            xlabel="UMAP1")
 
     return
 
 
 def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
     """Scatterplot of UMAP visualization weighted by condition"""
-    umap1 = points[::10, 0]
-    umap2 = points[::10, 1]
+    subset = np.random.choice(a=[False, True], size=len(totaldrugs), p=[.93, .07])
     for i, drugz in enumerate(drugs):
         drugList = np.where(np.asarray(totaldrugs == drugz), drugz, "Other Drugs")
-        sns.scatterplot(
-            x=umap1, y=umap2, hue=drugList[::10], s=1, palette="muted", ax=axs[i]
-        )
-        handles, labels = axs[i].get_legend_handles_labels()
-        axs[i].legend(handles=handles, labels=labels)
+        umap.plot.points(
+            points, labels=drugList, ax=axs[i], color_key_cmap="tab20", show_legend=True, subset_points=subset)
         axs[i].set(
             title=decomp + "-Based Decomposition",
-        )
-        umap_axis(umap1, umap2, axs[i])
+        ylabel="UMAP2",
+        xlabel="UMAP1")
 
     return
 
 
-def plotCmpUMAP(projDF, projName, points, f, axs):
+def plotCmpUMAP(weightedProj, cmp, points, axs):
     """Scatterplot of UMAP visualization weighted by projections for a component"""
-    umap1 = points[::10, 0]
-    umap2 = points[::10, 1]
-    for i, proj in enumerate(projName):
-        projs = projDF[proj].values
-        cmap = plt.cm.get_cmap("plasma")
-        tl = axs[i].scatter(
-            umap1,
-            umap2,
-            c=projs[::10],
-            cmap=cmap.reversed(),
-            s=0.2,
-        )
-        f.colorbar(tl, ax=axs[i])
+    subset = np.random.choice(a=[False, True], size=np.shape(weightedProj)[0], p=[.93, .07])
+    for i, proj in enumerate(cmp):
+        weightedProjs = weightedProj[:, proj-1]
+        psm = plt.pcolormesh([weightedProjs, weightedProjs], cmap=matplotlib.cm.get_cmap('viridis'))
+        plot = umap.plot.points(points, values=weightedProjs, theme='viridis', subset_points= subset, ax=axs[i])
+        colorbar= plt.colorbar(psm, ax=plot)
+
         axs[i].set(
-            title=proj + "-Pf2-Based Decomposition",
+            ylabel="UMAP2",
+            xlabel="UMAP1",
+            title="Cmp. " + str(proj) + "-Pf2-Based Decomposition",
         )
-        umap_axis(umap1, umap2, axs[i])
 
     return
 
@@ -269,17 +254,6 @@ def plotCellUMAP(decomp_DF, ax):
     ax.legend(handles=handles, labels=labels)
 
     return
-
-
-def umap_axis(x, y, ax):
-    ax.set(
-        ylabel="UMAP2",
-        xlabel="UMAP1",
-        xticks=np.linspace(np.min(x), np.max(x), num=5),
-        yticks=np.linspace(np.min(y), np.max(y), num=5),
-    )
-    ax.axes.xaxis.set_ticklabels([])
-    ax.axes.yaxis.set_ticklabels([])
 
 
 def plotR2X(data, rank, ax):
@@ -357,12 +331,12 @@ def plotDistGene(df, genes, ax):
         
 def plotDistAllDrug(df, rank, ax):
     """Plots all Normalized Centroid Distance for all drugs for Pf2 and PCA"""
-    sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", ax=ax)
+    sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", hue="Method", ax=ax)
     ax.set(title="All Drugs: Rank = " + str(rank))
     
 def plotDistAllGene(df, rank, ax):
     """Plots all Normalized Centroid Distance for all genes for Pf2 and PCA"""
-    sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", ax=ax)
+    sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", hue="Method", ax=ax)
     ax.set(title="All Canonical Genes: Rank = " + str(rank))
 
 def plotCombGO(GO, geneValue, axs):
