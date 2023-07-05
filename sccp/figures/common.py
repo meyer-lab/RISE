@@ -212,22 +212,20 @@ def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
     return
 
 
-def plotCmpUMAP(weightedProj, cmp, points, axs):
-    """Scatterplot of UMAP visualization weighted by projections for a component"""
-    subset = np.random.choice(a=[False, True], size=np.shape(weightedProj)[0], p=[.93, .07])
-    for i, proj in enumerate(cmp):
-        weightedProjs = weightedProj[:, proj-1]
-        psm = plt.pcolormesh([weightedProjs, weightedProjs], cmap=matplotlib.cm.get_cmap('viridis'))
-        plot = umap.plot.points(points, values=weightedProjs, theme='viridis', subset_points= subset, ax=axs[i])
-        colorbar= plt.colorbar(psm, ax=plot)
+def plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax):
+    """Scatterplot of UMAP visualization weighted by
+    projections for a component and cell state"""
+    allP = np.concatenate(projs, axis=0)
+    weightedProjs = allP[:, cellState-1] * factors[1][cellState-1, cmp-1]
+    subset = np.random.choice(a=[False, True], size= len(weightedProjs), p=[.95, .05])
+    psm = plt.pcolormesh([weightedProjs, weightedProjs], cmap=matplotlib.cm.get_cmap('viridis'))
+    plot = umap.plot.points(pf2Points, values=weightedProjs, theme='viridis', subset_points= subset, ax=ax)
+    colorbar= plt.colorbar(psm, ax=plot)
+    ax.set(
+        ylabel="UMAP2",
+        xlabel="UMAP1",
+        title="Cell State:" + str(cellState)+"-Pf2-Based Decomposition")
 
-        axs[i].set(
-            ylabel="UMAP2",
-            xlabel="UMAP1",
-            title="Cmp. " + str(proj) + "-Pf2-Based Decomposition",
-        )
-
-    return
 
 def plotBatchUMAP(decomp_DF, ax):
     """Scatterplot of UMAP visualization weighted by condition"""
