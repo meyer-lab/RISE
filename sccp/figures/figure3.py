@@ -26,7 +26,7 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes(offset=1.0)
-    rank = 25
+    rank = 2
     _, factors, projs, _ = parafac2_nd(
         data,
         rank=rank,
@@ -34,7 +34,7 @@ def makeFigure():
         verbose=True,
     )
 
-    dataDF, projDF, _ = flattenData(data, factors, projs)
+    dataDF = flattenData(data)
 
     # UMAP dimension reduction
     pf2Points = umap.UMAP(random_state=1).fit(np.concatenate(projs, axis=0))
@@ -53,10 +53,10 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Alprostadil",
     ]
-    plotDrugUMAP(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[4:6])
-    plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[6:8])
+    plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[4:6])
+    plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[6:8])
     
-    cmp = [1, 25]
+    cmp = [1]
     allP = np.concatenate(projs, axis=0)
     CompW = allP @ factors[1]
     plotCmpUMAP(CompW, cmp, pf2Points, ax[8:10])

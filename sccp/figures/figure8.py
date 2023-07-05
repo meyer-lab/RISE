@@ -16,6 +16,7 @@ import mygene
 from ..parafac2 import parafac2_nd
 import umap
 from sklearn.decomposition import PCA
+import numpy as np
 
 
 def makeFigure():
@@ -53,15 +54,15 @@ def makeFigure():
         random_state=1,
     )
 
-    dataDF, projDF, _ = flattenData(data, factors, projs)
+    dataDF = flattenData(data)
 
     # UMAP dimension reduction
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
     umapReduc = umap.UMAP(random_state=1)
-    pf2Points = umapReduc.fit_transform(projDF[cmpNames].to_numpy())
+    pf2Points = umapReduc.fit_transform(np.concatenate(projs, axis=0))
 
     pc = PCA(n_components=rank)
-    pcaPoints = pc.fit_transform(dataDF[data.variable_labels].to_numpy())
+    pcaPoints = pc.fit_transform(data.unfold())
     pcaPoints = umapReduc.fit_transform(pcaPoints)
 
     # Mono1, Mono2, NK, CD4, B
@@ -72,7 +73,7 @@ def makeFigure():
         "Budesonide",
         "Betamethasone Valerate",
     ]
-    plotDrugUMAP(drugs, "Pf2", dataDF["Drug"].values, pf2Points, ax[0:5])
-    plotDrugUMAP(drugs, "PCA", dataDF["Drug"].values, pcaPoints, ax[5:10])
+    plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[0:5])
+    plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[5:10])
 
     return f

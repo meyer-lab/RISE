@@ -163,32 +163,23 @@ def plotProj(projs, axs):
     )
 
 
-def flattenData(data, factors, projs):
+def flattenData(data):
     """Flattens tensor into dataframe"""
     cellCount = []
-    for i in range(factors[0].shape[0]):
-        cellCount = np.append(cellCount, projs[i].shape[0])
+    for i in range(len(data.X_list)):
+        cellCount = np.append(cellCount, data.X_list[i].shape[0])
 
-    drugNames = []
+    condNames = []
 
-    for i in range(factors[0].shape[0]):
-        drugNames = np.append(
-            drugNames, np.repeat(data.condition_labels[i], cellCount[i])
+    for i in range(len(data.X_list)):
+        condNames = np.append(
+            condNames, np.repeat(data.condition_labels[i], cellCount[i])
         )
-
-    flatProjs = np.concatenate(projs, axis=0)
     flatData = np.concatenate(data.X_list, axis=0)
-
-    cmpNames = [f"Cmp. {i}" for i in np.arange(1, factors[0].shape[1] + 1)]
-    projDF = pd.DataFrame(data=flatProjs, columns=cmpNames)
     dataDF = pd.DataFrame(data=flatData, columns=data.variable_labels)
-    weightedDF = pd.DataFrame(data=flatProjs @ factors[1], columns=cmpNames)
-    projDF["Drug"] = drugNames
-    dataDF["Drug"] = drugNames
-    weightedDF["Drug"] = drugNames
+    dataDF["Condition"] = condNames
 
-    return dataDF, projDF, weightedDF
-
+    return dataDF
 
 def plotGeneUMAP(genes, decomp, points, dataDF, axs):
     """Scatterplot of UMAP visualization weighted by gene"""

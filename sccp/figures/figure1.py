@@ -8,11 +8,11 @@ from .common import (
 )
 from ..imports.scRNA import import_pancreas, import_pancreas_all
 from ..parafac2 import parafac2_nd
-import umap
 import scib
 import pandas as pd
 import seaborn as sns
 import warnings
+import numpy as np 
 
 warnings.filterwarnings("ignore")
 
@@ -25,16 +25,16 @@ def makeFigure():
     subplotLabel(ax)
 
     methods=["bbknn", "scanorama", "harmony"]
-    ranks = [5, 15, 30, 40, 50, 75]
+    ranks = [2]
     pancreas_pf2 = import_pancreas(tensor=True)
-    rank = 50
+    rank = 2
     _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
-    _, projDF, _ = flattenData(pancreas_pf2, factors, projs)
     pancreas = import_pancreas(tensor=False)
-    pancreas.obsm["Pf2"] = projDF.values
+    flatProjs = np.concatenate(projs, axis=0)
+    pancreas.obsm["Pf2"] = flatProjs
 
-    compare_int_methods(methods, projDF.values, ax=ax[0:2])
-    compare_ranks_methods(ranks, projs, ax=ax[2:4])
+    compare_int_methods(methods, flatProjs, ax=ax[0:2])
+    compare_ranks_methods(ranks, ax=ax[2:4])
 
     return f
 
@@ -60,12 +60,11 @@ def compare_int_methods(methods, projs, ax):
     metric_df = pd.concat([metric_df, pd.DataFrame({"Method": ["PARAFAC2"], "ASW": asw, "kBET": kBET})])
 
     metric_df = metric_df.reset_index(drop=True)
-    print(metric_df)
     sns.barplot(data=metric_df, x="ASW", y="Method", ax=ax[0], color='k')
     sns.barplot(data=metric_df, x="kBET", y="Method", ax=ax[1], color='k')
 
 
-def compare_ranks_methods(ranks, projs, ax): 
+def compare_ranks_methods(ranks, ax): 
     """Compares all sc methodologies using scib metrics"""
     metric_df = pd.DataFrame()
     pancreas_pf2 = import_pancreas(tensor=True)
@@ -73,13 +72,11 @@ def compare_ranks_methods(ranks, projs, ax):
 
     for rank in ranks:
         _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
-        _, projDF, _ = flattenData(pancreas_pf2, factors, projs)
-        pancreas.obsm["Pf2"] = projDF.values
+        pancreas.obsm["Pf2"] = np.concatenate(projs, axis=0)
         asw = scib.me.isolated_labels_asw(pancreas, batch_key="batch", label_key="celltype", embed="Pf2")
         kBET = 1 - scib.me.kBET(pancreas, batch_key="batch", label_key="celltype", type_="full", embed="Pf2")
         metric_df = pd.concat([metric_df, pd.DataFrame({"Rank": [rank], "ASW": asw, "kBET": kBET})])
 
-    print(metric_df)
     metric_df = metric_df.reset_index(drop=True)
     sns.lineplot(data=metric_df, x="Rank", y="ASW", ax=ax[0])
     sns.lineplot(data=metric_df, x="Rank", y="kBET", ax=ax[1])

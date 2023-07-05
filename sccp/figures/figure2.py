@@ -27,20 +27,21 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
+    
     pancreas = import_pancreas(tensor=False)
     cellTypes = pancreas.obs["celltype"].values
-
     pancreas_pf2 = import_pancreas(tensor=True)
-    rank = 50
+    
+    rank = 2
     _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
-    dataDF, _, _ = flattenData(pancreas_pf2, factors, projs)
+    dataDF  = flattenData(pancreas_pf2)
 
     # UMAP dimension reduction
     umapReduc = umap.UMAP(random_state=1)
     pf2Points = umapReduc.fit_transform(np.concatenate(projs, axis=0))
 
     # NK, CD4, B, CD8
-    umap_DF = pd.DataFrame({"UMAP 1": pf2Points[:, 0], "UMAP 2": pf2Points[:, 1], "Batch": dataDF.Drug, "Cell Type": cellTypes})
+    umap_DF = pd.DataFrame({"UMAP 1": pf2Points[:, 0], "UMAP 2": pf2Points[:, 1], "Batch": dataDF["Condition"].values, "Cell Type": cellTypes})
     plotBatchUMAP(umap_DF, ax[2])
     plotCellUMAP(umap_DF, ax[3])
 
@@ -49,17 +50,17 @@ def makeFigure():
     sc.pp.pca(pancreas)
     sc.pp.neighbors(pancreas)
     sc.tl.umap(pancreas)
-    umap_DF = UMAP_DFify(pancreas, dataDF.Drug, cellTypes)
+    umap_DF = UMAP_DFify(pancreas, dataDF["Condition"].values, cellTypes)
     plotBatchUMAP(umap_DF, ax[0])
     plotCellUMAP(umap_DF, ax[1])
 
     pancreas = import_pancreas(tensor=False, method="_bbknn")
-    umap_DF = UMAP_DFify(pancreas, dataDF.Drug, cellTypes)
+    umap_DF = UMAP_DFify(pancreas, dataDF["Condition"].values, cellTypes)
     plotBatchUMAP(umap_DF, ax[4])
     plotCellUMAP(umap_DF, ax[5])
 
     pancreas = import_pancreas(tensor=False, method="_harmony")
-    umap_DF = UMAP_DFify(pancreas, dataDF.Drug, cellTypes)
+    umap_DF = UMAP_DFify(pancreas, dataDF["Condition"].values, cellTypes)
     plotBatchUMAP(umap_DF, ax[6])
     plotCellUMAP(umap_DF, ax[7])
 
