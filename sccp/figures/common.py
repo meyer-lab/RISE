@@ -350,3 +350,28 @@ def plotPvalGO(GO, geneValue, axs):
         ax=axs[i])
         axs[i].set_title(geneValue + "-Genes-" + geneset)
         pvalPlot.set_xscale("log")
+
+
+def plotLabelAllUMAP(conditions, points, ax):
+    """Scatterplot of UMAP visualization weighted by condition or cell type"""
+    subset = np.random.choice(a=[False, True], size=len(conditions), p=[.93, .07])
+    umap.plot.points(
+        points, labels=conditions, ax=ax, color_key_cmap="tab20", show_legend=True, subset_points=subset)
+    ax.set(
+        title="Pf2-Based Decomposition",
+        ylabel="UMAP2",
+        xlabel="UMAP1")
+
+
+def plotCellCount(dataDF, celltypes, ax):
+    """Plots a swarmplot for cell type distribution for each condition """
+    dataDF["Cell Type"] = celltypes
+    celltypeDF = dataDF.groupby(["Cell Type", "Condition"]).size().reset_index(name="Count") 
+    totalCellCount = dataDF.groupby(["Condition"]).size().values
+
+    for j, cond in enumerate(np.unique(dataDF["Condition"].values)):
+        df = celltypeDF.loc[celltypeDF["Condition"] == cond] 
+        perc = df["Count"].values / np.sum(df["Count"].values)
+        celltypeDF.loc[celltypeDF["Condition"] == cond, "Count"] = perc
+            
+    sns.swarmplot(data=celltypeDF, x="Condition", y="Count", hue="Cell Type", ax=ax)
