@@ -17,7 +17,7 @@ def import_scib_data(dataname):
         celltypes = annData.obs["Group"].values.to_numpy()
     elif dataname == "Stimulation2":
         annData = anndata.read_h5ad("/opt/andrew/scib/sim2_norm.h5ad")
-        annData.obs.rename(columns={"Batch": "Condition"}, inplace=True)
+        annData.obs.rename(columns={"SubBatch": "Condition"}, inplace=True)
         celltypes = annData.obs["Group"].values.to_numpy()
     elif dataname == "Pancreas":
         annData = anndata.read_h5ad("/opt/andrew/scib/human_pancreas_norm_complexBatch.h5ad")
