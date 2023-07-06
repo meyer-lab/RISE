@@ -373,3 +373,11 @@ def plotCellCount(dataDF, celltypes, ax):
         celltypeDF.loc[celltypeDF["Condition"] == cond, "Count"] = perc
             
     sns.swarmplot(data=celltypeDF, x="Condition", y="Count", hue="Cell Type", ax=ax)
+    
+def plotMetricSCIB(metricsDF, sheetName, axs):
+    """Plots all metrics values across SCIB and Pf2 for one dataset"""
+    for i, sheets in enumerate(sheetName):
+        datasetDF = metricsDF.loc[metricsDF["Dataset"] == sheets]
+        sns.stripplot(data=datasetDF, x="Metric", y = "Value", hue="Method", ax=axs[i])
+        axs[i].tick_params(axis="x", rotation=45)
+        axs[i].set(title=sheets)
