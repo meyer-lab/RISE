@@ -28,8 +28,6 @@ def makeFigure():
         random_state=1,
     )
     
-    plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,), saveGenes=False)
-    
     dataDF = flattenData(data)
     
      # UMAP dimension reduction
