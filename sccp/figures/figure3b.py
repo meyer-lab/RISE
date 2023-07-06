@@ -3,7 +3,7 @@ Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs: investiga
 """
 import numpy as np
 import umap
-from .common import subplotLabel, getSetup, umap_axis
+from .common import subplotLabel, getSetup
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
 
@@ -39,6 +39,5 @@ def makeFigure():
         s=2.0,
     )
     ax[0].set(title=f"Genes")
-    umap_axis(x, y, ax[0])
 
     return f
