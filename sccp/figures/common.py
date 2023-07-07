@@ -16,6 +16,7 @@ from ..crossVal import CrossVal
 from ..decomposition import R2X
 import os
 from os.path import join
+from pandas.plotting import parallel_coordinates as pc
 
 path_here = os.path.dirname(os.path.dirname(__file__))
 
@@ -396,6 +397,10 @@ def plotMetricSCIB(metricsDF, sheetName, axs):
     """Plots all metrics values across SCIB and Pf2 for one dataset"""
     for i, sheets in enumerate(sheetName):
         datasetDF = metricsDF.loc[metricsDF["Dataset"] == sheets]
-        sns.stripplot(data=datasetDF, x="Metric", y = "Value", hue="Method", ax=axs[i])
+        datasetDF = datasetDF.drop(columns="Dataset").reset_index(drop=True)
+        datasetDF = datasetDF.pivot_table(index="Metric", columns="Method", values="Value").reset_index()
+        pc(datasetDF, "Metric", colormap=plt.get_cmap("Set1"), ax=axs[i])
         axs[i].tick_params(axis="x", rotation=45)
         axs[i].set(title=sheets)
+    
+

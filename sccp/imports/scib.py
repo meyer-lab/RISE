@@ -32,10 +32,13 @@ def import_scib_metrics():
     """Imports all metric outputs from SCIB including Pf2 for all datasets"""
     xls = pd.ExcelFile("sccp/data/ScibMetrics.xlsx")
     
-    metrics = ["PCR batch", "Batch ASW", "graph iLISI",	"graph connectivity", 
-               "kBET", "NMI cluster/label", "ARI cluster/label", 
-               "Cell type ASW", "isolated label F1", 
-               "isolated label silhouette", "graph cLISI"]
+    # metrics = ["PCR batch", "Batch ASW", "graph iLISI", "graph connectivity", 
+    #            "kBET", "NMI cluster/label", "ARI cluster/label", 
+    #            "Cell type ASW", "isolated label F1", 
+    #            "isolated label silhouette", "graph cLISI"]
+
+    metrics = ["PCR batch", "Batch ASW", "graph iLISI",	
+               "graph connectivity", "kBET"]
     
     sheet_name=["immune_cell_hum","immune_cell_hum_mou", "simulations_1_1", 
                 "simulations_2", "pancreas", "mouse_brain_atac_genes_small", 
@@ -48,6 +51,8 @@ def import_scib_metrics():
     df = df.loc[(df["Features"] == "FULL") & (df["Scaling"] == "unscaled")]
     # No specification large and small atac excel sheet; 
     # assumed they are unscaled and full features
+    
+    df = df[np.append(metrics, ["Dataset","Method"])]
 
     df = pd.melt(df, id_vars=["Dataset", "Method"], value_vars=metrics).rename(
             columns={"variable": "Metric", "value": "Value"})
