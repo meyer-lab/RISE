@@ -181,6 +181,24 @@ def flattenData(data):
 
     return dataDF
 
+def flattenProjs(projs, data):
+    """Flattens tensor into dataframe"""
+    cellCount = []
+    for i in range(len(data.X_list)):
+        cellCount = np.append(cellCount, data.X_list[i].shape[0])
+
+    condNames = []
+
+    for i in range(len(data.X_list)):
+        condNames = np.append(
+            condNames, np.repeat(data.condition_labels[i], cellCount[i])
+        )
+    flatProjs= np.concatenate(projs, axis=0)
+    dataDF = pd.DataFrame(data=flatProjs, columns=data.variable_labels)
+    dataDF["Condition"] = condNames
+
+    return dataDF
+
 def plotGeneUMAP(genes, decomp, points, dataDF, axs):
     """Scatterplot of UMAP visualization weighted by gene"""
     subset = np.random.choice(a=[False, True], size=np.shape(dataDF)[0], p=[.93, .07])
