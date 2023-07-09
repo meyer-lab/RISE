@@ -35,8 +35,8 @@ def _cmf_reconstruction_error(matrices, factors: list, norm_X_sq, rng=None):
             mat = mat.double()
 
         lhs = B @ (A[i] * C).T
-        U, _, Vh = randomized_svd(lhs @ mat.T, A.shape[1], random_state=rng)
-        proj = (U @ Vh).T
+        U, _, Vh = randomized_svd(mat @ lhs.T, A.shape[1], random_state=rng)
+        proj = U @ Vh
 
         B_i = (proj @ B) * A[i]
         # trace of the multiplication products
