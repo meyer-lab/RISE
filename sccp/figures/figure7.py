@@ -11,6 +11,7 @@ import numpy as np
 from ..imports.scRNA import import_perturb_RPE
 from ..parafac2 import parafac2_nd
 import mygene
+import umap
 from ..parafac2 import parafac2_nd
 from sklearn.decomposition import PCA
 
