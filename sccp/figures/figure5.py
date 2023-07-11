@@ -22,7 +22,7 @@ def makeFigure():
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
 
-    ranks = [25, 20, 15, 10, 5, 2]
+    ranks = [25, 10, 5, 2]
     
     Pf2s = [parafac2_nd(data, rank=rank, random_state=1, verbose=True) for rank in ranks]
     PCs = [PCA(n_components=rank).fit_transform(data.unfold()) for rank in ranks]

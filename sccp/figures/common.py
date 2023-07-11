@@ -182,20 +182,22 @@ def flattenData(data):
 
     return dataDF
 
-def flattenProjs(projs, data):
+def flattenProjs(data, projs):
     """Flattens tensor into dataframe"""
     cellCount = []
     for i in range(len(data.X_list)):
         cellCount = np.append(cellCount, data.X_list[i].shape[0])
 
     condNames = []
-
+    
     for i in range(len(data.X_list)):
         condNames = np.append(
             condNames, np.repeat(data.condition_labels[i], cellCount[i])
         )
+        
     flatProjs= np.concatenate(projs, axis=0)
-    dataDF = pd.DataFrame(data=flatProjs, columns=data.variable_labels)
+    cmpNames = [f"Cmp. {i}" for i in np.arange(1, flatProjs.shape[1] + 1)]
+    dataDF = pd.DataFrame(data=flatProjs, columns=cmpNames)
     dataDF["Condition"] = condNames
 
     return dataDF
@@ -323,12 +325,12 @@ def plotCV(data, rank, trainPerc, ax):
 
     ax.legend()
 
-def plotDistDrug(df, drugs, ax):
+def plotDistDrug(df, conds, ax):
     """Plots normalized centroid distance across PCA and Pf2 for different ranks"""
-    for i, drug in enumerate(drugs):
-        plotDF = df.loc[df.Drug == drug]
+    for i, cond in enumerate(conds):
+        plotDF = df.loc[df["Condition"] == cond]
         sns.lineplot(data=plotDF, x="Rank", y="Normalized Centroid Distance", hue="Method", ax=ax[i])
-        ax[i].set(title=drug)
+        ax[i].set(title=cond)
         
 def plotDistGene(df, genes, ax):
     """Plots normalized centroid distance across PCA and Pf2 for different ranks"""
@@ -340,7 +342,7 @@ def plotDistGene(df, genes, ax):
 def plotDistAllDrug(df, rank, ax):
     """Plots all Normalized Centroid Distance for all drugs for Pf2 and PCA"""
     sns.swarmplot(data=df, x="Method", y="Normalized Centroid Distance", hue="Method", ax=ax)
-    ax.set(title="All Drugs: Rank = " + str(rank))
+    ax.set(title="All Conditions: Rank = " + str(rank))
     
 def plotDistAllGene(df, rank, ax):
     """Plots all Normalized Centroid Distance for all genes for Pf2 and PCA"""

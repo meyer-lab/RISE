@@ -46,7 +46,7 @@ def makeFigure():
 
     data = X
     # Performing parafac2 on single-cell Xarray
-    rank = 30
+    rank = 2
     _, factors, projs, _ = parafac2_nd(
         X,
         rank=24,
@@ -72,8 +72,8 @@ def makeFigure():
         "Alprostadil",
         "Budesonide",
         "Betamethasone Valerate",
-    ]
-    plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[0:5])
-    plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[5:10])
+    # ]
+    # plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[0:5])
+    # plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[5:10])
 
     return f
