@@ -405,4 +405,9 @@ def plotMetricSCIB(metricsDF, sheetName, axs):
         axs[i].tick_params(axis="x", rotation=45)
         axs[i].set(title=sheets)
     
+def plotCellCount(dataDF, ax):
+    """Plot number of cells per experiment for a dataframe"""
+    cellcountDF = dataDF.groupby(["Condition"]).size().reset_index(name="Cell Count") 
+    sns.barplot(data=cellcountDF, x="Condition", y="Cell Count", ax=ax)
+    ax.tick_params(axis="x", rotation=90)
 
