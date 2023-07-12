@@ -72,7 +72,7 @@ def makeFigure():
         "Alprostadil",
         "Budesonide",
         "Betamethasone Valerate",
-    # ]
+    ]
     # plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[0:5])
     # plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[5:10])
 

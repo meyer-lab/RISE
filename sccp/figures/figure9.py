@@ -2,7 +2,7 @@
 import numpy as np
 from .common import (subplotLabel, getSetup, 
     plotFactors, flattenData, 
-    plotLabelAllUMAP, plotCellCount)
+    plotLabelAllUMAP, plotCellType)
 from ..imports.scib import import_scib_data
 from ..parafac2 import parafac2_nd
 import umap
@@ -38,6 +38,6 @@ def makeFigure():
     plotLabelAllUMAP(dataDF["Condition"].values, pf2Points, ax[3])
     plotLabelAllUMAP(celltypes, pf2Points, ax[4])
     
-    plotCellCount(dataDF, celltypes, ax[5])
+    plotCellType(dataDF, celltypes, ax[5])
 
     return f

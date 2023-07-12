@@ -141,7 +141,30 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGen
                 df = pd.DataFrame(data=X, index=yt, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
                 df.to_csv(join(path_here, "data/TopBotGenes_Cmp"+str(rank)+".csv"))
    
-                
+def plotCondFactorsReorder(factors, data: Pf2X, ax):
+    """Plots parafac2 factors."""
+    rank = factors[0].shape[1]
+    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    yt = data.condition_labels
+    X = factors[0]
+
+    X, ind = reorder_table(X)
+    yt = yt[ind]
+
+    X = X / np.max(X, axis=0)
+
+    sns.heatmap(
+        data=X,
+        xticklabels=xticks,
+        yticklabels=yt,
+        ax=ax,
+        center=0,
+        cmap=cmap,
+    )
+
+    ax.set_title("Factors")
+    ax.tick_params(axis="y", rotation=0)        
 
 
 def reorder_table(projs):
@@ -386,7 +409,6 @@ def plotCellCount(dataDF, celltypes, ax):
     """Plots a swarmplot for cell type distribution for each condition """
     dataDF["Cell Type"] = celltypes
     celltypeDF = dataDF.groupby(["Cell Type", "Condition"]).size().reset_index(name="Count") 
-    totalCellCount = dataDF.groupby(["Condition"]).size().values
 
     for j, cond in enumerate(np.unique(dataDF["Condition"].values)):
         df = celltypeDF.loc[celltypeDF["Condition"] == cond] 
@@ -405,9 +427,15 @@ def plotMetricSCIB(metricsDF, sheetName, axs):
         axs[i].tick_params(axis="x", rotation=45)
         axs[i].set(title=sheets)
     
-def plotCellCount(dataDF, ax):
+def plotCellType(dataDF, ax):
     """Plot number of cells per experiment for a dataframe"""
     cellcountDF = dataDF.groupby(["Condition"]).size().reset_index(name="Cell Count") 
     sns.barplot(data=cellcountDF, x="Condition", y="Cell Count", ax=ax)
     ax.tick_params(axis="x", rotation=90)
 
+def plotWeight(weight, ax):
+    """Plots weights from Pf2 model"""
+    df = pd.DataFrame(data=np.transpose([weight]), columns=["Value"])
+    df["Component"] = [f"Cmp. {i}" for i in np.arange(1, len(weight) + 1)]
+    sns.barplot(data=df, x="Component", y="Value", ax=ax)
+    ax.tick_params(axis="x", rotation=90)
