@@ -268,7 +268,7 @@ def plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax):
     ax.set(
         ylabel="UMAP2",
         xlabel="UMAP1",
-        title="Cell State:" + str(cellState)+"- Cell State:" + str(cmp))
+        title="Cell State:" + str(cellState)+"- Component:" + str(cmp))
 
 
 def plotBatchUMAP(decomp_DF, ax):
