@@ -65,9 +65,15 @@ def parafac2_nd(
     norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X_in])
     X = [tl.tensor(xx).cuda() for xx in X_in]
 
-    # Initialization
+    # Checks size of each experiment is bigger than rank
+    for i in range(len(X)):
+        assert tl.shape(X[i])[0] > rank
+    
+    # Checks size of signal measured is bigger than rank
+    assert tl.shape(X[0])[1] > rank
+    
+    # Initialization  
     unfolded = tl.concatenate(list(X), axis=0).T
-    assert tl.shape(unfolded)[0] > rank
     C = randomized_svd(unfolded, rank, random_state=rng)[0].double()
     CP = tl.cp_tensor.CPTensor(
         (
