@@ -271,6 +271,7 @@ def plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax):
         title="Cell State:" + str(cellState)+"- Component:" + str(cmp))
 
 
+
 def plotBatchUMAP(decomp_DF, ax):
     """Scatterplot of UMAP visualization weighted by condition"""
     sns.scatterplot(data=decomp_DF, x="UMAP 1", y="UMAP 2", hue="Batch", s=1, palette="muted", ax=ax)

@@ -32,6 +32,7 @@ def makeFigure():
     cellState = [23, 24, 25, 26, 27, 28, 29, 30]
     component = [23, 24, 25, 26, 27, 28, 29, 30]
     
+    
     for i in range(len(cellState)):
         plotCmpUMAP(cellState[i], component[i], factors, pf2Points, projs, ax[i])
 
