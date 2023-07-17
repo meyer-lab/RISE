@@ -9,7 +9,7 @@ def geneOntology(cmpNumb: int, geneAmount, goTerms, geneValue):
     biological process, cellular component. Uses factors as 
     input for function"""
     
-    df = pd.read_csv("sccp/data/TopBotGenes_Cmp25.csv").rename(columns={"Unnamed: 0":"Gene"}).set_index("Gene")
+    df = pd.read_csv("sccp/data/TopBotGenes_Cmp30.csv").rename(columns={"Unnamed: 0":"Gene"}).set_index("Gene")
     sort_idx = np.argsort(df.to_numpy(), axis=0)
     
     # Specifies enrichment sets to run against

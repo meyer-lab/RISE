@@ -15,9 +15,14 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
     
-    # combDF, pvalDF = geneOntology(cmpNumb=21, geneAmount=60, goTerms=5, geneValue="Overexpressed")
+    # value = "Underexpressed"
+    value = "Overexpressed"
     
-    # plotCombGO(combDF, geneValue="Overexpressed", axs=ax[0:3])
-    # plotPvalGO(pvalDF, geneValue="Overexpressed", axs=ax[3:6])
+    # combDF, pvalDF = geneOntology(cmpNumb=26, geneAmount=30, goTerms=5, geneValue=value)
+
+    # plotCombGO(combDF, geneValue=value, axs=ax[0:3])
+    # plotPvalGO(pvalDF, geneValue=value, axs=ax[3:6])
+    
+
     
     return f
