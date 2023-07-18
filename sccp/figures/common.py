@@ -286,7 +286,7 @@ def plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax):
         xlabel="UMAP1",
         title="Cell State:" + str(cellState)+"- Component:" + str(cmp))
     
-def plotCmpUMAPDiv(cellState, cmp, factors, pf2Points, projs, f, ax):
+def plotCmpUMAPDiv(cellState, cmp, factors, pf2Points, projs, ax):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
     cellSkip = 10 
@@ -294,17 +294,19 @@ def plotCmpUMAPDiv(cellState, cmp, factors, pf2Points, projs, f, ax):
     umap2 = pf2Points[::cellSkip, 1]
     allP = np.concatenate(projs, axis=0)
     weightedProjs = allP[:, cellState-1] * factors[1][cellState-1, cmp-1]
+    weightedProjs = weightedProjs[::cellSkip]
     weightedProjs = weightedProjs / np.max(np.abs(weightedProjs))
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
-  
-    tl = ax.scatter(
+    psm = plt.pcolormesh([[-1, 1],[-1, 1]], cmap=cmap)
+    
+    ax.scatter(
             umap1,
             umap2,
-            c=weightedProjs[::cellSkip],
+            c=weightedProjs,
             cmap=cmap,
             s=0.2,
         )
-    f.colorbar(tl, ax=ax)
+    plt.colorbar(psm, ax=ax)
     
     ax.set(
         ylabel="UMAP2",
