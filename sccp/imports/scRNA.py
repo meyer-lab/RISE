@@ -87,7 +87,9 @@ def ThompsonXA_SCGenes(offset: float = 1.0) -> anndata.AnnData:
 
 
 def import_pancreas(tensor=True, method=str()):
-    pancreas = anndata.read_h5ad("/home/brianoj/SC_data/pancreas/pancreas" + method + ".h5ad")
+    pancreas = anndata.read_h5ad(
+        "/home/brianoj/SC_data/pancreas/pancreas" + method + ".h5ad"
+    )
 
     # Remove NaNs
     pancreas = pancreas[:, np.all(np.isfinite(pancreas.X), axis=0)]
@@ -107,3 +109,46 @@ def import_pancreas_all(tensor=True, method=str()):
         pancreas.obsm[method] = pancreas_corr.obsm["X_pca"]
 
     return pancreas, methods
+
+
+def load_lupus_data(third_axis="ind_cov", every_n=4):
+    """Import Lupus PBMC dataset.
+
+    `third_axis`: 3rd dimension along with to expand data. Defaults to patient (ind_cov)
+    `every_n`: takes every nth cell to be included. set to 1 to include all data
+
+    *NOTE*: This function has three outputs, not one. The first is the data in tensor format,
+    the second is a list of cell types compatible with later functions that plot by cell type,
+    and the third is a list of row colors for use coloring factor plot A by SLE status.
+    """
+    X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
+
+    # reorder X so that all of the patients are in alphanumeric order. this is important
+    # so that we can steal cell typings at this point
+    obsV = X.obs_vector("ind_cov")
+    sgUnique, sgIndex = np.unique(obsV, return_inverse=True)
+
+    ann_data_objects = [X[sgIndex == sgi, :] for sgi in range(len(sgUnique))]
+
+    X = anndata.concat(ann_data_objects, axis=0)
+
+    # keep only n observations
+    X = X[::every_n, :]
+
+    # get cell types -> only stay true if order of cells doesn't change after this
+    cell_types = X.obs["cg_cov"].reset_index(drop=True)
+
+    # get color mapping for patients by SLE status
+
+    status = (
+        X.obs[["ind_cov", "SLE_status"]]
+        .sort_values(by="ind_cov")
+        .drop_duplicates("ind_cov")
+    )
+
+    lut = {"SLE": "c", "Healthy": "m"}
+    row_colors = status["SLE_status"].map(lut)
+
+    assert np.all(np.isfinite(X.X.data))  # this should be true
+
+    return tensorFy(X, third_axis), cell_types, row_colors

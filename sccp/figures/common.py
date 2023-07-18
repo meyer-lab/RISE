@@ -99,8 +99,9 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGenes=False):
+def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGenes=False, row_colors= None):
     """Plots parafac2 factors."""
+    pd.set_option('display.max_rows', None)
     rank = factors[0].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
@@ -108,10 +109,13 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGen
         # The single cell mode has a square factors matrix
         if i == 0:
             yt = data.condition_labels
+            title = "Components by Condition"
         elif i == 1:
             yt = [f"Cell State {i}" for i in np.arange(1, rank + 1)]
+            title = "Components by Cell State"
         else:
             yt = data.variable_labels
+            title = "Components by Gene"
 
         X = factors[i]
 
@@ -120,20 +124,33 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGen
             kept_idxs = max_weight > 0.08
             X = X[kept_idxs]
             yt = yt[kept_idxs]
+            if i == 0 and not (row_colors is None):
+                row_colors = row_colors[ind]
 
         if i in reorder:
             X, ind = reorder_table(X)
             yt = yt[ind]
-        sns.heatmap(
-            data=X,
-            xticklabels=xticks,
-            yticklabels=yt,
-            ax=axs[i],
-            center=0,
-            cmap=cmap,
-        )
+            if i == 0 and not (row_colors is None):
+                row_colors = row_colors[ind]
 
-        axs[i].set_title("Factors")
+        sns.heatmap(
+                data=X,
+                xticklabels=xticks,
+                yticklabels=yt,
+                ax=axs[i],
+                center=0,
+                cmap=cmap,
+            )
+
+        if i == 0 and not (row_colors is None):
+            # add little boxes to denote SLE/healthy rows
+            axs[i].tick_params(axis='y', which='major', pad=20, length=0) # extra padding to leave room for the row colors
+            for iii, color in enumerate(row_colors):
+                axs[i].add_patch(plt.Rectangle(xy=(-0.05, iii), width=0.05, height=1, color=color, lw=0,
+                             transform=axs[i].get_yaxis_transform(), clip_on=False))
+
+
+        axs[i].set_title(title)
         axs[i].tick_params(axis="y", rotation=0)
         
         if saveGenes == True:
@@ -156,6 +173,7 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGen
 
                 dfTop.to_csv(join(path_here, "data/TopGenes_Cmp"+str(rank)+".csv"))
                 dfBot.to_csv(join(path_here, "data/BotGenes_Cmp"+str(rank)+".csv"))
+   
    
 def plotCondFactorsReorder(factors, data: Pf2X, ax):
     """Plots parafac2 factors."""
@@ -488,3 +506,32 @@ def plotWeight(weight, ax):
     df["Component"] = [f"Cmp. {i}" for i in np.arange(1, len(weight) + 1)]
     sns.barplot(data=df, x="Component", y="Value", ax=ax)
     ax.tick_params(axis="x", rotation=90)
+
+
+def plotUMAP_ct(labels, pf2Points, projs, ax):
+    """Scatterplot of UMAP visualization labeled by cell type"""
+    allP = np.concatenate(projs, axis=0)
+    plot = umap.plot.points(pf2Points, 
+                            labels = labels, 
+                            theme='viridis', 
+                            ax=ax)
+    ax.set(
+        ylabel="UMAP2",
+        xlabel="UMAP1",
+        title="Pf2-Based Decomposition: Label Cell Types")
+    
+def plotCellStateViolins(projections, cell_types, cell_state: int, ax):
+    all_cell_projs = pd.DataFrame(np.concatenate(list(projections), axis=0))
+    cell_state_n = pd.concat([all_cell_projs.iloc[:, (cell_state - 1)], cell_types], axis = 1)
+    cell_state_n.columns.values[0] = "contribution"
+
+    sns.violinplot(data = cell_state_n,
+                   x = "cg_cov",
+                   y = 'contribution',
+                   hue = 'cg_cov',
+                   dodge = False,
+                   ax = ax)
+    
+    ax.set_title('Cell Type Contrib to Cell State ' + str(cell_state))
+    ax.tick_params(axis="x", rotation=90)
+    ax.get_legend().remove()
