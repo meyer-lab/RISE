@@ -55,7 +55,7 @@ def test_pf2_r2x():
     """Compare R2X values to tensorly implementation"""
     w, f, _ = random_parafac2(pf2shape, rank=3, random_state=1, normalise_factors=False)
 
-    errCMF, p = _cmf_reconstruction_error(X, f, norm_tensor)
+    errCMF, p, _ = _cmf_reconstruction_error(X, f, norm_tensor)
     err = _parafac2_reconstruction_error(X, (w, f, p)) ** 2
 
     np.testing.assert_allclose(err, errCMF, rtol=1e-12)

@@ -8,8 +8,8 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
 numpy = "^1.24"
-scipy = "^1.10"
-scikit-learn = "^1.2"
+scipy = "^1.11"
+scikit-learn = "^1.3"
 seaborn = "^0.12.2"
 pandas = "^2.0"
 tensorly = "0.8.0"
@@ -18,8 +18,8 @@ h5netcdf = "^1.1.0"
 anndata = "^0.9.1"
 torch = "2.0.0"
 numba = "^0.57.0"
-datashader = { git = "https://github.com/holoviz/datashader.git", rev = "c40e976b8b0c6bfc2fd1f4096c0e60d2ad10a458" }
-umap-learn = {version = "0.5.3", extras = ["plot"]}
+datashader = "^0.15"
+umap-learn = { git = "https://github.com/lmcinnes/umap.git", rev = "a7606f2d413c278cc98d932de62f829914209c4f", extras = ["plot"] }
 mygene = "^3.2.2"
 gseapy = "^1.0.4"
 scib = "^1.1.3"

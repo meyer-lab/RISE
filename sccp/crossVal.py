@@ -60,7 +60,7 @@ def crossvalidate(X, rank: int, trainPerc: float = 0.75, verbose: bool = False, 
     fac_C = deepcopy(fac_B)
     fac_C[0] *= w_B[np.newaxis, :]
     fac_C[2] = fac_C[2][:X_C_idx, :]
-    _, proj = _cmf_reconstruction_error(C_train, fac_C, 1.0)
+    _, proj, _ = _cmf_reconstruction_error(C_train, fac_C, 1.0)
 
     # Project projections into B space
     X_recon = parafac2_to_slices((w_B, fac_B, proj), validate=False)

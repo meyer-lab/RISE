@@ -29,22 +29,26 @@ def _cmf_reconstruction_error(matrices, factors: list, norm_X_sq, rng=None):
     inner_product = 0
     CtC = C.T @ C
     projections = []
+    projected_X = []
 
     for i, mat in enumerate(matrices):
-        if isinstance(mat, torch.Tensor):
-            mat = mat.double()
+        if isinstance(B, torch.Tensor):
+            mat_gpu = torch.tensor(mat).cuda().double()
+        else:
+            mat_gpu = mat
 
         lhs = B @ (A[i] * C).T
-        U, _, Vh = randomized_svd(mat @ lhs.T, A.shape[1], random_state=rng)
+        U, _, Vh = randomized_svd(mat_gpu @ lhs.T, A.shape[1], random_state=rng)
         proj = U @ Vh
 
         B_i = (proj @ B) * A[i]
         # trace of the multiplication products
-        inner_product += tl.trace(B_i.T @ mat @ C)
+        inner_product += tl.trace(B_i.T @ mat_gpu @ C)
         norm_cmf_sq += tl.sum((B_i.T @ B_i) * CtC)
         projections.append(proj)
+        projected_X.append(proj.T @ mat_gpu)
 
-    return norm_X_sq - 2 * inner_product + norm_cmf_sq, projections
+    return norm_X_sq - 2 * inner_product + norm_cmf_sq, projections, projected_X
 
 
 @torch.inference_mode()
@@ -58,27 +62,29 @@ def parafac2_nd(
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
     rng = np.random.RandomState(random_state)
-    tl.set_backend("pytorch")
     if isinstance(X_in, Pf2X):
         X_in = X_in.X_list
 
+    X = X_in
+
     norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X_in])
-    X = [tl.tensor(xx).cuda() for xx in X_in]
 
     # Checks size of each experiment is bigger than rank
     for i in range(len(X)):
-        assert tl.shape(X[i])[0] > rank
-    
+        assert np.shape(X[i])[0] > rank
+
     # Checks size of signal measured is bigger than rank
-    assert tl.shape(X[0])[1] > rank
-    
+    assert np.shape(X[0])[1] > rank
+
     # Initialization  
-    unfolded = tl.concatenate(list(X), axis=0).T
-    C = randomized_svd(unfolded, rank, random_state=rng)[0].double()
+    unfolded = np.concatenate(list(X), axis=0).T
+    C = randomized_svd(unfolded, rank, random_state=rng)[0]
+
+    tl.set_backend("pytorch")
     CP = tl.cp_tensor.CPTensor(
         (
             None,
-            [tl.ones((len(X), rank)).cuda().double(), tl.eye(rank).cuda().double(), C],
+            [tl.ones((len(X), rank)).cuda().double(), tl.eye(rank).cuda().double(), torch.tensor(C).cuda().double()],
         )
     )
 
@@ -86,13 +92,13 @@ def parafac2_nd(
 
     tq = tqdm(range(n_iter_max), disable=(not verbose), mininterval=2)
     for iter in tq:
-        err, projections = _cmf_reconstruction_error(
+        err, projections, projected_X = _cmf_reconstruction_error(
             X, CP.factors, norm_tensor, rng=rng
         )
         errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
         # Project tensor slices
-        projected_X = tl.stack([p.T @ t.double() for p, t in zip(projections, X)])
+        projected_X = tl.stack(projected_X)
 
         CP = parafac(
             projected_X,
