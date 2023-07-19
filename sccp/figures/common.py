@@ -174,32 +174,6 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGen
                 dfTop.to_csv(join(path_here, "data/TopGenes_Cmp"+str(rank)+".csv"))
                 dfBot.to_csv(join(path_here, "data/BotGenes_Cmp"+str(rank)+".csv"))
    
-   
-def plotCondFactorsReorder(factors, data: Pf2X, ax):
-    """Plots parafac2 factors."""
-    rank = factors[0].shape[1]
-    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-    cmap = sns.diverging_palette(240, 10, as_cmap=True)
-    yt = data.condition_labels
-    X = factors[0]
-
-    X, ind = reorder_table(X)
-    yt = yt[ind]
-
-    X = X / np.max(X, axis=0)
-
-    sns.heatmap(
-        data=X,
-        xticklabels=xticks,
-        yticklabels=yt,
-        ax=ax,
-        center=0,
-        cmap=cmap,
-    )
-
-    ax.set_title("Factors")
-    ax.tick_params(axis="y", rotation=0)        
-
 
 def reorder_table(projs):
     """Reorder a table's rows using heirarchical clustering"""
@@ -207,18 +181,6 @@ def reorder_table(projs):
     Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
     index = sch.leaves_list(Z)
     return projs[index, :], index
-
-
-def plotProj(projs, axs):
-    """Plot a projection matrix along with cell type annotations."""
-    sns.heatmap(
-        data=projs,
-        xticklabels=[f"Cmp. {i}" for i in np.arange(1, projs.shape[1] + 1)],
-        yticklabels=False,
-        center=0,
-        ax=axs[0],
-        cmap=sns.diverging_palette(240, 10, as_cmap=True),
-    )
 
 
 def flattenData(data):
@@ -246,18 +208,19 @@ def flattenProjs(data, projs):
         cellCount = np.append(cellCount, data.X_list[i].shape[0])
 
     condNames = []
-    
+
     for i in range(len(data.X_list)):
         condNames = np.append(
             condNames, np.repeat(data.condition_labels[i], cellCount[i])
         )
-        
+
     flatProjs= np.concatenate(projs, axis=0)
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, flatProjs.shape[1] + 1)]
     dataDF = pd.DataFrame(data=flatProjs, columns=cmpNames)
     dataDF["Condition"] = condNames
 
     return dataDF
+
 
 def plotGeneUMAP(genes, decomp, points, dataDF, axs):
     """Scatterplot of UMAP visualization weighted by gene"""
@@ -290,10 +253,9 @@ def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
     return
 
 
-def plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax):
+def plotCmpUMAP(cellState, cmp, factors, pf2Points, allP, ax):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
-    allP = np.concatenate(projs, axis=0)
     weightedProjs = allP[:, cellState-1] * factors[1][cellState-1, cmp-1]
     subset = np.random.choice(a=[False, True], size= len(weightedProjs), p=[.95, .05])
     psm = plt.pcolormesh([weightedProjs, weightedProjs], cmap=matplotlib.cm.get_cmap('viridis'))
@@ -304,13 +266,12 @@ def plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax):
         xlabel="UMAP1",
         title="Cell State:" + str(cellState)+"- Component:" + str(cmp))
     
-def plotCmpUMAPDiv(cellState, cmp, factors, pf2Points, projs, ax):
+def plotCmpUMAPDiv(cellState, cmp, factors, pf2Points, allP, ax):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
     cellSkip = 10 
     umap1 = pf2Points[::cellSkip, 0]
     umap2 = pf2Points[::cellSkip, 1]
-    allP = np.concatenate(projs, axis=0)
     weightedProjs = allP[:, cellState-1] * factors[1][cellState-1, cmp-1]
     weightedProjs = weightedProjs[::cellSkip]
     weightedProjs = weightedProjs / np.max(np.abs(weightedProjs))
@@ -503,14 +464,14 @@ def plotCellCount(dataDF, ax):
 def plotWeight(weight, ax):
     """Plots weights from Pf2 model"""
     df = pd.DataFrame(data=np.transpose([weight]), columns=["Value"])
+    df["Value"] = df["Value"]/np.max(df["Value"])
     df["Component"] = [f"Cmp. {i}" for i in np.arange(1, len(weight) + 1)]
     sns.barplot(data=df, x="Component", y="Value", ax=ax)
     ax.tick_params(axis="x", rotation=90)
 
 
-def plotUMAP_ct(labels, pf2Points, projs, ax):
+def plotUMAP_ct(labels, pf2Points, ax):
     """Scatterplot of UMAP visualization labeled by cell type"""
-    allP = np.concatenate(projs, axis=0)
     plot = umap.plot.points(pf2Points, 
                             labels = labels, 
                             theme='viridis', 
@@ -521,7 +482,7 @@ def plotUMAP_ct(labels, pf2Points, projs, ax):
         title="Pf2-Based Decomposition: Label Cell Types")
     
 def plotCellStateViolins(projections, cell_types, cell_state: int, ax):
-    all_cell_projs = pd.DataFrame(np.concatenate(list(projections), axis=0))
+    all_cell_projs = pd.DataFrame(projections)
     cell_state_n = pd.concat([all_cell_projs.iloc[:, (cell_state - 1)], cell_types], axis = 1)
     cell_state_n.columns.values[0] = "contribution"
 
@@ -535,3 +496,24 @@ def plotCellStateViolins(projections, cell_types, cell_state: int, ax):
     ax.set_title('Cell Type Contrib to Cell State ' + str(cell_state))
     ax.tick_params(axis="x", rotation=90)
     ax.get_legend().remove()
+
+
+def savePf2(weight, factors, projs, dataName: str):
+    """Saves weight factors and projections for one dataset for a component"""
+    rank = len(weight)
+    np.save(join(path_here, "data/"+dataName+"/"+dataName+"_WeightCmp"+str(rank)+".npy"), weight)
+    for i in range(3):
+        np.save(join(path_here, "data/"+dataName+"/"+dataName+"_Factor"+str(i)+"Cmp"+str(rank)+ ".npy"), factors[i])
+    np.save(join(path_here, "data/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), np.concatenate(projs, axis=0))
+
+    
+def openPf2(rank: int, dataName: str):
+    """Opens weight factors and projections for one dataset for a component as numpy arrays"""
+    weight = np.load(join(path_here, "data/"+dataName+"/"+dataName+"_WeightCmp"+str(rank)+".npy"), allow_pickle=True)
+    factors = [np.load(join(path_here, "data/"+dataName+"/"+dataName+"_Factor0Cmp"+str(rank)+ ".npy"), allow_pickle=True),
+               np.load(join(path_here, "data/"+dataName+"/"+dataName+"_Factor1Cmp"+str(rank)+ ".npy"), allow_pickle=True),
+               np.load(join(path_here, "data/"+dataName+"/"+dataName+"_Factor2Cmp"+str(rank)+ ".npy"), allow_pickle=True)]
+               
+    projs = np.load(join(path_here, "data/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), allow_pickle=True)
+    
+    return weight, factors, projs

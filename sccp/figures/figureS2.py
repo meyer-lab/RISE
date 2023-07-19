@@ -43,15 +43,16 @@ def makeFigure():
         verbose=True,
     )
 
+    projs = np.concatenate(projs, axis=0)
     # UMAP dimension reduction
-    pf2Points = umap.UMAP(random_state=1).fit(np.concatenate(projs, axis=0))
+    pf2Points = umap.UMAP(random_state=1).fit(projs)
 
     # PCA dimension reduction
     pc = PCA(n_components=rank)
     pcaPoints = pc.fit_transform(data.unfold())
     pcaPoints = umap.UMAP(random_state=1).fit(pcaPoints)
 
-    plotUMAP_ct(cell_types, pf2Points, projs, ax[0])
+    plotUMAP_ct(cell_types, pf2Points, ax[0])
     plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax[1])
     plotCellStateViolins(projs, cell_types, cellState, ax[2])
 

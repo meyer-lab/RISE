@@ -31,11 +31,11 @@ def import_thompson_drug() -> anndata.AnnData:
     """Imports cell readings from scRNA-seq data from PBMCs from PopAlign paper."""
 
     # Cell barcodes, sample id of treatment and sample number (33482, 3)
-    metafile = pd.read_csv("sccp/data/meta.csv")
+    metafile = pd.read_csv("sccp/data/Thomson/meta.csv")
 
     # Cell barcodes (33482)
     barcodes = pd.read_csv(
-        "sccp/data/barcodes.tsv", sep="\t", header=None, names=("cell_barcode",)
+        "sccp/data/Thomson/barcodes.tsv", sep="\t", header=None, names=("cell_barcode",)
     )
 
     # Left merging should put the barcodes in order
