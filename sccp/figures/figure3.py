@@ -9,6 +9,7 @@ from .common import (
     plotDrugUMAP,
     plotGeneUMAP,
     plotCmpUMAP,
+    openPf2
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -19,23 +20,17 @@ from sklearn.decomposition import PCA
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((15, 13), (3, 4))
+    ax, f = getSetup((15, 13), (3, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes(offset=1.0)
-    rank = 2
-    _, factors, projs, _ = parafac2_nd(
-        data,
-        rank=rank,
-        random_state=1,
-        verbose=True,
-    )
+    rank = 30
+    weight, factors, projs = openPf2(rank, "Thomson")
 
     dataDF = flattenData(data)
-    projs = np.concatenate(projs, axis=0)
 
     # UMAP dimension reduction
     pf2Points = umap.UMAP(random_state=1).fit(projs)

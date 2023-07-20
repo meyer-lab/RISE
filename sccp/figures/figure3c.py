@@ -32,7 +32,7 @@ def makeFigure():
     dataDF = flattenData(data)
 
     # UMAP dimension reduction
-    pf2Points = umap.UMAP(random_state=1).fit(np.concatenate(projs, axis=0))
+    pf2Points = umap.UMAP(random_state=1).fit(projs)
     
     # Genes for cells
     cd4 =  ["IL7R"]

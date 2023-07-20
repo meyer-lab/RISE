@@ -7,6 +7,7 @@ from .common import (
     getSetup,
     openPf2
 )
+from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
 import umap.plot
 from sklearn.decomposition import PCA
@@ -22,6 +23,7 @@ def makeFigure():
 
     # Import of single cells: [Drug, Cell, Gene]
     rank = 30
+    data = ThompsonXA_SCGenes(offset=1.0)
     
     weight, factors, projs = openPf2(rank, "Thomson")
     
