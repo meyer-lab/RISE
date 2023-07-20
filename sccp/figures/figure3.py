@@ -10,6 +10,8 @@ from .common import (
     plotGeneUMAP,
     plotCmpUMAP,
     openPf2
+
+  
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
@@ -51,8 +53,5 @@ def makeFigure():
     ]
     plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[4:6])
     plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[6:8])
-    
-    cellState = 1; cmp = 1
-    plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax[8])
     
     return f

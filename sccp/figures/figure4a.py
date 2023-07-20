@@ -1,7 +1,7 @@
 """
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
-from .common import subplotLabel, getSetup, plotCmpUMAPDiv
+from .common import subplotLabel, getSetup, plotCmpUMAP, openPf2
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..parafac2 import parafac2_nd
 import umap 
@@ -19,21 +19,17 @@ def makeFigure():
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
     rank = 30
+
+    weight, factors, projs = openPf2(rank, "Thomson")
     
-    weight, factors, projs, _ = parafac2_nd(
-        data,
-        rank=rank,
-        random_state=1,
-    )
-    
-    projs = np.concatenate(projs, axis=0)
     # UMAP dimension reduction
-    pf2Points = umap.UMAP(random_state=1).fit_transform(projs)
+    pf2Points = umap.UMAP(random_state=1).fit(projs)
     
     cellState = np.arange(17, 25, 1) 
-    component = np.arange(17, 25, 1) 
+    component = np.copy(cellState)
     
     for i in range(len(cellState)):
-        plotCmpUMAPDiv(cellState[i], component[i], factors, pf2Points, projs, ax[i])
+        plotCmpUMAP(cellState[i], component[i], factors, pf2Points, projs, ax[i])
 
     return f
+

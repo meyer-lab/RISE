@@ -10,7 +10,6 @@ from .common import (
     openPf2
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
-from ..parafac2 import parafac2_nd
 import umap
 from sklearn.decomposition import PCA
 import numpy as np
