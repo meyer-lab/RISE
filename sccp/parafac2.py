@@ -1,7 +1,9 @@
+from copy import deepcopy
 import torch
 import numpy as np
 from tqdm import tqdm
 import tensorly as tl
+from tensorly.cp_tensor import CPTensor
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from tensorly.tenalg.svd import randomized_svd
 from tensorly.decomposition import parafac
@@ -59,9 +61,15 @@ def parafac2_nd(
     tol: float = 1e-7,
     verbose: bool = False,
     random_state=None,
+    linesearch=True,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
     rng = np.random.RandomState(random_state)
+
+    acc_pow: float = 2.0  # Extrapolate to the iteration^(1/acc_pow) ahead
+    acc_fail: int = 0  # How many times acceleration have failed
+    max_fail: int = 4  # Increase acc_pow with one after max_fail failure
+
     if isinstance(X_in, Pf2X):
         X_in = X_in.X_list
 
@@ -95,11 +103,56 @@ def parafac2_nd(
         err, projections, projected_X = _cmf_reconstruction_error(
             X, CP.factors, norm_tensor, rng=rng
         )
+
+        # Will we be performing a line search iteration
+        if linesearch and iter % 2 == 0 and iter > 5:
+            line_iter = True
+        else:
+            line_iter = False
+
+
+        # Initiate line search
+        if line_iter:
+            jump = iter ** (1.0 / acc_pow)
+
+            # Estimate error with line search
+            CP_ls = deepcopy(CP)
+            CP_ls.factors = [
+                CP_old.factors[ii] + (CP.factors[ii] - CP_old.factors[ii]) * jump
+                for ii in range(3)
+            ]
+            err_ls, projections_ls, projected_X_ls = _cmf_reconstruction_error(
+                X, CP_ls.factors, norm_tensor, rng=rng
+            )
+
+            if err_ls < err:
+                acc_fail = 0
+                err = err_ls
+                projections = projections_ls
+                projected_X = projected_X_ls
+                CP = CP_ls
+
+                if verbose:
+                    print(f"Accepted line search jump of {jump}.")
+            else:
+                acc_fail += 1
+
+                if verbose:
+                    print(f"Line search failed for jump of {jump}.")
+
+                if acc_fail == max_fail:
+                    acc_pow += 1.0
+                    acc_fail = 0
+
+                    if verbose:
+                        print("Reducing acceleration.")
+
         errs.append(tl.to_numpy((err / norm_tensor).cpu()))
 
         # Project tensor slices
         projected_X = tl.stack(projected_X)
 
+        CP_old: CPTensor = deepcopy(CP)
         CP = parafac(
             projected_X,
             rank,
