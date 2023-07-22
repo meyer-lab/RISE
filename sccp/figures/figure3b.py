@@ -21,7 +21,6 @@ def makeFigure():
         data,
         rank=rank,
         random_state=1,
-        verbose=True,
     )
 
     # UMAP dimension reduction

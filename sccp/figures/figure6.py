@@ -45,7 +45,6 @@ def makeFigure():
     _, factors, projs, _ = parafac2_nd(
         X,
         rank=rank,
-        verbose=True,
         random_state=42
     )
 

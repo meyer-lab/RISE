@@ -30,7 +30,7 @@ def makeFigure():
     ) = load_lupus_data()  # don't need to grab cell types here
 
     weights, factors, _, _ = parafac2_nd(
-        lupus_tensor, rank=rank, n_iter_max=20, random_state=1, verbose=True
+        lupus_tensor, rank=rank, n_iter_max=20, random_state=1
     )
 
     plotFactors(

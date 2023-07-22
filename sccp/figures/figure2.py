@@ -33,7 +33,7 @@ def makeFigure():
     pancreas_pf2 = import_pancreas(tensor=True)
     
     rank = 2
-    _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
+    _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1)
     dataDF  = flattenData(pancreas_pf2)
 
     # UMAP dimension reduction

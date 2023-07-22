@@ -43,11 +43,10 @@ def makeFigure():
 
     data = X
     # Performing parafac2 on single-cell Xarray
-    rank = 2
+    rank = 40
     _, factors, projs, _ = parafac2_nd(
         X,
         rank=rank,
-        verbose=True,
         random_state=42
     )
 

@@ -1,4 +1,6 @@
+import os
 from copy import deepcopy
+from typing import Sequence
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -10,8 +12,8 @@ from tensorly.decomposition import parafac
 from scipy.optimize import linear_sum_assignment
 
 
-class Pf2X:
-    def __init__(self, X_list, condition_labels, variable_labels):
+class Pf2X(Sequence):
+    def __init__(self, X_list: list, condition_labels, variable_labels):
         assert isinstance(X_list, list)
         self.X_list = X_list
         self.condition_labels = np.array(condition_labels, dtype=object)
@@ -23,8 +25,16 @@ class Pf2X:
     def unfold(self):
         return tl.concatenate(self.X_list, axis=0)
 
+    def __getitem__(self, item):
+        if item >= len(self.X_list):
+            raise IndexError("Pf2X index out of range")
+        return self.X_list[item]
 
-def _cmf_reconstruction_error(matrices, factors: list, norm_X_sq, rng=None):
+    def __len__(self):
+        return len(self.X_list)
+
+
+def _cmf_reconstruction_error(matrices: Sequence, factors: list, norm_X_sq, rng=None):
     A, B, C = factors
 
     norm_cmf_sq = 0
@@ -46,7 +56,7 @@ def _cmf_reconstruction_error(matrices, factors: list, norm_X_sq, rng=None):
         B_i = (proj @ B) * A[i]
         # trace of the multiplication products
         inner_product += tl.trace(B_i.T @ mat_gpu @ C)
-        norm_cmf_sq += tl.sum((B_i.T @ B_i) * CtC)
+        norm_cmf_sq += ((B_i.T @ B_i) * CtC).sum()
         projections.append(proj)
         projected_X.append(proj.T @ mat_gpu)
 
@@ -55,44 +65,44 @@ def _cmf_reconstruction_error(matrices, factors: list, norm_X_sq, rng=None):
 
 @torch.inference_mode()
 def parafac2_nd(
-    X_in,
+    X_in: Sequence,
     rank: int,
     n_iter_max: int = 200,
-    tol: float = 1e-7,
-    verbose: bool = False,
+    tol: float = 1e-6,
+    verbose = None,
     random_state=None,
     linesearch=True,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
     rng = np.random.RandomState(random_state)
 
+    # Check if verbose was not set
+    if verbose is None:
+        # Check if this is an automated build
+        verbose = "CI" not in os.environ
+
     acc_pow: float = 2.0  # Extrapolate to the iteration^(1/acc_pow) ahead
     acc_fail: int = 0  # How many times acceleration have failed
     max_fail: int = 4  # Increase acc_pow with one after max_fail failure
 
-    if isinstance(X_in, Pf2X):
-        X_in = X_in.X_list
-
-    X = X_in
-
     norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X_in])
 
     # Checks size of each experiment is bigger than rank
-    for i in range(len(X)):
-        assert np.shape(X[i])[0] > rank
+    for i in range(len(X_in)):
+        assert np.shape(X_in[i])[0] > rank
 
     # Checks size of signal measured is bigger than rank
-    assert np.shape(X[0])[1] > rank
+    assert np.shape(X_in[0])[1] > rank
 
     # Initialization  
-    unfolded = np.concatenate(list(X), axis=0).T
+    unfolded = np.concatenate(X_in, axis=0).T
     C = randomized_svd(unfolded, rank, random_state=rng)[0]
 
     tl.set_backend("pytorch")
-    CP = tl.cp_tensor.CPTensor(
+    CP = CPTensor(
         (
             None,
-            [tl.ones((len(X), rank)).cuda().double(), tl.eye(rank).cuda().double(), torch.tensor(C).cuda().double()],
+            [tl.ones((len(X_in), rank)).cuda().double(), tl.eye(rank).cuda().double(), torch.tensor(C).cuda().double()],
         )
     )
 
@@ -101,7 +111,7 @@ def parafac2_nd(
     tq = tqdm(range(n_iter_max), disable=(not verbose), mininterval=2)
     for iter in tq:
         err, projections, projected_X = _cmf_reconstruction_error(
-            X, CP.factors, norm_tensor, rng=rng
+            X_in, CP.factors, norm_tensor, rng=rng
         )
 
         # Will we be performing a line search iteration
@@ -122,7 +132,7 @@ def parafac2_nd(
                 for ii in range(3)
             ]
             err_ls, projections_ls, projected_X_ls = _cmf_reconstruction_error(
-                X, CP_ls.factors, norm_tensor, rng=rng
+                X_in, CP_ls.factors, norm_tensor, rng=rng
             )
 
             if err_ls < err:

@@ -28,7 +28,7 @@ def makeFigure():
     ranks = [2]
     pancreas_pf2 = import_pancreas(tensor=True)
     rank = 2
-    _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
+    _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1)
     pancreas = import_pancreas(tensor=False)
     flatProjs = np.concatenate(projs, axis=0)
     pancreas.obsm["Pf2"] = flatProjs
@@ -71,7 +71,7 @@ def compare_ranks_methods(ranks, ax):
     pancreas = import_pancreas(tensor=False)
 
     for rank in ranks:
-        _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1, verbose=True)
+        _, factors, projs, _ = parafac2_nd(pancreas_pf2, rank=rank, random_state=1)
         pancreas.obsm["Pf2"] = np.concatenate(projs, axis=0)
         asw = scib.me.isolated_labels_asw(pancreas, batch_key="batch", label_key="celltype", embed="Pf2")
         kBET = 1 - scib.me.kBET(pancreas, batch_key="batch", label_key="celltype", type_="full", embed="Pf2")

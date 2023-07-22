@@ -40,7 +40,6 @@ def makeFigure():
         data,
         rank=rank,
         random_state=1,
-        verbose=True,
     )
 
     projs = np.concatenate(projs, axis=0)
