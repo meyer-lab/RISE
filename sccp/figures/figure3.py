@@ -14,7 +14,7 @@ from .common import (
   
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 import umap
 from sklearn.decomposition import PCA
 

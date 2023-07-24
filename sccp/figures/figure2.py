@@ -10,7 +10,7 @@ from .common import (
     plotCellUMAP
 )
 from ..imports.scRNA import import_pancreas
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 import umap
 import scanpy as sc
 import pandas as pd

@@ -1,7 +1,8 @@
 from copy import deepcopy
 import numpy as np
 from tensorly.tenalg.svd import randomized_svd
-from .parafac2 import parafac2_nd, _cmf_reconstruction_error
+from parafac2 import parafac2_nd
+from parafac2.parafac2 import _cmf_reconstruction_error
 from tensorly.parafac2_tensor import parafac2_to_slices
 
 

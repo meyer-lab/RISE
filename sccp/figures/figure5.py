@@ -7,7 +7,7 @@ import pandas as pd
 import math
 from .common import subplotLabel, getSetup, plotDistDrug, plotDistGene, plotDistAllDrug, plotDistAllGene
 from ..imports.scRNA import ThompsonXA_SCGenes
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist
 from ..metric import distDrugDF, distGeneDF, distAllDrugDF, distAllGeneDF

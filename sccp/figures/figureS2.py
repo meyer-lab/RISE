@@ -15,7 +15,7 @@ from .common import (
     plotUMAP_ct,
 )
 from ..imports.scRNA import load_lupus_data
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 import numpy as np
 import umap
 from sklearn.decomposition import PCA

@@ -10,7 +10,7 @@ from .common import (
 import numpy as np
 import pandas as pd
 from ..imports.scRNA import import_perturb_RPE
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 import seaborn as sns
 import mygene
 

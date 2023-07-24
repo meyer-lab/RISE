@@ -4,7 +4,7 @@ from .common import (subplotLabel, getSetup,
     plotFactors, flattenData, 
     plotLabelAllUMAP, plotCellType)
 from ..imports.scib import import_scib_data
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 import umap
 
 def makeFigure():

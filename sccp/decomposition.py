@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.decomposition import PCA
-from .parafac2 import parafac2_nd, Pf2X
+from .parafac2 import Pf2X
+from parafac2 import parafac2_nd
 
 
 def R2X(tensor: Pf2X, rank: int) -> tuple[list[float], np.ndarray]:

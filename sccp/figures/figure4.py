@@ -6,7 +6,7 @@ getSetup, plotFactors,
 plotR2X, plotCV, plotWeight,
 openPf2, savePf2)
 from ..imports.scRNA import ThompsonXA_SCGenes
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""

@@ -8,7 +8,7 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 
 # load functions/modules ----
 from .common import subplotLabel, getSetup, plotFactors, plotWeight
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 from ..imports.scRNA import load_lupus_data
 from .common import subplotLabel, getSetup
 

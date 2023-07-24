@@ -7,7 +7,7 @@ from .common import (
     flattenData
 )
 from ..imports.scRNA import import_pancreas, import_pancreas_all
-from ..parafac2 import parafac2_nd
+from parafac2 import parafac2_nd
 import scib
 import pandas as pd
 import seaborn as sns
