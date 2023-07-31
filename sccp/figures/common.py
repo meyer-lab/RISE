@@ -489,13 +489,16 @@ def savePf2(weight, factors, projs, dataName: str):
     np.save(join(path_here, "data/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), np.concatenate(projs, axis=0))
 
     
-def openPf2(rank: int, dataName: str):
+def openPf2(rank: int, dataName: str, optProjs = False):
     """Opens weight factors and projections for one dataset for a component as numpy arrays"""
     weight = np.load(join(path_here, "data/"+dataName+"/"+dataName+"_WeightCmp"+str(rank)+".npy"), allow_pickle=True)
     factors = [np.load(join(path_here, "data/"+dataName+"/"+dataName+"_Factor0Cmp"+str(rank)+ ".npy"), allow_pickle=True),
                np.load(join(path_here, "data/"+dataName+"/"+dataName+"_Factor1Cmp"+str(rank)+ ".npy"), allow_pickle=True),
                np.load(join(path_here, "data/"+dataName+"/"+dataName+"_Factor2Cmp"+str(rank)+ ".npy"), allow_pickle=True)]
-               
-    projs = np.load(join(path_here, "data/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), allow_pickle=True)
-    
+        
+    if optProjs is False:
+        projs = np.load(join(path_here, "data/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), allow_pickle=True)
+    else:
+        projs = np.load(join(path_here, "/opt/andrew/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), allow_pickle=True)
+        
     return weight, factors, projs
