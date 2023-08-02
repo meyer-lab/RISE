@@ -258,7 +258,8 @@ def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
 def plotCmpUMAP(cellState, cmp, factors, pf2Points, allP, ax):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
-    weightedProjs = allP[:, cellState-1] * factors[1][cellState-1, cmp-1]
+    weightedProjs = allP @ factors[1]
+    weightedProjs = weightedProjs[:, cmp-1]
     subset = np.random.choice(a=[False, True], size= len(weightedProjs), p=[.95, .05])
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     weightedProjs = weightedProjs / np.max(np.abs(weightedProjs))
