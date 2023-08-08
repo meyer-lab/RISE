@@ -504,6 +504,14 @@ def plotCellTypeUMAP(points, data, ax):
     """Plots UMAP labeled by cell type"""
     umap.plot.points(points, labels=data["Cell Type"].values, ax=ax)
     
+def plotCmpPerCellType(weightedprojs, cmp, ax):
+    """Boxplot of weighted projections for one component across cell types"""
+    sns.boxplot(data=weightedprojs, x=cmp, y="Cell Type", ax=ax)
+    
+def plotGenePerCellType(data, gene, ax):
+    """Boxplot of genes for one across cell types"""
+    sns.boxplot(data=data[[gene, "Cell Type", "Condition"]], x=gene, y="Cell Type", hue="Condition", ax=ax)
+    
 
 def flattenWeightedProjs(data, factors, projs):
     """Flattens tensor into dataframe"""
