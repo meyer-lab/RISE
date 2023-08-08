@@ -515,3 +515,31 @@ def plotCellTypePerExpPerc(dataDF, condition, ax):
     
     sns.barplot(data=df, x="Cell Type", y="Count", ax=ax)
     ax.set(title=condition)
+    
+def plotCellTypeUMAP(points, data, ax):
+    """Plots UMAP labeled by cell type"""
+    umap.plot.points(points, labels=data["Cell Type"].values, ax=ax)
+    
+
+def flattenWeightedProjs(data, factors, projs):
+    """Flattens tensor into dataframe"""
+    cellCount = []
+    for i in range(len(data.X_list)):
+        cellCount = np.append(cellCount, data.X_list[i].shape[0])
+
+    condNames = []
+
+    for i in range(len(data.X_list)):
+        condNames = np.append(
+            condNames, np.repeat(data.condition_labels[i], cellCount[i])
+        )
+
+    weightedProjs = projs @ factors[1]
+
+    weightedProjs = weightedProjs / np.max(np.abs(weightedProjs),axis=0)
+
+    cmpNames = [f"Cmp. {i}" for i in np.arange(1, weightedProjs.shape[1] + 1)]
+    dataDF = pd.DataFrame(data=weightedProjs, columns=cmpNames)
+    dataDF["Condition"] = condNames
+
+    return dataDF
