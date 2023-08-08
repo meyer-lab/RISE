@@ -499,3 +499,19 @@ def openPf2(rank: int, dataName: str, optProjs = False):
         projs = np.load(join(path_here, "/opt/andrew/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), allow_pickle=True)
         
     return weight, factors, projs
+
+
+def plotCellTypePerExpCount(dataDF, condition, ax):
+    """Plots historgram of cell counts per experiment"""
+    sns.histplot(data=dataDF, x="Cell Type", hue="Cell Type", ax=ax)
+    ax.set(title=condition)
+
+
+def plotCellTypePerExpPerc(dataDF, condition, ax):
+    """Plots historgram of cell types percentages per experiment"""
+    df = dataDF.groupby(["Cell Type"]).size().reset_index(name="Count") 
+    perc = df["Count"].values / np.sum(df["Count"].values)
+    df["Count"] = perc
+    
+    sns.barplot(data=df, x="Cell Type", y="Count", ax=ax)
+    ax.set(title=condition)
