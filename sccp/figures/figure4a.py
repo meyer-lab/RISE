@@ -25,11 +25,10 @@ def makeFigure():
     # UMAP dimension reduction
     pf2Points = umap.UMAP(random_state=1).fit(projs)
     
-    cellState = np.arange(17, 25, 1) 
-    component = np.copy(cellState)
+    component  = np.arange(17, 25, 1) 
     
-    for i in range(len(cellState)):
-        plotCmpUMAP(cellState[i], component[i], factors, pf2Points, projs, ax[i])
+    for i in range(len(component)):
+        plotCmpUMAP(component[i], factors, pf2Points, projs, ax[i])
 
     return f
 

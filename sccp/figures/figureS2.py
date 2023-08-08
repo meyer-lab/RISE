@@ -52,7 +52,7 @@ def makeFigure():
     pcaPoints = umap.UMAP(random_state=1).fit(pcaPoints)
 
     plotUMAP_ct(cell_types, pf2Points, ax[0])
-    plotCmpUMAP(cellState, cmp, factors, pf2Points, projs, ax[1])
+    plotCmpUMAP(cmp, factors, pf2Points, projs, ax[1])
     plotCellStateViolins(projs, cell_types, cellState, ax[2])
 
     return f

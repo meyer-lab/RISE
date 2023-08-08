@@ -35,16 +35,15 @@ def makeFigure():
     pcaPoints = pc.fit_transform(data.unfold())
     pcaPoints = umap.UMAP(random_state=1).fit(pcaPoints)
 
-    subset = np.random.choice(a=[False, True], size=np.shape(projs)[0], p=[.93, .07])
 
-    umap.plot.points(pf2Points,theme='blue', subset_points= subset, ax=ax[0])
+    umap.plot.points(pf2Points,theme='blue', ax=ax[0])
     ax[0].set(
             title="Pf2-Based Decomposition",
             ylabel="UMAP2",
             xlabel="UMAP1")
     
     
-    umap.plot.points(pcaPoints,theme='red', subset_points=subset, ax=ax[1])
+    umap.plot.points(pcaPoints,theme='red', ax=ax[1])
     ax[1].set(
             title="PCA-Based Decomposition",
             ylabel="UMAP2",
