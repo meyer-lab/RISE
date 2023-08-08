@@ -21,17 +21,30 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 30
+    rank = 5
 
     (
         lupus_tensor,
-        _,
-        row_colors,
-    ) = load_lupus_data()  # don't need to grab cell types here
+        obs,
+    ) = load_lupus_data(every_n = 10)  # so that it builds quickly
+
 
     weights, factors, _, _ = parafac2_nd(
         lupus_tensor, rank=rank, n_iter_max=20, random_state=1
     )
+
+    status = (
+        obs[["sample_ID", "SLE_status"]]
+        .drop_duplicates("sample_ID")
+    )
+
+    # make sure that these two are in the same order
+    bool = status['sample_ID'] == lupus_tensor.condition_labels
+    assert bool.mean() == 1.0
+
+
+    lut = {"SLE": "c", "Healthy": "m"}
+    row_colors = status["SLE_status"].map(lut)
 
     plotFactors(
         factors, lupus_tensor, ax[0:3], reorder=(0, 2), trim=(2,), row_colors=row_colors

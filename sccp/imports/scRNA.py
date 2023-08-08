@@ -111,21 +111,49 @@ def import_pancreas_all(tensor=True, method=str()):
     return pancreas, methods
 
 
-def load_lupus_data(third_axis="ind_cov", every_n=4):
+def load_lupus_data(every_n=1):
     """Import Lupus PBMC dataset.
 
-    `third_axis`: 3rd dimension along with to expand data. Defaults to patient (ind_cov)
     `every_n`: takes every nth cell to be included. set to 1 to include all data
 
-    *NOTE*: This function has three outputs, not one. The first is the data in tensor format,
-    the second is a list of cell types compatible with later functions that plot by cell type,
-    and the third is a list of row colors for use coloring factor plot A by SLE status.
+    *NOTE*: This function has two outputs, not one. The first is the data in tensor format,
+    the second is the 'observations' anndata associated data (a pandas DataFrame)
+
+    -- columns from observation data:
+    {'batch_cov': POOL (1-23) cell was processed in,
+    'ind_cov': patient cell was derived from,
+    'Processing_Cohort': BATCH (1-4) cell was derived from, 
+    'louvain': louvain cluster group assignment,
+    'cg_cov': broad cell type,
+    'ct_cov': lymphocyte-specific cell type,
+    'L3': not super clear,
+    'ind_cov_batch_cov': combination of patient and pool, proxy for sample ID,
+    'Age':	age of patient,
+    'Sex': sex of patient,
+    'pop_cov': ancestry of patient,
+    'Status': SLE status: healthy, managed, treated, or flare,
+    'SLE_status': SLE status: healthy or SLE}
+
     """
     X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
 
+    # rename columns to make more sense 
+    X.obs = X.obs.rename({'batch_cov': 'pool',
+                          'ind_cov': 'patient',
+                          'cg_cov': 'cell_type_broad',
+                          'ct_cov': 'cell_type_lympho',
+                          'ind_cov_batch_cov': 'sample_ID',
+                          'Age': 'age',
+                          'Sex': 'sex',
+                          'pop_cov': 'ancestry',
+                          'Status': 'SLE_condition'}, axis = 1)
+    
+    # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
+    X = X[X.obs['sample_ID'] != 'IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831']
+
     # reorder X so that all of the patients are in alphanumeric order. this is important
     # so that we can steal cell typings at this point
-    obsV = X.obs_vector("ind_cov")
+    obsV = X.obs_vector('sample_ID')
     sgUnique, sgIndex = np.unique(obsV, return_inverse=True)
 
     ann_data_objects = [X[sgIndex == sgi, :] for sgi in range(len(sgUnique))]
@@ -135,20 +163,6 @@ def load_lupus_data(third_axis="ind_cov", every_n=4):
     # keep only n observations
     X = X[::every_n, :]
 
-    # get cell types -> only stay true if order of cells doesn't change after this
-    cell_types = X.obs["cg_cov"].reset_index(drop=True)
-
-    # get color mapping for patients by SLE status
-
-    status = (
-        X.obs[["ind_cov", "SLE_status"]]
-        .sort_values(by="ind_cov")
-        .drop_duplicates("ind_cov")
-    )
-
-    lut = {"SLE": "c", "Healthy": "m"}
-    row_colors = status["SLE_status"].map(lut)
-
     assert np.all(np.isfinite(X.X.data))  # this should be true
 
-    return tensorFy(X, third_axis), cell_types, row_colors
+    return tensorFy(X, 'sample_ID'), X.obs
