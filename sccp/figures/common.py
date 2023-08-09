@@ -17,6 +17,7 @@ from ..decomposition import R2X
 import os
 from os.path import join
 from pandas.plotting import parallel_coordinates as pc
+import pickle
 from matplotlib.patches import Patch
 
 path_here = os.path.dirname(os.path.dirname(__file__))
@@ -279,6 +280,7 @@ def plotCmpUMAP(cmp, factors, pf2Points, allP, ax):
         ylabel="UMAP2",
         xlabel="UMAP1",
         title="Component:" + str(cmp))
+    
 
 
 def plotBatchUMAP(decomp_DF, ax):
@@ -461,16 +463,16 @@ def plotWeight(weight, ax):
     ax.tick_params(axis="x", rotation=90)
 
 
-def plotUMAP_ct(labels, pf2Points, ax):
-    """Scatterplot of UMAP visualization labeled by cell type"""
-    plot = umap.plot.points(pf2Points, 
-                            labels = labels, 
-                            theme='viridis', 
-                            ax=ax)
+def plotUMAP_obslabel(labels, pf2Points, ax):
+    """Scatterplot of UMAP visualization labeled by cell type or other obs column"""
+    umap.plot.points(pf2Points, 
+                        labels = labels, 
+                        color_key_cmap='Paired', 
+                        ax=ax)
     ax.set(
         ylabel="UMAP2",
         xlabel="UMAP1",
-        title="Pf2-Based Decomposition: Label Cell Types")
+        title="Pf2-Based Decomposition: Label " + str(labels.name))
 
 
 def savePf2(weight, factors, projs, dataName: str):
@@ -496,6 +498,19 @@ def openPf2(rank: int, dataName: str, optProjs = False):
         projs = np.load(join(path_here, "/opt/andrew/"+dataName+"/"+dataName+"_ProjCmp"+str(rank)+".npy"), allow_pickle=True)
         
     return weight, factors, projs
+
+def saveUMAP(fit_points, rank:int, dataName: str):
+    """Saves UMAP points locally, large files uploaded manually to opt"""
+    f_name = join(path_here, "data/"+dataName+"/"+dataName+"_UMAPCmp"+str(rank)+".sav")
+    pickle.dump(fit_points, open(f_name, 'wb'))
+
+def openUMAP(rank: int, dataName: str, opt = True):
+    """Opens UMAP points for plotting, defaults to using the opt folder (for big files)"""
+    if opt == True:
+        f_name = join(path_here, "/opt/andrew/"+dataName+"/"+dataName+"_UMAPCmp"+str(rank)+".sav")
+    else:
+        f_name = join(path_here, "data/"+dataName+"/"+dataName+"_UMAPCmp"+str(rank)+".sav")
+    return pickle.load((open(f_name, 'rb')))
 
 
 def plotCellTypePerExpCount(dataDF, condition, ax):

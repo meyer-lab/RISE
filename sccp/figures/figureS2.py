@@ -6,18 +6,15 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 
 # GOAL: visualize the cell state compostition by cell type/UMAP
 
-import numpy as np
 from .common import (
     subplotLabel,
     getSetup,
     plotCmpUMAP,
-    plotUMAP_ct,
+    plotUMAP_obslabel,
+    openPf2,
+    openUMAP
 )
 from ..imports.scRNA import load_lupus_data
-from parafac2 import parafac2_nd
-import numpy as np
-import umap
-from sklearn.decomposition import PCA
 
 
 def makeFigure():
@@ -28,31 +25,27 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
+    rank = 40
+    cmp = 13
+
     # Import of data
-    data, obs = load_lupus_data(every_n=10)  # don't need to get patient color mappings
-    rank = 5
-    cmp = 4
+    _, obs= load_lupus_data()
+    
+    broad_type = obs["cell_type_broad"].reset_index(drop=True)
+    lympho_type = obs["cell_type_lympho"].reset_index(drop=True)
 
-    cell_types = obs["cell_type_broad"].reset_index(drop=True)
+    # replace NaN with string
+    lympho_type = lympho_type.cat.add_categories('other').fillna('other')
 
-    # run pf2
-    _, factors, projs, _ = parafac2_nd(
-        data,
-        rank=rank,
-        n_iter_max=10,
-        random_state=1,
-    )
+    _, factors, projs, = openPf2(rank = rank, dataName = 'lupus', optProjs=True)
 
-    projs = np.concatenate(projs, axis=0)
+
     # UMAP dimension reduction
-    pf2Points = umap.UMAP(random_state=1, verbose=True).fit(projs)
+    pf2Points = openUMAP(40, 'lupus', opt = True)
 
-    # PCA dimension reduction
-    pc = PCA(n_components=rank)
-    pcaPoints = pc.fit_transform(data.unfold())
-    pcaPoints = umap.UMAP(random_state=1).fit(pcaPoints)
 
-    plotUMAP_ct(cell_types, pf2Points, ax[0])
-    plotCmpUMAP(cmp, factors, pf2Points, projs, ax[1])
+    plotCmpUMAP(cmp, factors, pf2Points, projs, ax[0])
+    plotUMAP_obslabel(broad_type, pf2Points, ax[1])
+    plotUMAP_obslabel(lympho_type, pf2Points, ax[2])
 
     return f
