@@ -42,9 +42,9 @@ def makeFigure():
     weightedProjDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
     dataDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
     
-    comps = ["Cmp. 5", "Cmp. 12", "Cmp. 20", "Cmp. 30"]
+    comps = [5, 12, 20, 30]
     for i, comp in enumerate(comps):
-        plotCmpPerCellType(weightedProjDF, comp, ax[i+1])
+        plotCmpPerCellType(weightedProjDF, comps[i], ax[i+1])
 
     genes = ["NKG7", "GNLY", "MS4A1", "CD79A"]
     for i, gene in enumerate(genes):
