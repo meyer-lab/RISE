@@ -564,3 +564,9 @@ def flattenWeightedProjs(data, factors, projs):
     dataDF["Condition"] = condNames
 
     return dataDF
+
+def plotCmpRegContributions(contribs, predicting: str, ax):  
+    """Plots weights of components in logistic regression from `getCompContribs`"""
+    sns.barplot(data = contribs, x = "Component", y = "Weight", color = '#1a759f', errorbar=None, ax = ax)
+    ax.tick_params(axis="x", rotation=90)
+    ax.set_title('Weight of Each component in Logsitic Regression: Predicting ' + predicting)
