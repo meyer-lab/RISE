@@ -474,7 +474,6 @@ def plotUMAP_obslabel(labels, pf2Points, ax):
         xlabel="UMAP1",
         title="Pf2-Based Decomposition: Label " + str(labels.name))
 
-
 def savePf2(weight, factors, projs, dataName: str):
     """Saves weight factors and projections for one dataset for a component"""
     rank = len(weight)
@@ -532,10 +531,10 @@ def plotCellTypeUMAP(points, data, ax):
     """Plots UMAP labeled by cell type"""
     umap.plot.points(points, labels=data["Cell Type"].values, ax=ax)
     
-def plotCmpPerCellType(weightedprojs, cmp, ax):
+def plotCmpPerCellType(weightedprojs, cmp, ax, outliers = True):
     """Boxplot of weighted projections for one component across cell types"""
     cmpName = "Cmp. "+str(cmp)
-    sns.boxplot(data=weightedprojs[[cmpName, "Cell Type"]], x=cmpName, y="Cell Type", ax=ax)
+    sns.boxplot(data=weightedprojs[[cmpName, "Cell Type"]], x=cmpName, y="Cell Type", showfliers = outliers, ax=ax)
     
 def plotGenePerCellType(data, gene, ax):
     """Boxplot of genes for one across cell types"""
