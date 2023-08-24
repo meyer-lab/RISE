@@ -27,7 +27,7 @@ def makeFigure():
     # )
     
     # savePf2(weight, factors, projs, "Thomson")
-    weight, factors, projs = openPf2(rank, "Thomson")
+    weight, factors, _ = openPf2(rank, "Thomson")
 
     plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,), saveGenes=False)
     plotWeight(weight, ax[3])

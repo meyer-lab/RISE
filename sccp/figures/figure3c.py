@@ -7,7 +7,7 @@ from .common import (
     getSetup,
     flattenData,
     plotGeneUMAP,
-    openPf2
+    openUMAP
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
@@ -27,11 +27,11 @@ def makeFigure():
     data = ThompsonXA_SCGenes(offset=1.0)
     rank = 30
 
-    weight, factors, projs = openPf2(rank, "Thomson")
     dataDF = flattenData(data)
 
     # UMAP dimension reduction
-    pf2Points = umap.UMAP(random_state=1).fit(projs)
+    pf2Points = openUMAP(rank, "Thomson", opt=False)
+    
     
     # Genes for cells
     cd4 =  ["IL7R"]
@@ -44,11 +44,13 @@ def makeFigure():
     
     plotGeneUMAP(np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b)), "Pf2", pf2Points, dataDF, ax[0:16])
     
+    
     # # PCA dimension reduction
     # pc = PCA(n_components=rank)
     # pcaPoints = pc.fit_transform(data.unfold())
     # pcaPoints = umap.UMAP(random_state=1).fit(pcaPoints)
     
     # plotGeneUMAP(np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b)), "PCA", pcaPoints, dataDF, ax[0:16])
+
 
     return f
