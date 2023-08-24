@@ -241,11 +241,12 @@ def flattenProjs(data, projs):
 def plotGeneUMAP(genes, decomp, points, dataDF, axs):
     """Scatterplot of UMAP visualization weighted by gene"""
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
+    subset = np.random.choice(a=[False, True], size=len(dataDF[genes[0]].values), p=[.9, .1])
     for i, genez in enumerate(genes):
         geneList = dataDF[genez].to_numpy()
         geneList = geneList / np.max(np.abs(geneList))
         psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
-        plot = umap.plot.points(points, values=geneList, cmap=cmap, ax=axs[i])
+        plot = umap.plot.points(points, values=geneList, cmap=cmap, subset_points=subset, ax=axs[i])
         colorbar= plt.colorbar(psm, ax=plot)
         axs[i].set(
             title=genez + "-" + decomp + "-Based Decomposition",
@@ -257,10 +258,11 @@ def plotGeneUMAP(genes, decomp, points, dataDF, axs):
 
 def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
     """Scatterplot of UMAP visualization weighted by condition"""
+    subset = np.random.choice(a=[False, True], size=len(totaldrugs), p=[.9, .1])
     for i, drugz in enumerate(drugs):
         drugList = np.where(np.asarray(totaldrugs == drugz), drugz, "Z Other Drugs")
         umap.plot.points(
-            points, labels=drugList, ax=axs[i], color_key_cmap="tab20", show_legend=True)
+            points, labels=drugList, ax=axs[i], color_key_cmap="tab20", subset_points=subset, show_legend=True)
         axs[i].set(
             title=decomp + "-Based Decomposition",
         ylabel="UMAP2",
@@ -276,8 +278,10 @@ def plotCmpUMAP(cmp, factors, pf2Points, allP, ax):
     weightedProjs = weightedProjs[:, cmp-1]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     weightedProjs = weightedProjs / np.max(np.abs(weightedProjs))
+    subset = np.random.choice(a=[False, True], size=np.shape(weightedProjs)[0], p=[.9, .1])
+    subset[np.argmax(np.abs(weightedProjs))] = True # Ensure largest value is -1 or 1
     psm = plt.pcolormesh([[-1, 1],[-1, 1]], cmap=cmap)
-    plot = umap.plot.points(pf2Points, values=weightedProjs, cmap=cmap, ax=ax)
+    plot = umap.plot.points(pf2Points, values=weightedProjs, cmap=cmap, subset_points=subset, ax=ax)
     colorbar= plt.colorbar(psm, ax=plot)
     ax.set(
         ylabel="UMAP2",
@@ -532,16 +536,18 @@ def plotCellTypePerExpPerc(dataDF, condition, ax):
     
 def plotCellTypeUMAP(points, data, ax):
     """Plots UMAP labeled by cell type"""
-    umap.plot.points(points, labels=data["Cell Type"].values, ax=ax)
+    subset = np.random.choice(a=[False, True], size=len(data["Cell Type"].values), p=[.9, .1])
+    umap.plot.points(points, labels=data["Cell Type"].values, subset_points=subset, ax=ax)
     
 def plotCmpPerCellType(weightedprojs, cmp, ax, outliers = True):
     """Boxplot of weighted projections for one component across cell types"""
     cmpName = "Cmp. "+str(cmp)
     sns.boxplot(data=weightedprojs[[cmpName, "Cell Type"]], x=cmpName, y="Cell Type", showfliers = outliers, ax=ax)
     
+    
 def plotGenePerCellType(data, gene, ax):
     """Boxplot of genes for one across cell types"""
-    sns.boxplot(data=data[[gene, "Cell Type", "Condition"]], x=gene, y="Cell Type", hue="Condition", ax=ax)
+    sns.stripplot(data=data[[gene, "Cell Type", "Condition"]], x=gene, y="Cell Type", hue="Condition", ax=ax)
     
 
 def flattenWeightedProjs(data, factors, projs):
