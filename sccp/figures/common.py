@@ -19,6 +19,9 @@ from os.path import join
 from pandas.plotting import parallel_coordinates as pc
 import pickle
 from matplotlib.patches import Patch
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import RocCurveDisplay, auc
+from sklearn.model_selection import StratifiedGroupKFold
 
 path_here = os.path.dirname(os.path.dirname(__file__))
 
@@ -610,3 +613,83 @@ def investigate_comp(comp: int, rank: int, obs, proj_B, obs_column, ax, threshol
     sns.barplot(pcts, x = obs_column, y = 'percent', errorbar=None, ax=ax)
     ax.tick_params(axis="x", rotation=90)
     ax.set_title(obs_column + ' Percentages, Threshold: ' + str(threshold) + ' for comp ' + str(comp))
+
+def plotROCAcrossGroups(A_matrix, group_labs, ax, 
+                        pred_group = 'SLE_status',
+                        cv_group = 'Processing_Cohort',
+                        penalty_type = 'l1',      
+                        solver = 'saga',
+                        penalty = 50,
+                        n_splits = 4):    
+    
+    condition_labels_all = group_labs
+
+    condition_labels = group_labs[pred_group]
+       
+    sgkf = StratifiedGroupKFold(n_splits=n_splits)
+    
+    # get labels for the group that you want to do cross validation by 
+    group_cond_labels = condition_labels_all[cv_group]
+    # set up log reg specs
+    log_reg = LogisticRegression(random_state=0, 
+                                 max_iter = 5000,
+                                 penalty = penalty_type, 
+                                 solver = solver,
+                                 C = penalty
+                                 ) 
+
+    tprs = []
+    aucs = []
+    mean_fpr = np.linspace(0, 1, 100)
+
+    for fold, (train, test) in enumerate(sgkf.split(A_matrix, condition_labels.to_numpy(), group_cond_labels.to_numpy())):
+        log_reg.fit(A_matrix[train], condition_labels.to_numpy()[train])
+        viz = RocCurveDisplay.from_estimator(
+            log_reg,
+            A_matrix[test],
+            condition_labels.to_numpy()[test],
+            name=f"ROC fold {fold}",
+            alpha=0.3,
+            lw=1,
+            ax=ax,
+            plot_chance_level=(fold == n_splits - 1),
+        )
+    interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
+    interp_tpr[0] = 0.0
+    tprs.append(interp_tpr)
+    aucs.append(viz.roc_auc)
+
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    mean_auc = auc(mean_fpr, mean_tpr)
+    std_auc = np.std(aucs)
+    ax.plot(
+        mean_fpr,
+        mean_tpr,
+        color="b",
+        label=r"Mean ROC (AUC = %0.2f $\pm$ %0.2f)" % (mean_auc, std_auc),
+        lw=2,
+        alpha=0.8,
+    )
+
+    std_tpr = np.std(tprs, axis=0)
+    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+    ax.fill_between(
+    mean_fpr,
+    tprs_lower,
+    tprs_upper,
+    color="grey",
+    alpha=0.2,
+    label=r"$\pm$ 1 std. dev.",
+    )
+
+    ax.set(
+        xlim=[-0.05, 1.05],
+        ylim=[-0.05, 1.05],
+        xlabel="False Positive Rate",
+        ylabel="True Positive Rate",
+        title="Mean ROC curve with variability",
+    )
+    ax.axis("square")
+    ax.legend(loc="lower right")
