@@ -111,10 +111,8 @@ def import_pancreas_all(tensor=True, method=str()):
     return pancreas, methods
 
 
-def load_lupus_data(every_n=1):
+def load_lupus_data():
     """Import Lupus PBMC dataset.
-
-    `every_n`: takes every nth cell to be included. set to 1 to include all data
 
     *NOTE*: This function has two outputs, not one. The first is the data in tensor format,
     the second is the 'observations' anndata associated data (a pandas DataFrame)
@@ -159,9 +157,6 @@ def load_lupus_data(every_n=1):
     ann_data_objects = [X[sgIndex == sgi, :] for sgi in range(len(sgUnique))]
 
     X = anndata.concat(ann_data_objects, axis=0)
-
-    # keep only n observations
-    X = X[::every_n, :]
 
     assert np.all(np.isfinite(X.X.data))  # this should be true
 

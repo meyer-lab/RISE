@@ -26,7 +26,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    lupus_tensor, obs = load_lupus_data() # leaving in every_n for the github checks
+    lupus_tensor, obs = load_lupus_data()
 
     status = (
             obs[['sample_ID', 'SLE_status', 'Processing_Cohort']]

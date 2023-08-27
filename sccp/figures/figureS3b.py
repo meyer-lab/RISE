@@ -30,7 +30,7 @@ def makeFigure():
     rank = 40
     group_to_predict = "SLE_status" # group to predict in logistic regression
 
-    _, obs = load_lupus_data() # leaving in every_n for the github checks
+    _, obs = load_lupus_data()
 
     status = (
             obs[['sample_ID', group_to_predict]]
