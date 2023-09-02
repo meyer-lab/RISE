@@ -20,7 +20,6 @@ def makeFigure():
     dataDF = flattenData(data)
     dataDF["Cell Type"] = gateThomsonCells(rank=30, saveCellTypes=False)
     
-    
     for i, drug in enumerate(data.condition_labels):
         if i < 12:
             plotCellTypePerExpCount(dataDF.loc[dataDF["Condition"] == drug], drug, ax[2*i])

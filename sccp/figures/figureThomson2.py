@@ -9,7 +9,6 @@ from .common import (subplotLabel, getSetup,
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..imports.gating import gateThomsonCells
 
-import pandas as pd
 
 
 def makeFigure():
@@ -39,12 +38,16 @@ def makeFigure():
     
     comps = [5, 12, 20, 30]
     for i, comp in enumerate(comps):
-        plotCmpPerCellType(weightedProjDF, comps[i], ax[i+1])
+        plotCmpPerCellType(weightedProjDF, comps[i], ax[(2*i)+1], outliers=False)
+        plotCmpUMAP(comps[i], factors, pf2Points, projs, ax[(2*i)+2])
 
-    genes = ["NKG7", "GNLY", "MS4A1", "CD79A"]
-    for i, gene in enumerate(genes):
-        plotGenePerCellType(dataDF[(dataDF["Condition"].isin(["Budesonide", "CTRL3"]))], gene, ax[(2*i)+5])
-        plotGenePerCellType(dataDF[(dataDF["Condition"].isin(["Triamcinolone Acetonide", "CTRL1"]))], gene, ax[(2*i)+6])
-    
+    set1 = ["NKG7", "GNLY", "GZMB", "GZMH", "PRF1"]
+    set2 = ["MS4A1", "CD79A", "CD79B", "TNFRSF13B", "BANK1"]
+    set3 = ["VPREB3", "CD79A", "FAM111B", "HOPX", "SLC30A3", "MS4A1"]
+    set4 = ["CD163", "ADORA3", "MS4A6A", "RNASE1", "MTMR11"]
+
+    genes = [set1, set2, set3, set4]
+    for i in range(len(genes)):
+        plotGenePerCellType(genes[i], dataDF, ax[i+9])
     
     return f
