@@ -2,13 +2,7 @@
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs: investigating UMAP
 """
 import numpy as np
-from .common import (
-    subplotLabel,
-    getSetup,
-    flattenData,
-    plotGeneUMAP,
-    openUMAP
-)
+from .common import subplotLabel, getSetup, flattenData, plotGeneUMAP, openUMAP
 from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
 from sklearn.decomposition import PCA
@@ -31,26 +25,29 @@ def makeFigure():
 
     # UMAP dimension reduction
     pf2Points = openUMAP(rank, "Thomson", opt=False)
-    
-    
+
     # Genes for cells
-    cd4 =  ["IL7R"]
-    cd8 =  ["CD8A", "CD8B"] 
-    nk =  ["GNLY", "NKG7"] 
-    mono1 =   ["CD14", "LYZ", "MS4A7"]
-    mono2 = ["FCGR3A", "CST3"] 
+    cd4 = ["IL7R"]
+    cd8 = ["CD8A", "CD8B"]
+    nk = ["GNLY", "NKG7"]
+    mono1 = ["CD14", "LYZ", "MS4A7"]
+    mono2 = ["FCGR3A", "CST3"]
     dc = ["CCR7", "HLA-DQA1", "GPR183"]
     b = ["MS4A1", "CD79A"]
-    
-    plotGeneUMAP(np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b)), "Pf2", pf2Points, dataDF, ax[0:16])
-    
-    
+
+    plotGeneUMAP(
+        np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b)),
+        "Pf2",
+        pf2Points,
+        dataDF,
+        ax[0:16],
+    )
+
     # # PCA dimension reduction
     # pc = PCA(n_components=rank)
     # pcaPoints = pc.fit_transform(data.unfold())
     # pcaPoints = umap.UMAP(random_state=1).fit(pcaPoints)
-    
-    # plotGeneUMAP(np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b)), "PCA", pcaPoints, dataDF, ax[0:16])
 
+    # plotGeneUMAP(np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b)), "PCA", pcaPoints, dataDF, ax[0:16])
 
     return f

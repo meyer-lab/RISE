@@ -6,7 +6,9 @@ from parafac2.parafac2 import _cmf_reconstruction_error
 from tensorly.parafac2_tensor import parafac2_to_slices
 
 
-def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75, random_state=None) -> np.ndarray:
+def crossvalidate_PCA(
+    X: np.ndarray, rank: int, trainPerc: float = 0.75, random_state=None
+) -> np.ndarray:
     """Bi-cross-validation for PCA. Because PCA is component-by-component, this
     provides R2X for all ranks in one pass."""
     rng = np.random.default_rng(random_state)
@@ -41,7 +43,9 @@ def crossvalidate_PCA(X: np.ndarray, rank: int, trainPerc: float = 0.75, random_
     return 1.0 - recon_error / total_var
 
 
-def crossvalidate(X, rank: int, trainPerc: float = 0.75, verbose: bool = False, random_state=None) -> float:
+def crossvalidate(
+    X, rank: int, trainPerc: float = 0.75, verbose: bool = False, random_state=None
+) -> float:
     rng = np.random.default_rng(random_state)
 
     # Shuffle, rnd.shuffle handles the cell axis

@@ -14,15 +14,13 @@ def makeFigure():
     subplotLabel(ax)
     rank = 30
     _, factors, projs = openPf2(rank, "Thomson")
-    
+
     # UMAP dimension reduction
     pf2Points = openUMAP(rank, "Thomson", opt=False)
-    
-    component  = np.arange(17, 25, 1) 
-    
+
+    component = np.arange(17, 25, 1)
+
     for i in range(len(component)):
         plotCmpUMAP(component[i], factors, pf2Points, projs, ax[i])
 
     return f
-
-

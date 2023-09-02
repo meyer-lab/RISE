@@ -11,6 +11,7 @@ from .figures.common import flattenData, flattenProjs
 
 DATA_DIR = Path(__file__).parent / "data"
 
+
 def distDrugDF(data, ranks, Pf2s, PCs, conds):
     """Plots normalized variance for either a variable or for a group of cells"""
     distDF = pd.DataFrame([])
@@ -23,16 +24,48 @@ def distDrugDF(data, ranks, Pf2s, PCs, conds):
             pf2Cond = projDF.loc[projDF["Condition"] == cond].values[:, 0:-1]
             pcaCond = pcaAll[projDF["Condition"] == cond]
 
-            pf2Dist = len(projDF["Condition"].unique()) * centroid_dist(pf2Cond) / centroid_dist(pf2All)
-            pcaDist = len(projDF["Condition"].unique()) * centroid_dist(pcaCond) / centroid_dist(pcaAll)
-            
-            distDF = pd.concat([distDF, pd.DataFrame({"Rank": [rank], "Normalized Centroid Distance": pf2Dist, "Method": "PARAFAC2", "Condition": cond})])
-            distDF = pd.concat([distDF, pd.DataFrame({"Rank": [rank], "Normalized Centroid Distance": pcaDist, "Method": "PCA", "Condition": cond})])
-            
-        
+            pf2Dist = (
+                len(projDF["Condition"].unique())
+                * centroid_dist(pf2Cond)
+                / centroid_dist(pf2All)
+            )
+            pcaDist = (
+                len(projDF["Condition"].unique())
+                * centroid_dist(pcaCond)
+                / centroid_dist(pcaAll)
+            )
+
+            distDF = pd.concat(
+                [
+                    distDF,
+                    pd.DataFrame(
+                        {
+                            "Rank": [rank],
+                            "Normalized Centroid Distance": pf2Dist,
+                            "Method": "PARAFAC2",
+                            "Condition": cond,
+                        }
+                    ),
+                ]
+            )
+            distDF = pd.concat(
+                [
+                    distDF,
+                    pd.DataFrame(
+                        {
+                            "Rank": [rank],
+                            "Normalized Centroid Distance": pcaDist,
+                            "Method": "PCA",
+                            "Condition": cond,
+                        }
+                    ),
+                ]
+            )
+
     distDF = distDF.reset_index(drop=True)
-            
+
     return distDF
+
 
 def distGeneDF(data, ranks, Pf2s, PCs, markers):
     """Plots normalized variance for either a variable or for a group of cells"""
@@ -46,81 +79,162 @@ def distGeneDF(data, ranks, Pf2s, PCs, markers):
         for marker in markers:
             dataDF[marker + " status"] = "Marker Negative"
             dataDF.loc[dataDF[marker] > 0.03, marker + " status"] = "Marker Positive"
-        
+
             pf2Marker = projDF.loc[
                 dataDF[marker + " status"] == "Marker Positive"
-            ].values[:, 0:-1]      
+            ].values[:, 0:-1]
             pcaMarker = pcaAll[dataDF[marker + " status"] == "Marker Positive"]
-            
+
             pf2Dist = centroid_dist(pf2Marker) / centroid_dist(pf2All)
             pcaDist = centroid_dist(pcaMarker) / centroid_dist(pcaAll)
-            
-            distDF = pd.concat([distDF, pd.DataFrame({"Rank": [rank], "Normalized Centroid Distance": pf2Dist, "Method": "PARAFAC2",  "Marker": marker})])
-            distDF = pd.concat([distDF, pd.DataFrame({"Rank": [rank], "Normalized Centroid Distance": pcaDist, "Method": "PCA",  "Marker": marker})])
-            
-        
+
+            distDF = pd.concat(
+                [
+                    distDF,
+                    pd.DataFrame(
+                        {
+                            "Rank": [rank],
+                            "Normalized Centroid Distance": pf2Dist,
+                            "Method": "PARAFAC2",
+                            "Marker": marker,
+                        }
+                    ),
+                ]
+            )
+            distDF = pd.concat(
+                [
+                    distDF,
+                    pd.DataFrame(
+                        {
+                            "Rank": [rank],
+                            "Normalized Centroid Distance": pcaDist,
+                            "Method": "PCA",
+                            "Marker": marker,
+                        }
+                    ),
+                ]
+            )
+
     distDF = distDF.reset_index(drop=True)
-            
+
     return distDF
 
 
 def distAllDrugDF(data, Pf2s, PCs):
     """Plots normalized variance for either a variable or for a group of cells"""
     distDF = pd.DataFrame([])
-    
+
     factors = Pf2s[1]
     projs = Pf2s[2]
     pf2All = np.concatenate(projs, axis=0)
     projDF = flattenProjs(data, projs)
     pcaAll = PCs
-    
+
     for cond in projDF["Condition"].unique():
         pf2Cond = projDF.loc[projDF["Condition"] == cond].values[:, 0:-1]
         pcaCond = pcaAll[projDF["Condition"] == cond]
 
-        pf2Dist = len(projDF["Condition"].unique()) * centroid_dist(pf2Cond) / centroid_dist(pf2All)
-        pcaDist = len(projDF["Condition"].unique()) * centroid_dist(pcaCond) / centroid_dist(pcaAll)
-        
-        distDF = pd.concat([distDF, pd.DataFrame({"Normalized Centroid Distance": pf2Dist, "Method": "PARAFAC2", "Condition": [cond]})])
-        distDF = pd.concat([distDF, pd.DataFrame({"Normalized Centroid Distance": pcaDist, "Method": "PCA", "Condition": [cond]})])
-        
+        pf2Dist = (
+            len(projDF["Condition"].unique())
+            * centroid_dist(pf2Cond)
+            / centroid_dist(pf2All)
+        )
+        pcaDist = (
+            len(projDF["Condition"].unique())
+            * centroid_dist(pcaCond)
+            / centroid_dist(pcaAll)
+        )
+
+        distDF = pd.concat(
+            [
+                distDF,
+                pd.DataFrame(
+                    {
+                        "Normalized Centroid Distance": pf2Dist,
+                        "Method": "PARAFAC2",
+                        "Condition": [cond],
+                    }
+                ),
+            ]
+        )
+        distDF = pd.concat(
+            [
+                distDF,
+                pd.DataFrame(
+                    {
+                        "Normalized Centroid Distance": pcaDist,
+                        "Method": "PCA",
+                        "Condition": [cond],
+                    }
+                ),
+            ]
+        )
+
     distDF = distDF.reset_index(drop=True)
-            
+
     return distDF
 
 
 def distAllGeneDF(data, Pf2s, PCs):
     """Plots normalized variance for either a variable or for a group of cells"""
     distDF = pd.DataFrame([])
-    
+
     factors = Pf2s[1]
     projs = Pf2s[2]
     dataDF = flattenData(data)
     projDF = flattenProjs(data, projs)
     pf2All = np.concatenate(projs, axis=0)
     pcaAll = PCs
-    
-    markers = [item for value in marker_genes.values() for item in (value if isinstance(value, list) else [value])]
+
+    markers = [
+        item
+        for value in marker_genes.values()
+        for item in (value if isinstance(value, list) else [value])
+    ]
 
     datDFcopy = dataDF.copy()
     for marker in markers:
         if marker in datDFcopy.columns:
             dataDF.loc[dataDF[marker] > 0.03, marker + " status"] = "Marker Positive"
-            
+
     for marker in markers:
         if marker in datDFcopy.columns:
-            pf2Gene = projDF.loc[dataDF[marker + " status"] == "Marker Positive"].values[:, 0: -1]
+            pf2Gene = projDF.loc[
+                dataDF[marker + " status"] == "Marker Positive"
+            ].values[:, 0:-1]
             pcaGene = pcaAll[dataDF[marker + " status"] == "Marker Positive"]
 
             pf2Dist = centroid_dist(pf2Gene) / centroid_dist(pf2All)
             pcaDist = centroid_dist(pcaGene) / centroid_dist(pcaAll)
-            distDF = pd.concat([distDF, pd.DataFrame({"Marker": [marker], "Normalized Centroid Distance": pf2Dist, "Method": "PARAFAC2"})])
-            distDF = pd.concat([distDF, pd.DataFrame({"Marker": [marker], "Normalized Centroid Distance": pcaDist, "Method": "PCA"})])
+            distDF = pd.concat(
+                [
+                    distDF,
+                    pd.DataFrame(
+                        {
+                            "Marker": [marker],
+                            "Normalized Centroid Distance": pf2Dist,
+                            "Method": "PARAFAC2",
+                        }
+                    ),
+                ]
+            )
+            distDF = pd.concat(
+                [
+                    distDF,
+                    pd.DataFrame(
+                        {
+                            "Marker": [marker],
+                            "Normalized Centroid Distance": pcaDist,
+                            "Method": "PCA",
+                        }
+                    ),
+                ]
+            )
 
-    
     distDF = distDF.reset_index(drop=True)
-    
+
     return distDF
+
 
 def centroid_dist(points):
     """Calculates mean distance between clust points and all others"""
@@ -128,6 +242,7 @@ def centroid_dist(points):
     dist_vecs = points - np.reshape(centroid, (1, -1))
     row_norms = np.linalg.norm(np.array(dist_vecs, dtype=np.float64), axis=0)
     return np.mean(np.square(row_norms))
+
 
 marker_genes = {
     "Monocytes": ["CD14", "CD33", "LYZ", "LGALS3", "CSF1R", "ITGAX", "HLA-DRB1"],
@@ -167,7 +282,7 @@ METRICS = (
 def preprocess_pf2_pca_metrics(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["Dataset"] = [method.split("/")[1] for method in df["Method"]]
-    df["Output"] = [method.split('/')[-1].split('_')[1] for method in df["Method"]]
+    df["Output"] = [method.split("/")[-1].split("_")[1] for method in df["Method"]]
     df["Features"] = [
         {"full_feature": "FULL", "hvg": "HVG"}[method.split("/")[4]]
         for method in df["Method"]
@@ -175,7 +290,9 @@ def preprocess_pf2_pca_metrics(df: pd.DataFrame) -> pd.DataFrame:
     df["Scaling"] = [method.split("/")[3] for method in df["Method"]]
     df = df[~df["Method"].str.contains("unintegrated")]
     df["Rank"] = df["Rank"].astype(int)
-    df["Method"] = [method.split('/')[-1].split('_')[0].upper() for method in df["Method"]]
+    df["Method"] = [
+        method.split("/")[-1].split("_")[0].upper() for method in df["Method"]
+    ]
     dataset_translation = {
         "large_atac_gene_activity": "mouse_brain_atac_genes_large",
         "small_atac_gene_activity": "mouse_brain_atac_genes_small",
@@ -193,9 +310,17 @@ def preprocess_pf2_pca_metrics(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def assemble_df():
-    pf2_metrics = preprocess_pf2_pca_metrics(pd.read_excel(DATA_DIR / "Pf2-metrics.xlsx"))
-    pca_metrics = preprocess_pf2_pca_metrics(pd.read_excel(DATA_DIR / "pca-metrics.xlsx").rename(columns={"Unnamed: 0": "Method"}))
-    scib_metrics_separate = pd.read_excel(DATA_DIR / "ScibMetrics.xlsx", sheet_name=None)
+    pf2_metrics = preprocess_pf2_pca_metrics(
+        pd.read_excel(DATA_DIR / "Pf2-metrics.xlsx")
+    )
+    pca_metrics = preprocess_pf2_pca_metrics(
+        pd.read_excel(DATA_DIR / "pca-metrics.xlsx").rename(
+            columns={"Unnamed: 0": "Method"}
+        )
+    )
+    scib_metrics_separate = pd.read_excel(
+        DATA_DIR / "ScibMetrics.xlsx", sheet_name=None
+    )
     scib_metrics = pd.concat(
         [
             scib_metrics_separate[ds]
@@ -231,7 +356,9 @@ def assemble_df():
     }
     pf2_metrics.rename(columns=metric_translation, inplace=True)
     pca_metrics.rename(columns=metric_translation, inplace=True)
-    common_columns = list(set(scib_metrics.columns).intersection(set(pf2_metrics.columns)))
+    common_columns = list(
+        set(scib_metrics.columns).intersection(set(pf2_metrics.columns))
+    )
     pf2_metrics = pf2_metrics[common_columns]
     pca_metrics = pca_metrics[common_columns]
     scib_metrics = scib_metrics[common_columns]
@@ -242,10 +369,14 @@ def assemble_df():
 
     # reorder columns
     cols = all_metrics.columns
-    all_metrics = all_metrics[[col for col in cols if col not in METRICS] + list(METRICS)]
+    all_metrics = all_metrics[
+        [col for col in cols if col not in METRICS] + list(METRICS)
+    ]
     all_metrics.dropna(subset=list(METRICS), inplace=True)
 
-    all_metrics = all_metrics[~all_metrics["Method"].isin(["Unintegrated", "scGen*", "scANVI*"])]
+    all_metrics = all_metrics[
+        ~all_metrics["Method"].isin(["Unintegrated", "scGen*", "scANVI*"])
+    ]
 
     all_metrics.reset_index(drop=True, inplace=True)
 
@@ -284,4 +415,6 @@ def run_nmf(df: pd.DataFrame, n_comps=2, l1_coef=0):
 
 def get_R2(df: pd.DataFrame, nmf: sklearn.decomposition._nmf.NMF):
     scaled_data = normalize_metrics(df)[list(METRICS)]
-    return 1 - nmf.reconstruction_err_ / np.linalg.norm(scaled_data - np.mean(scaled_data))
+    return 1 - nmf.reconstruction_err_ / np.linalg.norm(
+        scaled_data - np.mean(scaled_data)
+    )

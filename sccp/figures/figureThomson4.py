@@ -8,9 +8,7 @@ from .common import (
     flattenData,
     plotDrugUMAP,
     plotGeneUMAP,
-    openUMAP
-
-  
+    openUMAP,
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
@@ -49,6 +47,5 @@ def makeFigure():
     ]
     plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[4:6])
     plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[6:8])
-    
-    
+
     return f

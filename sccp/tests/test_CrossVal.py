@@ -13,7 +13,9 @@ def test_crossval():
 
     X = random_parafac2([(200, 2000)] * 5, rank=rank, full=True, random_state=2)
 
-    pca_err = crossvalidate_PCA(np.concatenate(X), rank=rank, trainPerc=0.8, random_state=rng)
+    pca_err = crossvalidate_PCA(
+        np.concatenate(X), rank=rank, trainPerc=0.8, random_state=rng
+    )
     assert pca_err[-1] > 0.95
 
     err = crossvalidate(X, rank=rank, trainPerc=0.8, random_state=rng)

@@ -11,7 +11,7 @@ from .common import (
     getSetup,
     plotCmpPerCellType,
     flattenWeightedProjs,
-    openPf2
+    openPf2,
 )
 from ..imports.scRNA import load_lupus_data
 
@@ -25,20 +25,22 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of data
-    lupus_tensor, obs = load_lupus_data()  
+    lupus_tensor, obs = load_lupus_data()
     rank = 40
 
     # get cell types
-    cell_types = obs[['cell_type_broad', 'SLE_status']].reset_index(drop=True)
-    _, factors, projs, = openPf2(rank = rank, dataName = 'lupus', optProjs=True)
+    cell_types = obs[["cell_type_broad", "SLE_status"]].reset_index(drop=True)
+    (
+        _,
+        factors,
+        projs,
+    ) = openPf2(rank=rank, dataName="lupus", optProjs=True)
 
-    
     weightedProjDF = flattenWeightedProjs(lupus_tensor, factors, projs)
     weightedProjDF["Cell Type"] = cell_types["cell_type_broad"].values
 
     comps = [13, 16, 26, 29]
     for i, comp in enumerate(comps):
-            plotCmpPerCellType(weightedProjDF, comp, ax[i], outliers=False)
-
+        plotCmpPerCellType(weightedProjDF, comp, ax[i], outliers=False)
 
     return f

@@ -1,12 +1,19 @@
 """
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
-from .common import (subplotLabel, 
-getSetup, plotFactors, 
-plotR2X, plotCV, plotWeight,
-openPf2, savePf2)
+from .common import (
+    subplotLabel,
+    getSetup,
+    plotFactors,
+    plotR2X,
+    plotCV,
+    plotWeight,
+    openPf2,
+    savePf2,
+)
 from ..imports.scRNA import ThompsonXA_SCGenes
 from parafac2 import parafac2_nd
+
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -25,7 +32,7 @@ def makeFigure():
     #     rank=rank,
     #     random_state=1,
     # )
-    
+
     # savePf2(weight, factors, projs, "Thomson")
     weight, factors, _ = openPf2(rank, "Thomson")
 
@@ -36,4 +43,3 @@ def makeFigure():
     # plotR2X(data, rank+3, ax=ax[3])
 
     return f
-

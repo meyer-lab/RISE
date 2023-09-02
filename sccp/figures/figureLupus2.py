@@ -12,7 +12,7 @@ from .common import (
     plotCmpUMAP,
     plotUMAP_obslabel,
     openPf2,
-    openUMAP
+    openUMAP,
 )
 from ..imports.scRNA import load_lupus_data
 
@@ -29,20 +29,22 @@ def makeFigure():
     cmp = 13
 
     # Import of data
-    _, obs= load_lupus_data()
-    
+    _, obs = load_lupus_data()
+
     broad_type = obs["cell_type_broad"].reset_index(drop=True)
     lympho_type = obs["cell_type_lympho"].reset_index(drop=True)
 
     # replace NaN with string
-    lympho_type = lympho_type.cat.add_categories('other').fillna('other')
+    lympho_type = lympho_type.cat.add_categories("other").fillna("other")
 
-    _, factors, projs, = openPf2(rank = rank, dataName = 'lupus', optProjs=True)
-
+    (
+        _,
+        factors,
+        projs,
+    ) = openPf2(rank=rank, dataName="lupus", optProjs=True)
 
     # UMAP dimension reduction
-    pf2Points = openUMAP(40, 'lupus', opt = True)
-
+    pf2Points = openUMAP(40, "lupus", opt=True)
 
     plotCmpUMAP(cmp, factors, pf2Points, projs, ax[0])
     plotUMAP_obslabel(broad_type, pf2Points, ax[1])
