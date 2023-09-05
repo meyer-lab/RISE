@@ -660,6 +660,11 @@ def plotROCAcrossGroups(A_matrix, group_labs, ax,
     mean_fpr = np.linspace(0, 1, 100)
 
     for fold, (train, test) in enumerate(sgkf.split(A_matrix, condition_labels.to_numpy(), group_cond_labels.to_numpy())):
+        # adding escape option for the second fold (@ index 1) because it has no SLE cases.
+        # otherwise we just get NA for our mean and NA for that fold. which isn't super helpful
+        # this if statement shouldn't be used with other data
+        if fold == 1:
+            continue
         log_reg.fit(A_matrix[train], condition_labels.to_numpy()[train])
         viz = RocCurveDisplay.from_estimator(
             log_reg,
@@ -671,10 +676,10 @@ def plotROCAcrossGroups(A_matrix, group_labs, ax,
             ax=ax,
             plot_chance_level=(fold == n_splits - 1),
         )
-    interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
-    interp_tpr[0] = 0.0
-    tprs.append(interp_tpr)
-    aucs.append(viz.roc_auc)
+        interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
+        interp_tpr[0] = 0.0
+        tprs.append(interp_tpr)
+        aucs.append(viz.roc_auc)
 
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
