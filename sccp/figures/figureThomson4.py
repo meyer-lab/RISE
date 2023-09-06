@@ -46,7 +46,7 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Alprostadil",
     ]
-    plotDrugUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[4:6])
-    plotDrugUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[6:8])
+    plotCondUMAP(drugs, "Pf2", dataDF["Condition"].values, pf2Points, ax[4:6])
+    plotCondUMAP(drugs, "PCA", dataDF["Condition"].values, pcaPoints, ax[6:8])
 
     return f
