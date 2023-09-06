@@ -9,9 +9,8 @@ from .common import (
 )
 from .commonFuncs.plotUMAP import(
     plotGeneUMAP,
-    plotDrugUMAP
+    plotCondUMAP
 )
-from ..imports.scRNA import ThompsonXA_SCGenes
 from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
 from sklearn.decomposition import PCA

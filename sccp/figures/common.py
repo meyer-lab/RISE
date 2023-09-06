@@ -11,6 +11,7 @@ import numpy as np
 import os
 from os.path import join
 import pickle
+import pandas as pd
 
 
 path_here = os.path.dirname(os.path.dirname(__file__))

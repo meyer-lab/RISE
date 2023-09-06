@@ -4,13 +4,13 @@ import umap.plot
 import numpy as np
 
 
-def plotDrugUMAP(drugs, decomp, totaldrugs, points, axs):
+def plotCondUMAP(conds, decomp, totalconds, points, axs):
     """Scatterplot of UMAP visualization weighted by condition"""
-    subset = np.random.choice(a=[False, True], size=len(totaldrugs), p=[.75, .25])
-    for i, drugz in enumerate(drugs):
-        drugList = np.where(np.asarray(totaldrugs == drugz), drugz, "Z Other Drugs")
+    subset = np.random.choice(a=[False, True], size=len(totalconds), p=[.75, .25])
+    for i, cond in enumerate(conds):
+        condList = np.where(np.asarray(totalconds == cond), cond, " Other Conditions")
         umap.plot.points(
-            points, labels=drugList, ax=axs[i], color_key_cmap="tab20", subset_points=subset, show_legend=True)
+            points, labels=condList, ax=axs[i], color_key_cmap="tab20", subset_points=subset, show_legend=True)
         axs[i].set(
             title=decomp + "-Based Decomposition",
         ylabel="UMAP2",
