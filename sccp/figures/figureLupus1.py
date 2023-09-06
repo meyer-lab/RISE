@@ -7,7 +7,15 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # GOAL: test Pf2 on lupus data, get visualizations for factor matrices
 
 # load functions/modules ----
-from .common import subplotLabel, getSetup, plotFactors, plotWeight, openPf2
+from .common import (
+    subplotLabel,
+    getSetup,
+    openPf2
+)
+from .commonFuncs.plotFactors import (
+    plotFactors,
+    plotWeight,
+)
 from ..imports.scRNA import load_lupus_data
 
 

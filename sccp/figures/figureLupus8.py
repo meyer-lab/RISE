@@ -9,8 +9,17 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # is almost exclusively them-- likely OG megakaryocyte cluster that was removed/clumped in with others
 
 # load functions/modules ----
-from .common import subplotLabel, getSetup, openPf2, investigate_comp
+from .common import (
+    subplotLabel,
+    getSetup,
+    openPf2
+
+)
+from .commonFuncs.plotLupus import (
+    investigate_comp
+)
 from ..imports.scRNA import load_lupus_data
+
 
 
 def makeFigure():

@@ -7,9 +7,16 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # GOAL: Test various Pf2 ranks to see which best predicts disease status
 
 # load functions/modules ----
-from .common import subplotLabel, getSetup, plotPf2RankTest
 from ..imports.scRNA import load_lupus_data
 from ..logisticReg import testPf2Ranks
+from .common import (
+    subplotLabel,
+    getSetup,
+)
+from .commonFuncs.plotLupus import (
+    plotPf2RankTest
+)
+
 
 
 def makeFigure():

@@ -4,9 +4,12 @@ Hamad CITEseq dataset
 from .common import (
     subplotLabel,
     getSetup,
+)
+from .commonFuncs.plotFactors import (
     plotFactors,
     plotWeight,
 )
+
 from ..imports.citeseq import import_citeseq, combine_all_citeseq
 from parafac2 import parafac2_nd
 

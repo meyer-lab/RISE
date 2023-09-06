@@ -11,14 +11,14 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 from .common import (
     subplotLabel,
     getSetup,
-    openPf2,
+    openPf2
+)
+from .commonFuncs.plotLupus import (
     plot2DSeparationByComp
 )
 from ..imports.scRNA import load_lupus_data
-
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""

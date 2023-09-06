@@ -2,7 +2,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from itertools import groupby
 
-from sccp.figures.common import getSetup
+from .common import (
+    subplotLabel,
+    getSetup,
+)
+
+
 from sccp.metric import assemble_df, filter_by_overall_score, METRICS, run_nmf
 
 dataset = "immune_cell_hum_mou"
