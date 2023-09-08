@@ -100,17 +100,6 @@ def import_pancreas(tensor=True, method=str()):
         return pancreas
 
 
-def import_pancreas_all(tensor=True, method=str()):
-    pancreas = anndata.read_h5ad("/home/brianoj/SC_data/pancreas/pancreas.h5ad")
-    pancreas.obsm["Unintegrated"] = pancreas.obsm["X_pca"]
-    methods = ["Unintegrated", "scanorama", "mnnpy", "mnncorrect", "harmony", "cca", "bbknn_trim", "bbknn_faiss", "bbknn_ckdtree", "bbknn"]
-    for method in methods:
-        pancreas_corr = anndata.read_h5ad("/home/brianoj/SC_data/pancreas/pancreas_" + method + ".h5ad")
-        pancreas.obsm[method] = pancreas_corr.obsm["X_pca"]
-
-    return pancreas, methods
-
-
 def load_lupus_data():
     """Import Lupus PBMC dataset.
 

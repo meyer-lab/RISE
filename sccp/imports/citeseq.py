@@ -57,9 +57,7 @@ def combine_all_citeseq(saveAdata = False):
 def import_citeseq():
     """Normalizes 5 datasets from Hamad CITEseq and imports as tensory"""
     X = anndata.read_h5ad("/opt/andrew/HamadCITEseq/CITEseqCombined.h5ad")
-    print(X.var_names)
-    print(len(X.var_names))
-    print(len(np.unique(X.var_names)))
+
     X.X = np.asarray(X.X, dtype=float)
 
     scalingfactor = 1000

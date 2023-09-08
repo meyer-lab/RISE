@@ -34,16 +34,14 @@ def makeFigure():
     group_labs = status.set_index("sample_ID")[["SLE_status", "Processing_Cohort"]]
 
     ranks_to_test = [2, 3]  # set to 2,3 for github test
-    penalties_to_test = [10, 25, 50, 100, 200]
 
     results = testPf2Ranks(
         lupus_tensor,
         group_labs,
         ranks_to_test,
-        penalties_to_test=penalties_to_test,
         cv_group="Processing_Cohort",
     )
-    print(results)
+
     plotPf2RankTest(results, ax[0])
 
     return f
