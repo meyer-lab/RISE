@@ -7,7 +7,7 @@ import sklearn
 from sklearn.decomposition import NMF
 from sklearn.preprocessing import MinMaxScaler
 
-from .figures.common import flattenData, flattenProjs
+from .figures.common import flattenData
 
 DATA_DIR = Path(__file__).parent / "data"
 
