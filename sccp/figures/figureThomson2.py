@@ -10,12 +10,13 @@ from .common import (
     flattenWeightedProjs
 )
 from .commonFuncs.plotGeneral import(
-    plotGenePerCellType
+    plotGenePerCellType,
+    plotGenePerCategCond
 )
 from .commonFuncs.plotUMAP import (
     plotCellTypeUMAP,
     plotCmpPerCellType,
-    plotCmpUMAP
+    plotCmpUMAP,
 )
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..imports.gating import gateThomsonCells
@@ -51,13 +52,21 @@ def makeFigure():
         plotCmpPerCellType(weightedProjDF, comps[i], ax[(2 * i) + 1], outliers=False)
         plotCmpUMAP(comps[i], factors, pf2Points, projs, ax[(2 * i) + 2])
 
-    set1 = ["NKG7", "GNLY", "GZMB", "GZMH", "PRF1"]
-    set2 = ["MS4A1", "CD79A", "CD79B", "TNFRSF13B", "BANK1"]
-    set3 = ["VPREB3", "CD79A", "FAM111B", "HOPX", "SLC30A3", "MS4A1"]
-    set4 = ["CD163", "ADORA3", "MS4A6A", "RNASE1", "MTMR11"]
+    geneSet1 = ["NKG7", "GNLY", "GZMB", "GZMH", "PRF1"]
+    geneSet2 = ["MS4A1", "CD79A", "CD79B", "TNFRSF13B", "BANK1"]
 
-    genes = [set1, set2, set3, set4]
+    genes = [geneSet1, geneSet2]
     for i in range(len(genes)):
         plotGenePerCellType(genes[i], dataDF, ax[i + 9])
+        
+    # set3 = ["VPREB3", "CD79A", "FAM111B", "HOPX", "SLC30A3", "MS4A1"]
+    # set4 = ["CD163", "ADORA3", "MS4A6A", "RNASE1", "MTMR11"]
 
+    glucs = ["Betamethasone Valerate", "Loteprednol etabonate", "Budesonide", "Triamcinolone Acetonide", "Meprednisone"]
+    geneSet3 = ["CD163", "ADORA3"]
+    plotGenePerCategCond(glucs, "Gluco", geneSet3, dataDF, ax[11:13])
+
+    geneSet4 =["VPREB3", "FAM111B"] 
+    plotGenePerCategCond(["Dexrazoxane HCl (ICRF-187, ADR-529)"], "Dex HCl", geneSet4, dataDF, ax[13:15])
+   
     return f
