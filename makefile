@@ -8,7 +8,7 @@ all: $(patsubst sccp/figures/figure%.py, output/figure%.svg, $(flist))
 
 output/figure%.svg: sccp/figures/figure%.py
 	@ mkdir -p ./output
-	R_LIBS_USER="/home/brianoj/R_libs" poetry run fbuild $*
+	poetry run fbuild $*
 
 test:
 	poetry run pytest -s -x -v
