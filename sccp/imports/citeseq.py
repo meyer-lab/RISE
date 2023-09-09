@@ -58,7 +58,8 @@ def import_citeseq():
     """Normalizes 5 datasets from Hamad CITEseq and imports as tensory"""
     X = anndata.read_h5ad("/opt/andrew/HamadCITEseq/CITEseqCombined.h5ad")
 
-    X.X = np.asarray(X.X, dtype=float)
+    # A 32-bit float is high enough precision and uses 50% of the memory
+    X.X = np.asarray(X.X, dtype=np.float32)
 
     scalingfactor = 1000
 

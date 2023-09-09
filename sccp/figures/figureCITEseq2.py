@@ -1,17 +1,19 @@
 """
 Hamad CITEseq dataset
 """
+import numpy as np
+import umap
+from parafac2 import parafac2_nd
+
 from .common import (
     subplotLabel,
     getSetup,
 )
-import umap
-from ..imports.citeseq import import_citeseq, combine_all_citeseq
-from parafac2 import parafac2_nd
-import numpy as np
+from ..imports.citeseq import import_citeseq
 from .commonFuncs.plotUMAP import (
     plotCmpUMAP,
 )
+
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -27,7 +29,6 @@ def makeFigure():
         data,
         rank=rank,
         random_state=1,
-    
     )
 
     pf2Points = umap.UMAP(random_state=1).fit(np.concatenate(projs, axis=0))
@@ -35,6 +36,8 @@ def makeFigure():
     component = np.arange(1, 25, 1)
 
     for i in range(len(component)):
-        plotCmpUMAP(component[i], factors, pf2Points, np.concatenate(projs, axis=0), ax[i])
+        plotCmpUMAP(
+            component[i], factors, pf2Points, np.concatenate(projs, axis=0), ax[i]
+        )
 
     return f
