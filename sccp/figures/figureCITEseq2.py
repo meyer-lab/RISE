@@ -25,6 +25,8 @@ def makeFigure():
     data = import_citeseq()
     rank = 40
 
+    return
+
     _, factors, projs, _ = parafac2_nd(
         data,
         rank=rank,
