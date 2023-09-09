@@ -1,15 +1,8 @@
 """
 Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
 """
-from .common import (
-    subplotLabel,
-    getSetup,
-    openPf2
-)
-from .commonFuncs.plotGeneral import(
-    plotCV,
-    plotR2X
-)
+from .common import subplotLabel, getSetup, openPf2
+from .commonFuncs.plotGeneral import plotCV, plotR2X
 from .commonFuncs.plotFactors import (
     plotFactors,
     plotWeight,

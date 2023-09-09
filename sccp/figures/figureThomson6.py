@@ -3,10 +3,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotGeneOntology import (
-    plotCombGO,
-    plotPvalGO
-)
+from .commonFuncs.plotGeneOntology import plotCombGO, plotPvalGO
 from ..geneontology import geneOntology
 
 

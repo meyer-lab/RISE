@@ -5,18 +5,10 @@ import numpy as np
 from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
 from sklearn.decomposition import PCA
-from .common import (
-    subplotLabel,
-    getSetup,
-    openUMAP,
-    flattenData
-)
+from .common import subplotLabel, getSetup, openUMAP, flattenData
 
-from .commonFuncs.plotUMAP import (
-    plotGeneUMAP
-)
+from .commonFuncs.plotUMAP import plotGeneUMAP
 from ..imports.scRNA import ThompsonXA_SCGenes
-
 
 
 def makeFigure():

@@ -109,7 +109,7 @@ def load_lupus_data():
     -- columns from observation data:
     {'batch_cov': POOL (1-23) cell was processed in,
     'ind_cov': patient cell was derived from,
-    'Processing_Cohort': BATCH (1-4) cell was derived from, 
+    'Processing_Cohort': BATCH (1-4) cell was derived from,
     'louvain': louvain cluster group assignment,
     'cg_cov': broad cell type,
     'ct_cov': lymphocyte-specific cell type,
@@ -124,23 +124,28 @@ def load_lupus_data():
     """
     X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
 
-    # rename columns to make more sense 
-    X.obs = X.obs.rename({'batch_cov': 'pool',
-                          'ind_cov': 'patient',
-                          'cg_cov': 'cell_type_broad',
-                          'ct_cov': 'cell_type_lympho',
-                          'ind_cov_batch_cov': 'sample_ID',
-                          'Age': 'age',
-                          'Sex': 'sex',
-                          'pop_cov': 'ancestry',
-                          'Status': 'SLE_condition'}, axis = 1)
-    
+    # rename columns to make more sense
+    X.obs = X.obs.rename(
+        {
+            "batch_cov": "pool",
+            "ind_cov": "patient",
+            "cg_cov": "cell_type_broad",
+            "ct_cov": "cell_type_lympho",
+            "ind_cov_batch_cov": "sample_ID",
+            "Age": "age",
+            "Sex": "sex",
+            "pop_cov": "ancestry",
+            "Status": "SLE_condition",
+        },
+        axis=1,
+    )
+
     # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
-    X = X[X.obs['sample_ID'] != 'IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831']
+    X = X[X.obs["sample_ID"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
 
     # reorder X so that all of the patients are in alphanumeric order. this is important
     # so that we can steal cell typings at this point
-    obsV = X.obs_vector('sample_ID')
+    obsV = X.obs_vector("sample_ID")
     sgUnique, sgIndex = np.unique(obsV, return_inverse=True)
 
     ann_data_objects = [X[sgIndex == sgi, :] for sgi in range(len(sgUnique))]
@@ -149,4 +154,4 @@ def load_lupus_data():
 
     assert np.all(np.isfinite(X.X.data))  # this should be true
 
-    return tensorFy(X, 'sample_ID'), X.obs
+    return tensorFy(X, "sample_ID"), X.obs

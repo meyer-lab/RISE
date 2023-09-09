@@ -51,7 +51,7 @@ def testPf2Ranks(
         log_reg = LogisticRegressionCV(
             random_state=0,
             max_iter=5000,
-            cv=cvs, # type: ignore
+            cv=cvs,  # type: ignore
             penalty="l1",
             solver="saga",
             scoring=error_metric,

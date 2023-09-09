@@ -8,11 +8,7 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # comparison to Perez et al (linked above) fig 4C
 
 # load functions/modules ----
-from .common import (
-    subplotLabel,
-    getSetup,
-    openPf2
-)
+from .common import subplotLabel, getSetup, openPf2
 
 from ..imports.scRNA import load_lupus_data
 from ..logisticReg import getPf2ROC

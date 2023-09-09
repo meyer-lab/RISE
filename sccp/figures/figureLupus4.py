@@ -13,10 +13,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotLupus import (
-    plotPf2RankTest
-)
-
+from .commonFuncs.plotLupus import plotPf2RankTest
 
 
 def makeFigure():

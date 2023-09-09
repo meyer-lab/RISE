@@ -7,12 +7,9 @@ from .common import (
     openPf2,
     openUMAP,
     flattenData,
-    flattenWeightedProjs
+    flattenWeightedProjs,
 )
-from .commonFuncs.plotGeneral import(
-    plotGenePerCellType,
-    plotGenePerCategCond
-)
+from .commonFuncs.plotGeneral import plotGenePerCellType, plotGenePerCategCond
 from .commonFuncs.plotUMAP import (
     plotCellTypeUMAP,
     plotCmpPerCellType,
@@ -58,15 +55,23 @@ def makeFigure():
     genes = [geneSet1, geneSet2]
     for i in range(len(genes)):
         plotGenePerCellType(genes[i], dataDF, ax[i + 9])
-        
+
     # set3 = ["VPREB3", "CD79A", "FAM111B", "HOPX", "SLC30A3", "MS4A1"]
     # set4 = ["CD163", "ADORA3", "MS4A6A", "RNASE1", "MTMR11"]
 
-    glucs = ["Betamethasone Valerate", "Loteprednol etabonate", "Budesonide", "Triamcinolone Acetonide", "Meprednisone"]
+    glucs = [
+        "Betamethasone Valerate",
+        "Loteprednol etabonate",
+        "Budesonide",
+        "Triamcinolone Acetonide",
+        "Meprednisone",
+    ]
     geneSet3 = ["CD163", "ADORA3"]
     plotGenePerCategCond(glucs, "Gluco", geneSet3, dataDF, ax[11:13])
 
-    geneSet4 =["VPREB3", "FAM111B"] 
-    plotGenePerCategCond(["Dexrazoxane HCl (ICRF-187, ADR-529)"], "Dex HCl", geneSet4, dataDF, ax[13:15])
-   
+    geneSet4 = ["VPREB3", "FAM111B"]
+    plotGenePerCategCond(
+        ["Dexrazoxane HCl (ICRF-187, ADR-529)"], "Dex HCl", geneSet4, dataDF, ax[13:15]
+    )
+
     return f

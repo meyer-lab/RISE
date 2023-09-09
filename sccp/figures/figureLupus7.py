@@ -7,14 +7,8 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # GOAL: run logisitc regression to see which components are best able to predict disease status
 
 # load functions/modules ----
-from .common import (
-    subplotLabel,
-    getSetup,
-    openPf2
-)
-from .commonFuncs.plotLupus import (
-    plotROCAcrossGroups
-)
+from .common import subplotLabel, getSetup, openPf2
+from .commonFuncs.plotLupus import plotROCAcrossGroups
 from ..imports.scRNA import load_lupus_data
 
 

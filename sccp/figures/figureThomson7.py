@@ -1,14 +1,8 @@
 """
 Investigation of raw data for Thomson dataset
 """
-from .common import (
-    subplotLabel,
-    getSetup,
-    flattenData
-)
-from .commonFuncs.plotGeneral import (
-    plotCellTypePerExpCount,
-    plotCellTypePerExpPerc)
+from .common import subplotLabel, getSetup, flattenData
+from .commonFuncs.plotGeneral import plotCellTypePerExpCount, plotCellTypePerExpPerc
 from ..imports.scRNA import ThompsonXA_SCGenes
 from ..imports.gating import gateThomsonCells
 
