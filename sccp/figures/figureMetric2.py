@@ -11,7 +11,7 @@ from .commonFuncs.plotFactors import plotFactors
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((15, 15), (2, 2))
+    ax, f = getSetup((15, 15), (2, 3))
 
     # Add subplot labels
     subplotLabel(ax)
