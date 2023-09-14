@@ -12,7 +12,7 @@ import os
 from os.path import join
 import pickle
 import pandas as pd
-from commonFuncs.plotFactors import reorder_table
+from .commonFuncs.plotFactors import reorder_table
 
 
 path_here = os.path.dirname(os.path.dirname(__file__))
