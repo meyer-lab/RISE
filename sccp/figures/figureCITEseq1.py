@@ -33,7 +33,7 @@ def makeFigure():
         random_state=1,
     )
 
-    plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,), saveGenes=False)
+    plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,))
 
     pf2Points = umap.UMAP(random_state=1).fit(np.concatenate(projs, axis=0))
     dataDF = flattenData(data)

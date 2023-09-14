@@ -48,7 +48,6 @@ def makeFigure():
         reorder=(0, 2),
         trim=(2,),
         cond_group_labels=group_labs,
-        saveGenes=True,
     )
 
     plotWeight(weights, ax[3])

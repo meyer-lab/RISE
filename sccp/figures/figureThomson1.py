@@ -32,7 +32,7 @@ def makeFigure():
     # savePf2(weight, factors, projs, "Thomson")
     weight, factors, _ = openPf2(rank, "Thomson")
 
-    plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,), saveGenes=False)
+    plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,))
     plotWeight(weight, ax[3])
 
     # plotCV(data, rank+3, trainPerc=0.75, ax=ax[2])
