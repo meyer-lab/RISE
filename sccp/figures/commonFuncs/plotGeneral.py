@@ -105,4 +105,14 @@ def plotGenePerCategCond(conds, categoryCond, genes, dataDF, axs):
     for i, gene in enumerate(genes):
         sns.boxplot(data=df.loc[df["Gene"] == gene], x="Cell Type", y="Average Gene Expression For Drugs", hue="Condition", ax=axs[i])
         axs[i].set(title=gene)
+        
+def plotGeneFactors(cmp, rank, dataName, axs, geneAmount=20):
+    """Plotting weights for gene factors for both most negatively/positively weighted terms"""
+    df = pd.read_csv("sccp/data/"+dataName+"/TopBotGenes_Cmp"+str(rank)+".csv").rename(columns={"Unnamed: 0": "Gene"})
+    cmpName = "Cmp. "+str(cmp)
+    df = df[["Gene", cmpName]].sort_values(by=[cmpName])
+    sns.barplot(data=df.iloc[:geneAmount,:], x="Gene", y=cmpName, color="k", ax=axs[0])
+    sns.barplot(data=df.iloc[-geneAmount:,:], x="Gene", y=cmpName, color="k", ax=axs[1])
+    axs[0].tick_params(axis="x", rotation=90)
+    axs[1].tick_params(axis="x", rotation=90)
 

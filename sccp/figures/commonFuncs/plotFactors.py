@@ -14,7 +14,7 @@ path_here = os.path.dirname(os.path.dirname(__file__))
 
 
 
-def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGenes=False, cond_group_labels= None):
+def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), cond_group_labels= None):
     """Plots parafac2 factors."""
     pd.set_option('display.max_rows', None)
     rank = factors[0].shape[1]
@@ -86,30 +86,7 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), saveGen
 
 
         axs[i].set_title(title)
-        axs[i].tick_params(axis="y", rotation=0)
-        
-        
-    if saveGenes == True:
-            if i == 2 and len(yt) > 40:
-                df = pd.DataFrame(data=X, index=yt, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
-                df.to_csv("sccp/data/TopBotGenes_Cmp"+str(rank)+".csv")
-
-                geneAmount=20
-                genesTop = np.empty((geneAmount, X.shape[1]), dtype="<U10")
-                genesBottom = np.empty((geneAmount, X.shape[1]), dtype="<U10")
-                sort_idx = np.argsort(X, axis=0)
-
-                for j in range(rank):
-                    sortGenes = yt[sort_idx[:, j]]
-                    genesTop[:, j] = np.flip(sortGenes[-geneAmount:])  
-                    genesBottom[:, j] = sortGenes[:geneAmount]
-
-                dfTop = pd.DataFrame(data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
-                dfBot = pd.DataFrame(data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
-
-                dfTop.to_csv("sccp/data/TopGenes_Cmp"+str(rank)+".csv")
-                dfBot.to_csv("sccp/data/BotGenes_Cmp"+str(rank)+".csv")
-        
+        axs[i].tick_params(axis="y", rotation=0)    
         
 
 def reorder_table(projs):
@@ -118,8 +95,6 @@ def reorder_table(projs):
     Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
     index = sch.leaves_list(Z)
     return projs[index, :], index
-
-
 
 
 def plotWeight(weight, ax):
