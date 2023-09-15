@@ -217,5 +217,6 @@ def saveGeneFactors(factors, data, dataName):
         dfTop = pd.DataFrame(data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
         dfBot = pd.DataFrame(data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
 
-        dfTop.to_csv("sccp/data/"+dataName+"TopGenes_Cmp"+str(rank)+".csv")
-        dfBot.to_csv("sccp/data/"+dataName+"BotGenes_Cmp"+str(rank)+".csv")
+        dfTop.to_csv("sccp/data/"+dataName+"/TopGenes_Cmp"+str(rank)+".csv")
+        dfBot.to_csv("sccp/data/"+dataName+"/BotGenes_Cmp"+str(rank)+".csv")
+        
