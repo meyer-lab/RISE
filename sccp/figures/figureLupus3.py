@@ -5,15 +5,15 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 """
 
 # GOAL: visualize the component compostition by cell type
-from .common import subplotLabel, getSetup, flattenWeightedProjs, openPf2
-from .commonFuncs.plotUMAP import plotCmpPerCellType
+from .common import subplotLabel, getSetup, flattenWeightedProjs, openPf2, openUMAP, flattenData
+from .commonFuncs.plotUMAP import plotCmpPerCellType, plotCmpUMAP, plotCellTypeUMAP
 from ..imports.scRNA import load_lupus_data
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((15, 26), (2, 2))
+    ax, f = getSetup((18, 18), (4, 4))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -21,6 +21,8 @@ def makeFigure():
     # Import of data
     lupus_tensor, obs = load_lupus_data()
     rank = 40
+    
+    dataDF = flattenData(lupus_tensor)
 
     # get cell types
     cell_types = obs[["cell_type_broad", "SLE_status"]].reset_index(drop=True)
@@ -29,12 +31,20 @@ def makeFigure():
         factors,
         projs,
     ) = openPf2(rank=rank, dataName="lupus", optProjs=True)
+    
+    pf2Points = openUMAP(rank, "lupus", opt=True)
 
     weightedProjDF = flattenWeightedProjs(lupus_tensor, factors, projs)
     weightedProjDF["Cell Type"] = cell_types["cell_type_broad"].values
+    dataDF["Cell Type"] = cell_types["cell_type_broad"].values
 
-    comps = [13, 16, 26, 29]
+    comps = [13, 14, 16, 26, 29, 32]
     for i, comp in enumerate(comps):
-        plotCmpPerCellType(weightedProjDF, comp, ax[i], outliers=False)
+        plotCmpPerCellType(weightedProjDF, comp, ax[(2*i)], outliers=False)
+        plotCmpUMAP(comp, factors, pf2Points, projs, ax[(2*i)+1])
+    
+
+    plotCellTypeUMAP(pf2Points, dataDF, ax[14])
+
 
     return f

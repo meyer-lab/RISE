@@ -202,7 +202,7 @@ def saveGeneFactors(factors, data, dataName):
 
     if len(yt) > 40:
         df = pd.DataFrame(data=X, index=yt, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
-        df.to_csv("sccp/data/"+dataName+"/TopBotGenes_Cmp"+str(rank)+".csv")
+        df.to_csv("sccp/data/"+dataName+"/"+dataName+"TopBotGenes_Cmp"+str(rank)+".csv")
 
         geneAmount=20
         genesTop = np.empty((geneAmount, X.shape[1]), dtype="<U10")
@@ -217,6 +217,6 @@ def saveGeneFactors(factors, data, dataName):
         dfTop = pd.DataFrame(data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
         dfBot = pd.DataFrame(data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
 
-        dfTop.to_csv("sccp/data/"+dataName+"/TopGenes_Cmp"+str(rank)+".csv")
-        dfBot.to_csv("sccp/data/"+dataName+"/BotGenes_Cmp"+str(rank)+".csv")
+        dfTop.to_csv("sccp/data/"+dataName+"/"+dataName+"TopGenes_Cmp"+str(rank)+".csv")
+        dfBot.to_csv("sccp/data/"+dataName+"/"+dataName+"BotGenes_Cmp"+str(rank)+".csv")
         
