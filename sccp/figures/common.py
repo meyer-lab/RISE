@@ -183,7 +183,7 @@ def flattenWeightedProjs(data, factors, projs):
 
 
 
-def plotFactors(factors, data, dataName):
+def saveGeneFactors(factors, data, dataName):
     """Saves genes factors based on weight."""
     rank = factors[0].shape[1]
     yt = data.variable_labels
