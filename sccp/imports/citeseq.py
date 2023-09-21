@@ -74,4 +74,70 @@ def import_citeseq():
 
     # Assign cells a count per-experiment so we can reindex
     return tensorFy(X, "Condition")
+
+
+def combine_all_citeseqProt(saveData = False):
+    """Imports 5 datasets from Hamad CITEseq """
+    # Initiates import for control 
+    features = pd.read_csv("/opt/andrew/HamadCITEseq/control/features.tsv.gz", sep="\t", header=None)
+    data = pd.DataFrame(scipy.io.mmread("/opt/andrew/HamadCITEseq/control/matrix.mtx.gz").todense())
+
+    # Keep information about type of expression
+    data["Expression Type"] = features.iloc[:, 2].values
+    data["Expression Name"] = features.iloc[:, 1].values
+
+    # Keep only gene expression
+
+    print(data)
+    # a
+    protDF = data.loc[data["Expression Type"] == "Antibody Capture"].drop(columns="Expression Type").reset_index(drop=True) 
+    protNames = protDF["Expression Name"].values
+
+    protAll = np.transpose(protDF.drop(columns="Expression Name")).to_numpy()
+    numCells = [protAll.shape[0]] # Save number of cells per experiment
+    files = ["ic_pod1", "ic_pod7", "sc_pod1", "sc_pod1"]
+
+    # Repeat process for all files and combine datasets
+    for i in range(len(files)):
+        features = pd.read_csv("/opt/andrew/HamadCITEseq/"+files[i]+"/features.tsv.gz", sep="\t", header=None)
+        data = pd.DataFrame(scipy.io.mmread("/opt/andrew/HamadCITEseq/"+files[i]+"/matrix.mtx.gz").todense())
+
+        data["Expression Type"] = features.iloc[:, 2].values
+
+        protDF = data.loc[data["Expression Type"] == "Antibody Capture"].drop(columns="Expression Type").reset_index(drop=True) 
+        protMatrix = np.transpose(protDF).to_numpy()
+
+        # Combines datasets and save number of cells per exp
+        protAll = np.vstack((protAll, protMatrix))
+        numCells = np.append(numCells, protMatrix.shape[0])
+
+    allFiles = ["control", "ic_pod1", "ic_pod7", "sc_pod1", "sc_pod7"]
+    condNames = np.repeat(files, numCells)
+    
+    if saveData is False:
+        df = pd.DataFrame(data=protAll, columns=protNames)
+        df["Condition"]= condNames
+        
+        return df
+
+    else:
+        np.save(join(path_here, "data/CITEseq/HamadCITEseqProt.npy"), protAll)
+        np.save(join(path_here, "data/CITEseq/HamadCITEseqProtNames.npy"), protNames) 
+        np.save(join(path_here, "data/CITEseq/HamadCITEseqCondNames.npy"), condNames) 
+        
+        return
+
+
+
+
+def import_citeseqProt():
+    """Normalizes 5 datasets from Hamad CITEseq and imports as tensory"""
+    protAll = np.load(join(path_here, "data/CITEseq/HamadCITEseqProt.npy"), allow_pickle=True)
+    protNames = np.load(join(path_here, "data/CITEseq/HamadCITEseqProtNames.npy"), allow_pickle=True)
+    condNames = np.load(join(path_here, "data/CITEseq/HamadCITEseqCondNames.npy"), allow_pickle=True)
+
+    df = pd.DataFrame(data=protAll, columns=protNames)
+    df["Condition"]= condNames
+
+    return df
     
