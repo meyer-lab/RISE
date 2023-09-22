@@ -61,7 +61,7 @@ def testPf2Ranks(
 
         # grab fit results as a pandas dataframe, indicate which rank these are from
         initial_results = pd.DataFrame(
-            {"penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean()}
+            {"penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
         )
         initial_results["rank"] = rank
 
@@ -82,7 +82,7 @@ def getCompContribs(A_matrix, target, penalty_amt=50):
     log_fit = log_reg.fit(A_matrix, target)
 
     coefs = pd.DataFrame(
-        log_fit.densify().coef_, columns=[f"comp_{i}" for i in np.arange(1, rank + 1)]
+        log_fit.densify().coef_, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     ).melt(var_name="Component", value_name="Weight")
     return coefs
 

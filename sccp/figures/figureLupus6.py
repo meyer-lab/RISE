@@ -18,7 +18,7 @@ from sklearn.metrics import RocCurveDisplay
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 6), (1, 1))  # fig size  # grid size
+    ax, f = getSetup((6, 6), (1, 1))  # fig size  # grid size
 
     # Add subplot labels
     subplotLabel(ax)
@@ -46,7 +46,7 @@ def makeFigure():
 
     # get test data, and decisions made by the trained model corresponding to those test data
     y_test, sle_decisions = getPf2ROC(
-        A_matrix, group_labs, rank, penalties_to_test=penalties_to_test
+        A_matrix, group_labs, rank, penalties_to_test=penalties_to_test, 
     )
 
     # make plot of ROC AUC

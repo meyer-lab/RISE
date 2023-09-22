@@ -13,7 +13,7 @@ def plotR2X(data, rank, ax):
     rank_vec = np.arange(1, rank + 1)
     labelNames = ["Fit: Pf2", "Fit: PCA"]
     colorDecomp = ["r", "b"]
-    markerShape = ["|", "_"]
+    markerShape = ["o", "o"]
 
     for i in range(2):
         ax.scatter(

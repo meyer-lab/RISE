@@ -6,12 +6,12 @@ from sklearn.metrics import RocCurveDisplay, auc
 from sklearn.model_selection import StratifiedGroupKFold
 
 
-def plotPf2RankTest(rank_test_results, ax, error_metric = "accuracy", palette = 'Set2'):
+def plotPf2RankTest(rank_test_results, ax, error_metric = "accuracy", palette = 'Set1'):
     """Plots results from Pf2 test of various ranks using defined error metric and logistic reg"""
     sns.lineplot(data = rank_test_results, 
                  x = 'rank', y = error_metric, 
                  hue = 'penalty',
-                 palette= 'Set2',
+                 palette= palette,
                  ax = ax)
     sns.scatterplot(data = rank_test_results,
                     x = 'rank', y = error_metric,
@@ -23,9 +23,9 @@ def plotPf2RankTest(rank_test_results, ax, error_metric = "accuracy", palette = 
 
 def plotCmpRegContributions(contribs, predicting: str, ax):  
     """Plots weights of components in logistic regression from `getCompContribs`"""
-    sns.barplot(data = contribs, x = "Component", y = "Weight", color = '#1a759f', errorbar=None, ax = ax)
+    sns.barplot(data = contribs, x = "Component", y = "Weight", color = 'k', errorbar=None, ax = ax)
     ax.tick_params(axis="x", rotation=90)
-    ax.set_title('Weight of Each component in Logsitic Regression: Predicting ' + predicting)
+    ax.set_title('Weight of Pf2 Cmps in Logsitic Regression: Predicting ' + predicting)
 
 def investigate_comp(comp: int, rank: int, obs, proj_B, obs_column, ax, threshold = 0.05):
     """Makes barplots of the percentages of each observation column (obs_column) that are represented in the top
@@ -35,10 +35,10 @@ def investigate_comp(comp: int, rank: int, obs, proj_B, obs_column, ax, threshol
 
     proj_B = pd.DataFrame(proj_B,
                  index = obs.index,
-                 columns = [f"comp_{i}" for i in np.arange(1, rank + 1)])
+                 columns = [f"Cmp. {i}" for i in np.arange(1, rank + 1)])
     
     proj_et_obs = proj_B.merge(ct, left_index=True, right_index=True)
-    component_string = 'comp_' + str(comp)
+    component_string = 'Cmp. ' + str(comp)
     cmp_n = proj_et_obs[[obs_column, component_string]]
     # get just the ones that are "super" positive
     counts_all = cmp_n.groupby(by = obs_column).count().reset_index().rename({component_string:'count'}, axis = 1)
@@ -49,7 +49,7 @@ def investigate_comp(comp: int, rank: int, obs, proj_B, obs_column, ax, threshol
     pcts = pd.concat((counts[obs_column], counts['count']/counts_all['count']), axis = 1).rename({'count': 'percent'}, axis = 1)
     pcts['percent'] = pcts['percent'] * 100
 
-    sns.barplot(pcts, x = obs_column, y = 'percent', errorbar=None, ax=ax)
+    sns.barplot(pcts, x = obs_column, y = 'percent', color = 'k', errorbar=None, ax=ax)
     ax.tick_params(axis="x", rotation=90)
     ax.set_title(obs_column + ' Percentages, Threshold: ' + str(threshold) + ' for comp ' + str(comp))
 
@@ -124,19 +124,7 @@ def plotROCAcrossGroups(A_matrix, group_labs, ax,
         lw=2,
         alpha=0.8,
     )
-
-    std_tpr = np.std(tprs, axis=0)
-    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
-    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
-    ax.fill_between(
-    mean_fpr,
-    tprs_lower,
-    tprs_upper,
-    color="grey",
-    alpha=0.2,
-    label=r"$\pm$ 1 std. dev.",
-    )
-
+    
     ax.set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],

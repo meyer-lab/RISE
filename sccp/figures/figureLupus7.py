@@ -15,7 +15,7 @@ from ..imports.scRNA import load_lupus_data
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 6), (1, 1))  # fig size  # grid size
+    ax, f = getSetup((6, 6), (1, 1))  # fig size  # grid size
 
     # Add subplot labels
     subplotLabel(ax)
