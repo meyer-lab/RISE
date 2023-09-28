@@ -11,13 +11,13 @@ import mygene
 mg = mygene.MyGeneInfo()
 
 
-def geneOntology(cmpNumb: int, geneAmount, goTerms, geneValue):
+def geneOntology(cmpNumb: int, dataName, rank, geneAmount, goTerms, geneValue):
     """Plots top Gene Ontology terms for molecular function,
     biological process, cellular component. Uses factors as
     input for function"""
 
     df = (
-        pd.read_csv("sccp/data/Thomson/TopBotGenes_Cmp30.csv")
+        pd.read_csv("sccp/data/"+dataName+"/"+dataName+"TopBotGenes_Cmp"+str(rank)+".csv")
         .rename(columns={"Unnamed: 0": "Gene"})
         .set_index("Gene")
     )
