@@ -127,7 +127,7 @@ def plotGenePerCategStatus(cmp, dataDF, rank, dataName, axs, geneAmount=5):
     botGenes = df.iloc[:geneAmount,:]
     topGenes = df.iloc[-geneAmount:,:]
 
-    genes = [botGenes["Gene"].values, topGenes["Gene"].values]
+    genes = [botGenes["Gene"].values, np.flip(topGenes["Gene"].values)]
     axNumb = 0
     
     for i in range(2):
