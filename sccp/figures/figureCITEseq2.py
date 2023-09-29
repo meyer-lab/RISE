@@ -22,7 +22,7 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-    data = import_citeseq()
+    data, _ = import_citeseq()
     rank = 40
 
     return f
