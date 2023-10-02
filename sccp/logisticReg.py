@@ -144,7 +144,7 @@ def getPf2ROC(A_matrix, condition_batch_labels, rank, penalties_to_test=10):
         penalty="l1",
         solver="saga",
         scoring="roc_auc",
-        Cs=penalties_to_test,
+        #Cs=penalties_to_test,
     )
     log_fit = log_reg.fit(cmp_train, y_train)
 
