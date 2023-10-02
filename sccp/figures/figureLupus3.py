@@ -41,7 +41,7 @@ def makeFigure():
     comps = [13, 14, 16, 26, 29, 32]
     for i, comp in enumerate(comps):
         plotCmpPerCellType(weightedProjDF, comp, ax[(2*i)], outliers=False)
-        plotCmpUMAP(comp, factors, pf2Points, projs, ax[(2*i)+1])
+        plotCmpUMAP(comp, factors[1], pf2Points, projs, ax[(2*i)+1])
     
 
     plotCellTypeUMAP(pf2Points, dataDF, ax[14])

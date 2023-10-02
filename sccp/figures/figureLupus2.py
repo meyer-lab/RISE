@@ -39,7 +39,7 @@ def makeFigure():
     # UMAP dimension reduction
     pf2Points = openUMAP(40, "lupus", opt=True)
 
-    plotCmpUMAP(cmp, factors, pf2Points, projs, ax[0])
+    plotCmpUMAP(cmp, factors[1], pf2Points, projs, ax[0])
     plotUMAP_obslabel(broad_type, pf2Points, ax[1])
     plotUMAP_obslabel(lympho_type, pf2Points, ax[2])
 

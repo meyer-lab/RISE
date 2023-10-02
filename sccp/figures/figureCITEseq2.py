@@ -23,9 +23,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
     data, _ = import_citeseq()
-    rank = 40
-
-    return f
+    rank = 80
 
     _, factors, projs, _ = parafac2_nd(
         data,
@@ -39,7 +37,7 @@ def makeFigure():
 
     for i in range(len(component)):
         plotCmpUMAP(
-            component[i], factors, pf2Points, np.concatenate(projs, axis=0), ax[i]
+            component[i], factors[1], pf2Points, np.concatenate(projs, axis=0), ax[i]
         )
 
     return f

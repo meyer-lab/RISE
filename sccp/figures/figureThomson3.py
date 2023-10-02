@@ -24,6 +24,6 @@ def makeFigure():
     component = np.arange(17, 25, 1)
 
     for i in range(len(component)):
-        plotCmpUMAP(component[i], factors, pf2Points, projs, ax[i])
+        plotCmpUMAP(component[i], factors[1], pf2Points, projs, ax[i])
 
     return f

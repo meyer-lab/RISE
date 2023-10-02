@@ -6,6 +6,7 @@ import sys
 import time
 import seaborn as sns
 import matplotlib
+from matplotlib.figure import Figure
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import os
@@ -36,7 +37,7 @@ matplotlib.rcParams["legend.borderpad"] = 0.35
 matplotlib.rcParams["svg.fonttype"] = "none"
 
 
-def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True):
+def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True) -> tuple[list, Figure]:
     """Establish figure set-up with subplots."""
     sns.set(
         style="whitegrid",

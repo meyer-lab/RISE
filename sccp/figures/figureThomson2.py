@@ -47,7 +47,7 @@ def makeFigure():
     comps = [5, 12, 20, 30]
     for i, comp in enumerate(comps):
         plotCmpPerCellType(weightedProjDF, comps[i], ax[(2 * i) + 1], outliers=False)
-        plotCmpUMAP(comps[i], factors, pf2Points, projs, ax[(2 * i) + 2])
+        plotCmpUMAP(comps[i], factors[1], pf2Points, projs, ax[(2 * i) + 2])
 
     geneSet1 = ["NKG7", "GNLY", "GZMB", "GZMH", "PRF1"]
     geneSet2 = ["MS4A1", "CD79A", "CD79B", "TNFRSF13B", "BANK1"]
