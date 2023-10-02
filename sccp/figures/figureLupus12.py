@@ -55,10 +55,8 @@ def Lupus_comp_scan_plot(ax, patient_facs, status_DF):
     Lupus_y = preprocessing.label_binarize(status_DF.SLE_status, classes=["Healthy", "SLE"]).flatten()
     all_comps = np.arange(0, mode_facs.shape[1])
     Acc_DF = pd.DataFrame()
-    all_comps = np.arange(0, 2)
-
+  
     for comps in itertools.product(all_comps, all_comps):
-        print(comps)
         if comps[0] > comps[1]:
             acc = Acc_DF.loc[(Acc_DF["Component 1"] == "Comp. " + str(comps[1] + 1)) & (Acc_DF["Component 2"]== "Comp. " + str(comps[0] + 1))].Accuracy.values[0]
             Acc_DF = pd.concat([Acc_DF,pd.DataFrame({"Component 1": "Comp. " + str(comps[0] + 1),"Component 2": "Comp. " + str(comps[1] + 1), "Accuracy": [acc]})])
@@ -82,7 +80,6 @@ def Lupus_comp_scan_plot(ax, patient_facs, status_DF):
                     ),
                 ]
             )
-            print(Acc_DF)
 
     Acc_DF = Acc_DF.pivot_table(
         index="Component 1", columns="Component 2", values="Accuracy", sort=False
