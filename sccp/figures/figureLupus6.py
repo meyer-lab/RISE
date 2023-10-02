@@ -42,7 +42,7 @@ def makeFigure():
     A_matrix = factors[0]
 
     # only doing 50 because that is the penalty we used when we chose 40 as an optimal component number
-    penalties_to_test = [100]
+    penalties_to_test = [50]
 
     # get test data, and decisions made by the trained model corresponding to those test data
     y_test, sle_decisions = getPf2ROC(
