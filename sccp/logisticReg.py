@@ -30,7 +30,7 @@ def testPf2Ranks(
         # perform pf2 on the given rank
         print(f"\n\nPARAFAC2 FITTING: RANK {rank}")
         _, factors, _, _ = parafac2_nd(
-            pfx2_data, rank=rank, random_state=1, verbose=True
+            pfx2_data, rank=rank, random_state=1
         )
 
         A_matrix = factors[0]

@@ -44,7 +44,7 @@ def crossvalidate_PCA(
 
 
 def crossvalidate(
-    X, rank: int, trainPerc: float = 0.75, verbose: bool = False, random_state=None
+    X, rank: int, trainPerc: float = 0.75, random_state=None
 ) -> float:
     rng = np.random.default_rng(random_state)
 
@@ -60,7 +60,7 @@ def crossvalidate(
     X_C_idx = int(X[0].shape[1] * trainPerc)
     C_train = [xx[:, :X_C_idx] for xx in X]
 
-    w_B, fac_B, _, _ = parafac2_nd(B_train, rank, verbose=verbose)
+    w_B, fac_B, _, _ = parafac2_nd(B_train, rank)
 
     fac_C = deepcopy(fac_B)
     fac_C[0] *= w_B[np.newaxis, :]
