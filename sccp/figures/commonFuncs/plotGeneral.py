@@ -122,7 +122,7 @@ def plotGeneFactors(cmp, rank, dataName, axs, geneAmount=20):
 def plotGenePerCategStatus(cmp, dataDF, rank, dataName, axs, geneAmount=5):
     """Plotting weights for gene factors for both most negatively/positively weighted terms"""
     df = pd.read_csv("sccp/data/"+dataName+"/"+dataName+"TopBotGenes_Cmp"+str(rank)+".csv").rename(columns={"Unnamed: 0": "Gene"})
-    cmpName = "Cmp. "+str(cmp)
+    cmpName = "Cmp. " + str(cmp)
     df = df[["Gene", cmpName]].sort_values(by=[cmpName])
     botGenes = df.iloc[:geneAmount,:]
     topGenes = df.iloc[-geneAmount:,:]
