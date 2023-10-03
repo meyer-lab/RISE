@@ -23,7 +23,7 @@ umap-learn = { version = "^0.5.4", extras = ["plot"] }
 mygene = "^3.2.2"
 gseapy = "^1.0.4"
 openpyxl = "^3.1.2"
-parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "81de3749330fede88c3f93c069532e438c98b1f7" }
+parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "eb55e918cfcd52d0cedc4e359f54d267e112d89a" }
 scanpy = "^1.9.5"
 
 [tool.poetry.dev-dependencies]
