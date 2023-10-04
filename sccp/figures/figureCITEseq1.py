@@ -7,8 +7,7 @@ from .commonFuncs.plotFactors import (
 )
 import umap
 from ..imports.citeseq import import_citeseq
-import umap.plot
-import numpy as np
+from .commonFuncs.plotUMAP import points
 
 
 def makeFigure():
@@ -28,7 +27,7 @@ def makeFigure():
 
     pf2Points = umap.UMAP(random_state=1).fit(projs)
 
-    umap.plot.points(
+    points(
         pf2Points,
         labels=protDF["Condition"].values,
         ax=ax[3],
