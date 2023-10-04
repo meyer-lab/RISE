@@ -34,8 +34,6 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), cond_gr
             kept_idxs = max_weight > 0.08
             X = X[kept_idxs]
             yt = yt[kept_idxs]
-            if i == 0 and not (cond_group_labels is None):
-                cond_group_labels = cond_group_labels[ind]
 
         if i in reorder:
             X, ind = reorder_table(X)
