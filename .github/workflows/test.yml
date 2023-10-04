@@ -4,7 +4,6 @@
 name: Test
 
 on: [push]
-concurrency: gpu
 
 jobs:
   build:

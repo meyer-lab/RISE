@@ -17,4 +17,4 @@ jobs:
       with:
         name: files
         path: |
-          output/*.svg
+          output/*.png
