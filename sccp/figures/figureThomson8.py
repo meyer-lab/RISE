@@ -1,9 +1,8 @@
 """
 Plots all top and bottom genes for Thomson dataset
 """
-from .common import subplotLabel, getSetup, flattenData
-from .commonFuncs.plotGeneral import plotGenePerCategStatus, plotGeneFactors
-from ..imports.scRNA import ThompsonXA_SCGenes
+from .common import getSetup
+from .commonFuncs.plotGeneral import plotGeneFactors
 import numpy as np
 
 
