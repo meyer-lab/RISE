@@ -56,7 +56,7 @@ def getSetup(figsize, gridd, multz=None, empts=None, constrained_layout=True) ->
 
     # Setup plotting space and grid
     f = plt.figure(figsize=figsize, constrained_layout=constrained_layout)
-    gs1 = gridspec.GridSpec(*gridd, figure=f)
+    gs1 = gridspec.GridSpec(gridd[0], gridd[1], figure=f)
 
     # Get list of axis objects
     x = 0
