@@ -1,13 +1,12 @@
 """
 Hamad CITEseq dataset
 """
-from .common import subplotLabel, getSetup
+from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotFactors import (
     plotFactors,
 )
 import umap
 from ..imports.citeseq import import_citeseq
-from parafac2 import parafac2_nd
 import umap.plot
 import numpy as np
 
@@ -23,15 +22,11 @@ def makeFigure():
     data, protDF = import_citeseq()
     rank = 80
 
-    _, factors, projs, _ = parafac2_nd(
-        data,
-        rank=rank,
-        random_state=1,
-    )
+    _, factors, projs = openPf2(rank=rank, dataName="CITEseq")
 
     plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,))
 
-    pf2Points = umap.UMAP(random_state=1).fit(np.concatenate(projs, axis=0))
+    pf2Points = umap.UMAP(random_state=1).fit(projs)
 
     umap.plot.points(
         pf2Points,

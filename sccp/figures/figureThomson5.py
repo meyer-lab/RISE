@@ -5,7 +5,7 @@ import numpy as np
 from ..imports.scRNA import ThompsonXA_SCGenes
 import umap
 from sklearn.decomposition import PCA
-from .common import subplotLabel, getSetup, openUMAP, flattenData
+from .common import subplotLabel, getSetup, openPf2, flattenData
 
 from .commonFuncs.plotUMAP import plotGeneUMAP
 from ..imports.scRNA import ThompsonXA_SCGenes
@@ -26,7 +26,8 @@ def makeFigure():
     dataDF = flattenData(data)
 
     # UMAP dimension reduction
-    pf2Points = openUMAP(rank, "Thomson", opt=False)
+    _, _, projs = openPf2(rank, "Thomson")
+    pf2Points = umap.UMAP(random_state=1).fit(projs)
 
     # Genes for cells
     cd4 = ["IL7R"]

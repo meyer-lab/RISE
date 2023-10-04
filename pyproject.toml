@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-numpy = "^1.24"
+numpy = "^1.25"
 scipy = "^1.11"
 scikit-learn = "^1.3"
 seaborn = "^0.12.2"
@@ -23,7 +23,7 @@ umap-learn = { version = "^0.5.4", extras = ["plot"] }
 mygene = "^3.2.2"
 gseapy = "^1.0.4"
 openpyxl = "^3.1.2"
-parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "eb55e918cfcd52d0cedc4e359f54d267e112d89a" }
+parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "f05b0ee91a9eb9dfe21d5e7b0fae73802ac62d87" }
 scanpy = "^1.9.5"
 
 [tool.poetry.dev-dependencies]

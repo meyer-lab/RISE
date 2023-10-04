@@ -1,12 +1,8 @@
-from os.path import dirname
 import numpy as np
 import pandas as pd
 from scipy.stats import linregress
 import anndata
 from ..parafac2 import Pf2X
-
-
-path_here = dirname(dirname(__file__))
 
 
 def tensorFy(annD: anndata.AnnData, obsName: str) -> Pf2X:
@@ -84,20 +80,6 @@ def ThompsonXA_SCGenes(offset: float = 1.0) -> anndata.AnnData:
 
     # Assign cells a count per-experiment so we can reindex
     return tensorFy(X, "Drugs")
-
-
-def import_pancreas(tensor=True, method=str()):
-    pancreas = anndata.read_h5ad(
-        "/home/brianoj/SC_data/pancreas/pancreas" + method + ".h5ad"
-    )
-
-    # Remove NaNs
-    pancreas = pancreas[:, np.all(np.isfinite(pancreas.X), axis=0)]
-
-    if tensor:
-        return tensorFy(pancreas, "batch")
-    else:
-        return pancreas
 
 
 def load_lupus_data():

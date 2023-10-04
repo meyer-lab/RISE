@@ -21,8 +21,7 @@ def import_citeseq():
     # A 32-bit float is high enough precision and uses 50% of the memory
     annGene.X.data = np.asarray(annGene.X.data, dtype=np.float32)
 
-    # sc.pp.filter_cells(annGene, min_genes=200)
-    sc.pp.filter_genes(annGene, min_cells=10)
+    sc.pp.filter_genes(annGene, min_cells=100)
     sc.pp.normalize_total(annGene)
     sc.pp.log1p(annGene)
     sc.pp.highly_variable_genes(annGene, n_top_genes=10000)

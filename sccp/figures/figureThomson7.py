@@ -18,7 +18,7 @@ def makeFigure():
     # Import of single cells: [Drug, Cell, Gene]
     data = ThompsonXA_SCGenes()
     dataDF = flattenData(data)
-    dataDF["Cell Type"] = gateThomsonCells(rank=30, saveCellTypes=False)
+    dataDF["Cell Type"] = gateThomsonCells()
 
     for i, drug in enumerate(data.condition_labels):
         if i < 12:
