@@ -23,20 +23,22 @@ def makeFigure():
     rank = 40
 
     _, factors, _ = openPf2(rank=rank, dataName="lupus", optProjs=True)
+    predict = "SLE_status"
+    # predict = "ancestry"
+    
 
     _, obs = load_lupus_data()
-
-    status = obs[["sample_ID", "SLE_status", "Processing_Cohort"]].drop_duplicates()
-
-    group_labs = status.set_index("sample_ID")[["SLE_status", "Processing_Cohort"]]
-
+    status = obs[["sample_ID", predict, "Processing_Cohort"]].drop_duplicates()
+    group_labs = status.set_index("sample_ID")[[predict, "Processing_Cohort"]]
     A_matrix = factors[0]
+    
+    # group_labs["ancestry"] = np.where(group_labs["ancestry"].isin( ["European"]), group_labs["ancestry"], "Other")
 
     plotROCAcrossGroups(
         A_matrix,
         group_labs,
         ax[0],
-        pred_group="SLE_status",
+        pred_group=predict,
         cv_group="Processing_Cohort",
     )
 

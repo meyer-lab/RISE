@@ -25,12 +25,11 @@ def makeFigure():
 
     rank = 40
     group_to_predict = "SLE_status"  # group to predict
-
     lupus_tensor, obs = load_lupus_data()
-
     group_labs = obs[["sample_ID", group_to_predict]].drop_duplicates()
-
     group_labs = group_labs.set_index("sample_ID")
+    
+    # group_labs["ancestry"] = np.where(group_labs["ancestry"].isin( ["European"]), group_labs["ancestry"], "Other")
 
     (
         _,
