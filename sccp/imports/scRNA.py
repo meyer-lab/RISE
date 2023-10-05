@@ -45,7 +45,7 @@ def import_thompson_drug() -> anndata.AnnData:
     # data.X = data.X.todense()
     # data = data[:, np.mean(data.X > 0, axis=0) > 0.001]
     # data.write('thompson.h5ad', compression="gzip")
-    data = anndata.read_h5ad("/opt/andrew/thompson.h5ad")
+    data = anndata.read_h5ad("/opt/andrew/thomson.h5ad")
 
     data.obs["Drugs"] = pd.Categorical(metafile["sample_id"])
     return data
