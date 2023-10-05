@@ -141,5 +141,9 @@ def plotGenePerCategStatus(cmp, dataDF, rank, dataName, axs, geneAmount=5):
                 axs[axNumb].set(title="Downreg. Gene: "+gene)
             else: 
                 axs[axNumb].set(title="Upreg. Gene: "+gene)
+            axs[axNumb].set(xticks=np.linspace(0.5-np.abs(np.min(df["Average Gene Expression For Drugs"])), 
+                                       0.5+np.abs(np.max(df["Average Gene Expression For Drugs"])), 
+                                       num=5))
+
             axNumb += 1
 
