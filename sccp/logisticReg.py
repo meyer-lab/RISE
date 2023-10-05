@@ -78,8 +78,12 @@ def getCompContribs(A_matrix, target, penalty_amt: float=50) -> np.ndarray:
     log_fit = LogisticRegression(
         random_state=0, max_iter=5000, penalty="l1", solver="saga", C=penalty_amt
     ).fit(A_matrix, target)
+    
+    coefs = pd.DataFrame(
+        log_fit.densify().coef_, columns=[f"Cmp. {i}" for i in np.arange(1, A_matrix.shape[1] + 1)]
+    ).melt(var_name="Component", value_name="Weight")
 
-    return log_fit.densify().coef_
+    return coefs
 
 
 def getPf2ROC(A_matrix, condition_batch_labels, rank, penalties_to_test=10):
