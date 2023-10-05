@@ -120,10 +120,10 @@ def openPf2(rank: int, dataName: str, optProjs=False):
             allow_pickle=True,
         )
     else:
-        projs = np.load(
-            f"./sccp/data/{dataName}/{dataName}_ProjCmp" + str(rank) + ".npy",
-            allow_pickle=True,
-        )
+         projs = np.load(
+            f"/opt/andrew/{dataName}/{dataName}_ProjCmp"+str(rank)+".npy", 
+            allow_pickle=True)
+        
 
     return weight, factors, projs
 
