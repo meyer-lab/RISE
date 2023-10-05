@@ -74,12 +74,12 @@ def points(
     return ax
 
 
-def plotCondUMAP(conds, decomp, totalconds, points, axs: list[plt.Axes]):
+def plotCondUMAP(conds, decomp, totalconds, umappoints, axs: list[plt.Axes]):
     """Scatterplot of UMAP visualization weighted by condition"""
     for i, cond in enumerate(conds):
         condList = np.where(np.asarray(totalconds == cond), cond, " Other Conditions")
         points(
-            points,
+            umappoints,
             labels=condList,
             ax=axs[i],
             color_key_cmap="tab20",
@@ -93,9 +93,9 @@ def plotCondUMAP(conds, decomp, totalconds, points, axs: list[plt.Axes]):
 def plotGeneUMAP(
     genes: list[str],
     decomp,
-    points: umap.UMAP,
+    umappoints: umap.UMAP,
     dataDF: pd.DataFrame,
-    axs: list[plt.Axes],
+    axs
 ):
     """Scatterplot of UMAP visualization weighted by gene"""
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
@@ -104,7 +104,7 @@ def plotGeneUMAP(
         geneList = dataDF[genez].to_numpy()
         geneList = geneList / np.max(np.abs(geneList))
         psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
-        plot = points(points, values=geneList, cmap=cmap, ax=axs[i])
+        plot = points(umappoints, values=geneList, cmap=cmap, ax=axs[i])
         colorbar = plt.colorbar(psm, ax=plot)
         axs[i].set(
             title=genez + "-" + decomp + "-Based Decomposition",
@@ -114,7 +114,7 @@ def plotGeneUMAP(
 
 
 def plotCmpUMAP(
-    cmp: int, factors: np.ndarray, pf2Points: umap.UMAP, allP: np.ndarray, ax: plt.Axes
+    cmp: int, factors: np.ndarray, umappoints: umap.UMAP, allP: np.ndarray, ax: plt.Axes
 ):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
@@ -122,7 +122,7 @@ def plotCmpUMAP(
     weightedProjs = weightedProjs / np.max(np.abs(weightedProjs)) * 2.0
 
     cmap = sns.diverging_palette(240, 10, as_cmap=True, s=100)
-    plot = points(pf2Points, values=weightedProjs, cmap=cmap, ax=ax)
+    plot = points(umappoints, values=weightedProjs, cmap=cmap, ax=ax)
 
     psm = plt.pcolormesh([[-1, 1], [-1, 1]], cmap=cmap)
     plt.colorbar(psm, ax=plot, label="Cell Specific Weight")
@@ -130,9 +130,9 @@ def plotCmpUMAP(
     ax.set(ylabel="UMAP2", xlabel="UMAP1", title="Cmp. " + str(cmp))
 
 
-def plotUMAP_obslabel(labels, pf2Points, ax: plt.Axes):
+def plotUMAP_obslabel(labels, umappoints, ax: plt.Axes):
     """Scatterplot of UMAP visualization labeled by cell type or other obs column"""
-    points(pf2Points, labels=labels, color_key_cmap="Paired", ax=ax)
+    points(umappoints, labels=labels, color_key_cmap="Paired", ax=ax)
     ax.set(
         ylabel="UMAP2",
         xlabel="UMAP1",
@@ -140,15 +140,15 @@ def plotUMAP_obslabel(labels, pf2Points, ax: plt.Axes):
     )
 
 
-def plotLabelAllUMAP(conditions, points, ax: plt.Axes):
+def plotLabelAllUMAP(conditions, umappoints, ax: plt.Axes):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
-    points(points, labels=conditions, ax=ax, color_key_cmap="tab20", show_legend=True)
+    points(umappoints, labels=conditions, ax=ax, color_key_cmap="tab20", show_legend=True)
     ax.set(title="Pf2-Based Decomposition", ylabel="UMAP2", xlabel="UMAP1")
 
 
-def plotCellTypeUMAP(points, data, ax):
+def plotCellTypeUMAP(umappoints, data, ax):
     """Plots UMAP labeled by cell type"""
-    points(points, labels=data["Cell Type"].values, ax=ax)
+    points(umappoints, labels=data["Cell Type"].values, ax=ax)
     ax.set(ylabel="UMAP2", xlabel="UMAP1")
 
 
