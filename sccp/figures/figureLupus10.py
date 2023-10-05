@@ -26,7 +26,7 @@ def makeFigure():
     condLabels = annData[["sample_ID", "SLE_status"]].drop_duplicates("sample_ID")
     condLabels = np.asarray(condLabels["SLE_status"])
  
-    dataDF["Status"] = repeatLabels(condLabels, data, dataDF)
+    dataDF["Status"] = np.concatenate(repeatLabels(condLabels, data, dataDF))
     
     cell_types = annData[["cell_type_broad", "SLE_status"]].reset_index(drop=True)
     dataDF["Cell Type"] = cell_types["cell_type_broad"].values
