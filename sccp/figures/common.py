@@ -153,9 +153,10 @@ def flattenData(data: Pf2X) -> pd.DataFrame:
         condNames = np.append(
             condNames, np.repeat(data.condition_labels[i], data.X_list[i].shape[0])
         )
+        
     flatData = np.concatenate(data.X_list, axis=0)
     dataDF = pd.DataFrame(data=flatData, columns=data.variable_labels)
-    dataDF["Condition"] = condNames
+    dataDF["Condition"] = condNames[1::]
 
     return dataDF
 
@@ -175,7 +176,7 @@ def flattenWeightedProjs(data: Pf2X, factors: np.ndarray, projs: np.ndarray) -> 
 
     cmpNames = [f"Cmp. {i}" for i in np.arange(1, weightedProjs.shape[1] + 1)]
     dataDF = pd.DataFrame(data=weightedProjs, columns=cmpNames)
-    dataDF["Condition"] = condNames
+    dataDF["Condition"] = condNames[1::]
 
     return dataDF
 
