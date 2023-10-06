@@ -17,7 +17,7 @@ def makeFigure():
     _, factors, projs = openPf2(rank, "Thomson")
     data = ThompsonXA_SCGenes()
     
-    weightedProjDF = flattenWeightedProjs(data, factors, projs)
+    weightedProjDF = flattenWeightedProjs(data, factors[1], projs)
     weightedProjDF["Cell Type"] = gateThomsonCells()
     weightedProjDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
 

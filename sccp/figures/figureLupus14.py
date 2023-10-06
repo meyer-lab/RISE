@@ -18,7 +18,7 @@ def makeFigure():
      # get cell types
     cell_types = obs[["cell_type_broad", "SLE_status"]].reset_index(drop=True)
 
-    weightedProjDF = flattenWeightedProjs(lupus_tensor, factors, projs)
+    weightedProjDF = flattenWeightedProjs(lupus_tensor, factors[1], projs)
     weightedProjDF["Cell Type"] = cell_types["cell_type_broad"].values
     weightedProjDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
 

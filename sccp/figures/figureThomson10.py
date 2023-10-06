@@ -30,11 +30,11 @@ def makeFigure():
     dataDF = flattenData(data)
 
     rank = 30
-    dataDF["Cell Type"] = gateThomsonCells(rank=rank, saveCellTypes=False)
+    dataDF["Cell Type"] = gateThomsonCells()
 
     _, factors, projs = openPf2(rank, "Thomson")
 
-    weightedProjDF = flattenWeightedProjs(data, factors, projs)
+    weightedProjDF = flattenWeightedProjs(data, factors[1], projs)
     weightedProjDF["Cell Type"] = dataDF["Cell Type"].values
     weightedProjDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
     dataDF.sort_values(by=["Condition", "Cell Type"], inplace=True)

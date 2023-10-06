@@ -34,7 +34,7 @@ def makeFigure():
     
     pf2Points = openUMAP(rank, "lupus", opt=True)
 
-    weightedProjDF = flattenWeightedProjs(lupus_tensor, factors, projs)
+    weightedProjDF = flattenWeightedProjs(lupus_tensor, factors[1], projs)
     weightedProjDF["Cell Type"] = cell_types["cell_type_broad"].values
     dataDF["Cell Type"] = cell_types["cell_type_broad"].values
 
