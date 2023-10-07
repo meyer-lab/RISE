@@ -33,11 +33,11 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), cond_gr
             max_weight = np.max(np.abs(X), axis=1)
             kept_idxs = max_weight > 0.08
             X = X[kept_idxs]
-            yt = yt[kept_idxs]
+            yt = [yt[ii] for ii in kept_idxs]
 
         if i in reorder:
             X, ind = reorder_table(X)
-            yt = yt[ind]
+            yt = [yt[ii] for ii in ind]
             if i == 0 and not (cond_group_labels is None):
                 cond_group_labels = cond_group_labels[ind]
                 
