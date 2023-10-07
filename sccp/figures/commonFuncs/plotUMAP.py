@@ -95,7 +95,7 @@ def plotGeneUMAP(
     decomp,
     umappoints: umap.UMAP,
     dataDF: pd.DataFrame,
-    axs
+    axs: list[plt.Axes]
 ):
     """Scatterplot of UMAP visualization weighted by gene"""
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
@@ -146,7 +146,7 @@ def plotLabelAllUMAP(conditions, umappoints, ax: plt.Axes):
     ax.set(title="Pf2-Based Decomposition", ylabel="UMAP2", xlabel="UMAP1")
 
 
-def plotCellTypeUMAP(umappoints, data, ax):
+def plotCellTypeUMAP(umappoints, data, ax: plt.Axes):
     """Plots UMAP labeled by cell type"""
     points(umappoints, labels=data["Cell Type"].values, ax=ax)
     ax.set(ylabel="UMAP2", xlabel="UMAP1")

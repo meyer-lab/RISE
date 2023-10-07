@@ -31,7 +31,7 @@ matplotlib.rcParams["legend.borderpad"] = 0.35
 matplotlib.rcParams["svg.fonttype"] = "none"
 
 
-def getSetup(figsize, gridd) -> tuple[list, Figure]:
+def getSetup(figsize: tuple[int, int], gridd: tuple[int, int]) -> tuple[list[plt.Axes], Figure]:
     """Establish figure set-up with subplots."""
     sns.set(
         style="whitegrid",
@@ -51,7 +51,7 @@ def getSetup(figsize, gridd) -> tuple[list, Figure]:
     return ax, f
 
 
-def subplotLabel(axs):
+def subplotLabel(axs: list[plt.Axes]):
     """Place subplot labels on figure."""
     for ii, ax in enumerate(axs):
         ax.text(
@@ -95,7 +95,7 @@ def savePf2(weight, factors, projs, dataName: str):
     )
 
 
-def openPf2(rank: int, dataName: str, optProjs=False):
+def openPf2(rank: int, dataName: str, optProjs: bool=False):
     """Opens weight factors and projections for one dataset for a component as numpy arrays"""
     weight = np.load(
         f"./sccp/data/{dataName}/{dataName}_WeightCmp{rank}.npy",

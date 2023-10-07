@@ -18,13 +18,13 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), cond_gr
     for i in range(3):
         # The single cell mode has a square factors matrix
         if i == 0:
-            yt = data.condition_labels
+            yt = data.condition_labels.tolist()
             title = "Components by Condition"
         elif i == 1:
             yt = [f"Cell State {i}" for i in np.arange(1, rank + 1)]
             title = "Components by Cell State"
         else:
-            yt = data.variable_labels
+            yt = data.variable_labels.tolist()
             title = "Components by Gene"
 
         X = factors[i]
