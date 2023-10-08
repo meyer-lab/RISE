@@ -17,7 +17,7 @@ def makeFigure():
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
-    data = ThompsonXA_SCGenes(offset=1.0)
+    data = ThompsonXA_SCGenes()
     rank = 30
     dataDF = flattenData(data)
 
