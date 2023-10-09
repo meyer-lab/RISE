@@ -9,7 +9,6 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
-import pickle
 import pandas as pd
 from .commonFuncs.plotFactors import reorder_table
 from ..parafac2 import Pf2X
@@ -127,22 +126,6 @@ def openPf2(rank: int, dataName: str, optProjs: bool=False):
         
 
     return weight, factors, projs
-
-
-def saveUMAP(fit_points, rank: int, dataName: str):
-    """Saves UMAP points locally, large files uploaded manually to opt"""
-    f_name = f"./sccp/data/{dataName}/{dataName}_UMAPCmp{rank}.sav"
-    pickle.dump(fit_points, open(f_name, "wb"))
-
-
-def openUMAP(rank: int, dataName: str, opt=True):
-    """Opens UMAP points for plotting, defaults to using the opt folder (for big files)"""
-    if opt == True:
-        f_name = f"/opt/andrew/{dataName}/{dataName}_UMAPCmp{rank}.sav"
-    else:
-        f_name = f"./sccp/data/{dataName}/{dataName}_UMAPCmp{rank}.sav"
-
-    return pickle.load((open(f_name, "rb")))
 
 
 def flattenData(data: Pf2X) -> pd.DataFrame:

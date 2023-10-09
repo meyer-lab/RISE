@@ -2,7 +2,7 @@
 Hamad CITEseq dataset
 """
 import numpy as np
-import umap
+import pacmap
 
 from .common import (
     subplotLabel,
@@ -26,7 +26,7 @@ def makeFigure():
 
     _, _, projs = openPf2(rank=rank, dataName="CITEseq")
 
-    pf2Points = umap.UMAP(random_state=1).fit(projs)
+    pf2Points = pacmap.PaCMAP().fit_transform(projs)
 
     protNames = np.unique(protDF.drop(columns="Condition").columns)
 
@@ -34,7 +34,7 @@ def makeFigure():
     # protNames = protNames[24:48]
     # protNames = protNames[50:75]
     # protNames = protNames[75:100]
-    protNames = protNames[100:]
+    protNames = protNames[100:].tolist()
 
     plotGeneUMAP(protNames, "Pf2", pf2Points, protDF, ax[0:25])
 

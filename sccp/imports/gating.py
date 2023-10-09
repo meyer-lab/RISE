@@ -1,7 +1,5 @@
-import umap
-import numpy as np
+import pacmap
 import pandas as pd
-import umap.plot
 from ..figures.common import openPf2
 
 
@@ -9,14 +7,13 @@ def gateThomsonCells():
     """Manually gates cell types for Thomson UMAP"""
     _, _, projs = openPf2(30, "Thomson")
 
-    pf2Points = umap.UMAP(random_state=1).fit_transform(projs)
+    pf2Points = pacmap.PaCMAP(random_state=1).fit_transform(projs)
 
     umap1 = pf2Points[:, 0]
     umap2 = pf2Points[:, 1]
 
-    cells = np.zeros(len(umap1))
-
-    df = pd.DataFrame(data={"UMAP1": umap1, "UMAP2": umap2, "Cell Type": cells})
+    df = pd.DataFrame(data={"UMAP1": umap1, "UMAP2": umap2})
+    df["Cell Type"] = "Monocytes"
 
     idx = df.index[(df["UMAP1"] >= 5)].tolist()
     df.loc[idx, "Cell Type"] = "DCs"

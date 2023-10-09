@@ -2,7 +2,7 @@
 Hamad CITEseq dataset
 """
 import numpy as np
-import umap
+import pacmap
 
 from .common import (
     subplotLabel,
@@ -26,7 +26,7 @@ def makeFigure():
 
     _, factors, projs = openPf2(rank=rank, dataName="CITEseq")
 
-    pf2Points = umap.UMAP(random_state=1).fit(projs)
+    pf2Points = pacmap.PaCMAP().fit_transform(projs)
 
     component = np.arange(1, 25, 1)
 

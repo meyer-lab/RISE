@@ -5,7 +5,6 @@ from .common import (
     subplotLabel,
     getSetup,
     openPf2,
-    openUMAP,
     flattenData,
     flattenWeightedProjs,
 )

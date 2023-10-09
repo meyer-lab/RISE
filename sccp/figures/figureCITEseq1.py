@@ -5,7 +5,7 @@ from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotFactors import (
     plotFactors,
 )
-import umap
+import pacmap
 from ..imports.citeseq import import_citeseq
 from .commonFuncs.plotUMAP import points
 
@@ -25,7 +25,7 @@ def makeFigure():
 
     plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,))
 
-    pf2Points = umap.UMAP(random_state=1).fit(projs)
+    pf2Points = pacmap.PaCMAP().fit_transform(projs)
 
     points(
         pf2Points,

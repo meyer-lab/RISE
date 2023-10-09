@@ -5,7 +5,8 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 """
 
 # GOAL: visualize the cell state compostition by cell type/UMAP
-from .common import subplotLabel, getSetup, openPf2, openUMAP
+import pacmap
+from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotUMAP import plotCmpUMAP, plotUMAP_obslabel
 from ..imports.scRNA import load_lupus_data
 
@@ -37,7 +38,7 @@ def makeFigure():
     ) = openPf2(rank=rank, dataName="lupus", optProjs=True)
 
     # UMAP dimension reduction
-    pf2Points = openUMAP(40, "lupus", opt=True)
+    pf2Points = pacmap.PaCMAP().fit_transform(projs)
 
     plotCmpUMAP(cmp, factors[1], pf2Points, projs, ax[0])
     plotUMAP_obslabel(broad_type, pf2Points, ax[1])
