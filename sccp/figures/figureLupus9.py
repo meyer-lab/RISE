@@ -1,13 +1,6 @@
 """
-S3d: Plot samples along two components to see patient separation
-article: https://www.science.org/doi/10.1126/science.abf1970
-data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
+Lupus: Plot 2 Pf2 factors for conditions
 """
-
-# GOAL: see if SLE/healthy samples can be stratified along strongly predictive Pf2 components
-# (they can, at least when you do 13 and 26)
-
-# load functions/modules ----
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotLupus import plot2DSeparationByComp
 import numpy as np
@@ -17,7 +10,7 @@ import pandas as pd
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((6, 8), (1, 2))  # fig size  # grid size
+    ax, f = getSetup((6, 8), (1, 2)) 
 
     # Add subplot labels
     subplotLabel(ax)

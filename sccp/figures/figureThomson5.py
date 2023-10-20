@@ -1,5 +1,5 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs: investigating UMAP
+Thomson: UMAP labeled by genes 
 """
 import numpy as np
 from .common import subplotLabel, getSetup, openPf2

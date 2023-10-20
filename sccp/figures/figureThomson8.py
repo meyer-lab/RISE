@@ -1,5 +1,5 @@
 """
-Plots all top and bottom genes for Thomson dataset
+Thomson: Plots all top and bottom genes Pf2 weights
 """
 from .common import getSetup
 from .commonFuncs.plotGeneral import plotGeneFactors

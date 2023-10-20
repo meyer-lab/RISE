@@ -1,13 +1,6 @@
 """
-S3: Logisitic Regression (and maybe SVM) on Pf2 Factor matrix A output
-article: https://www.science.org/doi/10.1126/science.abf1970
-data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
+Lupus: Plot average AUC ROC curve for logistic regression
 """
-
-# GOAL: run logisitc regression and assess predictive ability of 40 comp Pf2 using ROC AUC
-# comparison to Perez et al (linked above) fig 4C
-
-# load functions/modules ----
 from .common import subplotLabel, getSetup, openPf2
 from ..logisticReg import getPf2ROC
 from sklearn.metrics import RocCurveDisplay
@@ -29,12 +22,10 @@ def makeFigure():
     condStatus = condStatus.set_index("Condition")
 
     penalties_to_test = [50]
-    # get test data, and decisions made by the trained model corresponding to those test data
     y_test, sle_decisions = getPf2ROC(
         X.uns["Pf2_A"], condStatus, rank, penalties_to_test=penalties_to_test
     )
 
-    # make plot of ROC AUC
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label="SLE", plot_chance_level=True, ax=ax[0]
     )

@@ -1,5 +1,5 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
+Thomson: XX
 """
 from .common import (
     subplotLabel,
@@ -19,7 +19,6 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # Import of single cells: [Drug, Cell, Gene]
     rank = 30
     X = openPf2(rank, "Thomson")
 

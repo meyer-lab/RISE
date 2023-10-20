@@ -1,5 +1,5 @@
 """
-Hamad CITEseq dataset
+CITEseq: Plotting weighted projections per component
 """
 from .common import (
     subplotLabel,

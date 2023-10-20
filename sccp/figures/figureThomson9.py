@@ -1,5 +1,5 @@
 """
-Plots all top and bottom genes for Thomson dataset
+Thomson: Boxplots of weighted projectoins per component
 """
 import numpy as np
 from .common import getSetup, openPf2

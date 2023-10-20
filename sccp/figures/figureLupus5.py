@@ -1,12 +1,6 @@
 """
-S3b: Logistic Regression (and maybe SVM) on Pf2 Factor matrix A output
-article: https://www.science.org/doi/10.1126/science.abf1970
-data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
+Lupus: Plot logistic regression weights for SLE and/or ancestry
 """
-
-# GOAL: run logisitc regression to see which components are best able to predict disease status
-
-# load functions/modules ----
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotLupus import plotCmpRegContributions, plot2CmpRegContributions
 from ..logisticReg import getCompContribs
@@ -17,7 +11,7 @@ import pandas as pd
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((5, 8), (2, 1))  # fig size  # grid size
+    ax, f = getSetup((5, 8), (2, 1))  #
 
     # Add subplot labels
     subplotLabel(ax)

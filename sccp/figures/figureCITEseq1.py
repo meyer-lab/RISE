@@ -1,17 +1,17 @@
 """
-Hamad CITEseq dataset
+CITEseq: Plotting Pf2 factors, weights, and UMAP labeled by all conditions
 """
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotFactors import plotFactors, plotWeight
 from ..imports.citeseq import import_citeseq
-from .commonFuncs.plotUMAP import points, plotAllLabelsUMAP
+from .commonFuncs.plotUMAP import plotAllLabelsUMAP
 from ..parafac2 import pf2
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((25, 25), (3, 3))
+    ax, f = getSetup((8, 8), (2, 2))
 
     # Add subplot labels
     subplotLabel(ax)

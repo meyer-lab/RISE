@@ -1,12 +1,6 @@
 """
-S3b: Logistic Regression (and maybe SVM) on Pf2 Factor matrix A output
-article: https://www.science.org/doi/10.1126/science.abf1970
-data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
+Lupus: Plot factor weights correlations for donor SLE prediction
 """
-
-# GOAL: run logisitc regression to see which components are best able to predict disease status
-
-# load functions/modules ----
 import itertools
 import numpy as np
 import seaborn as sns
@@ -35,7 +29,7 @@ def makeFigure():
 
 
 def Lupus_comp_scan_plot(ax, X, status_DF):
-    """Plot factor weights for donor BC prediction"""
+    """Plot factor weights for donor SLE prediction"""
     lrmodel = LogisticRegression(penalty=None)
     y = preprocessing.label_binarize(
         status_DF.SLE_status, classes=["Healthy", "SLE"]

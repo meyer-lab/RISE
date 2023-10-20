@@ -1,5 +1,5 @@
 """
-Plots all top and bottom genes for Thomson dataset
+Lupus: Plotting weighted projections per component
 """
 from .common import getSetup, openPf2
 from .commonFuncs.plotUMAP import plotCmpPerCellType

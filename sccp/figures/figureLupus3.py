@@ -1,10 +1,6 @@
 """
-S2: Examining cell state for Pf2 on lupus data
-article: https://www.science.org/doi/10.1126/science.abf1970
-data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
+Lupus: UMAP and boxplots of weighted projectoins per component
 """
-
-# GOAL: visualize the component compostition by cell type
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotUMAP import plotCmpPerCellType, plotCmpUMAP
 

@@ -15,7 +15,6 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # Import of single cells: [Drug, Cell, Gene]
     rank = 30
     X = openPf2(rank, "Thomson")
 

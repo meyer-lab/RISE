@@ -1,5 +1,5 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
+Thomson: Wasserstein Distance and KL Divergence distance of cells and their genes
 """
 from .common import (
     subplotLabel,

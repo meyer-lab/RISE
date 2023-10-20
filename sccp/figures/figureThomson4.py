@@ -1,5 +1,5 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs: investigating UMAP
+Thomson: Compares PCA and Pf2 UMAP labeled by genes and drugs
 """
 from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup, openPf2

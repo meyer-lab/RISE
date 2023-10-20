@@ -1,12 +1,6 @@
 """
-S3: Logisitic Regression (and maybe SVM) on Pf2 Factor matrix A output
-article: https://www.science.org/doi/10.1126/science.abf1970
-data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
+Lupus: Cross validation for determining optimal paramaters for logistic regression
 """
-
-# GOAL: Test various Pf2 ranks to see which best predicts disease status
-
-# load functions/modules ----
 from ..imports.scRNA import import_lupus
 from ..logisticReg import testPf2Ranks
 from .common import (

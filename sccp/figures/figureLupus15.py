@@ -1,5 +1,5 @@
 """
-Investigation of raw data for Thomson dataset
+Lupus: Plots of amount of cells and cell type distribution across all experiments
 """
 import numpy as np
 import pandas as pd

@@ -1,5 +1,5 @@
 """
-Parafac2 implementation on PBMCs treated wtih PopAlign/Thompson drugs
+Thomson: Plotting weighted projections per component
 """
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotUMAP import (
@@ -15,7 +15,6 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # UMAP dimension reduction
     rank = 30
     X = openPf2(rank, "Thomson")
 

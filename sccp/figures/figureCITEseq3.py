@@ -1,5 +1,5 @@
 """
-Hamad CITEseq dataset
+CITEseq: UMAP weighted by protein expression
 """
 from .common import (
     subplotLabel,
@@ -23,7 +23,7 @@ def makeFigure():
 
     names = X.var_names[X.var["feature_types"] == "Antibody Capture"]
 
-    protNames = names[0:24].tolist()
+    protNames = names[0:25].tolist()
 
     for i, name in enumerate(protNames):
         plotGeneUMAP(name, "Pf2", X, ax[i])
