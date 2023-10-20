@@ -43,11 +43,9 @@ def crossvalidate_PCA(
     return 1.0 - recon_error / total_var
 
 
-def crossvalidate(
-    X, rank: int, trainPerc: float = 0.75, random_state=None
-) -> float:
+def crossvalidate(X, rank: int, trainPerc: float = 0.75, random_state=None) -> float:
     rng = np.random.default_rng(random_state)
-    
+
     # Shuffle, rnd.shuffle handles the cell axis
     var_idx = rng.permutation(X[0].shape[1])
     X = [xx[:, var_idx] for xx in X]
@@ -87,9 +85,9 @@ def CrossVal(X, rank: int, trainPerc: float = 0.75):
     rank_vec = np.arange(1, rank + 1)
 
     # Collect Pf2 results
-    cv_pf2_error = [
-        crossvalidate(X, rank=rank, trainPerc=trainPerc) for r in rank_vec
-    ]
-    cv_pca_error = crossvalidate_PCA(np.concatenate(X, axis=0), rank, trainPerc=trainPerc)
+    cv_pf2_error = [crossvalidate(X, rank=rank, trainPerc=trainPerc) for r in rank_vec]
+    cv_pca_error = crossvalidate_PCA(
+        np.concatenate(X, axis=0), rank, trainPerc=trainPerc
+    )
 
     return cv_pf2_error, cv_pca_error

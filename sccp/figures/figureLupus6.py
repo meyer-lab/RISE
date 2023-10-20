@@ -23,12 +23,16 @@ def makeFigure():
 
     rank = 40
     X = openPf2(rank, "Lupus")
-    condStatus = X.obs[["Condition", "SLE_status", "Processing_Cohort", "patient"]].drop_duplicates()
+    condStatus = X.obs[
+        ["Condition", "SLE_status", "Processing_Cohort", "patient"]
+    ].drop_duplicates()
     condStatus = condStatus.set_index("Condition")
 
     penalties_to_test = [50]
     # get test data, and decisions made by the trained model corresponding to those test data
-    y_test, sle_decisions = getPf2ROC(X.uns["Pf2_A"], condStatus, rank, penalties_to_test=penalties_to_test)
+    y_test, sle_decisions = getPf2ROC(
+        X.uns["Pf2_A"], condStatus, rank, penalties_to_test=penalties_to_test
+    )
 
     # make plot of ROC AUC
     RocCurveDisplay.from_predictions(

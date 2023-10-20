@@ -17,7 +17,7 @@ def geneOntology(cmpNumb: int, dataName, rank, geneAmount, goTerms, geneValue):
     input for function"""
 
     df = (
-        pd.read_csv("sccp/data/"+dataName+"/"+dataName+"TopBotGenes_Cmp"+str(rank)+".csv")
+        pd.read_csv(f"sccp/data/{dataName}/{dataName}TopBotGenes_Cmp{rank}.csv")
         .rename(columns={"Unnamed: 0": "Gene"})
         .set_index("Gene")
     )

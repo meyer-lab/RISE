@@ -64,7 +64,6 @@ def _datashade_points(
     show_legend=True,
     alpha=255,
 ):
-
     """Use datashader to plot points"""
     extent = _get_extent(points)
     canvas = ds.Canvas(
@@ -102,14 +101,22 @@ def _datashade_points(
                 for i, k in enumerate(unique_labels)
             ]
             result = tf.shade(
-                aggregation, color_key=color_key, how="eq_hist", alpha=alpha, min_alpha=255
+                aggregation,
+                color_key=color_key,
+                how="eq_hist",
+                alpha=alpha,
+                min_alpha=255,
             )
         else:
             legend_elements = [
                 Patch(facecolor=color_key[k], label=k) for k in color_key.keys()
             ]
             result = tf.shade(
-                aggregation, color_key=color_key, how="eq_hist", alpha=alpha, min_alpha=255
+                aggregation,
+                color_key=color_key,
+                how="eq_hist",
+                alpha=alpha,
+                min_alpha=255,
             )
 
     # Color by values
@@ -131,7 +138,11 @@ def _datashade_points(
             aggregation = canvas.points(data, "x", "y", agg=ds.count_cat("val_cat"))
             color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, 256)))
             result = tf.shade(
-                aggregation, color_key=color_key, how="eq_hist", alpha=alpha, min_alpha=255
+                aggregation,
+                color_key=color_key,
+                how="eq_hist",
+                alpha=alpha,
+                min_alpha=255,
             )
         else:
             data["val_cat"] = pd.Categorical(values)
@@ -141,13 +152,17 @@ def _datashade_points(
             )
             color_key = dict(zip(unique_values, color_key_cols))
             result = tf.shade(
-                aggregation, color_key=color_key, how="eq_hist", alpha=alpha, min_alpha=255
+                aggregation,
+                color_key=color_key,
+                how="eq_hist",
+                alpha=alpha,
+                min_alpha=255,
             )
 
     # Color by density (default datashader option)
     else:
         aggregation = canvas.points(data, "x", "y", agg=ds.count())
-        result = tf.shade(aggregation, cmap=plt.get_cmap(cmap), alpha=alpha, how='log')
+        result = tf.shade(aggregation, cmap=plt.get_cmap(cmap), alpha=alpha, how="log")
 
     if background is not None:
         result = tf.set_background(result, background)
@@ -159,8 +174,6 @@ def _datashade_points(
         return ax
     else:
         return result
-
-
 
 
 def points(
@@ -221,12 +234,7 @@ def points(
     return ax
 
 
-def plotGeneUMAP(
-    gene: str,
-    decompType: str,
-    X: anndata.AnnData,
-    ax: Axes
-):
+def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     """Scatterplot of UMAP visualization weighted by gene"""
     geneList = X[:, X.var_names.isin([gene])].X.flatten()
     geneList = geneList + np.min(geneList)
@@ -241,15 +249,14 @@ def plotGeneUMAP(
         ylabel="UMAP2",
         xlabel="UMAP1",
     )
-    
-def plotCondUMAP(condition: str,
-    decompType: str,
-    XX: anndata.AnnData,
-    ax: Axes
-):
+
+
+def plotCondUMAP(condition: str, decompType: str, XX: anndata.AnnData, ax: Axes):
     """Scatterplot of UMAP visualization weighted by condition"""
     X = XX.copy()
-    X.obs["Condition"] = np.array([c if c in condition else " Other Conditions" for c in X.obs["Condition"]])
+    X.obs["Condition"] = np.array(
+        [c if c in condition else " Other Conditions" for c in X.obs["Condition"]]
+    )
     points(
         X.obsm["embedding"],
         labels=X.obs["Condition"],
@@ -259,7 +266,8 @@ def plotCondUMAP(condition: str,
     )
     ax.set(title=f"{decompType}-Based Decomposition", ylabel="UMAP2", xlabel="UMAP1")
 
-def plotCmpUMAP(X, cmp: int,  ax: Axes):
+
+def plotCmpUMAP(X, cmp: int, ax: Axes):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
     weightedProjs = X.obsm["weighted_projections"]
@@ -284,23 +292,28 @@ def plotUMAP_obslabel(labels, umappoints: np.ndarray, ax: Axes):
     )
 
 
-def plotAllLabelsUMAP(X: anndata.AnnData,
-                      labelType: str,
-    ax: Axes
-):
+def plotAllLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
-    points(X.obsm["embedding"], labels=X.obs[labelType], ax=ax, color_key_cmap="tab20", show_legend=True)
+    points(
+        X.obsm["embedding"],
+        labels=X.obs[labelType],
+        ax=ax,
+        color_key_cmap="tab20",
+        show_legend=True,
+    )
     ax.set(title="Pf2-Based Decomposition", ylabel="UMAP2", xlabel="UMAP1")
 
 
 def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers=False):
     """Boxplot of weighted projections for one component across cell types"""
     XX = X.obsm["weighted_projections"]
-    XX = XX[:, cmp-1]
+    XX = XX[:, cmp - 1]
     cmpName = f"Cmp. {cmp}"
     cellTypes = X.obs["Cell Type"]
-    df = pd.DataFrame(data=np.transpose(np.vstack((XX,cellTypes))), columns=[cmpName, "Cell Type"])
- 
+    df = pd.DataFrame(
+        data=np.transpose(np.vstack((XX, cellTypes))), columns=[cmpName, "Cell Type"]
+    )
+
     sns.boxplot(
         data=df,
         x=cmpName,
@@ -309,5 +322,7 @@ def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers=False):
         ax=ax,
     )
     maxvalue = np.max(np.abs(ax.get_xticks()))
-    ax.set(xticks=np.linspace(-maxvalue, maxvalue, num=5), xlabel="Cell Specific Weight")
+    ax.set(
+        xticks=np.linspace(-maxvalue, maxvalue, num=5), xlabel="Cell Specific Weight"
+    )
     ax.set_title(cmpName)

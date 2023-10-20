@@ -30,7 +30,9 @@ matplotlib.rcParams["legend.borderpad"] = 0.35
 matplotlib.rcParams["svg.fonttype"] = "none"
 
 
-def getSetup(figsize: tuple[int, int], gridd: tuple[int, int]) -> tuple[list[plt.Axes], Figure]:
+def getSetup(
+    figsize: tuple[int, int], gridd: tuple[int, int]
+) -> tuple[list[plt.Axes], Figure]:
     """Establish figure set-up with subplots."""
     sns.set(
         style="whitegrid",
@@ -79,11 +81,11 @@ def genFigure():
 def savePf2(X: anndata.AnnData, rank: int, dataName: str):
     """Saves weight factors and projections for one dataset for a component"""
     X.write(f"/opt/andrew/{dataName}_analyzed_{rank}comps.h5ad", compression="gzip")
-    
+
 
 def openPf2(rank: int, dataName: str) -> anndata.AnnData:
     """Opens weight factors and projections for one dataset for a component as numpy arrays"""
-    return anndata.read_h5ad(f"/opt/andrew/{dataName}_analyzed_{rank}comps.h5ad")  
+    return anndata.read_h5ad(f"/opt/andrew/{dataName}_analyzed_{rank}comps.h5ad")
 
 
 def saveGeneFactors(factors, data, dataName):

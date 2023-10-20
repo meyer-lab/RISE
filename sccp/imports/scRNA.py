@@ -31,7 +31,7 @@ def import_thomson() -> anndata.AnnData:
     X.X /= np.sum(X.X, axis=0)
 
     # Only operating on the data works because 0 ends up as 0 here
-    X.X = np.log10((1000.0 * X.X) + 1) # scaling factor
+    X.X = np.log10((1000.0 * X.X) + 1)  # scaling factor
 
     # Center the genes
     X.X -= np.mean(X.X, axis=0)
@@ -80,15 +80,13 @@ def import_lupus() -> anndata.AnnData:
 
     # Reorder X so that all of the patients are in alphanumeric order.
     ptIDX = np.argsort(X.obs_vector("Condition"))
-    
+
     X = X[ptIDX, :]
-    
+
     # X.X = X.X.todense()
     # X.write('lupus.h5ad', compression="gzip")
     # X = anndata.read_h5ad("/opt/andrew/thomson.h5ad")
-    
-    
-    
+
     # Center the genes
     X.X -= np.mean(X.X, axis=0)
 

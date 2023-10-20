@@ -7,13 +7,8 @@ from .common import (
     openPf2,
 )
 from .commonFuncs.plotGeneral import plotGenePerCellType, plotGenePerCategCond
-from .commonFuncs.plotUMAP import (
-    plotCmpPerCellType,
-    plotCmpUMAP,
-    points
-)
+from .commonFuncs.plotUMAP import plotCmpPerCellType, plotCmpUMAP, points
 from ..imports.gating import gateThomsonCells
-
 
 
 def makeFigure():

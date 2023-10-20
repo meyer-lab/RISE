@@ -14,6 +14,6 @@ def makeFigure():
     rank = 30
 
     for i in np.arange(0, rank):
-        plotGeneFactors(i + 1, rank, "Thomson", ax[2*i: 2*i + 2], geneAmount=5)
+        plotGeneFactors(i + 1, rank, "Thomson", ax[2 * i : 2 * i + 2], geneAmount=5)
 
     return f

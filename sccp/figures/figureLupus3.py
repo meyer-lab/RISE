@@ -8,6 +8,7 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotUMAP import plotCmpPerCellType, plotCmpUMAP
 
+
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
@@ -21,8 +22,7 @@ def makeFigure():
 
     comps = [13, 14, 16, 26, 29, 32]
     for i, cmp in enumerate(comps):
-        plotCmpPerCellType(X, cmp, ax[(2*i)])
-        plotCmpUMAP(X, cmp, ax[(2*i) + 1])
-
+        plotCmpPerCellType(X, cmp, ax[(2 * i)])
+        plotCmpUMAP(X, cmp, ax[(2 * i) + 1])
 
     return f

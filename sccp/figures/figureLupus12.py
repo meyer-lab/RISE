@@ -25,7 +25,9 @@ def makeFigure():
 
     X = openPf2(rank=40, dataName="Lupus")
 
-    status = X.obs[["pool", "patient", "SLE_status", "Processing_Cohort"]].drop_duplicates()
+    status = X.obs[
+        ["pool", "patient", "SLE_status", "Processing_Cohort"]
+    ].drop_duplicates()
 
     Lupus_comp_scan_plot(ax[0], X.uns["Pf2_A"], status)
 

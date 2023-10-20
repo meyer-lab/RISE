@@ -16,7 +16,7 @@ def makeFigure():
 
     rank = 30
     X = openPf2(rank, dataName="Thomson")
-    
+
     cd4 = ["IL7R"]
     cd8 = ["CD8A", "CD8B"]
     nk = ["GNLY", "NKG7"]
@@ -28,7 +28,5 @@ def makeFigure():
 
     for i, gene in enumerate(genes):
         plotGeneUMAP(gene, "Pf2", X, ax[i])
- 
 
     return f
-

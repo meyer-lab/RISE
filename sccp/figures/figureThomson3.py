@@ -7,7 +7,6 @@ from .commonFuncs.plotUMAP import (
 )
 
 
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects

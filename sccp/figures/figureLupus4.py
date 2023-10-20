@@ -23,12 +23,14 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-    
+
     X = import_lupus()
-    condStatus = X.obs[["Condition", "SLE_status", "Processing_Cohort"]].drop_duplicates()
+    condStatus = X.obs[
+        ["Condition", "SLE_status", "Processing_Cohort"]
+    ].drop_duplicates()
     condStatus = condStatus.set_index("Condition")
 
-    rank = [2, 3] 
+    rank = [2, 3]
     results = testPf2Ranks(
         X,
         condStatus,

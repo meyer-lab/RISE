@@ -24,7 +24,7 @@ def makeFigure():
     predict = "SLE_status"
     condStatus = X.obs[["Condition", predict, "Processing_Cohort"]].drop_duplicates()
     condStatus = condStatus.set_index("Condition")
-    
+
     # predict = "ancestry"
     # condStatus["ancestry"] = np.where(condStatus["ancestry"].isin(["European"]), condStatus["ancestry"], "Other")
 

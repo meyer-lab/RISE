@@ -2,7 +2,7 @@
 Plots all top and bottom genes for Lupus dataset
 """
 from .common import getSetup
-from .commonFuncs.plotGeneral import  plotGeneFactors
+from .commonFuncs.plotGeneral import plotGeneFactors
 import numpy as np
 
 
@@ -14,6 +14,6 @@ def makeFigure():
     rank = 40
 
     for i in np.arange(0, 3):
-        plotGeneFactors(i + 1, rank, "Lupus", ax[2*i: 2*i + 2], geneAmount=5)
+        plotGeneFactors(i + 1, rank, "Lupus", ax[2 * i : 2 * i + 2], geneAmount=5)
 
     return f

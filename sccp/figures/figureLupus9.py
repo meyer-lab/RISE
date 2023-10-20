@@ -22,7 +22,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank=40
+    rank = 40
     X = openPf2(rank=rank, dataName="Lupus")
     predict = "SLE_status"
     condStatus = X.obs[["Condition", predict]].drop_duplicates()
