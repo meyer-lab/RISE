@@ -1,12 +1,13 @@
 import seaborn as sns
 import pandas as pd
 import numpy as np
+from matplotlib.axes import Axes
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import RocCurveDisplay, auc
 from sklearn.model_selection import StratifiedGroupKFold
 
 
-def plotPf2RankTest(rank_test_results, ax, error_metric = "accuracy", palette = 'Set1'):
+def plotPf2RankTest(rank_test_results, ax: Axes, error_metric = "accuracy", palette = 'tab10'):
     """Plots results from Pf2 test of various ranks using defined error metric and logistic reg"""
     sns.lineplot(data = rank_test_results, 
                  x = 'rank', y = error_metric, 
@@ -22,7 +23,7 @@ def plotPf2RankTest(rank_test_results, ax, error_metric = "accuracy", palette = 
     ax.set_title(error_metric + ' by Hyperparameter input')
     ax.set(ylim=[-0.05, 1.05])
 
-def plotCmpRegContributions(contribs, predicting: str, ax):  
+def plotCmpRegContributions(contribs, predicting: str, ax: Axes):  
     """Plots weights of components in logistic regression from `getCompContribs`"""
     print(contribs)
     sns.barplot(data = contribs, x = "Component", y = "Weight", color = 'k', errorbar=None, ax = ax)
@@ -30,25 +31,19 @@ def plotCmpRegContributions(contribs, predicting: str, ax):
     ax.set_title('Weight of Pf2 Cmps in Logsitic Regression: Predicting ' + predicting)
     
 
-def plot2CmpRegContributions(contribs, ax):  
+def plot2CmpRegContributions(contribs, ax: Axes):  
     """Plots weights of components in logistic regression from `getCompContribs`"""
     sns.barplot(data = contribs, x = "Component", y = "Weight", hue="Predicting", errorbar=None, ax = ax)
     ax.tick_params(axis="x", rotation=90)
     ax.set_title("Weight of Pf2 Cmps in Logsitic Regression")
 
-def investigate_comp(comp: int, rank: int, obs, proj_B, obs_column, ax, threshold = 0.05):
+
+def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float = 0.05):
     """Makes barplots of the percentages of each observation column (obs_column) that are represented in the top
     contributors to a certain component (comp). Top contributors are determined by having a contribution above `threshold`"""
+    component_string = f"Cmp. {comp}"
+    cmp_n = pd.DataFrame({component_string: X.obsm["weighted_projections"][:, comp - 1], obs_column: X.obs[obs_column]})
 
-    ct = obs[obs_column]
-
-    proj_B = pd.DataFrame(proj_B,
-                 index = obs.index,
-                 columns = [f"Cmp. {i}" for i in np.arange(1, rank + 1)])
-    
-    proj_et_obs = proj_B.merge(ct, left_index=True, right_index=True)
-    component_string = 'Cmp. ' + str(comp)
-    cmp_n = proj_et_obs[[obs_column, component_string]]
     # get just the ones that are "super" positive
     counts_all = cmp_n.groupby(by = obs_column).count().reset_index().rename({component_string:'count'}, axis = 1)
     cmp_n = cmp_n[cmp_n[component_string] > threshold]
@@ -62,16 +57,17 @@ def investigate_comp(comp: int, rank: int, obs, proj_B, obs_column, ax, threshol
     ax.tick_params(axis="x", rotation=90)
     ax.set_title(obs_column + ' Percentages, Threshold: ' + str(threshold) + ' for comp ' + str(comp))
 
-def plot2DSeparationByComp(merged_data, x_y: tuple, hue, ax):
+
+def plot2DSeparationByComp(df, pair: tuple, predict : str, ax: Axes):
     """
     Plots the separation of some observation variable (hue) that is contained in
     the input merged dataframe across two components, passed as two strings in a tuple (x_y)
     that denote the names of the columns to be used for the x and y axes.   
     """
-    sns.scatterplot(data = merged_data, x = x_y[0], y = x_y[1], hue = hue, ax = ax)
+    sns.scatterplot(data=df, x=f"Cmp. {pair[0]}", y=f"Cmp. {pair[1]}", hue=predict, ax = ax)
 
 
-def plotROCAcrossGroups(A_matrix, group_labs, ax, 
+def plotROCAcrossGroups(A_matrix, group_labs, ax: Axes, 
                         pred_group = 'SLE_status',
                         cv_group = 'Processing_Cohort',
                         penalty_type = 'l1',      

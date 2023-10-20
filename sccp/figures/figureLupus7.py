@@ -9,7 +9,6 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # load functions/modules ----
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotLupus import plotROCAcrossGroups
-from ..imports.scRNA import load_lupus_data
 
 
 def makeFigure():
@@ -21,22 +20,17 @@ def makeFigure():
     subplotLabel(ax)
 
     rank = 40
-
-    _, factors, _ = openPf2(rank=rank, dataName="lupus", optProjs=True)
+    X = openPf2(rank, "Lupus")
     predict = "SLE_status"
+    condStatus = X.obs[["Condition", predict, "Processing_Cohort"]].drop_duplicates()
+    condStatus = condStatus.set_index("Condition")
+    
     # predict = "ancestry"
-    
-
-    _, obs = load_lupus_data()
-    status = obs[["sample_ID", predict, "Processing_Cohort"]].drop_duplicates()
-    group_labs = status.set_index("sample_ID")[[predict, "Processing_Cohort"]]
-    A_matrix = factors[0]
-    
-    # group_labs["ancestry"] = np.where(group_labs["ancestry"].isin( ["European"]), group_labs["ancestry"], "Other")
+    # condStatus["ancestry"] = np.where(condStatus["ancestry"].isin(["European"]), condStatus["ancestry"], "Other")
 
     plotROCAcrossGroups(
-        A_matrix,
-        group_labs,
+        X.uns["Pf2_A"],
+        condStatus,
         ax[0],
         pred_group=predict,
         cv_group="Processing_Cohort",

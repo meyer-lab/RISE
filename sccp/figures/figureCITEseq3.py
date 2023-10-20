@@ -1,16 +1,13 @@
 """
 Hamad CITEseq dataset
 """
-import numpy as np
-import pacmap
-
 from .common import (
     subplotLabel,
     getSetup,
-    openPf2,
 )
 from ..imports.citeseq import import_citeseq
 from .commonFuncs.plotUMAP import plotGeneUMAP
+from ..parafac2 import pf2
 
 
 def makeFigure():
@@ -21,21 +18,14 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    _, protDF = import_citeseq()
-    rank = 80
+    X = import_citeseq()
+    X = pf2(X, "Condition", rank=40)
 
-    _, _, projs = openPf2(rank=rank, dataName="CITEseq")
+    names = X.var_names[X.var["feature_types"] == "Antibody Capture"]
 
-    pf2Points = pacmap.PaCMAP().fit_transform(projs)
+    protNames = names[0:24].tolist()
 
-    protNames = np.unique(protDF.drop(columns="Condition").columns)
-
-    # protNames = protNames[0:24]
-    # protNames = protNames[24:48]
-    # protNames = protNames[50:75]
-    # protNames = protNames[75:100]
-    protNames = protNames[100:].tolist()
-
-    plotGeneUMAP(protNames, "Pf2", pf2Points, protDF, ax[0:25])
+    for i, name in enumerate(protNames):
+        plotGeneUMAP(name, "Pf2", X, ax[i])
 
     return f

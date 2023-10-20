@@ -13,7 +13,7 @@ def makeFigure():
 
     rank = 40
 
-    for i in np.arange(0, rank):
-        plotGeneFactors(i + 1, rank, "lupus", ax[2*i: 2*i + 2], geneAmount=5)
+    for i in np.arange(0, 3):
+        plotGeneFactors(i + 1, rank, "Lupus", ax[2*i: 2*i + 2], geneAmount=5)
 
     return f

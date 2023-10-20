@@ -7,6 +7,7 @@ import pandas as pd
 import datashader as ds
 import datashader.transfer_functions as tf
 from matplotlib.patches import Patch
+import anndata
 
 
 def _red(x):
@@ -221,39 +222,55 @@ def points(
 
 
 def plotGeneUMAP(
-    genes: list[str],
-    decomp,
-    umappoints,
-    dataDF: pd.DataFrame,
-    axs: list[Axes]
+    gene: str,
+    decompType: str,
+    X: anndata.AnnData,
+    ax: Axes
 ):
     """Scatterplot of UMAP visualization weighted by gene"""
-    for i, genez in enumerate(genes):
-        geneList = dataDF[genez].to_numpy()
-        geneList = np.clip(geneList, None, np.quantile(geneList, 0.99))
-        plot = points(umappoints, values=geneList, cmap="winter", ax=axs[i])
-        # colorbar = plt.colorbar(psm, ax=plot)
-        axs[i].set(
-            title=genez + "-" + decomp + "-Based Decomposition",
-            ylabel="UMAP2",
-            xlabel="UMAP1",
-        )
-
-
-def plotCmpUMAP(
-    cmp: int, factors: np.ndarray, umappoints: np.ndarray, allP: np.ndarray, ax: Axes
+    geneList = X[:, X.var_names.isin([gene])].X.flatten()
+    geneList = geneList + np.min(geneList)
+    geneList /= np.max(geneList)
+    geneList = np.clip(geneList, None, np.quantile(geneList, 0.99))
+    cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
+    plot = points(X.obsm["embedding"], values=geneList, cmap=cmap, ax=ax)
+    psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
+    colorbar = plt.colorbar(psm, ax=plot)
+    ax.set(
+        title=f"{gene}-{decompType}-Based Decomposition",
+        ylabel="UMAP2",
+        xlabel="UMAP1",
+    )
+    
+def plotCondUMAP(condition: str,
+    decompType: str,
+    XX: anndata.AnnData,
+    ax: Axes
 ):
+    """Scatterplot of UMAP visualization weighted by condition"""
+    X = XX.copy()
+    X.obs["Condition"] = np.array([c if c in condition else " Other Conditions" for c in X.obs["Condition"]])
+    points(
+        X.obsm["embedding"],
+        labels=X.obs["Condition"],
+        ax=ax,
+        color_key_cmap="tab20",
+        show_legend=True,
+    )
+    ax.set(title=f"{decompType}-Based Decomposition", ylabel="UMAP2", xlabel="UMAP1")
+
+def plotCmpUMAP(X, cmp: int,  ax: Axes):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
-    weightedProjs = (allP @ factors)[:, cmp - 1]
+    weightedProjs = X.obsm["weighted_projections"]
+    weightedProjs = weightedProjs[:, cmp - 1]
     weightedProjs = weightedProjs / np.max(np.abs(weightedProjs)) * 2.0
 
     cmap = sns.diverging_palette(240, 10, as_cmap=True, s=100)
-    plot = points(umappoints, values=weightedProjs, cmap=cmap, ax=ax)
+    plot = points(X.obsm["embedding"], values=weightedProjs, cmap=cmap, ax=ax)
 
     psm = plt.pcolormesh([[-1, 1], [-1, 1]], cmap=cmap)
     plt.colorbar(psm, ax=plot, label="Cell Specific Weight")
-
     ax.set(ylabel="UMAP2", xlabel="UMAP1", title="Cmp. " + str(cmp))
 
 
@@ -267,22 +284,30 @@ def plotUMAP_obslabel(labels, umappoints: np.ndarray, ax: Axes):
     )
 
 
-def plotLabelAllUMAP(conditions, umappoints: np.ndarray, ax: Axes):
+def plotAllLabelsUMAP(X: anndata.AnnData,
+                      labelType: str,
+    ax: Axes
+):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
-    points(umappoints, labels=conditions, ax=ax, color_key_cmap="tab20", show_legend=True)
+    points(X.obsm["embedding"], labels=X.obs[labelType], ax=ax, color_key_cmap="tab20", show_legend=True)
     ax.set(title="Pf2-Based Decomposition", ylabel="UMAP2", xlabel="UMAP1")
 
 
-def plotCmpPerCellType(weightedprojs, cmp, ax: Axes, outliers=True):
+def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers=False):
     """Boxplot of weighted projections for one component across cell types"""
-    cmpName = "Cmp. " + str(cmp)
+    XX = X.obsm["weighted_projections"]
+    XX = XX[:, cmp-1]
+    cmpName = f"Cmp. {cmp}"
+    cellTypes = X.obs["Cell Type"]
+    df = pd.DataFrame(data=np.transpose(np.vstack((XX,cellTypes))), columns=[cmpName, "Cell Type"])
+ 
     sns.boxplot(
-        data=weightedprojs[[cmpName, "Cell Type"]],
+        data=df,
         x=cmpName,
         y="Cell Type",
         showfliers=outliers,
         ax=ax,
     )
     maxvalue = np.max(np.abs(ax.get_xticks()))
-    ax.set(xlim=(-maxvalue, maxvalue), xlabel="Cell Specific Weight")
+    ax.set(xticks=np.linspace(-maxvalue, maxvalue, num=5), xlabel="Cell Specific Weight")
     ax.set_title(cmpName)

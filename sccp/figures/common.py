@@ -11,7 +11,7 @@ from matplotlib import gridspec, pyplot as plt
 import numpy as np
 import pandas as pd
 from .commonFuncs.plotFactors import reorder_table
-from ..parafac2 import Pf2X
+import anndata
 
 
 matplotlib.use("AGG")
@@ -76,92 +76,14 @@ def genFigure():
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
 
-def savePf2(weight, factors, projs, dataName: str):
+def savePf2(X: anndata.AnnData, rank: int, dataName: str):
     """Saves weight factors and projections for one dataset for a component"""
-    rank = len(weight)
-    np.save(f"./sccp/data/{dataName}/{dataName}_WeightCmp{rank}.npy", weight)
+    X.write(f"/opt/andrew/{dataName}_analyzed_{rank}comps.h5ad", compression="gzip")
+    
 
-    factor = ["A", "B", "C"]
-    for i in range(3):
-        np.save(
-            f"./sccp/data/{dataName}/{dataName}_Factor{factor[i]}Cmp{rank}.npy",
-            factors[i],
-        )
-
-    np.save(
-        f"./sccp/data/{dataName}/{dataName}_ProjCmp{rank}.npy",
-        np.concatenate(projs, axis=0),
-    )
-
-
-def openPf2(rank: int, dataName: str, optProjs: bool=False):
+def openPf2(rank: int, dataName: str) -> anndata.AnnData:
     """Opens weight factors and projections for one dataset for a component as numpy arrays"""
-    weight = np.load(
-        f"./sccp/data/{dataName}/{dataName}_WeightCmp{rank}.npy",
-        allow_pickle=True,
-    )
-    factors = [
-        np.load(
-            f"./sccp/data/{dataName}/{dataName}_FactorACmp{rank}.npy",
-            allow_pickle=True,
-        ),
-        np.load(
-            f"./sccp/data/{dataName}/{dataName}_FactorBCmp{rank}.npy", allow_pickle=True
-        ),
-        np.load(
-            f"./sccp/data/{dataName}/{dataName}_FactorCCmp{rank}.npy",
-            allow_pickle=True,
-        ),
-    ]
-
-    if optProjs is False:
-        projs = np.load(
-            f"./sccp/data/{dataName}/{dataName}_ProjCmp{rank}.npy",
-            allow_pickle=True,
-        )
-    else:
-         projs = np.load(
-            f"/opt/andrew/{dataName}/{dataName}_ProjCmp"+str(rank)+".npy", 
-            allow_pickle=True)
-        
-
-    return weight, factors, projs
-
-
-def flattenData(data: Pf2X) -> pd.DataFrame:
-    """Flattens tensor into dataframe"""
-    condNames = np.empty([])
-
-    for i in range(len(data.X_list)):
-        condNames = np.append(
-            condNames, np.repeat(data.condition_labels[i], data.X_list[i].shape[0])
-        )
-        
-    flatData = np.concatenate(data.X_list, axis=0)
-    dataDF = pd.DataFrame(data=flatData, columns=data.variable_labels)
-    dataDF["Condition"] = condNames[1::]
-
-    return dataDF
-
-
-def flattenWeightedProjs(data: Pf2X, factors: np.ndarray, projs: np.ndarray) -> pd.DataFrame:
-    """Flattens tensor into dataframe"""
-    condNames = np.empty([])
-
-    for i in range(len(data.X_list)):
-        condNames = np.append(
-            condNames, np.repeat(data.condition_labels[i], data.X_list[i].shape[0])
-        )
-
-    weightedProjs = projs @ factors
-
-    weightedProjs = weightedProjs / np.max(np.abs(weightedProjs))
-
-    cmpNames = [f"Cmp. {i}" for i in np.arange(1, weightedProjs.shape[1] + 1)]
-    dataDF = pd.DataFrame(data=weightedProjs, columns=cmpNames)
-    dataDF["Condition"] = condNames[1::]
-
-    return dataDF
+    return anndata.read_h5ad(f"/opt/andrew/{dataName}_analyzed_{rank}comps.h5ad")  
 
 
 def saveGeneFactors(factors, data, dataName):
@@ -205,9 +127,3 @@ def saveGeneFactors(factors, data, dataName):
 
         dfTop.to_csv(f"/opt/andrew/{dataName}/{dataName}TopGenes_Cmp{rank}.csv")
         dfBot.to_csv(f"/opt/andrew/{dataName}/{dataName}BotGenes_Cmp{rank}.csv")
-
-
-def repeatLabels(condLabels, data, dataDF):
-    """Repeats a label in original AnnData file"""
-    cellCount = dataDF.groupby(["Condition"]).size().values
-    return [np.repeat(condLabels[i], cellCount[i]) for i in range(len(data.X_list))]

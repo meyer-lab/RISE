@@ -1,18 +1,15 @@
 """
 Hamad CITEseq dataset
 """
-import numpy as np
-import pacmap
-
 from .common import (
     subplotLabel,
     getSetup,
-    openPf2,
 )
 from ..imports.citeseq import import_citeseq
 from .commonFuncs.plotUMAP import (
     plotCmpUMAP,
 )
+from ..parafac2 import pf2
 
 
 def makeFigure():
@@ -22,17 +19,11 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-    rank = 80
 
-    _, factors, projs = openPf2(rank=rank, dataName="CITEseq")
+    X = import_citeseq()
+    X = pf2(X, "Condition", rank=40)
 
-    pf2Points = pacmap.PaCMAP().fit_transform(projs)
-
-    component = np.arange(1, 25, 1)
-
-    for i in range(len(component)):
-        plotCmpUMAP(
-            component[i], factors[1], pf2Points, projs, ax[i]
-        )
+    for i in range(25):
+        plotCmpUMAP(X, i + 1, ax[i])
 
     return f

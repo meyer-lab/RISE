@@ -9,8 +9,6 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 
 # load functions/modules ----
 from .common import subplotLabel, getSetup, openPf2
-
-from ..imports.scRNA import load_lupus_data
 from ..logisticReg import getPf2ROC
 from sklearn.metrics import RocCurveDisplay
 
@@ -24,36 +22,19 @@ def makeFigure():
     subplotLabel(ax)
 
     rank = 40
+    X = openPf2(rank, "Lupus")
+    condStatus = X.obs[["Condition", "SLE_status", "Processing_Cohort", "patient"]].drop_duplicates()
+    condStatus = condStatus.set_index("Condition")
 
-    _, obs = load_lupus_data()
-
-    status = obs[
-        ["sample_ID", "SLE_status", "Processing_Cohort", "patient"]
-    ].drop_duplicates()
-
-    group_labs = status.set_index("sample_ID")
-
-    (
-        _,
-        factors,
-        _,
-    ) = openPf2(rank=rank, dataName="lupus", optProjs=True)
-
-    A_matrix = factors[0]
-
-    # only doing 50 because that is the penalty we used when we chose 40 as an optimal component number
     penalties_to_test = [50]
-
     # get test data, and decisions made by the trained model corresponding to those test data
-    y_test, sle_decisions = getPf2ROC(
-        A_matrix, group_labs, rank, penalties_to_test=penalties_to_test, 
-    )
+    y_test, sle_decisions = getPf2ROC(X.uns["Pf2_A"], condStatus, rank, penalties_to_test=penalties_to_test)
 
     # make plot of ROC AUC
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label="SLE", plot_chance_level=True, ax=ax[0]
     )
 
-    ax[0].set_title("OOS ROC for Cases/Controls: " + str(rank) + " Component LASSO")
+    ax[0].set_title("OOS ROC: " + str(rank) + " Component LASSO")
 
     return f

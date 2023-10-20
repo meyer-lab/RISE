@@ -7,7 +7,7 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # GOAL: Test various Pf2 ranks to see which best predicts disease status
 
 # load functions/modules ----
-from ..imports.scRNA import load_lupus_data
+from ..imports.scRNA import import_lupus
 from ..logisticReg import testPf2Ranks
 from .common import (
     subplotLabel,
@@ -23,19 +23,16 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
+    
+    X = import_lupus()
+    condStatus = X.obs[["Condition", "SLE_status", "Processing_Cohort"]].drop_duplicates()
+    condStatus = condStatus.set_index("Condition")
 
-    lupus_tensor, obs = load_lupus_data()
-
-    status = obs[["sample_ID", "SLE_status", "Processing_Cohort"]].drop_duplicates()
-
-    group_labs = status.set_index("sample_ID")[["SLE_status", "Processing_Cohort"]]
-
-    ranks_to_test = [2, 3]  # set to 2,3 for github test
-
+    rank = [2, 3] 
     results = testPf2Ranks(
-        lupus_tensor,
-        group_labs,
-        ranks_to_test,
+        X,
+        condStatus,
+        rank,
         cv_group="Processing_Cohort",
     )
 

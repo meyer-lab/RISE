@@ -7,35 +7,25 @@ from .commonFuncs.plotFactors import (
     plotFactors,
     plotWeight,
 )
-from ..imports.scRNA import ThompsonXA_SCGenes
-from parafac2 import parafac2_nd
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((18, 16), (2, 2))
+    ax, f = getSetup((18, 16), (2, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
     # Import of single cells: [Drug, Cell, Gene]
-    data = ThompsonXA_SCGenes()
     rank = 30
+    X = openPf2(rank, "Thomson")
 
-    # weight, factors, projs, _ = parafac2_nd(
-    #     data,
-    #     rank=rank,
-    #     random_state=1,
-    # )
+    factors = [X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"]]
+    plotFactors(factors, X, ax[0:3], reorder=(0, 2), trim=(2,))
+    plotWeight(X.uns["Pf2_weights"], ax[3])
 
-    # savePf2(weight, factors, projs, "Thomson")
-    weight, factors, _ = openPf2(rank, "Thomson")
-
-    plotFactors(factors, data, ax[0:3], reorder=(0, 2), trim=(2,))
-    plotWeight(weight, ax[3])
-
-    # plotCV(data, rank+3, trainPerc=0.75, ax=ax[2])
-    # plotR2X(data, rank+3, ax=ax[3])
+    # plotCV(X_pf, rank+1, trainPerc=0.75, ax=ax[4])
+    # plotR2X(X_pf, rank+1, ax=ax[5])
 
     return f

@@ -5,10 +5,7 @@ from .common import (
     subplotLabel,
     getSetup,
     openPf2,
-    flattenData,
-    flattenWeightedProjs,
 )
-from ..imports.scRNA import ThompsonXA_SCGenes
 from ..imports.gating import gateThomsonCells
 import numpy as np
 import pandas as pd
@@ -24,28 +21,19 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # Import of single cells: [Drug, Cell, Gene]
-    data = ThompsonXA_SCGenes()
-    dataDF = flattenData(data)
-
+    # Import data
     rank = 30
-    dataDF["Cell Type"] = gateThomsonCells()
-
-    _, factors, projs = openPf2(rank, "Thomson")
-
-    weightedProjDF = flattenWeightedProjs(data, factors[1], projs)
-    weightedProjDF["Cell Type"] = dataDF["Cell Type"].values
-    weightedProjDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
-    dataDF.sort_values(by=["Condition", "Cell Type"], inplace=True)
+    X = openPf2(rank, "Thomson")
+    
+    X.obs["Cell Type"] = gateThomsonCells(X)
     
     threshold = -.3
     cmp = 20
-    # Wass_KL_Dist(threshold, cmp, data, dataDF, weightedProjDF, ax[0:2])
+    # TODO: Rewrite for matrix
+    # Wass_KL_Dist(X, threshold, cmp, ax[0:2])
     # -.3 for b cells that are more greater
 
     return f
-
-
 
 
 def Wass_KL_Dist(threshold, cmp, data, dataDF, weightedProjDF, ax, numFactors=10):
@@ -82,8 +70,6 @@ def Wass_KL_Dist(threshold, cmp, data, dataDF, weightedProjDF, ax, numFactors=10
         distOffTarg = np.exp(kdeOffTarg.score_samples(outcomes))
         KL_div = stats.entropy(distOffTarg.flatten() + 1e-200, distTarg.flatten() + 1e-200, base=2)
         markerDF = pd.concat([markerDF, pd.DataFrame({"Marker": [gene], "Wasserstein Distance": stats.wasserstein_distance(targCells, offCells), "KL Divergence": KL_div})])
-        
-    print(markerDF)
         
     for i, distance in enumerate(["Wasserstein Distance", "KL Divergence"]):
         ratioDF = markerDF.sort_values(by=distance)

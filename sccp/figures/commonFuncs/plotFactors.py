@@ -3,13 +3,12 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
-from ...parafac2 import Pf2X
 from matplotlib.patches import Patch
 import pandas as pd
 
 
 
-def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), cond_group_labels= None):
+def plotFactors(factors, data, axs, reorder=tuple(), trim=tuple(), cond_group_labels= None):
     """Plots parafac2 factors."""
     pd.set_option('display.max_rows', None)
     rank = factors[0].shape[1]
@@ -18,13 +17,13 @@ def plotFactors(factors, data: Pf2X, axs, reorder=tuple(), trim=tuple(), cond_gr
     for i in range(3):
         # The single cell mode has a square factors matrix
         if i == 0:
-            yt = data.condition_labels.tolist()
+            yt = np.unique(data.obs["Condition"])
             title = "Components by Condition"
         elif i == 1:
             yt = [f"Cell State {i}" for i in np.arange(1, rank + 1)]
             title = "Components by Cell State"
         else:
-            yt = data.variable_labels.tolist()
+            yt = data.var.to_numpy()
             title = "Components by Gene"
 
         X = factors[i]
@@ -90,7 +89,7 @@ def reorder_table(projs):
     return projs[index, :], index
 
 
-def plotWeight(weight, ax):
+def plotWeight(weight: np.ndarray, ax):
     """Plots weights from Pf2 model"""
     df = pd.DataFrame(data=np.transpose([weight]), columns=["Value"])
     df["Value"] = df["Value"]/np.max(df["Value"])

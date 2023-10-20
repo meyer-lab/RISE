@@ -7,12 +7,13 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # GOAL: test Pf2 on lupus data, get visualizations for factor matrices
 
 # load functions/modules ----
-from .common import subplotLabel, getSetup, openPf2
+from .common import subplotLabel, getSetup, openPf2, savePf2
 from .commonFuncs.plotFactors import (
     plotFactors,
     plotWeight,
 )
-from ..imports.scRNA import load_lupus_data
+from ..imports.scRNA import import_lupus
+from ..parafac2 import pf2
 
 
 def makeFigure():
@@ -24,33 +25,19 @@ def makeFigure():
     subplotLabel(ax)
 
     rank = 40
-    group_to_label = "SLE_status"  # group to label on left side of factor A plot
+    # X = import_lupus()
+    # X = pf2(X, "Condition", rank=rank)
+    # savePf2(X, rank, "Lupus")
+    X = openPf2(rank, "Lupus")
+    lupusStatus = X.obs[["Condition", "SLE_status"]].drop_duplicates("Condition")
+    lupusStatus = lupusStatus.set_index("Condition")["SLE_status"]
 
-    (
-        lupus_tensor,
-        obs,
-    ) = load_lupus_data()
-
-    status = obs[["sample_ID", group_to_label]].drop_duplicates("sample_ID")
-
-    # make sure that these two are in the same order
-    bool = status["sample_ID"] == lupus_tensor.condition_labels
-    assert bool.mean() == 1.0
-
-    group_labs = status.set_index("sample_ID")[group_to_label]
-
-    weights, factors, _ = openPf2(rank=rank, dataName="lupus", optProjs=True)
-
-    plotFactors(
-        factors,
-        lupus_tensor,
-        ax[0:3],
-        reorder=(0, 2),
-        trim=(2,),
-        cond_group_labels=group_labs,
-    )
-
-    plotWeight(weights, ax[3])
-    ax[3].set_title("Weight of Each Component")
+    factors = [X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"]]
+    plotFactors(factors, X, ax[0:3], reorder=(0, 2), trim=(2,), cond_group_labels=lupusStatus)
+    plotWeight(X.uns["Pf2_weights"], ax[3])
+    
+    # X_pf = tensorFy(X, "Condition")
+    # plotCV(X_pf, rank+1, trainPerc=0.75, ax=ax[4])
+    # plotR2X(X_pf, rank+1, ax=ax[5])
 
     return f

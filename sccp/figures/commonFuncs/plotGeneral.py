@@ -93,6 +93,7 @@ def plotGenePerCellType(genes, dataDF, ax):
 
 def plotGenePerCategCond(conds, categoryCond, genes, dataDF, axs, mean=True):
     """Plots average gene expression across cell types for a category of drugs"""
+    
     df = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
             columns={"variable": "Gene", "value": "Value"})
     if mean is True:
@@ -119,9 +120,9 @@ def plotGeneFactors(cmp, rank, dataName, axs, geneAmount=20):
     axs[1].tick_params(axis="x", rotation=90)
 
 
-def plotGenePerCategStatus(cmp, dataDF, rank, dataName, axs, geneAmount=5):
+def plotGenePerCategStatus(X, cmp, rank, dataName, axs, geneAmount=5):
     """Plotting weights for gene factors for both most negatively/positively weighted terms"""
-    df = pd.read_csv("sccp/data/"+dataName+"/"+dataName+"TopBotGenes_Cmp"+str(rank)+".csv").rename(columns={"Unnamed: 0": "Gene"})
+    df = pd.read_csv(f"sccp/data/{dataName}/{dataName}TopBotGenes_Cmp{rank}.csv").rename(columns={"Unnamed: 0": "Gene"})
     cmpName = "Cmp. " + str(cmp)
     df = df[["Gene", cmpName]].sort_values(by=[cmpName])
     botGenes = df.iloc[:geneAmount,:]
@@ -129,11 +130,16 @@ def plotGenePerCategStatus(cmp, dataDF, rank, dataName, axs, geneAmount=5):
 
     genes = [botGenes["Gene"].values, np.flip(topGenes["Gene"].values)]
     axNumb = 0
+    dataDF = pd.DataFrame(data=pd.concat([X[:, np.concatenate(genes)].to_df(), 
+                                          X.obs["Condition"].to_frame(), 
+                                          X.obs["Cell Type"].to_frame(), 
+                                          X.obs["SLE_status"].to_frame()], axis=1))
+    dataDF.rename(columns={"SLE_status": "Status"}, inplace=True)
     
     for i in range(2):
         data = pd.melt(dataDF, id_vars=["Condition", "Status", "Cell Type"], value_vars=genes[i]).rename(
             columns={"variable": "Gene", "value": "Value"})
-        df = data.groupby(["Condition","Status", "Cell Type", "Gene"]).mean()
+        df = data.groupby(["Condition", "Status", "Cell Type", "Gene"]).mean()
         df = df.rename(columns={"Value": "Average Gene Expression For Drugs"}).reset_index()
         for j, gene in enumerate(genes[i]):
             sns.boxplot(data=df.loc[df["Gene"] == gene], x="Cell Type", y="Average Gene Expression For Drugs", hue="Status", showfliers=False, ax=axs[axNumb])

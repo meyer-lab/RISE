@@ -9,7 +9,6 @@ data: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE174188
 # load functions/modules ----
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotLupus import plotCmpRegContributions, plot2CmpRegContributions
-from ..imports.scRNA import load_lupus_data
 from ..logisticReg import getCompContribs
 import numpy as np
 import pandas as pd
@@ -23,27 +22,22 @@ def makeFigure():
     subplotLabel(ax)
 
     rank = 40
-    group_to_predict = "SLE_status"  # group to predict in logistic regression
-    _, obs = load_lupus_data()
-    status = obs[["sample_ID", group_to_predict]].drop_duplicates()
-    group_labs = status.set_index("sample_ID")[group_to_predict]
+    predict = "SLE_status" 
+    X = openPf2(rank, "Lupus")
+    condStatus = X.obs[["Condition", predict]].drop_duplicates()
+    condStatus = condStatus.set_index("Condition")
+    contribsStatus = getCompContribs(X.uns["Pf2_A"], condStatus.to_numpy(), penalty_amt=50)
+    plotCmpRegContributions(contribsStatus, predict, ax[0])
 
-    _, factors, _ = openPf2(rank=rank, dataName="lupus", optProjs=True)
 
-    A_matrix = factors[0]
-    contribsStatus = getCompContribs(A_matrix, group_labs.to_numpy(), penalty_amt=50)
-    plotCmpRegContributions(contribsStatus, group_to_predict, ax[0])
-
+    predict = "ancestry"  
+    condStatus = X.obs[["Condition", predict]].drop_duplicates()
+    condStatus = condStatus.set_index("Condition")
+    condStatus[predict] = np.where(condStatus[predict].isin(["European"]), condStatus[predict], "Other")
+    contribsAnc = getCompContribs(X.uns["Pf2_A"], condStatus[predict].to_numpy(), penalty_amt=50)
+    
     contribsStatus["Predicting"] = np.repeat("SLE Status", contribsStatus.shape[0])
-
-    group_to_predict = "ancestry"  # group to predict in logistic regression
-    status = obs[["sample_ID", group_to_predict]].drop_duplicates()
-    group_labs = status.set_index("sample_ID")
-    group_labs[group_to_predict] = np.where(group_labs[group_to_predict].isin(["European"]), group_labs[group_to_predict], "Other")
-
-    contribsAnc = getCompContribs(A_matrix, group_labs[group_to_predict].to_numpy(), penalty_amt=50)
     contribsAnc["Predicting"] = np.repeat("Euro-Ancestry", contribsAnc.shape[0])
-
     plot2CmpRegContributions(pd.concat([contribsStatus,contribsAnc]), ax[1])
 
     return f
