@@ -24,6 +24,7 @@ openpyxl = "^3.1.2"
 parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "eb55e918cfcd52d0cedc4e359f54d267e112d89a" }
 scanpy = "^1.9.5"
 pacmap = "^0.7.1"
+leidenalg = "^0.10.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.3"
