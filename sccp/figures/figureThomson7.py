@@ -1,7 +1,6 @@
 """
-Investigation of raw data for Thomson dataset
+Thomson dataset: Cell counts and cell type percentages per condition.
 """
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup, openPf2
@@ -20,33 +19,31 @@ def makeFigure():
     rank = 30
     X = openPf2(rank, "Thomson")
 
-    dataDF = pd.DataFrame(
+    df = pd.DataFrame(
         {"Cell Type": gateThomsonCells(X), "Condition": X.obs["Condition"]}
     )
 
-    dfCond = dataDF.groupby(["Condition"]).size().reset_index(name="Cell Number")
+    # Per condition counts
+    dfCond = df.groupby(["Condition"]).size().reset_index(name="Cell Number")
     sns.histplot(data=dfCond, x="Cell Number", bins=15, color="k", ax=ax[0])
     ax[0].set(ylabel="# of Experiments")
 
-    dfCellType = (
-        dataDF.groupby(["Cell Type", "Condition"]).size().reset_index(name="Count")
+    # Per condition cell type percentages
+    dfCellType = df.groupby(["Cell Type", "Condition"]).size().reset_index(name="Count")
+    dfCellType["Cell Type Percentage"] = (
+        100
+        * dfCellType["Count"]
+        / dfCellType.groupby("Condition")["Count"].transform("sum")
     )
-    for i, cond in enumerate(pd.unique(dataDF["Condition"])):
-        dfCellType.loc[dfCellType["Condition"] == cond, "Count"] = (
-            100
-            * dfCellType.loc[dfCellType["Condition"] == cond, "Count"].to_numpy()
-            / dfCond.loc[dfCond["Condition"] == cond]["Cell Number"].to_numpy()
-        )
 
-    dfCellType.rename(columns={"Count": "Cell Type Percentage"}, inplace=True)
-    for i, celltype in enumerate(np.unique(dfCellType["Cell Type"])):
+    for i, (name, group) in enumerate(dfCellType.groupby("Cell Type")):
         sns.histplot(
-            data=dfCellType.loc[dfCellType["Cell Type"] == celltype],
+            data=group,
             x="Cell Type Percentage",
             bins=15,
             color="k",
             ax=ax[i + 1],
         )
-        ax[i + 1].set(title=celltype, ylabel="# of Experiments")
+        ax[i + 1].set(title=name, ylabel="# of Experiments", xlim=(0.0, group["Cell Type Percentage"].max()))
 
     return f
