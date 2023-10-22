@@ -25,17 +25,9 @@ def plotPf2RankTest(rank_test_results, ax: Axes, error_metric = "accuracy", pale
 
 def plotCmpRegContributions(contribs, predicting: str, ax: Axes):  
     """Plots weights of components in logistic regression from `getCompContribs`"""
-    print(contribs)
     sns.barplot(data = contribs, x = "Component", y = "Weight", color = 'k', errorbar=None, ax = ax)
     ax.tick_params(axis="x", rotation=90)
     ax.set_title('Weight of Pf2 Cmps in Logsitic Regression: Predicting ' + predicting)
-    
-
-def plot2CmpRegContributions(contribs, ax: Axes):  
-    """Plots weights of components in logistic regression from `getCompContribs`"""
-    sns.barplot(data = contribs, x = "Component", y = "Weight", hue="Predicting", errorbar=None, ax = ax)
-    ax.tick_params(axis="x", rotation=90)
-    ax.set_title("Weight of Pf2 Cmps in Logsitic Regression")
 
 
 def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float = 0.05):

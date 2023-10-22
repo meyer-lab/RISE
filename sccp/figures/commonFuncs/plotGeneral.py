@@ -1,7 +1,6 @@
 import numpy as np 
 import pandas as pd
 import seaborn as sns
-from matplotlib import gridspec, pyplot as plt
 from ...crossVal import CrossVal
 from ...decomposition import R2X
 

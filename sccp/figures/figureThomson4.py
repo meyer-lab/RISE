@@ -3,7 +3,7 @@ Thomson: Compares PCA and Pf2 UMAP labeled by genes and drugs
 """
 from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup, openPf2
-from .commonFuncs.plotUMAP import plotGeneUMAP, plotCondUMAP
+from .commonFuncs.plotUMAP import plotGeneUMAP, plotLabelsUMAP
 import pacmap
 
 
@@ -23,8 +23,9 @@ def makeFigure():
         plotGeneUMAP(gene, "Pf2", X, ax[i])
 
     drugs = ["Triamcinolone Acetonide", "Alprostadil"]
-    for i, drug in enumerate(drugs):
-        plotCondUMAP(drug, "Pf2", X, ax[i + 2])
+
+    plotLabelsUMAP(X, "Condition", ax[2], drugs)
+    ax[2].set(title=f"Pf2-Based Decomposition")
 
     # PCA dimension reduction
     pc = PCA(n_components=rank)
@@ -34,7 +35,7 @@ def makeFigure():
     for i, gene in enumerate(genes):
         plotGeneUMAP(gene, "PCA", X, ax[i + 4])
 
-    for i, drug in enumerate(drugs):
-        plotCondUMAP(drug, "PCA", X, ax[i + 6])
+    plotLabelsUMAP(X, "Condition", ax[6], drugs)
+    ax[6].set(title=f"PCA-Based Decomposition")
 
     return f

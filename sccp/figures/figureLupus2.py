@@ -2,7 +2,7 @@
 Lupus: UMAP labeled by cell type
 """
 from .common import subplotLabel, getSetup, openPf2
-from .commonFuncs.plotUMAP import plotAllLabelsUMAP
+from .commonFuncs.plotUMAP import plotLabelsUMAP
 
 
 def makeFigure():
@@ -16,6 +16,6 @@ def makeFigure():
     rank = 40
     X = openPf2(rank, "Lupus")
 
-    plotAllLabelsUMAP(X, "Cell Type", ax[0])
+    plotLabelsUMAP(X, "Cell Type", ax[0])
 
     return f

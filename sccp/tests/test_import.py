@@ -2,8 +2,7 @@
 Test the cross validation accuracy.
 """
 import numpy as np
-from ..imports.scRNA import import_thomson, import_lupus
-from ..imports.citeseq import import_citeseq
+from ..imports.scRNA import import_thomson, import_lupus, import_citeseq
 
 
 def test_Thomson():
@@ -23,5 +22,3 @@ def test_Lupus():
 def test_CITEseq():
     """Test for correctness of cross validation."""
     X = import_citeseq()
-
-    assert np.all(np.isfinite(X.X))

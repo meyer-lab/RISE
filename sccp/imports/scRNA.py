@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import anndata
+import scanpy as sc
 
 
 def import_thomson() -> anndata.AnnData:
@@ -21,7 +22,7 @@ def import_thomson() -> anndata.AnnData:
     # h5ad is simplified version of mtx format
     # import scanpy as sc
     # data = sc.read_10x_mtx("./sccp/data/", var_names='gene_symbols', make_unique=True)
-    # data.X = data.X.todense()
+    # data.X = data.X.toarray()
     # data = data[:, np.mean(data.X > 0, axis=0) > 0.001]
     # data.write('thompson.h5ad', compression="gzip")
     X = anndata.read_h5ad("/opt/andrew/thomson.h5ad")
@@ -83,11 +84,34 @@ def import_lupus() -> anndata.AnnData:
 
     X = X[ptIDX, :]
 
-    # X.X = X.X.todense()
+    # X.X = X.X.toarray()
     # X.write('lupus.h5ad', compression="gzip")
     # X = anndata.read_h5ad("/opt/andrew/thomson.h5ad")
 
     # Center the genes
     X.X -= np.mean(X.X, axis=0)
+
+    return X
+
+
+def import_citeseq() -> anndata.AnnData:
+    """Imports 5 datasets from Hamad CITEseq."""
+    files = ["control", "ic_pod1", "ic_pod7", "sc_pod1", "sc_pod7"]
+
+    data = {
+        k: sc.read_10x_mtx("/opt/andrew/HamadCITEseq/" + k, gex_only=False, make_unique=True) for k in files
+    }
+    X = anndata.concat(data, merge="same", label="Condition")
+
+    sc.pp.filter_genes(X, min_cells=100)
+    sc.pp.normalize_total(X)
+    sc.pp.log1p(X)
+    sc.pp.highly_variable_genes(X, n_top_genes=4000)
+
+    X = X[:, X.var["highly_variable"]]
+
+    # Center and read normalize the genes
+    X.X /= np.sum(X.X, axis=0)
+    X.X = X.X.tocsr()
 
     return X

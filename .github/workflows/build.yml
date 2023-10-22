@@ -1,9 +1,6 @@
 name: Build
 
-on:
-  push:
-    branches:
-      - main
+on: push
 concurrency: gpu
 
 jobs:
@@ -14,10 +11,10 @@ jobs:
     - name: Install dependencies
       run: poetry install
     - name: Build figures
-      run: make all
+      run: make all -j 2
     - name: Upload files
       uses: actions/upload-artifact@v3
       with:
         name: files
         path: |
-          output/*.png
+          output/*.svg
