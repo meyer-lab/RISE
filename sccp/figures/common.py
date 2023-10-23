@@ -8,9 +8,6 @@ import seaborn as sns
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib import gridspec, pyplot as plt
-import numpy as np
-import pandas as pd
-from .commonFuncs.plotFactors import reorder_table
 import anndata
 
 
@@ -72,7 +69,9 @@ def genFigure():
 
     exec(f"from sccp.figures.{nameOut} import makeFigure", globals())
     ff = makeFigure()
-    ff.savefig(f"./output/{nameOut}.svg", dpi=300, bbox_inches="tight", pad_inches=0)
+
+    if ff is not None:
+        ff.savefig(f"./output/{nameOut}.svg", dpi=300, bbox_inches="tight", pad_inches=0)
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 
@@ -86,46 +85,3 @@ def savePf2(X: anndata.AnnData, dataName: str):
 def openPf2(rank: int, dataName: str) -> anndata.AnnData:
     """Opens weight factors and projections for one dataset for a component as numpy arrays"""
     return anndata.read_h5ad(f"/opt/andrew/{dataName}_analyzed_{rank}comps.h5ad")
-
-
-def saveGeneFactors(factors, data, dataName):
-    """Saves genes factors based on weight."""
-    rank = factors[0].shape[1]
-    yt = data.variable_labels
-    X = factors[2]
-
-    max_weight = np.max(np.abs(X), axis=1)
-    kept_idxs = max_weight > 0.08
-    X = X[kept_idxs]
-    yt = yt[kept_idxs]
-
-    X, ind = reorder_table(X)
-    yt = yt[ind]
-
-    X = X / np.max(np.abs(X))
-
-    if len(yt) > 40:
-        df = pd.DataFrame(
-            data=X, index=yt, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-        )
-        df.to_csv(f"/opt/andrew/{dataName}/{dataName}TopBotGenes_Cmp{rank}.csv")
-
-        geneAmount = 20
-        genesTop = np.empty((geneAmount, X.shape[1]), dtype="<U10")
-        genesBottom = np.empty((geneAmount, X.shape[1]), dtype="<U10")
-        sort_idx = np.argsort(X, axis=0)
-
-        for j in range(rank):
-            sortGenes = yt[sort_idx[:, j]]
-            genesTop[:, j] = np.flip(sortGenes[-geneAmount:])
-            genesBottom[:, j] = sortGenes[:geneAmount]
-
-        dfTop = pd.DataFrame(
-            data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-        )
-        dfBot = pd.DataFrame(
-            data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-        )
-
-        dfTop.to_csv(f"/opt/andrew/{dataName}/{dataName}TopGenes_Cmp{rank}.csv")
-        dfBot.to_csv(f"/opt/andrew/{dataName}/{dataName}BotGenes_Cmp{rank}.csv")

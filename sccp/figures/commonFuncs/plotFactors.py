@@ -93,7 +93,7 @@ def plotFactors(
         axs[i].tick_params(axis="y", rotation=0)
 
 
-def reorder_table(projs):
+def reorder_table(projs: np.ndarray):
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2
     Z = sch.linkage(projs, method="centroid", optimal_ordering=True)
