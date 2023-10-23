@@ -4,7 +4,7 @@ Thomson dataset: Cell counts and cell type percentages per condition.
 import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup, openPf2
-from ..imports.gating import gateThomsonCells
+from ..gating import gateThomsonCells
 
 
 def makeFigure():
@@ -43,6 +43,10 @@ def makeFigure():
             color="k",
             ax=ax[i + 1],
         )
-        ax[i + 1].set(title=name, ylabel="# of Experiments", xlim=(0.0, group["Cell Type Percentage"].max()))
+        ax[i + 1].set(
+            title=name,
+            ylabel="# of Experiments",
+            xlim=(0.0, group["Cell Type Percentage"].max()),
+        )
 
     return f

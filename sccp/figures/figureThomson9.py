@@ -4,7 +4,7 @@ Thomson: Boxplots of weighted projectoins per component
 import numpy as np
 from .common import getSetup, openPf2
 from .commonFuncs.plotUMAP import plotCmpPerCellType
-from ..imports.gating import gateThomsonCells
+from ..gating import gateThomsonCells
 
 
 def makeFigure():

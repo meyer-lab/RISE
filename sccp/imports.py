@@ -4,40 +4,44 @@ import anndata
 import scanpy as sc
 
 
+def prepare_dataset(X):
+    assert np.amin(X.X) == 0.0
+
+    sc.pp.normalize_total(X)
+    sc.pp.log1p(X)
+    sc.pp.highly_variable_genes(X, n_top_genes=4000)
+
+    X = X[:, X.var["highly_variable"]]
+
+    # Read normalize the genes
+    X.X /= np.sum(X.X, axis=0)
+    X.X = X.X.tocsr()
+
+    print(X.shape)
+    print(X.X.nnz / X.X.shape[0] / X.X.shape[1])
+    return X
+
+
 def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
     # Cell barcodes, sample id of treatment and sample number (33482, 3)
     metafile = pd.read_csv("sccp/data/Thomson/meta.csv")
 
     # Cell barcodes (33482)
-    # barcodes = pd.read_csv(
-    #     "sccp/data/Thomson/barcodes.tsv", sep="\t", header=None, names=("cell_barcode",)
-    # )
+    barcodes = pd.read_csv(
+        "sccp/data/Thomson/barcodes.tsv", sep="\t", header=None, names=("cell_barcode",)
+    )
 
     # Left merging should put the barcodes in order
-    # metafile = pd.merge(
-    #     barcodes, metafile, on="cell_barcode", how="left", validate="one_to_one"
-    # )
+    metafile = pd.merge(
+        barcodes, metafile, on="cell_barcode", how="left", validate="one_to_one"
+    )
 
-    # h5ad is simplified version of mtx format
-    # import scanpy as sc
-    # data = sc.read_10x_mtx("./sccp/data/", var_names='gene_symbols', make_unique=True)
-    # data.X = data.X.toarray()
-    # data = data[:, np.mean(data.X > 0, axis=0) > 0.001]
-    # data.write('thompson.h5ad', compression="gzip")
-    X = anndata.read_h5ad("/opt/andrew/thomson.h5ad")
-
+    # read in actual data
+    X = sc.read_10x_mtx("/opt/andrew/Thomson/", var_names='gene_symbols', make_unique=True)
     X.obs["Condition"] = pd.Categorical(metafile["sample_id"])
 
-    X.X /= np.sum(X.X, axis=0)
-
-    # Only operating on the data works because 0 ends up as 0 here
-    X.X = np.log10((1000.0 * X.X) + 1)  # scaling factor
-
-    # Center the genes
-    X.X -= np.mean(X.X, axis=0)
-
-    return X
+    return prepare_dataset(X)
 
 
 def import_lupus() -> anndata.AnnData:
@@ -79,18 +83,6 @@ def import_lupus() -> anndata.AnnData:
     # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
     X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
 
-    # Reorder X so that all of the patients are in alphanumeric order.
-    ptIDX = np.argsort(X.obs_vector("Condition"))
-
-    X = X[ptIDX, :]
-
-    # X.X = X.X.toarray()
-    # X.write('lupus.h5ad', compression="gzip")
-    # X = anndata.read_h5ad("/opt/andrew/thomson.h5ad")
-
-    # Center the genes
-    X.X -= np.mean(X.X, axis=0)
-
     return X
 
 
@@ -99,19 +91,11 @@ def import_citeseq() -> anndata.AnnData:
     files = ["control", "ic_pod1", "ic_pod7", "sc_pod1", "sc_pod7"]
 
     data = {
-        k: sc.read_10x_mtx("/opt/andrew/HamadCITEseq/" + k, gex_only=False, make_unique=True) for k in files
+        k: sc.read_10x_mtx(
+            "/opt/andrew/HamadCITEseq/" + k, gex_only=False, make_unique=True
+        )
+        for k in files
     }
     X = anndata.concat(data, merge="same", label="Condition")
 
-    sc.pp.filter_genes(X, min_cells=100)
-    sc.pp.normalize_total(X)
-    sc.pp.log1p(X)
-    sc.pp.highly_variable_genes(X, n_top_genes=4000)
-
-    X = X[:, X.var["highly_variable"]]
-
-    # Center and read normalize the genes
-    X.X /= np.sum(X.X, axis=0)
-    X.X = X.X.tocsr()
-
-    return X
+    return prepare_dataset(X)

@@ -1,7 +1,7 @@
 """
 Lupus: Cross validation for determining optimal paramaters for logistic regression
 """
-from ..imports.scRNA import import_lupus
+from ..imports import import_lupus
 from ..logisticReg import testPf2Ranks
 from .common import (
     subplotLabel,

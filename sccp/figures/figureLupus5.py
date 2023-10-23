@@ -41,7 +41,14 @@ def makeFigure():
     contribsAnc["Predicting"] = np.repeat("Euro-Ancestry", contribsAnc.shape[0])
     contribs = pd.concat([contribsStatus, contribsAnc])
 
-    sns.barplot(data = contribs, x = "Component", y = "Weight", hue="Predicting", errorbar=None, ax = ax[1])
+    sns.barplot(
+        data=contribs,
+        x="Component",
+        y="Weight",
+        hue="Predicting",
+        errorbar=None,
+        ax=ax[1],
+    )
     ax[1].tick_params(axis="x", rotation=90)
     ax[1].set_title("Weight of Pf2 Cmps in Logsitic Regression")
 

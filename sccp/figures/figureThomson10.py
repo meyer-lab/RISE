@@ -6,7 +6,7 @@ from .common import (
     getSetup,
     openPf2,
 )
-from ..imports.gating import gateThomsonCells
+from ..gating import gateThomsonCells
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import KernelDensity

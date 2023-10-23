@@ -31,9 +31,9 @@ def points(
     labels=None,
     values=None,
     cmap=None,
-    width: int=1200,
-    height: int=1200,
-    show_legend: bool=True,
+    width: int = 1200,
+    height: int = 1200,
+    show_legend: bool = True,
     alpha=255,
 ) -> Axes:
     """Use datashader to plot points"""
@@ -61,12 +61,9 @@ def points(
 
         unique_labels = np.unique(labels)
         num_labels = unique_labels.shape[0]
-        color_key = _to_hex(
-            plt.get_cmap(cmap)(np.linspace(0, 1, num_labels))
-        )
+        color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, num_labels)))
         legend_elements = [
-            Patch(facecolor=color_key[i], label=k)
-            for i, k in enumerate(unique_labels)
+            Patch(facecolor=color_key[i], label=k) for i, k in enumerate(unique_labels)
         ]
         result = tf.shade(
             aggregation,
@@ -106,10 +103,9 @@ def points(
     result = tf.set_background(result, "white")
 
     img_rev = result.data[::-1]
-    mpl_img = np.dstack([
-        img_rev & 0x0000FF,
-        (img_rev & 0x00FF00) >> 8,
-        (img_rev & 0xFF0000) >> 16])
+    mpl_img = np.dstack(
+        [img_rev & 0x0000FF, (img_rev & 0x00FF00) >> 8, (img_rev & 0xFF0000) >> 16]
+    )
 
     ax.imshow(mpl_img)
 
@@ -118,7 +114,7 @@ def points(
     elif show_legend:
         psm = plt.pcolormesh([[0, 256], [0, 256]], cmap=cmap)
         plt.colorbar(psm, ax=ax)
-    
+
     ax.set(xticks=[], yticks=[])
     return ax
 
@@ -129,9 +125,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     geneList = np.clip(geneList, None, np.quantile(geneList, 0.99))
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
     points(X.obsm["embedding"], values=geneList, cmap=cmap, ax=ax)
-    ax.set(
-        title=f"{gene}-{decompType}-Based Decomposition"
-    )
+    ax.set(title=f"{gene}-{decompType}-Based Decomposition")
 
 
 def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes):
@@ -149,9 +143,7 @@ def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None)
     labs = X.obs[labelType]
 
     if condition is not None:
-        labs = np.array(
-            [c if c in condition else "Other" for c in labs]
-        )
+        labs = np.array([c if c in condition else "Other" for c in labs])
 
     points(
         X.obsm["embedding"],
@@ -162,7 +154,7 @@ def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None)
     )
 
 
-def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers: bool=False):
+def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers: bool = False):
     """Boxplot of weighted projections for one component across cell types"""
     XX = X.obsm["weighted_projections"][:, cmp - 1]
     cmpName = f"Cmp. {cmp}"
