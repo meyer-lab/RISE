@@ -81,6 +81,7 @@ def points(
         assert values.shape[0] == points.shape[0]
 
         min_val, max_val = np.min(values), np.max(values)
+        # Here!
         bin_size = (max_val - min_val) / 255.0
         data["val_cat"] = pd.Categorical(
             np.round((values - min_val) / bin_size).astype(np.int16)
