@@ -17,9 +17,10 @@ def makeFigure():
 
     rank = 30
     X = openPf2(rank, "Thomson")
+    X = gateThomsonCells(X)
 
     df = pd.DataFrame(
-        {"Cell Type": gateThomsonCells(X), "Condition": X.obs["Condition"]}
+        {"Cell Type": X.obs["Cell Type"], "Condition": X.obs["Condition"]}
     )
 
     # Per condition counts

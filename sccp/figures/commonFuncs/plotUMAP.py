@@ -55,11 +55,16 @@ def points(
         assert labels.shape[0] == points.shape[0]
         if cmap is None:
             cmap = "Spectral"
+        indices = np.argsort(labels)
+        points = points[indices, :]
+        labels = labels[indices]
+        data = pd.DataFrame(points, columns=("x", "y"))
 
         data["label"] = pd.Categorical(labels)
         aggregation = canvas.points(data, "x", "y", agg=ds.count_cat("label"))
 
         unique_labels = np.unique(labels)
+
         num_labels = unique_labels.shape[0]
         color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, num_labels)))
         legend_elements = [
