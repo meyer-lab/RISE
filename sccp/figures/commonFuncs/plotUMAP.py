@@ -81,7 +81,6 @@ def points(
         assert values.shape[0] == points.shape[0]
 
         min_val, max_val = np.min(values), np.max(values)
-        # Here!
         bin_size = (max_val - min_val) / 255.0
         data["val_cat"] = pd.Categorical(
             np.round((values - min_val) / bin_size).astype(np.int16)
@@ -98,6 +97,7 @@ def points(
 
     # Color by density (default datashader option)
     else:
+        print("yup")
         aggregation = canvas.points(data, "x", "y", agg=ds.count())
         result = tf.shade(aggregation, cmap=plt.get_cmap(cmap), alpha=alpha, how="log")
 
@@ -133,6 +133,8 @@ def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
     weightedProjs = X.obsm["weighted_projections"][:, cmp - 1]
+    print(np.max(weightedProjs))
+    print(np.min(weightedProjs))
 
     cmap = sns.diverging_palette(250, 30, l=65, center="dark", as_cmap=True)
     points(X.obsm["embedding"], values=weightedProjs, cmap=cmap, ax=ax)
