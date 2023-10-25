@@ -5,12 +5,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup, openPf2
+from .commonFuncs.plotGeneral import population_bar_chart
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((10, 8), (4, 3))
+    ax, f = getSetup((10, 10), (5, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -48,5 +49,7 @@ def makeFigure():
             ax=ax[i + 1],
         )
         ax[i + 1].set(title=celltype, ylabel="# of Experiments")
+    
+    population_bar_chart(X, "Cell Type", "SLE_status", ax[12])
 
     return f
