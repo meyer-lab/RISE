@@ -25,7 +25,6 @@ def makeFigure():
 
     gateThomsonCells(X)
     plotLabelsUMAP(X, "Cell Type", ax[0])
-    plotLabelsUMAP(X, "Cell Type2", ax[0])
 
     # weightedProjDF = flattenWeightedProjs(data, factors[1], projs)
     # weightedProjDF["Cell Type"] = dataDF["Cell Type"].values

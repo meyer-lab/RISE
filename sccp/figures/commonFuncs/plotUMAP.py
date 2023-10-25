@@ -115,7 +115,7 @@ def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None)
 
     indices = np.argsort(labels)
     points = X.obsm["embedding"][indices, :]
-    labels = labels[indices]
+    labels = labels.iloc[indices]
 
     canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=("x", "y"))
