@@ -71,7 +71,9 @@ def genFigure():
     ff = makeFigure()
 
     if ff is not None:
-        ff.savefig(f"./output/{nameOut}.svg", dpi=300, bbox_inches="tight", pad_inches=0)
+        ff.savefig(
+            f"./output/{nameOut}.svg", dpi=300, bbox_inches="tight", pad_inches=0
+        )
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
 

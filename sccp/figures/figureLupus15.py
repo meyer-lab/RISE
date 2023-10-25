@@ -19,11 +19,17 @@ def makeFigure():
 
     df = X.obs[["Cell Type", "SLE_status", "Condition"]].reset_index(drop=True)
 
-    dfCond = df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
+    dfCond = (
+        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
+    )
     sns.histplot(data=dfCond, x="Cell Number", bins=15, color="k", ax=ax[0])
     ax[0].set(ylabel="# of Experiments")
 
-    dfCellType = df.groupby(["Cell Type", "Condition"], observed=True).size().reset_index(name="Count")
+    dfCellType = (
+        df.groupby(["Cell Type", "Condition"], observed=True)
+        .size()
+        .reset_index(name="Count")
+    )
     dfCellType["Count"] = dfCellType["Count"].astype("float")
     for i, cond in enumerate(pd.unique(df["Condition"])):
         dfCellType.loc[dfCellType["Condition"] == cond, "Count"] = (

@@ -38,7 +38,9 @@ def import_thomson() -> anndata.AnnData:
     )
 
     # read in actual data
-    X = sc.read_10x_mtx("/opt/andrew/Thomson/", var_names='gene_symbols', make_unique=True)
+    X = sc.read_10x_mtx(
+        "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
+    )
     X.obs["Condition"] = pd.Categorical(metafile["sample_id"])
 
     return prepare_dataset(X)

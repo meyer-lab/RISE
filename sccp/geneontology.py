@@ -17,7 +17,9 @@ def geneOntology(cmpNumb: int, X, geneAmount, goTerms, geneValue):
     input for function"""
     rank = X.varm["Pf2_C"].shape[1]
     df = pd.DataFrame(
-        data=X.varm["Pf2_C"], index=X.var_names, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+        data=X.varm["Pf2_C"],
+        index=X.var_names,
+        columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)],
     )
 
     sort_idx = np.argsort(df.to_numpy(), axis=0)

@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from ...crossVal import CrossVal
@@ -74,10 +74,10 @@ def plotCellTypePerExpCount(dataDF, condition, ax):
 
 def plotCellTypePerExpPerc(dataDF, condition, ax):
     """Plots historgram of cell types percentages per experiment"""
-    df = dataDF.groupby(["Cell Type"]).size().reset_index(name="Count") 
+    df = dataDF.groupby(["Cell Type"]).size().reset_index(name="Count")
     perc = df["Count"].values / np.sum(df["Count"].values)
     df["Count"] = perc
-    
+
     sns.barplot(data=df, x="Cell Type", y="Count", ax=ax)
     ax.set(title=condition)
 
@@ -85,32 +85,48 @@ def plotCellTypePerExpPerc(dataDF, condition, ax):
 def plotGenePerCellType(genes, dataDF: pd.DataFrame, ax):
     """Plots average gene expression across cell types for all conditions"""
     data = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
-            columns={"variable": "Gene", "value": "Value"})
+        columns={"variable": "Gene", "value": "Value"}
+    )
     df = data.groupby(["Condition", "Cell Type", "Gene"]).mean()
     df = df.rename(columns={"Value": "Average Gene Expression For Drugs"})
-    sns.stripplot(data=df, x="Gene", y="Average Gene Expression For Drugs", hue="Cell Type", dodge=True, jitter=False, ax=ax)
+    sns.stripplot(
+        data=df,
+        x="Gene",
+        y="Average Gene Expression For Drugs",
+        hue="Cell Type",
+        dodge=True,
+        jitter=False,
+        ax=ax,
+    )
 
 
 def plotGenePerCategCond(conds, categoryCond, genes, dataDF, axs, mean=True):
     """Plots average gene expression across cell types for a category of drugs"""
-    
+
     df = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
-            columns={"variable": "Gene", "value": "Value"})
+        columns={"variable": "Gene", "value": "Value"}
+    )
     if mean is True:
         df = df.groupby(["Condition", "Cell Type", "Gene"]).mean()
-        
+
     df = df.rename(columns={"Value": "Average Gene Expression For Drugs"}).reset_index()
-    
+
     df["Condition"] = np.where(df["Condition"].isin(conds), df["Condition"], "Other")
     for i in conds:
         df = df.replace({"Condition": {i: categoryCond}})
 
     for i, gene in enumerate(genes):
-        sns.boxplot(data=df.loc[df["Gene"] == gene], x="Cell Type", y="Average Gene Expression For Drugs", hue="Condition", ax=axs[i])
+        sns.boxplot(
+            data=df.loc[df["Gene"] == gene],
+            x="Cell Type",
+            y="Average Gene Expression For Drugs",
+            hue="Condition",
+            ax=axs[i],
+        )
         axs[i].set(title=gene)
 
 
-def plotGeneFactors(cmp: int, dataIn: anndata.AnnData, axs, geneAmount: int=20):
+def plotGeneFactors(cmp: int, dataIn: anndata.AnnData, axs, geneAmount: int = 20):
     """Plotting weights for gene factors for both most negatively/positively weighted terms"""
     cmpName = f"Cmp. {cmp}"
 
@@ -121,7 +137,9 @@ def plotGeneFactors(cmp: int, dataIn: anndata.AnnData, axs, geneAmount: int=20):
     df = df.reset_index(names="Gene")
     df = df.sort_values(by=cmpName)
 
-    sns.barplot(data=df.iloc[:geneAmount,:], x="Gene", y=cmpName, color="k", ax=axs[0])
-    sns.barplot(data=df.iloc[-geneAmount:,:], x="Gene", y=cmpName, color="k", ax=axs[1])
+    sns.barplot(data=df.iloc[:geneAmount, :], x="Gene", y=cmpName, color="k", ax=axs[0])
+    sns.barplot(
+        data=df.iloc[-geneAmount:, :], x="Gene", y=cmpName, color="k", ax=axs[1]
+    )
     axs[0].tick_params(axis="x", rotation=90)
     axs[1].tick_params(axis="x", rotation=90)

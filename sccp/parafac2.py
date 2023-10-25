@@ -6,7 +6,11 @@ from .imports import import_citeseq, import_lupus, import_thomson
 
 
 def pf2(
-    X: anndata.AnnData, condition_name: str, rank: int, random_state=1, doEmbedding: bool=True
+    X: anndata.AnnData,
+    condition_name: str,
+    rank: int,
+    random_state=1,
+    doEmbedding: bool = True,
 ):
     # TensorFy
     # Sort so that the concatenation matches up later
