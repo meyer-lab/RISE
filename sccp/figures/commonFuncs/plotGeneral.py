@@ -1,9 +1,14 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import scanpy as sc
+import anndata
+from copy import deepcopy
 from ...crossVal import CrossVal
 from ...decomposition import R2X
-import anndata
+
+
+
 
 
 def plotR2X(data, rank, ax):
@@ -150,3 +155,56 @@ def population_bar_chart(adata: anndata.AnnData, cellType: str, category: str, a
     cellDF = pd.crosstab(adata.obs[category],adata.obs[cellType], normalize='index')
     cellDF.plot.bar(ax=ax, stacked=True).legend(loc='upper right')
     ax.set(ylim=(0, 1), ylabel= "Proportion of Cells")
+
+
+def cell_comp_hist(X, category: str, comp: int, unique, ax):
+    """Plots weighted projections of each cell according to category"""
+    adata = deepcopy(X)
+    adata.obs[category] = adata.obs[category].astype(str)
+    w_proj = adata.obsm["weighted_projections"][:, comp - 1]
+    if category is not None:
+        if unique is not None:
+            adata.obs.loc[adata.obs[category] != unique, category] = "Other"
+        labels = adata.obs[category]
+        histDF = pd.DataFrame({"Component " + str(comp): w_proj, category: labels})
+        sns.histplot(data=histDF, x="Component " + str(comp), hue=category, kde=True, ax=ax)
+
+
+def gene_plot_cells(X, genes, hue: str, ax, unique=None, average=False, kde=False):
+    """Plots two genes on either a per cell or per cell type basis"""
+    #adata = deepcopy(X)
+    adata = sc.pp.subsample(X, fraction=0.01, random_state=0, copy=True)
+    adata = adata[:, [genes[0], genes[1]]]
+    dataDF = pd.DataFrame(columns=genes, data=adata.X)
+    dataDF[hue] = adata.obs[hue].values
+    if unique is not None:
+        dataDF[hue] = dataDF[hue].astype(str)
+        dataDF.loc[dataDF[hue] != unique, hue] = "Other"
+    if average:
+        dataDF = dataDF.groupby([hue]).mean()
+    sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-.1, alpha=0.2)
+    if kde: 
+        sns.kdeplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, levels=5, fill=True, alpha=0.3, cut=2, ax=ax)
+
+
+def gene_plot_conditions(X, condition: str, genes, ax, hue=None, unique=None):
+    """Plots two genes on either a per cell or per cell type basis"""
+    #adata = deepcopy(X)
+    adata = sc.pp.subsample(X, fraction=0.01, random_state=0, copy=True)
+    adata = adata[:, [genes[0], genes[1]]]
+    dataDF = pd.DataFrame(columns=genes, data=adata.X)
+    dataDF[condition] = adata.obs[condition].values
+    dataDF[condition] = dataDF[condition].astype('str')
+    if hue:
+        dataDF[hue] = adata.obs[hue].values
+        dataDF[hue] = dataDF[hue].astype('str')
+        dataDF = dataDF.groupby([condition, hue]).mean()
+    else:
+        dataDF = dataDF.groupby([condition]).mean()
+    if unique is not None:
+        dataDF[condition] = dataDF[condition].astype(str)
+        dataDF.loc[dataDF[condition] != unique, condition] = "Other"
+    if hue is not None: 
+        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-.1, alpha=0.2)
+    else: 
+        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], ax=ax, size=-.1, alpha=0.2)
