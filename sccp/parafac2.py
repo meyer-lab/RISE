@@ -1,6 +1,7 @@
 from typing import Sequence
 import numpy as np
 import anndata
+import tensorly as tl
 from pacmap import PaCMAP
 from parafac2 import parafac2_nd
 from .imports import import_citeseq, import_lupus, import_thomson
@@ -41,6 +42,11 @@ def pf2(
 
     X_pf = [X[sgIndex == sgi, :].X.toarray() - means for sgi in range(len(sgUnique))]
 
+    # Quantify the variation in cross-products since this is an assumption of Pf2
+    covs = np.stack([xx.T @ xx for xx in X_pf])
+    cov_total = tl.norm(covs) ** 2
+    cov_var = tl.norm(covs - np.mean(covs, axis=0)) ** 2
+
     weight, factors, projs, _ = parafac2_nd(
         X_pf,
         rank=rank,
@@ -49,6 +55,7 @@ def pf2(
 
     X.uns["Pf2_weights"] = weight
     X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"] = factors
+    X.uns["cov_ratio"] = cov_var / cov_total
     X.uns["cvSNR"] = cwSNR(X_pf, weight, factors, projs)
 
     X.obsm["projections"] = np.zeros((X.shape[0], rank))
