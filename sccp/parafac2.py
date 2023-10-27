@@ -13,10 +13,6 @@ def pf2(
     doEmbedding: bool = True,
 ):
     # TensorFy
-    # Sort so that the concatenation matches up later
-    sort_idx = np.argsort(X.obs_vector(condition_name))
-    X = X[sort_idx, :]
-
     # Get the indices for subsetting the data
     sgUnique, sgIndex = np.unique(X.obs_vector(condition_name), return_inverse=True)
 
@@ -33,13 +29,16 @@ def pf2(
 
     X.uns["Pf2_weights"] = weight
     X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"] = factors
-    X.obsm["projections"] = np.concatenate(projs, axis=0)
+
+    X.obsm["projections"] = np.zeros((X.shape[0], rank))
+    for i, p in enumerate(projs):
+        X.obsm["projections"][sgIndex == i, :] = p # type: ignore
+
     X.obsm["weighted_projections"] = X.obsm["projections"] @ X.uns["Pf2_B"]
 
     if doEmbedding:
-        X.obsm["embedding"] = PaCMAP(random_state=random_state).fit_transform(
-            np.concatenate(projs, axis=0)
-        )
+        pcm = PaCMAP(random_state=random_state)
+        X.obsm["embedding"] = pcm.fit_transform(X.obsm["projections"]) # type: ignore
 
     return X
 
