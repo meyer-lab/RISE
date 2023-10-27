@@ -19,9 +19,8 @@ def cwSNR(
     for i, mat in enumerate(matrices):
         xx = parafac2_to_slice((weights, factors, projections), i, validate=False)
 
-        E_k = np.linalg.norm(mat - xx)
-
-        SNR[i, :] = factors[0][i, :] * weights / E_k
+        SNR[i, :] = (factors[0][i, :] * weights) ** 2.0
+        SNR[i, :] /= np.linalg.norm(mat - xx) ** 2.0
 
     return SNR
 
