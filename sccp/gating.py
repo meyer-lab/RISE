@@ -1,13 +1,24 @@
 import numpy.typing as npt
 import scanpy
+import pandas as pd
 
 
-def gateThomsonCells(X) -> npt.ArrayLike:
+def gateThomsonCellsLeiden(X) -> npt.ArrayLike:
     """Manually gates cell types for Thomson UMAP"""
     scanpy.pp.neighbors(X, n_neighbors=15, use_rep="projections", random_state=0)
     scanpy.tl.leiden(X, resolution=3, random_state=0)
     X.obs["Cell Type"] = X.obs.leiden.replace(thomson_layer1).astype(str)
     X.obs["Cell Type2"] = X.obs.leiden.replace(thomson_layer2).astype(str)
+
+    return X
+
+
+def gateThomsonCells(X) -> npt.ArrayLike:
+    """Manually gates cell types for Thomson UMAP"""
+    cellTypeDF = pd.read_csv("sccp/data/Thomson/ThomsonCellTypes.csv", index_col=0)
+    X.obs = X.obs.join(cellTypeDF, how='outer')
+    X.obs["Cell Type"] = X.obs["Cell Type"].astype(str)
+    X.obs["Cell Type2"] = X.obs["Cell Type2"].astype(str)
 
     return X
 
