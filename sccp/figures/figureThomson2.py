@@ -10,7 +10,6 @@ from .commonFuncs.plotUMAP import plotLabelsUMAP
 from ..gating import gateThomsonCells
 
 
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects

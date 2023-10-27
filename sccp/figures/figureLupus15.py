@@ -49,7 +49,7 @@ def makeFigure():
             ax=ax[i + 1],
         )
         ax[i + 1].set(title=celltype, ylabel="# of Experiments")
-    
+
     population_bar_chart(X, "Cell Type", "SLE_status", ax[12])
 
     return f
