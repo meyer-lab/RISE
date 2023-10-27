@@ -24,7 +24,6 @@ def makeFigure():
     gateThomsonCells(X)
     cell_comp_hist(X, "Condition", 12, "Triamcinolone Acetonide", ax[0])
     cell_comp_hist(X, "Cell Type", 12, unique=None, ax=ax[1])
-    print(X.obs["Cell Type"])
 
     cell_comp_hist(X, "Condition", 30, "Triamcinolone Acetonide", ax[2])
     cell_comp_hist(X, "Cell Type", 30, unique=None, ax=ax[3])

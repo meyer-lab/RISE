@@ -159,22 +159,22 @@ def population_bar_chart(adata: anndata.AnnData, cellType: str, category: str, a
 
 def cell_comp_hist(X, category: str, comp: int, unique, ax):
     """Plots weighted projections of each cell according to category"""
-    adata = deepcopy(X)
-    adata.obs[category] = adata.obs[category].astype(str)
-    w_proj = adata.obsm["weighted_projections"][:, comp - 1]
+    w_proj = X.obsm["weighted_projections"][:, comp - 1]
+    obsDF = pd.DataFrame({category: X.obs[category].astype(str).values})
+    w_proj = X.obsm["weighted_projections"][:, comp - 1]
     if category is not None:
         if unique is not None:
-            adata.obs.loc[adata.obs[category] != unique, category] = "Other"
-        labels = adata.obs[category]
+            obsDF.loc[obsDF[category] != unique, category] = "Other"
+        labels = obsDF[category]
+        #obsDF[category] = obsDF[category].astype(str)
         histDF = pd.DataFrame({"Component " + str(comp): w_proj, category: labels})
         sns.histplot(data=histDF, x="Component " + str(comp), hue=category, kde=True, ax=ax)
 
 
 def gene_plot_cells(X, genes, hue: str, ax, unique=None, average=False, kde=False):
     """Plots two genes on either a per cell or per cell type basis"""
-    #adata = deepcopy(X)
-    adata = sc.pp.subsample(X, fraction=0.01, random_state=0, copy=True)
-    adata = adata[:, [genes[0], genes[1]]]
+    adata = X[:, [genes[0], genes[1]]]
+    sc.pp.subsample(adata, fraction=0.01, random_state=0)
     dataDF = pd.DataFrame(columns=genes, data=adata.X)
     dataDF[hue] = adata.obs[hue].values
     if unique is not None:
@@ -189,9 +189,9 @@ def gene_plot_cells(X, genes, hue: str, ax, unique=None, average=False, kde=Fals
 
 def gene_plot_conditions(X, condition: str, genes, ax, hue=None, unique=None):
     """Plots two genes on either a per cell or per cell type basis"""
-    #adata = deepcopy(X)
-    adata = sc.pp.subsample(X, fraction=0.01, random_state=0, copy=True)
-    adata = adata[:, [genes[0], genes[1]]]
+    adata = X[:, [genes[0], genes[1]]]
+    sc.pp.subsample(adata, fraction=0.01, random_state=0)
+
     dataDF = pd.DataFrame(columns=genes, data=adata.X)
     dataDF[condition] = adata.obs[condition].values
     dataDF[condition] = dataDF[condition].astype('str')
