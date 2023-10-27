@@ -177,12 +177,14 @@ def gene_plot_cells(X, genes, hue: str, ax, unique=None, average=False, kde=Fals
     sc.pp.subsample(adata, fraction=0.01, random_state=0)
     dataDF = pd.DataFrame(columns=genes, data=adata.X)
     dataDF[hue] = adata.obs[hue].values
+    alpha=0.3
     if unique is not None:
         dataDF[hue] = dataDF[hue].astype(str)
         dataDF.loc[dataDF[hue] != unique, hue] = "Other"
     if average:
         dataDF = dataDF.groupby([hue]).mean()
-    sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-.1, alpha=0.2)
+        alpha=1
+    sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-.1, alpha=alpha)
     if kde: 
         sns.kdeplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, levels=5, fill=True, alpha=0.3, cut=2, ax=ax)
 
@@ -205,6 +207,30 @@ def gene_plot_conditions(X, condition: str, genes, ax, hue=None, unique=None):
         dataDF[condition] = dataDF[condition].astype(str)
         dataDF.loc[dataDF[condition] != unique, condition] = "Other"
     if hue is not None: 
-        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-.1, alpha=0.2)
+        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-.1, alpha=5)
     else: 
         sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], ax=ax, size=-.1, alpha=0.2)
+
+
+def geneSig_plot_cells(X, comps, hue: str, ax, unique=None, average=False, kde=False):
+    """Plots two genes on either a per cell or per cell type basis"""
+    
+    geneSigDF = pd.DataFrame()
+    geneVecs = X.varm["Pf2_C"][:, comps]
+    for i, _ in enumerate(comps):
+        geneSigDF[str(comps[i])] = np.matmul(X.X, geneVecs[:, i])
+
+    geneSigDF[hue] = X.obs[hue].values
+    geneSigDF = geneSigDF.sample(n=10000)
+    alpha=0.3
+
+    if unique is not None:
+        geneSigDF[hue] = geneSigDF[hue].astype(str)
+        geneSigDF.loc[geneSigDF[hue] != unique, hue] = "Other"
+    if average:
+        geneSigDF = geneSigDF.groupby([hue]).mean()
+        alpha=1
+    sns.scatterplot(data=geneSigDF, x=str(comps[0]), y=str(comps[1]), hue=hue, ax=ax, size=-.1, alpha=alpha)
+    if kde: 
+        sns.kdeplot(data=geneSigDF, x=str(comps[0]), y=str(comps[1]), hue=hue, levels=5, fill=True, alpha=0.3, cut=2, ax=ax)
+    ax.set(xlabel="Comp. " + str(comps[0]) + " Signature", ylabel="Comp. " + str(comps[1]) + " Signature")

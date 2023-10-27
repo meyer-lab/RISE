@@ -19,6 +19,9 @@ def makeFigure():
     subplotLabel(ax)
     rank = 30
     X = openPf2(rank, "Thomson")
+    print(X.uns["Pf2_A"].shape)
+    print(X.uns["Pf2_B"].shape)
+    print(X.varm["Pf2_C"].shape)
 
     gateThomsonCells(X)
     plotLabelsUMAP(X, "Cell Type", ax[0])
