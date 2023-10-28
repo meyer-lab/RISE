@@ -19,6 +19,8 @@ def makeFigure():
     subplotLabel(ax)
 
     X = import_lupus()
+    X = X.to_memory()
+
     condStatus = X.obs[
         ["Condition", "SLE_status", "Processing_Cohort"]
     ].drop_duplicates()

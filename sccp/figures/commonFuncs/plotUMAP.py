@@ -45,7 +45,7 @@ def ds_show(result, ax):
 
 def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     """Scatterplot of UMAP visualization weighted by gene"""
-    geneList = X[:, gene].X.toarray().flatten()
+    geneList = X[:, gene].X.flatten()
     geneList = np.clip(geneList, None, np.quantile(geneList, 0.99))
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 

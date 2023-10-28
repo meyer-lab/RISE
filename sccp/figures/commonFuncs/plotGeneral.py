@@ -170,7 +170,7 @@ def cell_comp_hist(X, category: str, comp: int, unique, ax):
         )
 
 
-def gene_plot_cells(X, genes, hue: str, ax, unique=None, average=False, kde=False):
+def gene_plot_cells(X: anndata.AnnData, genes, hue: str, ax, unique=None, average=False, kde=False):
     """Plots two genes on either a per cell or per cell type basis"""
     adata = X[:, [genes[0], genes[1]]]
     sc.pp.subsample(adata, fraction=0.01, random_state=0)
