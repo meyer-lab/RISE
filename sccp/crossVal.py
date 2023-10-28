@@ -1,8 +1,8 @@
 from copy import deepcopy
 import numpy as np
 from tensorly.tenalg.svd import randomized_svd
-from parafac2 import parafac2_nd
-from parafac2.parafac2 import _cmf_reconstruction_error
+from .parafac2 import parafac2_nd
+from tensorly.decomposition._parafac2 import _compute_projections
 from tensorly.parafac2_tensor import parafac2_to_slices
 
 
@@ -63,7 +63,7 @@ def crossvalidate(X, rank: int, trainPerc: float = 0.75, random_state=None) -> f
     fac_C = deepcopy(fac_B)
     fac_C[0] *= w_B[np.newaxis, :]
     fac_C[2] = fac_C[2][:X_C_idx, :]
-    _, proj, _ = _cmf_reconstruction_error(C_train, fac_C, 1.0)
+    proj = _compute_projections(C_train, fac_C, "truncated_svd")
 
     # Project projections into B space
     X_recon = parafac2_to_slices((w_B, fac_B, proj), validate=False)

@@ -1,7 +1,7 @@
 """
 Test the cross validation accuracy.
 """
-import numpy as np
+import pytest
 from ..imports import import_thomson, import_lupus, import_citeseq
 
 
@@ -10,6 +10,7 @@ def test_Thomson():
     X = import_thomson()
 
 
+@pytest.mark.skip("The lupus dataset uses too much memory for now.")
 def test_Lupus():
     """Test for correctness of cross validation."""
     X = import_lupus()

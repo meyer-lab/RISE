@@ -28,5 +28,4 @@ def makeFigure():
     cell_comp_hist(X, "Condition", 30, "Triamcinolone Acetonide", ax[2])
     cell_comp_hist(X, "Cell Type", 30, unique=None, ax=ax[3])
 
-
     return f

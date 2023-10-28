@@ -1,11 +1,16 @@
+import os
 from typing import Sequence
 import numpy as np
 import anndata
 import tensorly as tl
 from pacmap import PaCMAP
-from parafac2 import parafac2_nd
 from .imports import import_citeseq, import_lupus, import_thomson
 from tensorly.parafac2_tensor import parafac2_to_slice
+from tensorly.cp_tensor import cp_flip_sign
+from tensorly.tenalg.svd import randomized_svd
+from tensorly.decomposition import parafac2
+from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
+from scipy.optimize import linear_sum_assignment
 
 
 def cwSNR(
@@ -84,3 +89,80 @@ def runAndSavePf2():
     X = import_thomson()
     X = pf2(X, "Condition", 30)
     X.write("Thomson_analyzed_30comps.h5ad")
+
+
+def parafac2_nd(
+    X_in: Sequence,
+    rank: int,
+    n_iter_max: int = 200,
+    tol: float = 1e-7,
+    random_state=None,
+) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
+    r"""The same interface as regular PARAFAC2."""
+    rng = np.random.RandomState(random_state)
+
+    # Verbose if this is not an automated build
+    verbose = "CI" not in os.environ
+
+    norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X_in])
+
+    # Checks size of each experiment is bigger than rank
+    for i in range(len(X_in)):
+        assert np.shape(X_in[i])[0] > rank
+
+    # Checks size of signal measured is bigger than rank
+    assert np.shape(X_in[0])[1] > rank
+
+    # Assemble covariance matrix rather than concatenation
+    # This saves memory and should be faster
+    covM = X_in[0].T @ X_in[0]
+    for i in range(1, len(X_in)):
+        covM += X_in[i].T @ X_in[i]
+
+    C = randomized_svd(covM, rank, random_state=rng, n_iter=4)[0]
+
+    (w, f, p) = parafac2( # type: ignore
+        X_in,
+        rank,
+        n_iter_max=n_iter_max,
+        init=(None, [np.ones((len(X_in), rank)), np.eye(rank), C]), # type: ignore
+        svd="truncated_svd",
+        normalize_factors=True,
+        tol=tol,
+        nn_modes=(0,),
+        random_state=rng,
+        verbose=verbose,
+        return_errors=False,
+        n_iter_parafac=5,
+        linesearch=True,
+    )
+
+    pf2_error = _parafac2_reconstruction_error(X_in, (w, f, p)) ** 2.0
+
+    R2X = 1 - pf2_error / norm_tensor
+
+    gini_idx = giniIndex(f[0])
+    f = [f[:, gini_idx] for f in f]
+    w = w[gini_idx]
+
+    w, f = cp_flip_sign((w, f), mode=1)
+
+    # Maximize the diagonal of B
+    _, col_ind = linear_sum_assignment(np.abs(f[1].T), maximize=True)
+    f[1] = f[1][col_ind, :]
+    p = [p[:, col_ind] for p in p]
+
+    # Flip the sign based on B
+    signn = np.sign(np.diag(f[1]))
+    f[1] *= signn[:, np.newaxis]
+    p = [p * signn for p in p]
+
+    return w, f, p, R2X
+
+
+def giniIndex(X: np.ndarray) -> np.ndarray:
+    """Calculates the Gini Coeff for each component and returns the index rearrangment"""
+    X = np.abs(X)
+    gini = np.var(X, axis=0) / np.mean(X, axis=0)
+
+    return np.argsort(gini)

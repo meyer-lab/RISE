@@ -2,17 +2,18 @@ import numpy as np
 import pandas as pd
 import anndata
 import scanpy as sc
+from scipy.sparse import spmatrix
 
 
 def prepare_dataset(X):
     assert np.amin(X.X) == 0.0
     assert np.all(np.isfinite(X.X.data))
-    
-    X.X = X.X.todense()
+    assert isinstance(X.X, spmatrix)
+
     X = X[:, np.mean(X.X > 0, axis=0) > 0.001]
     X.X /= np.sum(X.X, axis=0)
-    X.X = np.log10((1000 * X.X) + 1) 
-    
+    X.X.data = np.log10((1000 * X.X.data) + 1)
+
     assert np.all(np.isfinite(X.X.data))
 
     return X
@@ -37,7 +38,9 @@ def import_thomson() -> anndata.AnnData:
     X = sc.read_10x_mtx(
         "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
     )
-    X.obs["Condition"] = pd.Categorical(metafile["sample_id"])
+
+    # Workaround to not trigger conversion to dense
+    X._obs = pd.DataFrame({"Condition": pd.Categorical(metafile["sample_id"])})
 
     return prepare_dataset(X)
 
