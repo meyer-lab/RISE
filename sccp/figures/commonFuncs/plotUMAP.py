@@ -8,6 +8,7 @@ import datashader as ds
 import datashader.transfer_functions as tf
 from matplotlib.patches import Patch
 import anndata
+from scipy.sparse import spmatrix
 
 
 def _get_canvas(points: np.ndarray):
@@ -45,7 +46,10 @@ def ds_show(result, ax):
 
 def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     """Scatterplot of UMAP visualization weighted by gene"""
-    geneList = X[:, gene].X.flatten()
+    geneList = X[:, gene].X
+    if isinstance(geneList, spmatrix):
+        geneList = geneList.toarray()
+
     geneList = np.clip(geneList, None, np.quantile(geneList, 0.99))
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 
