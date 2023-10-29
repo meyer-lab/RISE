@@ -11,7 +11,7 @@ def prepare_dataset(X):
     assert np.all(np.isfinite(X.X.data))
     assert isinstance(X.X, spmatrix)
 
-    X = X[:, np.mean(X.X > 0, axis=0) > 0.001]
+    X = X[:, np.sum(X.X > 0, axis=0) > 100]
     X.X /= np.sum(X.X, axis=0)
     X.X.data = np.log10((1000 * X.X.data) + 1)
 
