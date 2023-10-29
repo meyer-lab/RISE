@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
 import anndata
@@ -91,12 +92,19 @@ def import_citeseq() -> anndata.AnnData:
     """Imports 5 datasets from Hamad CITEseq."""
     files = ["control", "ic_pod1", "ic_pod7", "sc_pod1", "sc_pod7"]
 
-    data = {
-        k: sc.read_10x_mtx(
-            "/opt/andrew/HamadCITEseq/" + k, gex_only=False, make_unique=True
-        )
-        for k in files
-    }
+    with ProcessPoolExecutor(max_workers=5) as executor:
+        futures = [
+            executor.submit(
+                sc.read_10x_mtx,
+                "/opt/andrew/HamadCITEseq/" + k,
+                gex_only=False,
+                make_unique=True,
+            )
+            for k in files
+        ]
+
+        data = {k: futures[i].result() for i, k in enumerate(files)}
+
     X = anndata.concat(data, merge="same", label="Condition")
 
     return prepare_dataset(X)
