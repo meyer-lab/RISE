@@ -170,7 +170,9 @@ def cell_comp_hist(X, category: str, comp: int, unique, ax):
         )
 
 
-def gene_plot_cells(X: anndata.AnnData, genes, hue: str, ax, unique=None, average=False, kde=False):
+def gene_plot_cells(
+    X: anndata.AnnData, genes, hue: str, ax, unique=None, average=False, kde=False
+):
     """Plots two genes on either a per cell or per cell type basis"""
     adata = X[:, [genes[0], genes[1]]]
     sc.pp.subsample(adata, fraction=0.01, random_state=0)
@@ -181,7 +183,7 @@ def gene_plot_cells(X: anndata.AnnData, genes, hue: str, ax, unique=None, averag
         dataDF[hue] = dataDF[hue].astype(str)
         dataDF.loc[dataDF[hue] != unique, hue] = "Other"
     if average:
-        dataDF = dataDF.groupby([hue]).mean()
+        dataDF = dataDF.groupby([hue], observed=True).mean()
         alpha = 1
     sns.scatterplot(
         data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-0.1, alpha=alpha
@@ -243,7 +245,7 @@ def geneSig_plot_cells(X, comps, hue: str, ax, unique=None, average=False, kde=F
         geneSigDF[hue] = geneSigDF[hue].astype(str)
         geneSigDF.loc[geneSigDF[hue] != unique, hue] = "Other"
     if average:
-        geneSigDF = geneSigDF.groupby([hue]).mean()
+        geneSigDF = geneSigDF.groupby([hue], observed=True).mean()
         alpha = 1
     sns.scatterplot(
         data=geneSigDF,

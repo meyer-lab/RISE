@@ -24,16 +24,22 @@ def makeFigure():
     )
 
     # Per condition counts
-    dfCond = df.groupby(["Condition"]).size().reset_index(name="Cell Number")
+    dfCond = (
+        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
+    )
     sns.histplot(data=dfCond, x="Cell Number", bins=15, color="k", ax=ax[0])
     ax[0].set(ylabel="# of Experiments")
 
     # Per condition cell type percentages
-    dfCellType = df.groupby(["Cell Type", "Condition"]).size().reset_index(name="Count")
+    dfCellType = (
+        df.groupby(["Cell Type", "Condition"], observed=True)
+        .size()
+        .reset_index(name="Count")
+    )
     dfCellType["Cell Type Percentage"] = (
         100
         * dfCellType["Count"]
-        / dfCellType.groupby("Condition")["Count"].transform("sum")
+        / dfCellType.groupby("Condition", observed=True)["Count"].transform("sum")
     )
 
     for i, (name, group) in enumerate(dfCellType.groupby("Cell Type")):

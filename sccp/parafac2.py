@@ -121,11 +121,11 @@ def parafac2_nd(
 
     C = randomized_svd(covM, rank, random_state=rng, n_iter=4)[0]
 
-    (w, f, p) = parafac2( # type: ignore
+    (w, f, p) = parafac2(  # type: ignore
         X_in,
         rank,
         n_iter_max=n_iter_max,
-        init=(None, [np.ones((len(X_in), rank)), np.eye(rank), C]), # type: ignore
+        init=(None, [np.ones((len(X_in), rank)), np.eye(rank), C]),  # type: ignore
         svd="truncated_svd",
         normalize_factors=True,
         tol=tol,
