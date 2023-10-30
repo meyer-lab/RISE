@@ -1,6 +1,7 @@
 """
 Test the cross validation accuracy.
 """
+import numpy as np
 import pytest
 from ..imports import import_thomson, import_lupus, import_citeseq
 
@@ -10,7 +11,7 @@ def test_Thomson():
     X = import_thomson()
     print()
     print(f"Data shape: {X.shape}")
-    print(f"Data non-zeros: {X.X.nnz}")
+    assert X.X.dtype == np.float32
 
 
 @pytest.mark.skip("The lupus dataset uses too much memory for now.")
@@ -24,4 +25,4 @@ def test_CITEseq():
     X = import_citeseq()
     print()
     print(f"Data shape: {X.shape}")
-    print(f"Data non-zeros: {X.X.nnz}")
+    assert X.X.dtype == np.float32

@@ -1,15 +1,18 @@
 import os
+from tqdm import tqdm
+from copy import deepcopy
 from typing import Sequence
 import numpy as np
 import anndata
 import tensorly as tl
+import torch
 from pacmap import PaCMAP
 from .imports import import_citeseq, import_lupus, import_thomson
 from tensorly.parafac2_tensor import parafac2_to_slice
-from tensorly.cp_tensor import cp_flip_sign
-from tensorly.tenalg.svd import randomized_svd
-from tensorly.decomposition import parafac2
-from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
+from tensorly.cp_tensor import cp_flip_sign, CPTensor, cp_normalize
+from tensorly.tenalg.svd import randomized_svd, truncated_svd
+from tensorly.decomposition import non_negative_parafac_hals
+from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error, _compute_projections, _project_tensor_slices
 from scipy.optimize import linear_sum_assignment
 
 
@@ -91,11 +94,42 @@ def runAndSavePf2():
     X.write("Thomson_analyzed_30comps.h5ad")
 
 
+def _cmf_reconstruction_error(matrices: Sequence, factors: list, norm_X_sq):
+    A, B, C = factors
+
+    norm_sq_err = norm_X_sq
+    CtC = C.T @ C
+    projections = []
+    projected_X = []
+
+    for i, mat in enumerate(matrices):
+        if isinstance(B, torch.Tensor):
+            mat_gpu = torch.tensor(mat).cuda().double()
+        else:
+            mat_gpu = mat
+
+        lhs = B @ (A[i] * C).T
+        U, _, Vh = truncated_svd(mat_gpu @ lhs.T, A.shape[1])
+        proj = U @ Vh
+
+        projections.append(proj)
+        projected_X.append(proj.T @ mat_gpu)
+
+        B_i = (proj @ B) * A[i]
+
+        # trace of the multiplication products
+        norm_sq_err -= 2.0 * tl.trace(A[i][:, np.newaxis] * B.T @ projected_X[-1] @ C)
+        norm_sq_err += ((B_i.T @ B_i) * CtC).sum()
+
+    return norm_sq_err, projections, projected_X
+
+
+@torch.inference_mode()
 def parafac2_nd(
     X_in: Sequence,
     rank: int,
     n_iter_max: int = 200,
-    tol: float = 1e-7,
+    tol: float = 1e-6,
     random_state=None,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
@@ -103,6 +137,9 @@ def parafac2_nd(
 
     # Verbose if this is not an automated build
     verbose = "CI" not in os.environ
+
+    acc_pow: float = 2.0  # Extrapolate to the iteration^(1/acc_pow) ahead
+    acc_fail: int = 0  # How many times acceleration have failed
 
     norm_tensor = np.sum([np.linalg.norm(xx) ** 2 for xx in X_in])
 
@@ -121,43 +158,101 @@ def parafac2_nd(
 
     C = randomized_svd(covM, rank, random_state=rng, n_iter=4)[0]
 
-    (w, f, p) = parafac2(  # type: ignore
-        X_in,
-        rank,
-        n_iter_max=n_iter_max,
-        init=(None, [np.ones((len(X_in), rank)), np.eye(rank), C]),  # type: ignore
-        svd="truncated_svd",
-        normalize_factors=True,
-        tol=tol,
-        nn_modes=(0,),
-        random_state=rng,
-        verbose=verbose,
-        return_errors=False,
-        n_iter_parafac=5,
-        linesearch=True,
+    tl.set_backend("pytorch")
+    CP = CPTensor(
+        (
+            None,
+            [
+                tl.ones((len(X_in), rank)).cuda().double(),
+                tl.eye(rank).cuda().double(),
+                torch.tensor(C).cuda().double(),
+            ],
+        )
     )
 
-    pf2_error = _parafac2_reconstruction_error(X_in, (w, f, p)) ** 2.0
+    errs = []
 
-    R2X = 1 - pf2_error / norm_tensor
+    tq = tqdm(range(n_iter_max), disable=(not verbose))
+    for iter in tq:
+        err, projections, projected_X = _cmf_reconstruction_error(
+            X_in, CP.factors, norm_tensor
+        )
 
-    gini_idx = giniIndex(f[0])
-    f = [f[:, gini_idx] for f in f]
-    w = w[gini_idx]
+        # Initiate line search
+        if iter % 2 == 0 and iter > 5:
+            jump = iter ** (1.0 / acc_pow)
 
-    w, f = cp_flip_sign((w, f), mode=1)
+            # Estimate error with line search
+            CP_ls = deepcopy(CP)
+            CP_ls.factors = [
+                CP_old.factors[ii] + (CP.factors[ii] - CP_old.factors[ii]) * jump
+                for ii in range(3)
+            ]
+            err_ls, projections_ls, projected_X_ls = _cmf_reconstruction_error(
+                X_in, CP_ls.factors, norm_tensor
+            )
+
+            if err_ls < err:
+                acc_fail = 0
+                err = err_ls
+                projections = projections_ls
+                projected_X = projected_X_ls
+                CP = CP_ls
+            else:
+                acc_fail += 1
+
+                if acc_fail >= 4:
+                    acc_pow += 1.0
+                    acc_fail = 0
+
+                    if verbose:
+                        print("Reducing acceleration.")
+
+        errs.append(tl.to_numpy((err / norm_tensor).cpu()))
+
+        # Project tensor slices
+        projected_X = tl.stack(projected_X)
+
+        CP_old: CPTensor = deepcopy(CP)
+        CP = non_negative_parafac_hals(
+            projected_X,
+            rank,
+            n_iter_max=10,
+            nn_modes=(0, ),
+            init=CP,
+            tol=False,
+            normalize_factors=False,
+        )
+
+        if iter > 1:
+            delta = errs[-2] - errs[-1]
+            tq.set_postfix(R2X=1.0 - errs[-1], Δ=delta, refresh=False)
+
+            if delta < tol:
+                break
+
+    R2X = 1 - errs[-1]
+    tl.set_backend("numpy")
+
+    gini_idx = giniIndex(tl.to_numpy(CP.factors[0].cpu()))
+    assert gini_idx.size == rank
+
+    CP.factors = [f.numpy(force=True)[:, gini_idx] for f in CP.factors]
+    CP.weights = CP.weights.numpy(force=True)[gini_idx]
+
+    CP = cp_normalize(cp_flip_sign(CP, mode=1))
 
     # Maximize the diagonal of B
-    _, col_ind = linear_sum_assignment(np.abs(f[1].T), maximize=True)
-    f[1] = f[1][col_ind, :]
-    p = [p[:, col_ind] for p in p]
+    _, col_ind = linear_sum_assignment(np.abs(CP.factors[1].T), maximize=True)
+    CP.factors[1] = CP.factors[1][col_ind, :]
+    projections = [p.numpy(force=True)[:, col_ind] for p in projections]
 
     # Flip the sign based on B
-    signn = np.sign(np.diag(f[1]))
-    f[1] *= signn[:, np.newaxis]
-    p = [p * signn for p in p]
+    signn = np.sign(np.diag(CP.factors[1]))
+    CP.factors[1] *= signn[:, np.newaxis]
+    projections = [p * signn for p in projections]
 
-    return w, f, p, R2X
+    return CP.weights, CP.factors, projections, R2X
 
 
 def giniIndex(X: np.ndarray) -> np.ndarray:
