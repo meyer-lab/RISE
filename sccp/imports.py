@@ -32,25 +32,20 @@ def prepare_dataset(X: anndata.AnnData) -> anndata.AnnData:
 def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
     # Cell barcodes, sample id of treatment and sample number (33482, 3)
-    metafile = pd.read_csv("sccp/data/Thomson/meta.csv")
-
-    # Cell barcodes (33482)
-    barcodes = pd.read_csv(
-        "sccp/data/Thomson/barcodes.tsv", sep="\t", header=None, names=("cell_barcode",)
-    )
-
-    # Left merging should put the barcodes in order
-    metafile = pd.merge(
-        barcodes, metafile, on="cell_barcode", how="left", validate="one_to_one"
-    )
+    metafile = pd.read_csv("sccp/data/Thomson/meta.csv", usecols=[0, 1])
 
     # read in actual data
     X = sc.read_10x_mtx(
         "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
     )
+    obs = X.obs.reset_index(names="cell_barcode")
 
-    # Workaround to not trigger conversion to dense
-    X._obs = pd.DataFrame({"Condition": pd.Categorical(metafile["sample_id"])})
+    # Left merging should put the barcodes in order
+    metafile = pd.merge(
+        obs, metafile, on="cell_barcode", how="left", validate="one_to_one"
+    )
+
+    X.obs = pd.DataFrame({"cell_barcode": metafile["cell_barcode"], "Condition": pd.Categorical(metafile["sample_id"])})
 
     return prepare_dataset(X)
 
