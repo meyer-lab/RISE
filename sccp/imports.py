@@ -13,14 +13,8 @@ def prepare_dataset(X: anndata.AnnData) -> anndata.AnnData:
     if isinstance(X.X, spmatrix):
         X.X = X.X.toarray()
 
-    # Filter out genes that show up in very few cells
-    X = X[:, np.sum(X.X > 0, axis=0) > 100]
-
     # Filter out genes with too few reads
     X = X[:, np.sum(X.X, axis=0) > 1000]
-
-    # Filter out cells with too few reads
-    X = X[np.sum(X.X, axis=1) > 100, :]
 
     X.X /= np.sum(X.X, axis=0)
     X.X = np.log10((1000 * X.X) + 1)

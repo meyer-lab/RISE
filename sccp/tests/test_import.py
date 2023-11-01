@@ -4,6 +4,7 @@ Test the cross validation accuracy.
 import numpy as np
 import pytest
 from ..imports import import_thomson, import_lupus, import_citeseq
+from ..gating import gateThomsonCells
 
 
 def test_Thomson():
@@ -26,3 +27,9 @@ def test_CITEseq():
     print()
     print(f"Data shape: {X.shape}")
     assert X.X.dtype == np.float32
+
+
+def test_GateThomson():
+    """Test that gating function matches size of data"""
+    X = import_thomson()
+    gateThomsonCells(X)
