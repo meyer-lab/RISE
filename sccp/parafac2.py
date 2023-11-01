@@ -55,7 +55,7 @@ def pf2(
     cov_total = tl.norm(covs) ** 2
     cov_var = tl.norm(covs - np.mean(covs, axis=0)) ** 2
 
-    weight, factors, projs, _ = parafac2_nd(
+    weight, factors, projs, r2x = parafac2_nd(
         X_pf,
         rank=rank,
         random_state=random_state,
@@ -65,6 +65,7 @@ def pf2(
     X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"] = factors
     X.uns["cov_ratio"] = cov_var / cov_total
     X.uns["cvSNR"] = cwSNR(X_pf, weight, factors, projs)
+    X.uns["R2X"] = r2x
 
     X.obsm["projections"] = np.zeros((X.shape[0], rank))
     for i, p in enumerate(projs):
