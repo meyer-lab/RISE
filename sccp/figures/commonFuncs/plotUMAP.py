@@ -54,6 +54,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 
     values = geneList
+    
     points = X.obsm["embedding"]
 
     canvas = _get_canvas(points)
@@ -65,7 +66,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     data["val_cat"] = values
     result = tf.shade(
         agg=canvas.points(data, "x", "y", agg=ds.mean("val_cat")),
-        color_key=cmap,
+        cmap=cmap,
         span=(0, 1),
         how="linear",
         min_alpha=255,
@@ -76,7 +77,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
     plt.colorbar(psm, ax=ax)
 
-    ax.set(xticks=[], yticks=[])
+    ax = assignAxes(ax)
     ax.set(title=f"{gene}-{decompType}-Based Decomposition")
 
 
@@ -107,15 +108,16 @@ def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes):
 
     psm = plt.pcolormesh([[-1, 1], [-1, 1]], cmap=cmap)
     plt.colorbar(psm, ax=ax)
-    ax.set(title="Cmp. " + str(cmp), xticks=[], yticks=[])
+    ax.set(title="Cmp. " + str(cmp))
+    ax = assignAxes(ax)
 
 
-def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None):
+def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None, cmap="tab20"):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
     labels = X.obs[labelType]
 
     if condition is not None:
-        labels = pd.Series([c if c in condition else "Other" for c in labels])
+        labels = pd.Series([c if c in condition else "Z Other" for c in labels])
 
     indices = np.argsort(labels)
     points = X.obsm["embedding"][indices, :]
@@ -129,7 +131,7 @@ def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None)
 
     unique_labels = np.unique(labels)
     num_labels = unique_labels.shape[0]
-    color_key = _to_hex(plt.get_cmap("tab20")(np.linspace(0, 1, num_labels)))
+    color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, num_labels)))
     legend_elements = [
         Patch(facecolor=color_key[i], label=k) for i, k in enumerate(unique_labels)
     ]
@@ -142,7 +144,7 @@ def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None)
 
     ds_show(result, ax)
     ax.legend(handles=legend_elements)
-    ax.set(xticks=[], yticks=[])
+    ax = assignAxes(ax)
 
 
 def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers: bool = False):
@@ -164,3 +166,9 @@ def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers: bool = 
         xticks=np.linspace(-maxvalue, maxvalue, num=5), xlabel="Cell Specific Weight"
     )
     ax.set_title(cmpName)
+
+def assignAxes(ax):
+    ax.set(xlabel="PaCMAP1", ylabel="PaCMAP2", xticks=[], yticks=[])
+    return ax
+    
+    

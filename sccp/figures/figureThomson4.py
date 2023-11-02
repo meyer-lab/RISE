@@ -23,9 +23,9 @@ def makeFigure():
         plotGeneUMAP(gene, "Pf2", X, ax[i])
 
     drugs = ["Triamcinolone Acetonide", "Alprostadil"]
-
-    plotLabelsUMAP(X, "Condition", ax[2], drugs)
-    ax[2].set(title=f"Pf2-Based Decomposition")
+    for i, drug in enumerate(drugs):
+        plotLabelsUMAP(X, "Condition", ax[i+2], drug, cmap="Set1")
+        ax[i+2].set(title=f"Pf2-Based Decomposition")
 
     # PCA dimension reduction
     pc = PCA(n_components=rank)
@@ -33,9 +33,10 @@ def makeFigure():
     X.obsm["embedding"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
     for i, gene in enumerate(genes):
-        plotGeneUMAP(gene, "PCA", X, ax[i + 4])
+        plotGeneUMAP(gene, "PCA", X, ax[i+4])
 
-    plotLabelsUMAP(X, "Condition", ax[6], drugs)
-    ax[6].set(title=f"PCA-Based Decomposition")
-
+    for i, drug in enumerate(drugs):
+        plotLabelsUMAP(X, "Condition", ax[i+6], drug, cmap="Set1")
+        ax[i+6].set(title=f"PCA-Based Decomposition")
+        
     return f
