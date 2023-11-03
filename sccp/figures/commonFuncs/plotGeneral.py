@@ -3,12 +3,12 @@ import pandas as pd
 import seaborn as sns
 import scanpy as sc
 import anndata
-from copy import deepcopy
+from matplotlib.axes import Axes
 from ...crossVal import CrossVal
 from ...decomposition import R2X
 
 
-def plotR2X(data, rank, ax):
+def plotR2X(data, rank, ax: Axes):
     """Creates R2X plot for parafac2 tensor decomposition"""
     r2xError = R2X(data, rank)
 
@@ -39,7 +39,7 @@ def plotR2X(data, rank, ax):
     ax.legend()
 
 
-def plotCV(data, rank, trainPerc, ax):
+def plotCV(data, rank, trainPerc, ax: Axes):
     """Creates variance explained plot for parafac2 tensor decomposition CV"""
     cvError = CrossVal(data, rank, trainPerc=trainPerc)
 
@@ -68,13 +68,13 @@ def plotCV(data, rank, trainPerc, ax):
     ax.legend()
 
 
-def plotCellTypePerExpCount(dataDF, condition, ax):
+def plotCellTypePerExpCount(dataDF, condition, ax: Axes):
     """Plots historgram of cell counts per experiment"""
     sns.histplot(data=dataDF, x="Cell Type", hue="Cell Type", ax=ax)
     ax.set(title=condition)
 
 
-def plotCellTypePerExpPerc(dataDF, condition, ax):
+def plotCellTypePerExpPerc(dataDF, condition, ax: Axes):
     """Plots historgram of cell types percentages per experiment"""
     df = dataDF.groupby(["Cell Type"]).size().reset_index(name="Count")
     perc = df["Count"].values / np.sum(df["Count"].values)
@@ -84,7 +84,7 @@ def plotCellTypePerExpPerc(dataDF, condition, ax):
     ax.set(title=condition)
 
 
-def plotGenePerCellType(genes, dataDF: pd.DataFrame, ax):
+def plotGenePerCellType(genes, dataDF: pd.DataFrame, ax: Axes):
     """Plots average gene expression across cell types for all conditions"""
     data = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
         columns={"variable": "Gene", "value": "Value"}
@@ -102,7 +102,9 @@ def plotGenePerCellType(genes, dataDF: pd.DataFrame, ax):
     )
 
 
-def plotGenePerCategCond(conds, categoryCond, genes, dataDF, axs, mean=True):
+def plotGenePerCategCond(
+    conds, categoryCond, genes, dataDF, axs: list[Axes], mean=True
+):
     """Plots average gene expression across cell types for a category of drugs"""
 
     df = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
@@ -128,7 +130,9 @@ def plotGenePerCategCond(conds, categoryCond, genes, dataDF, axs, mean=True):
         axs[i].set(title=gene)
 
 
-def plotGeneFactors(cmp: int, dataIn: anndata.AnnData, axs, geneAmount: int = 20):
+def plotGeneFactors(
+    cmp: int, dataIn: anndata.AnnData, axs: list[Axes], geneAmount: int = 20
+):
     """Plotting weights for gene factors for both most negatively/positively weighted terms"""
     cmpName = f"Cmp. {cmp}"
 
@@ -147,14 +151,16 @@ def plotGeneFactors(cmp: int, dataIn: anndata.AnnData, axs, geneAmount: int = 20
     axs[1].tick_params(axis="x", rotation=90)
 
 
-def population_bar_chart(adata: anndata.AnnData, cellType: str, category: str, ax):
+def population_bar_chart(
+    adata: anndata.AnnData, cellType: str, category: str, ax: Axes
+):
     """Plots proportion of cells by type stratified by an identifying condition or patient attribute (i.e. Lupus Status)"""
     cellDF = pd.crosstab(adata.obs[category], adata.obs[cellType], normalize="index")
     cellDF.plot.bar(ax=ax, stacked=True).legend(loc="upper right")
     ax.set(ylim=(0, 1), ylabel="Proportion of Cells")
 
 
-def cell_comp_hist(X, category: str, comp: int, unique, ax):
+def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
     """Plots weighted projections of each cell according to category"""
     w_proj = X.obsm["weighted_projections"][:, comp - 1]
     obsDF = pd.DataFrame({category: X.obs[category].astype(str).values})
@@ -171,13 +177,14 @@ def cell_comp_hist(X, category: str, comp: int, unique, ax):
 
 
 def gene_plot_cells(
-    X: anndata.AnnData, genes, hue: str, ax, unique=None, average=False, kde=False
+    X: anndata.AnnData, hue: str, ax: Axes, unique=None, average=False, kde=False
 ):
     """Plots two genes on either a per cell or per cell type basis"""
-    adata = X[:, [genes[0], genes[1]]]
-    sc.pp.subsample(adata, fraction=0.01, random_state=0)
-    dataDF = pd.DataFrame(columns=genes, data=adata.X)
-    dataDF[hue] = adata.obs[hue].values
+    assert X.shape[1] == 2
+    genes = X.var_names
+    sc.pp.subsample(X, fraction=0.01, random_state=0)
+    dataDF = X.to_df()
+    dataDF[hue] = X.obs[hue].values
     alpha = 0.3
     if unique is not None:
         dataDF[hue] = dataDF[hue].astype(str)
@@ -202,7 +209,7 @@ def gene_plot_cells(
         )
 
 
-def gene_plot_conditions(X, condition: str, genes, ax, hue=None, unique=None):
+def gene_plot_conditions(X, condition: str, genes, ax: Axes, hue=None, unique=None):
     """Plots two genes on either a per cell or per cell type basis"""
     adata = X[:, [genes[0], genes[1]]]
     sc.pp.subsample(adata, fraction=0.01, random_state=0)
@@ -229,7 +236,9 @@ def gene_plot_conditions(X, condition: str, genes, ax, hue=None, unique=None):
         )
 
 
-def geneSig_plot_cells(X, comps, hue: str, ax, unique=None, average=False, kde=False):
+def geneSig_plot_cells(
+    X, comps: list[int], hue: str, ax: Axes, unique=None, average=False, kde=False
+):
     """Plots two genes on either a per cell or per cell type basis"""
 
     geneSigDF = pd.DataFrame()

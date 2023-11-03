@@ -21,8 +21,8 @@ def _get_canvas(points: np.ndarray):
     maxs = np.round(max_xy + 0.05 * (max_xy - min_xy))
 
     canvas = ds.Canvas(
-        plot_width=1200,
-        plot_height=1200,
+        plot_width=900,
+        plot_height=900,
         x_range=(mins[0], maxs[0]),
         y_range=(mins[1], maxs[1]),
     )
@@ -54,7 +54,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 
     values = geneList
-    
+
     points = X.obsm["embedding"]
 
     canvas = _get_canvas(points)
@@ -112,7 +112,9 @@ def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes):
     ax = assignAxes(ax)
 
 
-def plotLabelsUMAP(X: anndata.AnnData, labelType: str, ax: Axes, condition=None, cmap="tab20"):
+def plotLabelsUMAP(
+    X: anndata.AnnData, labelType: str, ax: Axes, condition=None, cmap="tab20"
+):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
     labels = X.obs[labelType]
 
@@ -167,8 +169,7 @@ def plotCmpPerCellType(X: anndata.AnnData, cmp: int, ax: Axes, outliers: bool = 
     )
     ax.set_title(cmpName)
 
+
 def assignAxes(ax):
     ax.set(xlabel="PaCMAP1", ylabel="PaCMAP2", xticks=[], yticks=[])
     return ax
-    
-    

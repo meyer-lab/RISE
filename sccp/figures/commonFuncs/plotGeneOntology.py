@@ -7,7 +7,7 @@ from ...geneontology import getGenesfromGO
 def plotCombGO(GO, geneValue, axs):
     """Plots combines score for gene ontology"""
     for i, geneset in enumerate(np.unique(GO["Gene Set"])):
-        pvalPlot = sns.barplot(
+        sns.barplot(
             data=GO.loc[GO["Gene Set"] == geneset],
             x="Combined Score",
             y="Term",
