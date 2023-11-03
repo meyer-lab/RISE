@@ -21,7 +21,7 @@ def makeFigure():
     ].drop_duplicates()
     condStatus = condStatus.set_index("Condition")
 
-    y_test, sle_decisions = getPf2ROC(X.uns["Pf2_A"], condStatus, rank)
+    y_test, sle_decisions = getPf2ROC(X.uns["Pf2_A"], condStatus)
 
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label="SLE", plot_chance_level=True, ax=ax[0]
