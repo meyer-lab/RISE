@@ -84,8 +84,13 @@ def plotCellTypePerExpPerc(dataDF, condition, ax: Axes):
     ax.set(title=condition)
 
 
-def plotGenePerCellType(genes, dataDF: pd.DataFrame, ax: Axes):
+
+def plotGenePerCellType(genes, adata, ax):
     """Plots average gene expression across cell types for all conditions"""
+    genesV = adata[:, genes]
+    dataDF = pd.DataFrame(columns=genes, data=genesV.X)
+    dataDF["Condition"] = genesV.obs["Condition"].values
+    dataDF["Cell Type"] = genesV.obs["Cell Type"].values
     data = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
         columns={"variable": "Gene", "value": "Value"}
     )
@@ -102,10 +107,12 @@ def plotGenePerCellType(genes, dataDF: pd.DataFrame, ax: Axes):
     )
 
 
-def plotGenePerCategCond(
-    conds, categoryCond, genes, dataDF, axs: list[Axes], mean=True
-):
+def plotGenePerCategCond(conds, categoryCond, genes, adata, axs, mean=True):
     """Plots average gene expression across cell types for a category of drugs"""
+    genesV = adata[:, genes]
+    dataDF = pd.DataFrame(columns=genes, data=genesV.X)
+    dataDF["Condition"] = genesV.obs["Condition"].values
+    dataDF["Cell Type"] = genesV.obs["Cell Type"].values
 
     df = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
         columns={"variable": "Gene", "value": "Value"}

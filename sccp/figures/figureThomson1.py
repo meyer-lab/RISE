@@ -18,7 +18,6 @@ def makeFigure():
 
     rank = 30
     X = openPf2(rank, "Thomson")
-    print(X.shape)
 
     factors = [X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"]]
     plotFactors(factors, X, ax[0:3], reorder=(0, 2), trim=(2,))
