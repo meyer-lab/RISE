@@ -12,7 +12,11 @@ from tensorly.parafac2_tensor import parafac2_to_slice
 from tensorly.cp_tensor import cp_flip_sign, CPTensor, cp_normalize
 from tensorly.tenalg.svd import randomized_svd, truncated_svd
 from tensorly.decomposition import non_negative_parafac_hals
-from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error, _compute_projections, _project_tensor_slices
+from tensorly.decomposition._parafac2 import (
+    _parafac2_reconstruction_error,
+    _compute_projections,
+    _project_tensor_slices,
+)
 from scipy.optimize import linear_sum_assignment
 
 
@@ -219,7 +223,7 @@ def parafac2_nd(
             projected_X,
             rank,
             n_iter_max=10,
-            nn_modes=(0, ),
+            nn_modes=(0,),
             init=CP,
             tol=False,
             normalize_factors=False,

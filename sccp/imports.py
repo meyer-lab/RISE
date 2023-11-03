@@ -39,7 +39,12 @@ def import_thomson() -> anndata.AnnData:
         obs, metafile, on="cell_barcode", how="left", validate="one_to_one"
     )
 
-    X.obs = pd.DataFrame({"cell_barcode": metafile["cell_barcode"], "Condition": pd.Categorical(metafile["sample_id"])})
+    X.obs = pd.DataFrame(
+        {
+            "cell_barcode": metafile["cell_barcode"],
+            "Condition": pd.Categorical(metafile["sample_id"]),
+        }
+    )
 
     return prepare_dataset(X)
 

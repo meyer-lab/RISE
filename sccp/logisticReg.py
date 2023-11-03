@@ -86,11 +86,10 @@ def getCompContribs(A_matrix, target, penalty_amt: float = 50) -> np.ndarray:
     return coefs
 
 
-def getPf2ROC(A_matrix, condition_batch_labels, rank):
+def getPf2ROC(A_matrix, condition_batch_labels):
     """Train a logistic regression model using CV on some cohorts, test on another
     A_matrix: first factor matrix (Pf2 output)
     condition_batch_labels: unique list of observation categories, indexed by sample ID
-    rank: rank of Pf2 model being used
     """
     # get list of conditions, patients
     conditions = condition_batch_labels.index
@@ -99,7 +98,7 @@ def getPf2ROC(A_matrix, condition_batch_labels, rank):
     A_matrix = pd.DataFrame(
         A_matrix,
         index=conditions,
-        columns=[f"comp_{i}" for i in np.arange(1, rank + 1)],
+        columns=[f"comp_{i}" for i in np.arange(1, A_matrix.shape[1] + 1)],
     )
     comps_w_sle_status = A_matrix.merge(
         condition_batch_labels, left_index=True, right_index=True
@@ -129,7 +128,7 @@ def getPf2ROC(A_matrix, condition_batch_labels, rank):
     # need to separate these out into predictor sets (components) and target variable (SLE Status)
     # also can rename the 4 group as training and the 123 group as testing
 
-    last_comp = "comp_" + str(rank)
+    last_comp = "comp_" + str(A_matrix.shape[1])
     cmp_train = group_4.loc[:, "comp_1":last_comp].to_numpy()
     y_train = group_4.loc[:, "SLE_status"].to_numpy()
     cmp_test = group_123.loc[:, "comp_1":last_comp].to_numpy()
