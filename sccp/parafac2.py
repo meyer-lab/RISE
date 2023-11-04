@@ -155,15 +155,11 @@ def parafac2_nd(
     tl.set_backend("cupy")
 
     _, C = cp.linalg.eigh(cp.asarray(covM))
-    
+
     CP = CPTensor(
         (
             None,
-            [
-                cp.ones((len(X_in), rank)),
-                cp.eye(rank),
-                C[:, -rank:]
-            ],
+            [cp.ones((len(X_in), rank)), cp.eye(rank), C[:, -rank:]],
         )
     )
 

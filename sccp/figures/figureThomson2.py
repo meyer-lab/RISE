@@ -25,10 +25,10 @@ def makeFigure():
     gateThomsonCells(X)
     plotLabelsUMAP(X, "Cell Type", ax[0])
     plotLabelsUMAP(X, "Cell Type2", ax[1])
-    plotCmpUMAP(X, 3, ax[2], 0.2) # NK
-    plotCmpUMAP(X, 29, ax[3], 0.2) # Gluco
-    plotCmpUMAP(X, 12, ax[4], 0.2) # B Cell
-    plotCmpUMAP(X, 23, ax[5], 0.2) # Dex Hcl
+    plotCmpUMAP(X, 3, ax[2], 0.2)  # NK
+    plotCmpUMAP(X, 29, ax[3], 0.2)  # Gluco
+    plotCmpUMAP(X, 12, ax[4], 0.2)  # B Cell
+    plotCmpUMAP(X, 23, ax[5], 0.2)  # Dex Hcl
 
     # weightedProjDF = flattenWeightedProjs(data, factors[1], projs)
     # weightedProjDF["Cell Type"] = dataDF["Cell Type"].values
@@ -51,12 +51,12 @@ def makeFigure():
     # set4 = ["CD163", "ADORA3", "MS4A6A", "RNASE1", "MTMR11"]
 
     glucs = [
-         "Betamethasone Valerate",
-         "Loteprednol etabonate",
-         "Budesonide",
-         "Triamcinolone Acetonide",
-         "Meprednisone",
-     ]
+        "Betamethasone Valerate",
+        "Loteprednol etabonate",
+        "Budesonide",
+        "Triamcinolone Acetonide",
+        "Meprednisone",
+    ]
     geneSet3 = ["CD163"]
     plotGenePerCategCond(glucs, "Gluco", geneSet3, X, [ax[8]])
 

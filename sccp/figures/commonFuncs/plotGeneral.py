@@ -84,7 +84,6 @@ def plotCellTypePerExpPerc(dataDF, condition, ax: Axes):
     ax.set(title=condition)
 
 
-
 def plotGenePerCellType(genes, adata, ax):
     """Plots average gene expression across cell types for all conditions"""
     genesV = adata[:, genes]
