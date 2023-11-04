@@ -15,14 +15,14 @@ norm_tensor = np.linalg.norm(X) ** 2
 
 def test_parafac2():
     """Test for equivalence to TensorLy's PARAFAC2."""
-    w1, f1, p1, e1 = parafac2_nd(X, rank=3, random_state=1)
+    w1, f1, p1, e1 = parafac2_nd(X, rank=3)
 
     # Test that the model still matches the data
     err = _parafac2_reconstruction_error(X, (w1, f1, p1)) ** 2
     np.testing.assert_allclose(1.0 - err / norm_tensor, e1, rtol=1e-6)
 
     # Test reproducibility
-    w2, f2, p2, e2 = parafac2_nd(X, rank=3, random_state=1)
+    w2, f2, p2, e2 = parafac2_nd(X, rank=3)
     # Compare to TensorLy
     wT, fT, pT = parafac2(
         X,

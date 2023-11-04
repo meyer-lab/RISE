@@ -5,18 +5,13 @@ from typing import Sequence
 import numpy as np
 import anndata
 import tensorly as tl
-import torch
+import cupy as cp
 from pacmap import PaCMAP
 from .imports import import_citeseq, import_lupus, import_thomson
 from tensorly.parafac2_tensor import parafac2_to_slice
 from tensorly.cp_tensor import cp_flip_sign, CPTensor, cp_normalize
-from tensorly.tenalg.svd import randomized_svd, truncated_svd
+from tensorly.tenalg.svd import truncated_svd
 from tensorly.decomposition import non_negative_parafac_hals
-from tensorly.decomposition._parafac2 import (
-    _parafac2_reconstruction_error,
-    _compute_projections,
-    _project_tensor_slices,
-)
 from scipy.optimize import linear_sum_assignment
 
 
@@ -62,7 +57,6 @@ def pf2(
     weight, factors, projs, r2x = parafac2_nd(
         X_pf,
         rank=rank,
-        random_state=random_state,
     )
 
     X.uns["Pf2_weights"] = weight
@@ -108,12 +102,13 @@ def _cmf_reconstruction_error(matrices: Sequence, factors: list, norm_X_sq):
     projected_X = []
 
     for i, mat in enumerate(matrices):
-        if isinstance(B, torch.Tensor):
-            mat_gpu = torch.tensor(mat).cuda().double()
+        if isinstance(B, cp.ndarray):
+            mat_gpu = cp.asarray(mat)
         else:
             mat_gpu = mat
 
         lhs = B @ (A[i] * C).T
+        print((mat_gpu @ lhs.T).shape)
         U, _, Vh = truncated_svd(mat_gpu @ lhs.T, A.shape[1])
         proj = U @ Vh
 
@@ -129,17 +124,13 @@ def _cmf_reconstruction_error(matrices: Sequence, factors: list, norm_X_sq):
     return norm_sq_err, projections, projected_X
 
 
-@torch.inference_mode()
 def parafac2_nd(
     X_in: Sequence,
     rank: int,
     n_iter_max: int = 200,
     tol: float = 1e-6,
-    random_state=None,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
-    rng = np.random.RandomState(random_state)
-
     # Verbose if this is not an automated build
     verbose = "CI" not in os.environ
 
@@ -161,16 +152,17 @@ def parafac2_nd(
     for i in range(1, len(X_in)):
         covM += X_in[i].T @ X_in[i]
 
-    C = randomized_svd(covM, rank, random_state=rng, n_iter=4)[0]
+    tl.set_backend("cupy")
 
-    tl.set_backend("pytorch")
+    _, C = cp.linalg.eigh(cp.asarray(covM))
+    
     CP = CPTensor(
         (
             None,
             [
-                tl.ones((len(X_in), rank)).cuda().double(),
-                tl.eye(rank).cuda().double(),
-                torch.tensor(C).cuda().double(),
+                cp.ones((len(X_in), rank)),
+                cp.eye(rank),
+                C[:, -rank:]
             ],
         )
     )
@@ -213,7 +205,7 @@ def parafac2_nd(
                     if verbose:
                         print("Reducing acceleration.")
 
-        errs.append(tl.to_numpy((err / norm_tensor).cpu()))
+        errs.append((err / norm_tensor).get())
 
         # Project tensor slices
         projected_X = tl.stack(projected_X)
@@ -239,18 +231,18 @@ def parafac2_nd(
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
-    gini_idx = giniIndex(tl.to_numpy(CP.factors[0].cpu()))
+    gini_idx = giniIndex(CP.factors[0].get())
     assert gini_idx.size == rank
 
-    CP.factors = [f.numpy(force=True)[:, gini_idx] for f in CP.factors]
-    CP.weights = CP.weights.numpy(force=True)[gini_idx]
+    CP.factors = [f.get()[:, gini_idx] for f in CP.factors]
+    CP.weights = CP.weights.get()[gini_idx]
 
     CP = cp_normalize(cp_flip_sign(CP, mode=1))
 
     # Maximize the diagonal of B
     _, col_ind = linear_sum_assignment(np.abs(CP.factors[1].T), maximize=True)
     CP.factors[1] = CP.factors[1][col_ind, :]
-    projections = [p.numpy(force=True)[:, col_ind] for p in projections]
+    projections = [p.get()[:, col_ind] for p in projections]
 
     # Flip the sign based on B
     signn = np.sign(np.diag(CP.factors[1]))
