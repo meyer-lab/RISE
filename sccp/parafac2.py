@@ -108,7 +108,6 @@ def _cmf_reconstruction_error(matrices: Sequence, factors: list, norm_X_sq):
             mat_gpu = mat
 
         lhs = B @ (A[i] * C).T
-        print((mat_gpu @ lhs.T).shape)
         U, _, Vh = truncated_svd(mat_gpu @ lhs.T, A.shape[1])
         proj = U @ Vh
 
