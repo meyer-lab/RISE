@@ -10,7 +10,6 @@ from pacmap import PaCMAP
 from .imports import import_citeseq, import_lupus, import_thomson
 from tensorly.parafac2_tensor import parafac2_to_slice
 from tensorly.cp_tensor import cp_flip_sign, CPTensor, cp_normalize
-from tensorly.tenalg.svd import truncated_svd
 from tensorly.decomposition import non_negative_parafac_hals
 from scipy.optimize import linear_sum_assignment
 
@@ -108,7 +107,7 @@ def _cmf_reconstruction_error(matrices: Sequence, factors: list, norm_X_sq):
             mat_gpu = mat
 
         lhs = B @ (A[i] * C).T
-        U, _, Vh = truncated_svd(mat_gpu @ lhs.T, A.shape[1])
+        U, _, Vh = cp.linalg.svd(mat_gpu @ lhs.T, full_matrices=False)
         proj = U @ Vh
 
         projections.append(proj)
@@ -209,7 +208,7 @@ def parafac2_nd(
         CP = non_negative_parafac_hals(
             projected_X,
             rank,
-            n_iter_max=10,
+            n_iter_max=20,
             nn_modes=(0,),
             init=CP,
             tol=False,
