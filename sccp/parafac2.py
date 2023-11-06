@@ -133,7 +133,7 @@ def parafac2_nd(
     X_in: Sequence,
     rank: int,
     n_iter_max: int = 200,
-    tol: float = 1e-6,
+    tol: float = 1e-7,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray], float]:
     r"""The same interface as regular PARAFAC2."""
     # Verbose if this is not an automated build
