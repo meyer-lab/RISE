@@ -232,30 +232,35 @@ def parafac2_nd(
     R2X = 1 - errs[-1]
     tl.set_backend("numpy")
 
-    gini_idx = giniIndex(CP.factors[0].get())
-    assert gini_idx.size == rank
+    factors = [f.get() for f in CP.factors]
+    projections = [p.get() for p in projections]
 
-    CP.factors = [f.get()[:, gini_idx] for f in CP.factors]
-    CP.weights = CP.weights.get()[gini_idx]
+    weights, factors, projections = standardize_pf2(
+        CP.weights.get(), factors, projections
+    )
 
-    CP = cp_normalize(cp_flip_sign(CP, mode=1))
+    return weights, factors, projections, R2X
 
-    # Maximize the diagonal of B
-    _, col_ind = linear_sum_assignment(np.abs(CP.factors[1].T), maximize=True)
-    CP.factors[1] = CP.factors[1][col_ind, :]
-    projections = [p.get()[:, col_ind] for p in projections]
+
+def standardize_pf2(
+    weights: np.ndarray, factors: list[np.ndarray], projections: list[np.ndarray]
+) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
+    # Order components by condition variance
+    gini = np.var(factors[0], axis=0) / np.mean(factors[0], axis=0)
+    gini_idx = np.argsort(gini)
+    factors = [f[:, gini_idx] for f in factors]
+    weights = weights[gini_idx]
+
+    weights, factors = cp_normalize(cp_flip_sign((weights, factors), mode=1))
+
+    # Order eigen-cells to maximize the diagonal of B
+    _, col_ind = linear_sum_assignment(np.abs(factors[1].T), maximize=True)
+    factors[1] = factors[1][col_ind, :]
+    projections = [p[:, col_ind] for p in projections]
 
     # Flip the sign based on B
-    signn = np.sign(np.diag(CP.factors[1]))
-    CP.factors[1] *= signn[:, np.newaxis]
+    signn = np.sign(np.diag(factors[1]))
+    factors[1] *= signn[:, np.newaxis]
     projections = [p * signn for p in projections]
 
-    return CP.weights, CP.factors, projections, R2X
-
-
-def giniIndex(X: np.ndarray) -> np.ndarray:
-    """Calculates the Gini Coeff for each component and returns the index rearrangment"""
-    X = np.abs(X)
-    gini = np.var(X, axis=0) / np.mean(X, axis=0)
-
-    return np.argsort(gini)
+    return weights, factors, projections
