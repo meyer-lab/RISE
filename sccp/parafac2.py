@@ -12,6 +12,7 @@ from tensorly.parafac2_tensor import parafac2_to_slice
 from tensorly.cp_tensor import cp_flip_sign, CPTensor, cp_normalize
 from tensorly.decomposition import non_negative_parafac_hals
 from scipy.optimize import linear_sum_assignment
+from sklearn.utils.sparsefuncs import mean_variance_axis
 
 
 def cwSNR(
@@ -44,9 +45,15 @@ def pf2(
     sgUnique, sgIndex = np.unique(X.obs_vector(condition_name), return_inverse=True)
 
     # We are going to center as we make the matrices
-    means = np.mean(X.X, axis=0)
+    means, _ = mean_variance_axis(X.X, axis=0) # type: ignore
 
-    X_pf = [X[sgIndex == sgi, :].X.toarray() - means for sgi in range(len(sgUnique))]
+    X_pf = []
+
+    for sgi in range(len(sgUnique)):
+        X_condition = X[sgIndex == sgi, :]
+        X_condition_arr = X_condition.X.toarray()
+        assert X_condition_arr.shape == X_condition.shape
+        X_pf.append(X_condition_arr - means)
 
     # Quantify the variation in cross-products since this is an assumption of Pf2
     covs = np.stack([xx.T @ xx for xx in X_pf])

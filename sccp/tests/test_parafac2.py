@@ -4,8 +4,9 @@ Test the parafac2 method.
 import numpy as np
 from tensorly.decomposition import parafac2
 from tensorly.random import random_parafac2
-from ..parafac2 import parafac2_nd
+from ..parafac2 import parafac2_nd, pf2
 from tensorly.decomposition._parafac2 import _parafac2_reconstruction_error
+from ..imports import import_thomson
 
 
 pf2shape = [(100, 800)] * 4
@@ -49,6 +50,13 @@ def test_parafac2():
     for ii in range(3):
         np.testing.assert_allclose(f1[ii], fT[ii], rtol=0.01, atol=0.01)
         np.testing.assert_allclose(p1[ii], pT[ii], rtol=0.01, atol=0.01)
+
+
+def test_factor_thomson():
+    """Import and factor Thomson."""
+    X = import_thomson()
+
+    X = pf2(X, "Condition", 3, doEmbedding=False)
 
 
 def test_performance():

@@ -20,7 +20,7 @@ clean:
 	rm -rf output profile profile.svg
 
 testprofile:
-	poetry run python3 -m cProfile -o profile -m pytest -s -v -x --full-trace
+	poetry run python3 -m cProfile -o profile -m pytest -s -v -x
 	gprof2dot -f pstats --node-thres=5.0 profile | dot -Tsvg -o profile.svg
 
 mypy:
