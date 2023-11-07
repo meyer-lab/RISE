@@ -9,14 +9,14 @@ from sklearn.utils.sparsefuncs import inplace_column_scale, mean_variance_axis
 
 def prepare_dataset(X: anndata.AnnData) -> anndata.AnnData:
     assert isinstance(X.X, spmatrix)
-    assert np.amin(X.X.data) >= 0.0 # type: ignore
+    assert np.amin(X.X.data) >= 0.0  # type: ignore
 
-    readSum, _ = mean_variance_axis(X.X, axis=0) # type: ignore
+    readSum, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
     readSum *= X.X.shape[0]
     inplace_column_scale(X.X, 1.0 / readSum)
 
     # Transform values
-    X.X.data = np.log10((1000.0 * X.X.data) + 1.0) # type: ignore
+    X.X.data = np.log10((1000.0 * X.X.data) + 1.0)  # type: ignore
 
     # Filter out genes with too few reads
     X = X[:, readSum > 1000]

@@ -33,6 +33,25 @@ def cwSNR(
     return SNR
 
 
+def getCondition(
+    X: anndata.AnnData, condition_name: str, matrix_idx: int
+) -> np.ndarray:
+    """Separate out one condition from within the anndata object. Note that this is
+    dependent on the ordering of cells in the dataset. This also centers based on
+    the whole-dataset mean."""
+    # Get the indices for subsetting the data
+    _, sgIndex = np.unique(X.obs_vector(condition_name), return_inverse=True)
+
+    # We are going to center as we make the matrices
+    means, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
+
+    X_condition = X[sgIndex == matrix_idx, :]
+    X_condition_arr = X_condition.X.toarray()
+    assert X_condition_arr.shape == X_condition.shape
+
+    return X_condition_arr - means
+
+
 def pf2(
     X: anndata.AnnData,
     condition_name: str,
@@ -44,16 +63,7 @@ def pf2(
     # Get the indices for subsetting the data
     sgUnique, sgIndex = np.unique(X.obs_vector(condition_name), return_inverse=True)
 
-    # We are going to center as we make the matrices
-    means, _ = mean_variance_axis(X.X, axis=0) # type: ignore
-
-    X_pf = []
-
-    for sgi in range(len(sgUnique)):
-        X_condition = X[sgIndex == sgi, :]
-        X_condition_arr = X_condition.X.toarray()
-        assert X_condition_arr.shape == X_condition.shape
-        X_pf.append(X_condition_arr - means)
+    X_pf = [getCondition(X, condition_name, sgi) for sgi in range(len(sgUnique))]
 
     # Quantify the variation in cross-products since this is an assumption of Pf2
     covs = np.stack([xx.T @ xx for xx in X_pf])
