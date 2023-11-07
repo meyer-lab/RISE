@@ -30,7 +30,7 @@ def testPf2Ranks(
         # perform pf2 on the given rank
         print(f"\n\nPARAFAC2 FITTING: RANK {rank}")
 
-        X = pf2(pfx2_data, "Condition", rank=rank, doEmbedding=False)
+        X = pf2(pfx2_data, rank=rank, doEmbedding=False)
 
         A_matrix = X.uns["Pf2_A"]
         condition_labels = condition_labels_all["SLE_status"]
