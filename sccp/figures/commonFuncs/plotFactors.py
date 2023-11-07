@@ -29,7 +29,7 @@ def plotFactors(
             yt = [f"Cell State {i}" for i in np.arange(1, rank + 1)]
             title = "Components by Cell State"
         else:
-            yt = data.var.to_numpy()
+            yt = data.var.index.values
             title = "Components by Gene"
 
         X = factors[i]
@@ -38,7 +38,7 @@ def plotFactors(
             max_weight = np.max(np.abs(X), axis=1)
             kept_idxs = max_weight > 0.08
             X = X[kept_idxs]
-            yt = [yt[ii] for ii in kept_idxs]
+            yt = yt[kept_idxs]
 
         if i in reorder:
             X, ind = reorder_table(X)
