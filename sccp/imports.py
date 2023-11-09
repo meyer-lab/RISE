@@ -27,7 +27,7 @@ def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
     X.var["means"] = means
 
     # Filter out genes with too few reads
-    X = X[:, readSum > 100]
+    X = X[:, readSum > 50]
 
     return X
 

@@ -11,6 +11,7 @@ from .commonFuncs.plotGeneral import plotGenePerCellType, plotGenePerCategCond
 from ..gating import gateThomsonCells
 
 
+
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
@@ -20,7 +21,6 @@ def makeFigure():
     subplotLabel(ax)
     rank = 30
     X = openPf2(rank, "Thomson")
-    print(X)
 
     gateThomsonCells(X)
     plotLabelsUMAP(X, "Cell Type", ax[0])
