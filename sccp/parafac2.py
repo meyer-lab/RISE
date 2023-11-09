@@ -42,6 +42,24 @@ def cwSNR(
     return SNR, 1.0 - err_norm / norm_overall
 
 
+def store_pf2(
+    X: anndata.AnnData, parafac2_output: tuple[np.ndarray, list, list]
+) -> anndata.AnnData:
+    """Store the Pf2 results into the anndata object."""
+    sgIndex = X.obs["condition_unique_idxs"]
+
+    X.uns["Pf2_weights"] = parafac2_output[0]
+    X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"] = parafac2_output[1]
+
+    X.obsm["projections"] = np.zeros((X.shape[0], len(X.uns["Pf2_weights"])))
+    for i, p in enumerate(parafac2_output[2]):
+        X.obsm["projections"][sgIndex == i, :] = p  # type: ignore
+
+    X.obsm["weighted_projections"] = X.obsm["projections"] @ X.uns["Pf2_B"]
+
+    return X
+
+
 def pf2(
     X: anndata.AnnData,
     rank: int,
@@ -76,20 +94,54 @@ def pf2(
 
     parafac2_output = svd_decompress_parafac2_tensor(parafac2_output, loadings_pf)
 
-    X.uns["Pf2_weights"] = parafac2_output[0]
-    X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"] = parafac2_output[1]
-
-    X.obsm["projections"] = np.zeros((X.shape[0], rank))
-    for i, p in enumerate(parafac2_output[2]):
-        X.obsm["projections"][sgIndex == i, :] = p  # type: ignore
-
-    X.obsm["weighted_projections"] = X.obsm["projections"] @ X.uns["Pf2_B"]
+    X = store_pf2(X, parafac2_output)
 
     if doEmbedding:
         pcm = PaCMAP(random_state=random_state)
         X.obsm["embedding"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
 
     return X
+
+
+def pf2_r2x(
+    X: anndata.AnnData,
+    max_rank: int,
+) -> np.ndarray:
+    # Get the indices for subsetting the data
+    sgIndex = X.obs["condition_unique_idxs"]
+    nConditions = np.amax(sgIndex) + 1
+
+    X_pf = []
+    loadings_pf = []
+
+    tl.set_backend("cupy")
+
+    print("Loading and compressing tensor slices")
+    for sgi in tqdm(range(nConditions), total=nConditions):
+        X_cond = X[sgIndex == sgi, :]
+        X_condition_arr = X_cond.X.toarray() - X.var["means"].to_numpy()
+
+        scores, loadings = svd_compress_tensor_slice(X_condition_arr, maxrank=200)
+        X_pf.append(scores)
+        loadings_pf.append(loadings)
+
+    tl.set_backend("numpy")
+
+    r2x_vec = np.empty(max_rank)
+
+    for i in tqdm(range(len(r2x_vec)), total=len(r2x_vec)):
+        parafac2_output = parafac2_nd(
+            X_pf,
+            rank=i + 1,
+        )
+
+        parafac2_output = svd_decompress_parafac2_tensor(parafac2_output, loadings_pf)
+
+        X = store_pf2(X, parafac2_output)
+
+        _, r2x_vec[i] = cwSNR(X)
+
+    return r2x_vec
 
 
 def svd_compress_tensor_slice(tensor_slice, maxrank):
