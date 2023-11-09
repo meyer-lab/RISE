@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup, openPf2
 from .commonFuncs.plotUMAP import plotGeneUMAP, plotLabelsUMAP
 import pacmap
+import numpy as np
 
 
 def makeFigure():
@@ -29,7 +30,7 @@ def makeFigure():
 
     # PCA dimension reduction
     pc = PCA(n_components=rank)
-    pcaPoints = pc.fit_transform(X.X)
+    pcaPoints = pc.fit_transform(np.asarray(X.X.to_memory() - X.var["means"].values))
     X.obsm["embedding"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
     for i, gene in enumerate(genes):

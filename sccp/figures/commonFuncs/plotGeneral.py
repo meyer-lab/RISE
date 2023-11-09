@@ -88,13 +88,14 @@ def plotGenePerCellType(genes, adata, ax):
     """Plots average gene expression across cell types for all conditions"""
     genesV = adata[:, genes]
     dataDF = genesV.to_df()
+    dataDF = dataDF.subtract(genesV.var["means"].values)
     dataDF["Condition"] = genesV.obs["Condition"].values
     dataDF["Cell Type"] = genesV.obs["Cell Type"].values
     print(dataDF)
     data = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
         columns={"variable": "Gene", "value": "Value"}
     )
-    df = data.groupby(["Condition", "Cell Type", "Gene"]).mean()
+    df = data.groupby(["Condition", "Cell Type", "Gene"], observed=False).mean()
     df = df.rename(columns={"Value": "Average Gene Expression For Drugs"})
     sns.stripplot(
         data=df,
@@ -111,6 +112,7 @@ def plotGenePerCategCond(conds, categoryCond, genes, adata, axs, mean=True):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = adata[:, genes]
     dataDF = genesV.to_df()
+    dataDF = dataDF.subtract(genesV.var["means"].values)
     dataDF["Condition"] = genesV.obs["Condition"].values
     dataDF["Cell Type"] = genesV.obs["Cell Type"].values
 
@@ -118,7 +120,7 @@ def plotGenePerCategCond(conds, categoryCond, genes, adata, axs, mean=True):
         columns={"variable": "Gene", "value": "Value"}
     )
     if mean is True:
-        df = df.groupby(["Condition", "Cell Type", "Gene"]).mean()
+        df = df.groupby(["Condition", "Cell Type", "Gene"], observed=False).mean()
 
     df = df.rename(columns={"Value": "Average Gene Expression For Drugs"}).reset_index()
 
