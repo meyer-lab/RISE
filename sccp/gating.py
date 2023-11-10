@@ -17,7 +17,7 @@ def gateThomsonCells(X) -> npt.ArrayLike:
     """Manually gates cell types for Thomson UMAP"""
     cellTypeDF = pd.read_csv("sccp/data/Thomson/ThomsonCellTypes.csv", index_col=0)
     cellTypeDF.index.name = "cell_barcode"
-    X.obs = X.obs.join(cellTypeDF, on="cell_barcode", how='inner')
+    X.obs = X.obs.join(cellTypeDF, on="cell_barcode", how="inner")
 
     X.obs["Cell Type"] = X.obs["Cell Type"].values.astype(str)
     X.obs["Cell Type2"] = X.obs["Cell Type2"].values.astype(str)

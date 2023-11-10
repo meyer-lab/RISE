@@ -5,7 +5,7 @@ import anndata
 import tensorly as tl
 import cupy as cp
 from pacmap import PaCMAP
-from tensorly.tenalg.svd import randomized_svd
+from tensorly.tenalg.svd import randomized_range_finder
 from tensorly.decomposition._parafac2 import parafac2
 from tensorly.preprocessing import svd_decompress_parafac2_tensor
 from tensorly.cp_tensor import cp_flip_sign
@@ -66,26 +66,7 @@ def pf2(
     random_state=1,
     doEmbedding: bool = True,
 ):
-    # Get the indices for subsetting the data
-    sgIndex = X.obs["condition_unique_idxs"]
-    nConditions = np.amax(sgIndex) + 1
-    max_rank = 500 if nConditions < 100 else 200
-
-    X_pf = []
-    loadings_pf = []
-
-    tl.set_backend("cupy")
-
-    print("Loading and compressing tensor slices")
-    for sgi in tqdm(range(nConditions), total=nConditions):
-        X_cond = X[sgIndex == sgi, :]
-        X_condition_arr = X_cond.X.toarray() - X.var["means"].to_numpy()
-
-        scores, loadings = svd_compress_tensor_slice(X_condition_arr, maxrank=max_rank)
-        X_pf.append(scores)
-        loadings_pf.append(loadings)
-
-    tl.set_backend("numpy")
+    X_pf, loadings_pf = compress_tensor_slices(X)
 
     parafac2_output = parafac2_nd(
         X_pf,
@@ -107,25 +88,7 @@ def pf2_r2x(
     X: anndata.AnnData,
     max_rank: int,
 ) -> np.ndarray:
-    # Get the indices for subsetting the data
-    sgIndex = X.obs["condition_unique_idxs"]
-    nConditions = np.amax(sgIndex) + 1
-
-    X_pf = []
-    loadings_pf = []
-
-    tl.set_backend("cupy")
-
-    print("Loading and compressing tensor slices")
-    for sgi in tqdm(range(nConditions), total=nConditions):
-        X_cond = X[sgIndex == sgi, :]
-        X_condition_arr = X_cond.X.toarray() - X.var["means"].to_numpy()
-
-        scores, loadings = svd_compress_tensor_slice(X_condition_arr, maxrank=200)
-        X_pf.append(scores)
-        loadings_pf.append(loadings)
-
-    tl.set_backend("numpy")
+    X_pf, loadings_pf = compress_tensor_slices(X)
 
     r2x_vec = np.empty(max_rank)
 
@@ -144,32 +107,47 @@ def pf2_r2x(
     return r2x_vec
 
 
-def svd_compress_tensor_slice(tensor_slice, maxrank):
-    r"""Compress data with the SVD for running PARAFAC2."""
-    n_rows, n_cols = np.shape(tensor_slice)
-    n_cols = min(n_cols, maxrank)
-    if n_rows <= n_cols:
-        return cp.array(tensor_slice), None
+def compress_tensor_slices(X) -> tuple[list, list]:
+    r"""Compress data with the randomized range finder for running PARAFAC2."""
+    # Get the indices for subsetting the data
+    sgIndex = X.obs["condition_unique_idxs"]
+    nConditions = np.amax(sgIndex) + 1
+    max_rank = 500 if nConditions < 100 else 200
 
-    U, s, Vh = randomized_svd(
-        cp.array(tensor_slice),
-        n_eigenvecs=n_cols,
-        random_state=1,
-    )
+    X_pf = []
+    loadings_pf = []
 
-    # Array broadcasting happens at the last dimension, since Vh is num_svds x n_cols
-    # we need to transpose it, multiply in the singular values and then transpose
-    # it again. This is equivalen to writing diag(s) @ Vh. If we skip the
-    # transposes, we would get Vh @ diag(s), which is wrong.
-    return (s * Vh.T).T, U.get()  # scores, loadings
+    n_cols = min(np.shape(X)[1], max_rank)
+
+    tl.set_backend("cupy")
+
+    for sgi in tqdm(range(nConditions), total=nConditions, desc="Compressing tensor slices"):
+        X_cond = X[sgIndex == sgi, :]
+        X_condition_arr = X_cond.X.toarray() - X.var["means"].to_numpy()
+
+        matrix = cp.array(X_condition_arr)
+
+        if np.shape(X_condition_arr)[0] <= n_cols:
+            X_pf.append(matrix)
+            loadings_pf.append(None)
+            continue
+
+        Q = randomized_range_finder(matrix, n_cols, random_state=1, n_iter=5)
+
+        X_pf.append(Q.T @ matrix)  # scores
+        loadings_pf.append(Q.get())  # loadings
+
+    tl.set_backend("numpy")
+
+    return X_pf, loadings_pf
 
 
 def parafac2_nd(
     X_in: Sequence,
     rank: int,
-    n_iter_max: int = 300,
-    tol: float = 1e-7,
-    verbose=True,
+    n_iter_max: int = 200,
+    tol: float = 1e-8,
+    verbose=False,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
     r"""The same interface as regular PARAFAC2."""
 
