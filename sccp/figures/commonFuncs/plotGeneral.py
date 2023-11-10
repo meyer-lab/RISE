@@ -5,12 +5,12 @@ import scanpy as sc
 import anndata
 from matplotlib.axes import Axes
 from ...crossVal import CrossVal
-from ...decomposition import R2X
+from ...parafac2 import pf2_r2x
 
 
 def plotR2X(data, rank, ax: Axes):
     """Creates R2X plot for parafac2 tensor decomposition"""
-    r2xError = R2X(data, rank)
+    r2xError = pf2_r2x(data, rank)
 
     rank_vec = np.arange(1, rank + 1)
     labelNames = ["Fit: Pf2", "Fit: PCA"]

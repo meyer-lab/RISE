@@ -114,8 +114,8 @@ def compress_tensor_slices(X) -> tuple[list, list]:
     nConditions = np.amax(sgIndex) + 1
     max_rank = 500 if nConditions < 100 else 200
 
-    X_pf = []
-    loadings_pf = []
+    X_pf: list = []
+    loadings_pf: list = []
 
     n_cols = min(np.shape(X)[1], max_rank)
 
