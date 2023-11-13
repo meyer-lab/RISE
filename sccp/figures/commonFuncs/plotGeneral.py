@@ -5,7 +5,7 @@ import scanpy as sc
 import anndata
 from matplotlib.axes import Axes
 from ...crossVal import CrossVal
-from ...parafac2 import pf2_r2x
+from ...parafac2 import pf2_r2x, pf2_fms
 
 
 def plotR2X(data, rank, ax: Axes):
@@ -37,6 +37,27 @@ def plotR2X(data, rank, ax: Axes):
     )
 
     ax.legend()
+
+
+def plotfms(data, rank, ax: Axes):
+    """Creates R2X plot for parafac2 tensor decomposition"""
+    fms_vec = pf2_fms(data, rank)
+
+    rank_vec = np.arange(1, rank + 1)
+
+    ax.scatter(
+        rank_vec,
+        fms_vec,
+        c="k",
+        s=30.0,
+    )
+
+    ax.set(
+        ylabel="Factor Match Score",
+        xlabel="Number of Components",
+        xticks=np.linspace(0, rank, num=8, dtype=int),
+        yticks=np.linspace(0, np.max(np.append(fms_vec[0], fms_vec[1])) + 0.01, num=5),
+    )
 
 
 def plotCV(data, rank, trainPerc, ax: Axes):
@@ -91,7 +112,6 @@ def plotGenePerCellType(genes, adata, ax):
     dataDF = dataDF.subtract(genesV.var["means"].values)
     dataDF["Condition"] = genesV.obs["Condition"].values
     dataDF["Cell Type"] = genesV.obs["Cell Type"].values
-    print(dataDF)
     data = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
         columns={"variable": "Gene", "value": "Value"}
     )

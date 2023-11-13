@@ -7,9 +7,11 @@ from .common import (
     openPf2,
 )
 from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
-from .commonFuncs.plotGeneral import plotGenePerCellType, plotGenePerCategCond
+from .commonFuncs.plotGeneral import plotGenePerCellType, plotGenePerCategCond, plotfms
 from ..gating import gateThomsonCells
-
+import scanpy as sc
+import numpy as np
+from ..parafac2 import pf2_fms
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -21,13 +23,14 @@ def makeFigure():
     rank = 30
     X = openPf2(rank, "Thomson")
 
+    # plotfms(X, 30, ax[0])
     gateThomsonCells(X)
-    plotLabelsUMAP(X, "Cell Type", ax[0])
-    plotLabelsUMAP(X, "Cell Type2", ax[1])
-    plotCmpUMAP(X, 3, ax[2], 0.2)  # NK
-    plotCmpUMAP(X, 29, ax[3], 0.2)  # Gluco
-    plotCmpUMAP(X, 12, ax[4], 0.2)  # B Cell
-    plotCmpUMAP(X, 23, ax[5], 0.2)  # Dex Hcl
+    plotLabelsUMAP(X, "Cell Type", ax[1])
+    plotLabelsUMAP(X, "Cell Type2", ax[2])
+    plotCmpUMAP(X, 3, ax[3], 0.2)  # NK
+    plotCmpUMAP(X, 29, ax[4], 0.2)  # Gluco
+    plotCmpUMAP(X, 12, ax[5], 0.2)  # B Cell
+    plotCmpUMAP(X, 23, ax[6], 0.2)  # Dex Hcl
 
     # weightedProjDF = flattenWeightedProjs(data, factors[1], projs)
     # weightedProjDF["Cell Type"] = dataDF["Cell Type"].values
@@ -44,7 +47,7 @@ def makeFigure():
 
     genes = [geneSet1, geneSet2]
     for i in range(len(genes)):
-        plotGenePerCellType(genes[i], X, ax[i + 6])
+        plotGenePerCellType(genes[i], X, ax[i + 7])
 
     # set3 = ["VPREB3", "CD79A", "FAM111B", "HOPX", "SLC30A3", "MS4A1"]
     # set4 = ["CD163", "ADORA3", "MS4A6A", "RNASE1", "MTMR11"]
@@ -57,7 +60,7 @@ def makeFigure():
         "Meprednisone",
     ]
     geneSet3 = ["CD163"]
-    plotGenePerCategCond(glucs, "Gluco", geneSet3, X, [ax[8]])
+    plotGenePerCategCond(glucs, "Gluco", geneSet3, X, [ax[9]])
 
     # geneSet4 = ["VPREB3", "FAM111B"]
     # plotGenePerCategCond(

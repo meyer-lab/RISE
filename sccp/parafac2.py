@@ -8,8 +8,9 @@ from pacmap import PaCMAP
 from tensorly.tenalg.svd import randomized_range_finder
 from tensorly.decomposition._parafac2 import parafac2
 from tensorly.preprocessing import svd_decompress_parafac2_tensor
-from tensorly.cp_tensor import cp_flip_sign
+from tensorly.cp_tensor import cp_flip_sign, CPTensor
 from scipy.optimize import linear_sum_assignment
+from tlviz.factor_tools import factor_match_score as fms
 
 
 def cwSNR(
@@ -218,3 +219,70 @@ def standardize_pf2(
     projections = [p * signn for p in projections]
 
     return weights, factors, projections
+
+
+def pf2_fms(
+    X: anndata.AnnData,
+    max_rank: int,
+    random_state=1,
+) -> np.ndarray:
+    # Get the indices for subsetting the data
+    rng = np.random.default_rng(random_state)
+    indices = rng.choice(2, size=X.shape[0])
+
+    X1 = X[indices == 0, :].to_memory()
+    X2 = X[indices == 1, :].to_memory()
+
+    sgIndex1 = X1.obs["condition_unique_idxs"]
+    sgIndex2 = X2.obs["condition_unique_idxs"]
+    nConditions = np.amax(sgIndex1) + 1
+
+    X_pf1 = []
+    X_pf2 = []
+    loadings_pf1 = []
+    loadings_pf2 = []
+
+    tl.set_backend("cupy")
+
+    print("Loading and compressing tensor slices")
+    for sgi in tqdm(range(nConditions), total=nConditions):
+        X_cond1 = X1[sgIndex1 == sgi, :]
+        X_cond2 = X2[sgIndex2 == sgi, :]
+        X_condition_arr1 = X_cond1.X.toarray() - X1.var["means"].to_numpy()
+        X_condition_arr2 = X_cond2.X.toarray() - X2.var["means"].to_numpy()
+
+        scores1, loadings1 = svd_compress_tensor_slice(X_condition_arr1, maxrank=200)
+        scores2, loadings2 = svd_compress_tensor_slice(X_condition_arr2, maxrank=200)
+        X_pf1.append(scores1)
+        X_pf2.append(scores2)
+        loadings_pf1.append(loadings1)
+        loadings_pf2.append(loadings2)
+
+    tl.set_backend("numpy")
+
+    fms_vec = np.empty(max_rank)
+
+    for i in tqdm(range(len(fms_vec)), total=len(fms_vec)):
+        parafac2_output1 = parafac2_nd(
+            X_pf1,
+            rank=i + 1,
+        )
+
+        parafac2_output2 = parafac2_nd(
+            X_pf2,
+            rank=i + 1,
+        )
+
+        parafac2_output1 = svd_decompress_parafac2_tensor(
+            parafac2_output1, loadings_pf1
+        )
+        parafac2_output2 = svd_decompress_parafac2_tensor(
+            parafac2_output2, loadings_pf2
+        )
+
+        X1cp = CPTensor((parafac2_output1.weights, parafac2_output1.factors))
+        X2cp = CPTensor((parafac2_output2.weights, parafac2_output2.factors))
+
+        fms_vec[i] = fms(X1cp, X2cp, consider_weights=True, skip_mode=None)
+
+    return fms_vec
