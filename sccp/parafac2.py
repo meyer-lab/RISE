@@ -251,8 +251,8 @@ def pf2_fms(
         X_condition_arr1 = X_cond1.X.toarray() - X1.var["means"].to_numpy()
         X_condition_arr2 = X_cond2.X.toarray() - X2.var["means"].to_numpy()
 
-        scores1, loadings1 = svd_compress_tensor_slice(X_condition_arr1, maxrank=200)
-        scores2, loadings2 = svd_compress_tensor_slice(X_condition_arr2, maxrank=200)
+        scores1, loadings1 = compress_tensor_slices(X_condition_arr1, maxrank=200)
+        scores2, loadings2 = compress_tensor_slices(X_condition_arr2, maxrank=200)
         X_pf1.append(scores1)
         X_pf2.append(scores2)
         loadings_pf1.append(loadings1)
