@@ -1,12 +1,10 @@
-from typing import Sequence
 import numpy as np
 from tqdm import tqdm
 import anndata
 import tensorly as tl
 import cupy as cp
 import scipy.sparse as sps
-from scipy.sparse.linalg import norm
-from cupyx.scipy.sparse.linalg._eigen import svds
+from scipy.sparse.linalg import svds
 from pacmap import PaCMAP
 from tensorly.decomposition import parafac
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize, CPTensor
@@ -19,7 +17,7 @@ def cwSNR(
 ) -> tuple[np.ndarray, float]:
     """Calculate the columnwise signal-to-noise ratio for each dataset and overall error."""
     SNR = np.empty(X.uns["Pf2_A"].shape, dtype=float)
-    norm_overall = 0.0
+    norm_overall = calc_total_norm(X) 
     err_norm = 0.0
 
     # Get the indices for subsetting the data
@@ -34,7 +32,6 @@ def cwSNR(
         slice = np.dot(B_i * a, np.array(X.varm["Pf2_C"]).T)
 
         X_condition_arr = Xarr[sgIndex == i] - X.var["means"].to_numpy()
-        norm_overall += float(np.linalg.norm(X_condition_arr) ** 2.0)
         err_norm_here = float(np.linalg.norm(X_condition_arr - slice) ** 2.0)
         err_norm += err_norm_here
 
@@ -42,6 +39,19 @@ def cwSNR(
         SNR[i, :] /= err_norm_here
 
     return SNR, 1.0 - err_norm / norm_overall
+
+
+def calc_total_norm(X: anndata.AnnData) -> float:
+    """Calculate the total norm of the dataset, with centering"""
+    norm_overall = 0.0
+    Xarr = sps.csr_array(X.X)
+
+    for i in range(0, X.shape[0], 1000):
+        idx_max = min(i + 1000, Xarr.shape[0])
+        X_condition_arr = Xarr[i:idx_max] - X.var["means"].to_numpy()
+        norm_overall += float(np.linalg.norm(X_condition_arr) ** 2.0)
+
+    return norm_overall
 
 
 def store_pf2(
@@ -103,17 +113,18 @@ def pf2_r2x(
     return r2x_vec
 
 
-def _cmf_reconstruction_error(
-    matrices: Sequence, factors: list, means: cp.ndarray, norm_X_sq
-):
+def _cmf_reconstruction_error(Xarr, sgIndex, means, factors: list, norm_X_sq: float):
     A, B, C = factors
 
-    norm_sq_err = norm_X_sq.copy()
+    norm_sq_err = cp.array(norm_X_sq)
     CtC = C.T @ C
     projections = []
     projected_X = []
 
-    for i, mat in enumerate(matrices):
+    for i in range(np.amax(sgIndex) + 1):
+        # Prepare CuPy matrix
+        mat = cp.sparse.csr_matrix(Xarr[sgIndex == i])
+
         lhs = B @ (A[i] * C).T
         U, _, Vh = cp.linalg.svd(mat @ lhs.T - means @ lhs.T, full_matrices=False)
         proj = U @ Vh
@@ -138,7 +149,7 @@ def parafac2_nd(
     rank: int,
     n_iter_max: int = 200,
     tol: float = 1e-6,
-    verbose=False,
+    verbose=True,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
     r"""The same interface as regular PARAFAC2."""
     # Index dataset to a list of conditions
@@ -146,25 +157,19 @@ def parafac2_nd(
     n_cond = np.amax(sgIndex) + 1
 
     Xarr = sps.csr_array(X.X)
-    X_in = [
-        cp.sparse.csr_matrix(Xarr[sgIndex == i], dtype=cp.float32)
-        for i in range(n_cond)
-    ]
-
     means = cp.array(X.var["means"].to_numpy())
 
     # Calculate the norm of the dataset
-    norm_tensor = norm(Xarr) ** 2
-    # TODO: This norm isn't quite right because it doesn't account for centering
+    norm_tensor = calc_total_norm(X)
+
+    _, _, C = svds(Xarr, k=rank, return_singular_vectors=True)
 
     tl.set_backend("cupy")
 
-    _, _, C = svds(X_in[0], k=rank, return_singular_vectors=True)
-
     factors = [
-        tl.ones((len(X_in), rank), dtype=cp.float32),
+        tl.ones((n_cond, rank), dtype=cp.float32),
         tl.eye(rank, dtype=cp.float32),
-        C.T,
+        cp.array(C.T),
     ]
 
     errs = []
@@ -172,7 +177,7 @@ def parafac2_nd(
     tq = tqdm(range(n_iter_max), disable=(not verbose))
     for iter in tq:
         err, projections, projected_X = _cmf_reconstruction_error(
-            X_in, factors, means, norm_tensor
+            Xarr, sgIndex, means, factors, norm_tensor
         )
 
         errs.append(tl.to_numpy((err / norm_tensor)))
