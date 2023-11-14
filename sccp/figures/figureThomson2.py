@@ -7,11 +7,16 @@ from .common import (
     openPf2,
 )
 from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
-from .commonFuncs.plotGeneral import plotGenePerCellType, plotGenePerCategCond, plotfms
+from .commonFuncs.plotGeneral import (
+    plotGenePerCellType,
+    plotGenePerCategCond,
+    plotfms,
+    plotR2X_pf2,
+)
 from ..gating import gateThomsonCells
 import scanpy as sc
 import numpy as np
-from ..parafac2 import pf2_fms
+
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -23,9 +28,11 @@ def makeFigure():
     rank = 30
     X = openPf2(rank, "Thomson")
 
-    # plotfms(X, 30, ax[0])
+    plotfms(X, 15, ax[0])
+    plotR2X_pf2(X, 15, ax[1])
+
     gateThomsonCells(X)
-    plotLabelsUMAP(X, "Cell Type", ax[1])
+    # plotLabelsUMAP(X, "Cell Type", ax[1])
     plotLabelsUMAP(X, "Cell Type2", ax[2])
     plotCmpUMAP(X, 3, ax[3], 0.2)  # NK
     plotCmpUMAP(X, 29, ax[4], 0.2)  # Gluco

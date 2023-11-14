@@ -38,9 +38,11 @@ def import_thomson() -> anndata.AnnData:
     metafile = pd.read_csv("sccp/data/Thomson/meta.csv", usecols=[0, 1])
 
     # read in actual data
-    X = sc.read_10x_mtx(
-        "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
-    )
+    # X = sc.read_10x_mtx(
+    #     "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
+    # )
+    # Just immediately written from above line, to make loading faster
+    X = anndata.read_h5ad("/opt/andrew/thomson_raw.h5ad")
     obs = X.obs.reset_index(names="cell_barcode")
 
     # Left merging should put the barcodes in order
