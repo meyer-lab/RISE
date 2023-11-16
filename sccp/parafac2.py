@@ -249,11 +249,16 @@ def pf2_fms(
     random_state=1,
 ) -> np.ndarray:
     # Get the indices for subsetting the data
-    rng = np.random.default_rng(random_state)
-    indices = rng.choice(2, size=X.shape[0])
+    indices = np.arange(0, X.shape[0])
 
-    X1 = X[indices == 0, :].to_memory()
-    X2 = X[indices == 1, :].to_memory()
+    rng1 = np.random.default_rng(random_state)
+    indices1 = rng1.choice(indices, size=X.shape[0], replace=True)
+
+    rng2 = np.random.default_rng(random_state + 1)
+    indices2 = rng2.choice(indices, size=X.shape[0], replace=True)
+
+    X1 = X[indices1, :].to_memory()
+    X2 = X[indices2, :].to_memory()
 
     fms_vec = np.empty(max_rank)
 
