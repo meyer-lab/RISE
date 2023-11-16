@@ -16,8 +16,9 @@ def cwSNR(
     X: anndata.AnnData,
 ) -> tuple[np.ndarray, float]:
     """Calculate the columnwise signal-to-noise ratio for each dataset and overall error."""
-    SNR = np.empty(X.uns["Pf2_A"].shape, dtype=float)
-    norm_overall = calc_total_norm(X) 
+    a = X.uns["Pf2_A"] * X.uns["Pf2_weights"]
+    SNR = a
+    norm_overall = calc_total_norm(X)
     err_norm = 0.0
 
     # Get the indices for subsetting the data
@@ -27,15 +28,13 @@ def cwSNR(
 
     for i in range(X.uns["Pf2_A"].shape[0]):
         # Parafac2 to slice
-        a = X.uns["Pf2_A"][i] * X.uns["Pf2_weights"]
         B_i = W_proj[sgIndex == i]
-        slice = np.dot(B_i * a, np.array(X.varm["Pf2_C"]).T)
+        slice = np.dot(B_i * a[i], np.array(X.varm["Pf2_C"]).T)
 
         X_condition_arr = Xarr[sgIndex == i] - X.var["means"].to_numpy()
         err_norm_here = float(np.linalg.norm(X_condition_arr - slice) ** 2.0)
         err_norm += err_norm_here
 
-        SNR[i, :] = a**2.0
         SNR[i, :] /= err_norm_here
 
     return SNR, 1.0 - err_norm / norm_overall
@@ -43,15 +42,23 @@ def cwSNR(
 
 def calc_total_norm(X: anndata.AnnData) -> float:
     """Calculate the total norm of the dataset, with centering"""
-    norm_overall = 0.0
     Xarr = sps.csr_array(X.X)
+    means = X.var["means"].to_numpy()
 
-    for i in range(0, X.shape[0], 1000):
-        idx_max = min(i + 1000, Xarr.shape[0])
-        X_condition_arr = Xarr[i:idx_max] - X.var["means"].to_numpy()
-        norm_overall += float(np.linalg.norm(X_condition_arr) ** 2.0)
+    # Deal with non-zero values first, by centering
+    centered_nonzero = Xarr.data - means[Xarr.indices]
+    centered_nonzero_norm = float(np.linalg.norm(centered_nonzero) ** 2.0)
 
-    return norm_overall
+    # Obtain non-zero counts for each column
+    # Note that these are sorted, and no column should be empty
+    unique, counts = np.unique(Xarr.indices, return_counts=True)
+    assert np.all(np.diff(unique) == 1)
+
+    num_zero = Xarr.shape[0] - counts
+    assert num_zero.shape == means.shape
+    zero_norm = np.sum(np.square(means) * num_zero)
+
+    return zero_norm + centered_nonzero_norm
 
 
 def store_pf2(
