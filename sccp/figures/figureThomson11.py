@@ -22,7 +22,7 @@ def makeFigure():
     rank = 30
     X = openPf2(rank, "Thomson")
     gateThomsonCells(X)
-    cell_comp_hist(X, "Condition", 12, "Triamcinolone Acetonide", ax[0])
+    cell_comp_hist(X, "Condition", 26, "Dexrazoxane HCl (ICRF-187, ADR-529)", ax[0])
     cell_comp_hist(X, "Cell Type", 12, unique=None, ax=ax[1])
 
     cell_comp_hist(X, "Condition", 30, "Triamcinolone Acetonide", ax[2])
