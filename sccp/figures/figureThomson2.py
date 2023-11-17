@@ -30,8 +30,8 @@ def makeFigure():
     rank = 30
     X = openPf2(rank, "Thomson")
 
-    #plotfms(X, 30, ax[0])
-    #plotR2X_pf2(X, 15, ax[1])
+    # plotfms(X, 30, ax[0])
+    # plotR2X_pf2(X, 15, ax[1])
 
     gateThomsonCells(X)
     plotLabelsUMAP(X, "Cell Type", ax[0])
