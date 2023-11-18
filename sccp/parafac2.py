@@ -3,6 +3,7 @@ from tqdm import tqdm
 import anndata
 import tensorly as tl
 import cupy as cp
+from cupyx.scipy import sparse as cupy_sparse
 import scipy.sparse as sps
 from scipy.sparse.linalg import svds
 from pacmap import PaCMAP
@@ -130,7 +131,7 @@ def _cmf_reconstruction_error(Xarr, sgIndex, means, factors: list, norm_X_sq: fl
 
     for i in range(np.amax(sgIndex) + 1):
         # Prepare CuPy matrix
-        mat = cp.sparse.csr_matrix(Xarr[sgIndex == i])
+        mat = cupy_sparse.csr_matrix(Xarr[sgIndex == i], dtype=cp.float32)
 
         lhs = B @ (A[i] * C).T
         U, _, Vh = cp.linalg.svd(mat @ lhs.T - means @ lhs.T, full_matrices=False)
@@ -155,7 +156,7 @@ def parafac2_nd(
     X: anndata.AnnData,
     rank: int,
     n_iter_max: int = 200,
-    tol: float = 1e-6,
+    tol: float = 1e-7,
     verbose=True,
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
     r"""The same interface as regular PARAFAC2."""

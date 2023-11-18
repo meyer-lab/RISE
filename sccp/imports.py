@@ -11,9 +11,17 @@ def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
     assert isinstance(X.X, spmatrix)
     assert np.amin(X.X.data) >= 0.0  # type: ignore
 
-    readSum, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
-    readSum *= X.shape[0]
-    inplace_column_scale(X.X, 1.0 / (readSum + 1.0e-9))
+    # Filter out genes with too few reads
+    readmean, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
+    X = X[:, readmean > 0.01]
+
+    # Normalize read depth
+    sc.pp.normalize_total(X, exclude_highly_expressed=False, inplace=True)
+
+    # Scale genes by sum
+    readmean, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
+    readsum = X.shape[0] * readmean
+    inplace_column_scale(X.X, 1.0 / readsum)
 
     # Transform values
     X.X.data = np.log10((1000.0 * X.X.data) + 1.0)  # type: ignore
@@ -25,9 +33,6 @@ def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
     # Pre-calculate gene means
     means, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
     X.var["means"] = means
-
-    # Filter out genes with too few reads
-    X = X[:, readSum > 50]
 
     return X
 
