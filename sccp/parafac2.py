@@ -83,7 +83,7 @@ def parafac2_nd(
     n_iter_max: int = 200,
     tol: float = 1e-7,
     verbose=True,
-) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
+) -> tuple[tuple[np.ndarray, list[np.ndarray], list[np.ndarray]], float]:
     r"""The same interface as regular PARAFAC2."""
     # Index dataset to a list of conditions
     sgIndex = X.obs["condition_unique_idxs"].to_numpy(dtype=int)
@@ -138,7 +138,7 @@ def parafac2_nd(
 
     print(f"Degeneracy score: {degeneracy_score((weights, factors))}")
 
-    return standardize_pf2(weights, factors, projections)
+    return standardize_pf2(weights, factors, projections), 1.0 - errs[-1]
 
 
 def standardize_pf2(

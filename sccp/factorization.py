@@ -2,7 +2,7 @@ from pacmap import PaCMAP
 import scipy.sparse as sps
 from tensorly.cp_tensor import CPTensor
 from tlviz.factor_tools import factor_match_score as fms
-from sccp.parafac2 import calc_total_norm, parafac2_nd
+from sccp.parafac2 import parafac2_nd
 
 
 import anndata
@@ -12,12 +12,10 @@ from tqdm import tqdm
 
 def cwSNR(
     X: anndata.AnnData,
-) -> tuple[np.ndarray, float]:
+) -> np.ndarray:
     """Calculate the columnwise signal-to-noise ratio for each dataset and overall error."""
     a = X.uns["Pf2_A"] * X.uns["Pf2_weights"]
     SNR = a
-    norm_overall = calc_total_norm(X)
-    err_norm = 0.0
 
     # Get the indices for subsetting the data
     sgIndex = X.obs["condition_unique_idxs"]
@@ -31,11 +29,9 @@ def cwSNR(
 
         X_condition_arr = Xarr[sgIndex == i] - X.var["means"].to_numpy()
         err_norm_here = float(np.linalg.norm(X_condition_arr - slice) ** 2.0)
-        err_norm += err_norm_here
-
         SNR[i, :] /= err_norm_here
 
-    return SNR, 1.0 - err_norm / norm_overall
+    return SNR
 
 
 def store_pf2(
@@ -65,14 +61,12 @@ def pf2_r2x(
     r2x_vec = np.empty(max_rank)
 
     for i in tqdm(range(len(r2x_vec)), total=len(r2x_vec)):
-        parafac2_output = parafac2_nd(
+        _, R2X = parafac2_nd(
             X,
             rank=i + 1,
         )
 
-        X = store_pf2(X, parafac2_output)
-
-        _, r2x_vec[i] = cwSNR(X)
+        r2x_vec[i] = R2X
 
     return r2x_vec
 
@@ -83,12 +77,12 @@ def pf2(
     random_state=1,
     doEmbedding: bool = True,
 ):
-    parafac2_output = parafac2_nd(
+    pf_out, _ = parafac2_nd(
         X,
         rank=rank,
     )
 
-    X = store_pf2(X, parafac2_output)
+    X = store_pf2(X, pf_out)
 
     if doEmbedding:
         pcm = PaCMAP(random_state=random_state)
@@ -114,11 +108,11 @@ def pf2_fms(
     fms_vec = np.empty(max_rank)
 
     for i in tqdm(range(len(fms_vec)), total=len(fms_vec)):
-        parafac2_output1 = parafac2_nd(
+        parafac2_output1, _ = parafac2_nd(
             X1,
             rank=i + 1,
         )
-        parafac2_output2 = parafac2_nd(
+        parafac2_output2, _ = parafac2_nd(
             X2,
             rank=i + 1,
         )
