@@ -4,8 +4,10 @@ import seaborn as sns
 import scanpy as sc
 import anndata
 from matplotlib.axes import Axes
+
+from ...factorization import pf2_r2x
 from ...crossVal import CrossVal
-from ...parafac2 import pf2_r2x, pf2_fms
+from ...factorization import pf2_fms
 
 
 def plotR2X(data, rank, ax: Axes):
@@ -195,13 +197,13 @@ def plotGeneFactors(
     df = df.sort_values(by=cmpName)
 
     if top:
-        sns.barplot(data=df.iloc[-geneAmount:, :], x="Gene", y=cmpName, color="k", ax=ax)
+        sns.barplot(
+            data=df.iloc[-geneAmount:, :], x="Gene", y=cmpName, color="k", ax=ax
+        )
     else:
         sns.barplot(data=df.iloc[:geneAmount, :], x="Gene", y=cmpName, color="k", ax=ax)
-        
 
     ax.tick_params(axis="x", rotation=90)
-
 
 
 def population_bar_chart(
@@ -225,7 +227,13 @@ def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
         # obsDF[category] = obsDF[category].astype(str)
         histDF = pd.DataFrame({"Component " + str(comp): w_proj, category: labels})
         sns.histplot(
-            data=histDF, x="Component " + str(comp), hue=category, kde=True, ax=ax, stat='density', common_norm=False
+            data=histDF,
+            x="Component " + str(comp),
+            hue=category,
+            kde=True,
+            ax=ax,
+            stat="density",
+            common_norm=False,
         )
 
 

@@ -13,7 +13,7 @@ from .commonFuncs.plotGeneral import (
     plotfms,
     plotR2X_pf2,
     plotGeneFactors,
-    gene_plot_cells
+    gene_plot_cells,
 )
 from ..gating import gateThomsonCells
 import scanpy as sc
@@ -64,13 +64,23 @@ def makeFigure():
     geneSet3 = ["CD163"]
     plotGenePerCategCond(glucs, "Gluco", geneSet3, X, [ax[13]])
 
-
     DexGenes1 = X[:, ["MT1G", "MT1H"]].to_memory()
-    gene_plot_cells(DexGenes1, hue="Condition", ax=ax[14], unique="Dexrazoxane HCl (ICRF-187, ADR-529)", average=True)
+    gene_plot_cells(
+        DexGenes1,
+        hue="Condition",
+        ax=ax[14],
+        unique="Dexrazoxane HCl (ICRF-187, ADR-529)",
+        average=True,
+    )
 
     ax[15].clear()
     DexGenes2 = X[:, ["MT1G", "ZNF311"]].to_memory()
-    gene_plot_cells(DexGenes2, hue="Condition", ax=ax[15], unique="Dexrazoxane HCl (ICRF-187, ADR-529)", average=True)
-
+    gene_plot_cells(
+        DexGenes2,
+        hue="Condition",
+        ax=ax[15],
+        unique="Dexrazoxane HCl (ICRF-187, ADR-529)",
+        average=True,
+    )
 
     return f

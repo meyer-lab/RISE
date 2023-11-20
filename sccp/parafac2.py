@@ -6,39 +6,10 @@ import cupy as cp
 from cupyx.scipy import sparse as cupy_sparse
 import scipy.sparse as sps
 from scipy.sparse.linalg import svds
-from pacmap import PaCMAP
 from tensorly.decomposition import parafac
-from tensorly.cp_tensor import cp_flip_sign, cp_normalize, CPTensor
+from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from scipy.optimize import linear_sum_assignment
-from tlviz.factor_tools import factor_match_score as fms, degeneracy_score
-
-
-def cwSNR(
-    X: anndata.AnnData,
-) -> tuple[np.ndarray, float]:
-    """Calculate the columnwise signal-to-noise ratio for each dataset and overall error."""
-    a = X.uns["Pf2_A"] * X.uns["Pf2_weights"]
-    SNR = a
-    norm_overall = calc_total_norm(X)
-    err_norm = 0.0
-
-    # Get the indices for subsetting the data
-    sgIndex = X.obs["condition_unique_idxs"]
-    Xarr = sps.csr_array(X.X)
-    W_proj = np.array(X.obsm["weighted_projections"])
-
-    for i in range(X.uns["Pf2_A"].shape[0]):
-        # Parafac2 to slice
-        B_i = W_proj[sgIndex == i]
-        slice = np.dot(B_i * a[i], np.array(X.varm["Pf2_C"]).T)
-
-        X_condition_arr = Xarr[sgIndex == i] - X.var["means"].to_numpy()
-        err_norm_here = float(np.linalg.norm(X_condition_arr - slice) ** 2.0)
-        err_norm += err_norm_here
-
-        SNR[i, :] /= err_norm_here
-
-    return SNR, 1.0 - err_norm / norm_overall
+from tlviz.factor_tools import degeneracy_score
 
 
 def calc_total_norm(X: anndata.AnnData) -> float:
@@ -62,78 +33,38 @@ def calc_total_norm(X: anndata.AnnData) -> float:
     return zero_norm + centered_nonzero_norm
 
 
-def store_pf2(
-    X: anndata.AnnData, parafac2_output: tuple[np.ndarray, list, list]
-) -> anndata.AnnData:
-    """Store the Pf2 results into the anndata object."""
-    sgIndex = X.obs["condition_unique_idxs"]
-
-    X.uns["Pf2_weights"] = parafac2_output[0]
-    X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"] = parafac2_output[1]
-
-    X.obsm["projections"] = np.zeros((X.shape[0], len(X.uns["Pf2_weights"])))
-    for i, p in enumerate(parafac2_output[2]):
-        X.obsm["projections"][sgIndex == i, :] = p  # type: ignore
-
-    X.obsm["weighted_projections"] = X.obsm["projections"] @ X.uns["Pf2_B"]
-
-    return X
-
-
-def pf2(
-    X: anndata.AnnData,
-    rank: int,
-    random_state=1,
-    doEmbedding: bool = True,
-):
-    parafac2_output = parafac2_nd(
-        X,
-        rank=rank,
-    )
-
-    X = store_pf2(X, parafac2_output)
-
-    if doEmbedding:
-        pcm = PaCMAP(random_state=random_state)
-        X.obsm["embedding"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
-
-    return X
-
-
-def pf2_r2x(
-    X: anndata.AnnData,
-    max_rank: int,
-) -> np.ndarray:
-    X = X.to_memory()
-
-    r2x_vec = np.empty(max_rank)
-
-    for i in tqdm(range(len(r2x_vec)), total=len(r2x_vec)):
-        parafac2_output = parafac2_nd(
-            X,
-            rank=i + 1,
-        )
-
-        X = store_pf2(X, parafac2_output)
-
-        _, r2x_vec[i] = cwSNR(X)
-
-    return r2x_vec
-
-
-def _cmf_reconstruction_error(Xarr, sgIndex, means, factors: list, norm_X_sq: float):
+def reconstruction_error(
+    factors: list, projections, projected_X, norm_X_sq: float
+) -> float:
+    """Calculate the reconstruction error from the factors and projected data."""
     A, B, C = factors
+    CtC = C.T @ C
 
     norm_sq_err = cp.array(norm_X_sq)
-    CtC = C.T @ C
+
+    for i, proj in enumerate(projections):
+        B_i = (proj @ B) * A[i]
+
+        # trace of the multiplication products
+        norm_sq_err -= 2.0 * cp.trace(A[i][:, np.newaxis] * B.T @ projected_X[i] @ C)
+        norm_sq_err += ((B_i.T @ B_i) * CtC).sum()
+
+    return float(cp.asnumpy(norm_sq_err))
+
+
+def project_data(
+    Xarr: sps.csr_array, sgIndex: np.ndarray, means, factors: list
+) -> tuple[list, cp.ndarray]:
+    A, B, C = factors
+
     projections = []
-    projected_X = []
+    projected_X = cp.empty((A.shape[0], B.shape[0], C.shape[0]))
 
     for i in range(np.amax(sgIndex) + 1):
         # Prepare CuPy matrix
         mat = cupy_sparse.csr_matrix(Xarr[sgIndex == i], dtype=cp.float32)
 
-        lhs = B @ (A[i] * C).T
+        lhs = cp.array(B @ (A[i] * C).T, dtype=cp.float32)
         U, _, Vh = cp.linalg.svd(mat @ lhs.T - means @ lhs.T, full_matrices=False)
         proj = U @ Vh
 
@@ -141,15 +72,9 @@ def _cmf_reconstruction_error(Xarr, sgIndex, means, factors: list, norm_X_sq: fl
 
         # Account for centering
         centering = cp.outer(cp.sum(proj, axis=0), means)
-        projected_X.append(proj.T @ mat - centering)
+        projected_X[i, :, :] = proj.T @ mat - centering
 
-        B_i = (proj @ B) * A[i]
-
-        # trace of the multiplication products
-        norm_sq_err -= 2.0 * cp.trace(A[i][:, np.newaxis] * B.T @ projected_X[-1] @ C)
-        norm_sq_err += ((B_i.T @ B_i) * CtC).sum()
-
-    return norm_sq_err, projections, projected_X
+    return projections, projected_X
 
 
 def parafac2_nd(
@@ -161,7 +86,7 @@ def parafac2_nd(
 ) -> tuple[np.ndarray, list[np.ndarray], list[np.ndarray]]:
     r"""The same interface as regular PARAFAC2."""
     # Index dataset to a list of conditions
-    sgIndex = X.obs["condition_unique_idxs"]
+    sgIndex = X.obs["condition_unique_idxs"].to_numpy(dtype=int)
     n_cond = np.amax(sgIndex) + 1
 
     Xarr = sps.csr_array(X.X)
@@ -175,23 +100,19 @@ def parafac2_nd(
     tl.set_backend("cupy")
 
     factors = [
-        tl.ones((n_cond, rank), dtype=cp.float32),
-        tl.eye(rank, dtype=cp.float32),
-        cp.array(C.T),
+        cp.ones((n_cond, rank)),
+        cp.eye(rank),
+        cp.array(C).T,
     ]
 
     errs = []
 
     tq = tqdm(range(n_iter_max), disable=(not verbose))
     for iter in tq:
-        err, projections, projected_X = _cmf_reconstruction_error(
-            Xarr, sgIndex, means, factors, norm_tensor
-        )
+        projections, projected_X = project_data(Xarr, sgIndex, means, factors)
 
-        errs.append(tl.to_numpy((err / norm_tensor)))
-
-        # Project tensor slices
-        projected_X = tl.stack(projected_X)
+        err = reconstruction_error(factors, projections, projected_X, norm_tensor)
+        errs.append(err / norm_tensor)
 
         _, factors = parafac(
             projected_X,
@@ -242,37 +163,3 @@ def standardize_pf2(
     projections = [p * signn for p in projections]
 
     return weights, factors, projections
-
-
-def pf2_fms(
-    X: anndata.AnnData,
-    max_rank: int,
-    random_state=1,
-) -> np.ndarray:
-    # Get the indices for subsetting the data
-    indices = np.arange(0, X.shape[0])
-
-    rng1 = np.random.default_rng(random_state)
-    indices1 = rng1.choice(indices, size=X.shape[0], replace=True)
-
-    X1 = X[indices1, :].to_memory()
-    X2 = X.to_memory()
-
-    fms_vec = np.empty(max_rank)
-
-    for i in tqdm(range(len(fms_vec)), total=len(fms_vec)):
-        parafac2_output1 = parafac2_nd(
-            X1,
-            rank=i + 1,
-        )
-        parafac2_output2 = parafac2_nd(
-            X2,
-            rank=i + 1,
-        )
-
-        X1cp = CPTensor((parafac2_output1[0], parafac2_output1[1]))
-        X2cp = CPTensor((parafac2_output2[0], parafac2_output2[1]))
-
-        fms_vec[i] = fms(X1cp, X2cp, consider_weights=True, skip_mode=None)
-
-    return fms_vec

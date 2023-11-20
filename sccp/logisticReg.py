@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import roc_auc_score
-from .parafac2 import pf2
+from .factorization import pf2
 
 
 def testPf2Ranks(

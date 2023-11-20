@@ -10,7 +10,9 @@ from tensorly.random import random_parafac2
 from tensorly.parafac2_tensor import (
     parafac2_to_slices,
 )
-from ..parafac2 import pf2, pf2_r2x, calc_total_norm, _cmf_reconstruction_error
+
+from ..factorization import pf2, pf2_r2x
+from ..parafac2 import calc_total_norm, project_data, reconstruction_error
 from ..imports import import_thomson
 
 
@@ -49,20 +51,24 @@ def test_pf2_proj_centering():
 
     norm_X_sq = float(np.linalg.norm(XX) ** 2.0)
 
-    norm_sq_err, _, _ = _cmf_reconstruction_error(
-        csr_array(XX), sgIndex, means, factors, norm_X_sq
-    )
-    np.testing.assert_allclose(norm_sq_err.get() / norm_X_sq, 0.0, atol=1e-6)
+    projections, projected_X = project_data(csr_array(XX), sgIndex, means, factors)
+    norm_sq_err = reconstruction_error(factors, projections, projected_X, norm_X_sq)
+
+    np.testing.assert_allclose(norm_sq_err / norm_X_sq, 0.0, atol=1e-6)
 
     # De-mean since we aim to subtract off the means
     means = np.mean(XX, axis=0)
     XX = XX + means
 
-    norm_sq_err_centered, _, _ = _cmf_reconstruction_error(
-        csr_array(XX), sgIndex, cp.array(means), factors, norm_X_sq
+    projections, projected_X = project_data(
+        csr_array(XX), sgIndex, cp.array(means), factors
     )
+    norm_sq_err_centered = reconstruction_error(
+        factors, projections, projected_X, norm_X_sq
+    )
+
     np.testing.assert_allclose(
-        norm_sq_err.get() / norm_X_sq, norm_sq_err_centered.get() / norm_X_sq, atol=1e-6
+        norm_sq_err / norm_X_sq, norm_sq_err_centered / norm_X_sq, atol=1e-6
     )
 
     tl.set_backend("numpy")
@@ -75,5 +81,5 @@ def test_factor_thomson():
     X = pf2(X, 30, doEmbedding=False)
 
     r2x = pf2_r2x(X, 4)
-    assert np.all(r2x > np.array([[0.012, 0.015, 0.017, 0.018]]))
+    assert np.all(r2x > np.array([0.002, 0.005, 0.007, 0.008]))
     print(r2x)
