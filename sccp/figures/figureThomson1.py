@@ -49,9 +49,9 @@ def groupDrugs(labels):
     for i in ctrl:
         names[names == i] = "Control"
 
-    names[names == "Everolimus (RAD001)"] = "Prostaglandin"
-    names[names == "Rapamycin (Sirolimus)"] = "Prostaglandin"
-    names[names == "Alprostadil"] = "mTOR Inhibitor"
+    names[names == "Everolimus (RAD001)"] = "mTOR Inhibitor"
+    names[names == "Rapamycin (Sirolimus)"] = "mTOR Inhibitor"
+    names[names == "Alprostadil"] = "Prostaglandin"
     names[names == "Cyclosporine"] = "Calcineruin Inhibitor"
 
     condition = [
