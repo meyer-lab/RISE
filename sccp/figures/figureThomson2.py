@@ -10,14 +10,10 @@ from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
 from .commonFuncs.plotGeneral import (
     plotGenePerCellType,
     plotGenePerCategCond,
-    plotfms,
-    plotR2X_pf2,
     plotGeneFactors,
     gene_plot_cells,
 )
 from ..gating import gateThomsonCells
-import scanpy as sc
-import numpy as np
 
 
 def makeFigure():
