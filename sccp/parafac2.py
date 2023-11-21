@@ -34,7 +34,7 @@ def calc_total_norm(X: anndata.AnnData) -> float:
 
 
 def reconstruction_error(
-    factors: list, projections, projected_X, norm_X_sq: float
+    factors: list, projections: list, projected_X: cp.ndarray, norm_X_sq: float
 ) -> float:
     """Calculate the reconstruction error from the factors and projected data."""
     A, B, C = factors
@@ -54,7 +54,7 @@ def reconstruction_error(
 
 def project_data(
     Xarr: sps.csr_array, sgIndex: np.ndarray, means, factors: list
-) -> tuple[list, cp.ndarray]:
+) -> tuple[cp.ndarray, cp.ndarray]:
     A, B, C = factors
 
     projections = []
