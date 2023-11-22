@@ -1,4 +1,5 @@
 from typing import Optional
+from anndata import AnnData
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -8,33 +9,37 @@ from matplotlib.patches import Patch
 
 
 def plotFactors(
-    factors,
-    data,
-    axs,
+    data: AnnData,
+    axs: list,
     reorder=tuple(),
-    trim=tuple(),
+    trim=True,
     cond_group_labels: Optional[pd.Series] = None,
 ):
     """Plots parafac2 factors."""
+    assert len(axs) == 3
+
     pd.set_option("display.max_rows", None)
-    rank = factors[0].shape[1]
+    rank = data.uns["Pf2_A"].shape[1]
     xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     for i in range(3):
         # The single cell mode has a square factors matrix
         if i == 0:
+            X = data.uns["Pf2_A"]
             yt = np.unique(data.obs["Condition"])
             title = "Components by Condition"
         elif i == 1:
+            X = data.uns["Pf2_B"]
             yt = [f"Cell State {i}" for i in np.arange(1, rank + 1)]
             title = "Components by Cell State"
         else:
+            X = data.varm["Pf2_C"]
             yt = data.var.index.values
             title = "Components by Gene"
 
-        X = factors[i]
+        X = np.array(X)
 
-        if i in trim:
+        if (i == 2) and (trim is True):
             max_weight = np.max(np.abs(X), axis=1)
             kept_idxs = max_weight > 0.08
             X = X[kept_idxs]

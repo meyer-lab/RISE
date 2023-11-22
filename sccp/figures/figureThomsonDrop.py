@@ -20,14 +20,12 @@ def makeFigure():
 
     origX = pf2(data, rank, doEmbedding=False)
 
-    factors = [origX.uns["Pf2_A"], origX.uns["Pf2_B"], origX.varm["Pf2_C"]]
-    plotFactors(factors, origX, ax[0:3], reorder=(0, 2), trim=(2,))
+    plotFactors(origX, ax[0:3], reorder=(0, 2))
 
     # sampled_data = data
 
     sampledX = pf2(sampled_data, rank, doEmbedding=False)
-    factors = [sampledX.uns["Pf2_A"], sampledX.uns["Pf2_B"], sampledX.varm["Pf2_C"]]
 
-    plotFactors(factors, sampledX, ax[3:6], reorder=(0, 2), trim=(2,))
+    plotFactors(sampledX, ax[3:6], reorder=(0, 2))
 
     return f

@@ -22,10 +22,7 @@ def makeFigure():
     X = openPf2(rank, "Thomson")
     drugNames = groupDrugs(X.obs["Condition"])
 
-    factors = [X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"]]
-    plotFactors(
-        factors, X, ax[0:3], reorder=(0, 2), trim=(2,), cond_group_labels=drugNames
-    )
+    plotFactors(X, ax[0:3], reorder=(0, 2), cond_group_labels=drugNames)
     plotWeight(X.uns["Pf2_weights"], ax[3])
 
     return f

@@ -23,7 +23,7 @@ def makeFigure():
     dataX = pf2(X, rank, random_state=1)
 
     factors = [dataX.uns["Pf2_A"], dataX.uns["Pf2_B"], dataX.varm["Pf2_C"]]
-    plotFactors(factors, dataX, ax[0:3], reorder=(0, 2), trim=(2,))
+    plotFactors(dataX, ax[0:3], reorder=(0, 2))
 
     sampled_data = sc.pp.subsample(X, fraction=0.99, random_state=0, copy=True)
 
@@ -35,8 +35,8 @@ def makeFigure():
         sampledX.uns["Pf2_B"],
         sampledX.varm["Pf2_C"],
     ]
-    
-    plotFactors(factors, sampledX, ax[3:6], reorder=(0, 2), trim=(2,))
+
+    plotFactors(sampledX, ax[3:6], reorder=(0, 2))
 
     # factor score match
     dataXcp = CPTensor(
