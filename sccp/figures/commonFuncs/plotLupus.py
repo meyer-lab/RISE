@@ -55,7 +55,7 @@ def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float =
 
     # get just the ones that are "super" positive
     counts_all = (
-        cmp_n.groupby(by=obs_column, observed=True)
+        cmp_n.groupby(by=obs_column, observed=False)
         .count()
         .reset_index()
         .rename({component_string: "count"}, axis=1)
@@ -63,7 +63,7 @@ def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float =
     cmp_n = cmp_n[cmp_n[component_string] > threshold]
 
     counts = (
-        cmp_n.groupby(by=obs_column)
+        cmp_n.groupby(by=obs_column, observed=False)
         .count()
         .reset_index()
         .rename({component_string: "count"}, axis=1)

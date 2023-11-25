@@ -1,6 +1,7 @@
 """
 Lupus: Plot average AUC ROC curve for logistic regression
 """
+import numpy as np
 from .common import subplotLabel, getSetup, openPf2
 from ..logisticReg import getPf2ROC
 from sklearn.metrics import RocCurveDisplay
@@ -17,11 +18,10 @@ def makeFigure():
     rank = 40
     X = openPf2(rank, "Lupus")
     condStatus = X.obs[
-        ["Condition", "SLE_status", "Processing_Cohort", "patient"]
+        ["Condition", "SLE_status", "Processing_Cohort"]
     ].drop_duplicates()
-    condStatus = condStatus.set_index("Condition")
 
-    y_test, sle_decisions = getPf2ROC(X.uns["Pf2_A"], condStatus)
+    y_test, sle_decisions = getPf2ROC(np.array(X.uns["Pf2_A"]), condStatus)
 
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label="SLE", plot_chance_level=True, ax=ax[0]
