@@ -1,7 +1,8 @@
 """
 Lupus: UMAP and boxplots of weighted projectoins per component
 """
-from .common import subplotLabel, getSetup, openPf2
+from anndata import read_h5ad
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import plotCmpPerCellType, plotCmpUMAP
 
 
@@ -13,8 +14,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    # Import of data
-    X = openPf2(40, "Lupus")
+    X = read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
 
     comps = [13, 16, 26, 32]
     for i, cmp in enumerate(comps):

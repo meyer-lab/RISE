@@ -75,11 +75,16 @@ def test_pf2_proj_centering():
 
 
 def test_factor_thomson():
-    """Import and factor Thomson."""
+    """Import and factor Thomson.
+    This also checks that the factorization process is reproducible."""
     X = import_thomson()
 
-    X = pf2(X, 30, doEmbedding=False)
+    X = pf2(X, 10, doEmbedding=False)
+    C_first = np.array(X.varm["Pf2_C"], copy=True)
 
-    r2x = pf2_r2x(X, 4)
-    assert np.all(r2x > np.array([0.002, 0.005, 0.007, 0.008]))
+    X = pf2(X, 10, doEmbedding=False)
+    np.testing.assert_allclose(np.array(X.varm["Pf2_C"]), C_first, atol=1e-6)
+
+    r2x = pf2_r2x(X, 3)
+    assert np.all(r2x > np.array([0.002, 0.005, 0.007]))
     print(r2x)

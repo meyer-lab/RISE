@@ -1,9 +1,10 @@
 """
 Thomson dataset: Cell counts and cell type percentages per condition.
 """
+import anndata
 import pandas as pd
 import seaborn as sns
-from .common import subplotLabel, getSetup, openPf2
+from .common import subplotLabel, getSetup
 from ..gating import gateThomsonCells
 
 
@@ -15,8 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 30
-    X = openPf2(rank, "Thomson")
+    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
     X = gateThomsonCells(X)
 
     df = pd.DataFrame(

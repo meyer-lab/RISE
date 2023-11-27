@@ -1,7 +1,8 @@
 """
 Lupus: Plotting Pf2 factors and weights
 """
-from .common import subplotLabel, getSetup, openPf2
+from anndata import read_h5ad
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotFactors import (
     plotFactors,
     plotWeight,
@@ -16,8 +17,8 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 40
-    X = openPf2(rank, "Lupus")
+    X = read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+
     lupusStatus = X.obs[["Condition", "SLE_status"]].drop_duplicates("Condition")
     lupusStatus = lupusStatus.set_index("Condition")["SLE_status"]
 

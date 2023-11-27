@@ -11,7 +11,7 @@ import anndata
 from scipy.sparse import spmatrix
 
 
-def _get_canvas(points: np.ndarray):
+def _get_canvas(points: np.ndarray) -> ds.Canvas:
     """Compute bounds on a space with appropriate padding"""
     min_xy = np.nanmin(points, axis=0)
     assert min_xy.size == 2
@@ -55,7 +55,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
 
     values = geneList
 
-    points = X.obsm["embedding"]
+    points = np.array(X.obsm["embedding"])
 
     canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=("x", "y"))

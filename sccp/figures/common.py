@@ -8,7 +8,6 @@ import seaborn as sns
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib import gridspec, pyplot as plt
-import anndata
 
 
 matplotlib.use("AGG")
@@ -76,10 +75,3 @@ def genFigure():
         )
 
     print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")
-
-
-def openPf2(rank: int, dataName: str) -> anndata.AnnData:
-    """Opens weight factors and projections for one dataset for a component as numpy arrays"""
-    return anndata.read_h5ad(
-        f"/opt/pf2/{dataName}_analyzed_{rank}comps.h5ad", backed="r"
-    )

@@ -1,7 +1,8 @@
 """
 Lupus: Plots all top and bottom genes Pf2 weights
 """
-from .common import getSetup, openPf2
+import anndata
+from .common import getSetup
 from .commonFuncs.plotGeneral import plotGeneFactors
 import numpy as np
 
@@ -11,7 +12,7 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((24, 24), (10, 8))
 
-    X = openPf2(rank=40, dataName="Lupus")
+    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
 
     for i in np.arange(0, 3):
         plotGeneFactors(i + 1, X, ax[2 * i], geneAmount=5, top=True)

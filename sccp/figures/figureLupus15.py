@@ -1,10 +1,11 @@
 """
 Lupus: Plots of amount of cells and cell type distribution across all experiments
 """
+import anndata
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from .common import subplotLabel, getSetup, openPf2
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotGeneral import population_bar_chart
 
 
@@ -16,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = openPf2(rank=40, dataName="Lupus")
+    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
 
     df = X.obs[["Cell Type", "SLE_status", "Condition"]].reset_index(drop=True)
 

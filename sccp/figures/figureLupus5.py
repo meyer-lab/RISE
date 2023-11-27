@@ -1,10 +1,11 @@
 """
 Lupus: Plot logistic regression weights for SLE and/or ancestry
 """
+from anndata import read_h5ad
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from .common import subplotLabel, getSetup, openPf2
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import plotCmpRegContributions
 from ..logisticReg import getCompContribs
 
@@ -17,9 +18,10 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 40
     predict = "SLE_status"
-    X = openPf2(rank, "Lupus")
+
+    X = read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+
     condStatus = X.obs[["Condition", predict]].drop_duplicates()
     condStatus = condStatus.set_index("Condition")
     contribsStatus = getCompContribs(

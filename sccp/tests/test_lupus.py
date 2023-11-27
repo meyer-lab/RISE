@@ -1,15 +1,14 @@
 """
 Test prediction metrics for Lupus
 """
+import anndata
 from ..logisticReg import getPf2ROC
 from sklearn.metrics import roc_auc_score
-from ..figures.common import openPf2
 
 
 def test_Lupus_AUCROC():
     """Test ROC AUC for Lupus"""
-    rank = 40
-    X = openPf2(rank, "Lupus")
+    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
 
     condStatus = X.obs[
         ["Condition", "SLE_status", "Processing_Cohort", "patient"]

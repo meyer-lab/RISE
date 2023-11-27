@@ -1,3 +1,4 @@
+import sys
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
@@ -5,6 +6,7 @@ import anndata
 import scanpy as sc
 from scipy.sparse import spmatrix
 from sklearn.utils.sparsefuncs import inplace_column_scale, mean_variance_axis
+from .factorization import pf2
 
 
 def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
@@ -13,7 +15,7 @@ def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
 
     # Filter out genes with too few reads
     readmean, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
-    X = X[:, readmean > 0.01]
+    X = X[:, readmean > 0.002]
 
     # Normalize read depth
     sc.pp.normalize_total(X, exclude_highly_expressed=False, inplace=True)
@@ -130,3 +132,16 @@ def import_citeseq() -> anndata.AnnData:
     X = anndata.concat(data, merge="same", label="Condition")
 
     return prepare_dataset(X, "Condition")
+
+
+def factorSave():
+    if sys.argv[1] == "CITEseq":
+        X = import_citeseq()
+        pf2(X, int(sys.argv[2]))
+        X.write("factor_cache/CITEseq.h5ad")
+    elif sys.argv[1] == "Thomson":
+        X = import_thomson()
+        pf2(X, int(sys.argv[2]))
+        X.write("factor_cache/Thomson.h5ad")
+    else:
+        raise RuntimeError("Dataset not recognized.")

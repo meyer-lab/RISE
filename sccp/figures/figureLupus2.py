@@ -1,7 +1,8 @@
 """
 Lupus: UMAP labeled by cell type
 """
-from .common import subplotLabel, getSetup, openPf2
+from anndata import read_h5ad
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import plotLabelsUMAP
 
 
@@ -13,8 +14,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 40
-    X = openPf2(rank, "Lupus")
+    X = read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
 
     plotLabelsUMAP(X, "Cell Type", ax[0])
 

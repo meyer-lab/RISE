@@ -1,7 +1,8 @@
 """
 Thomson: Plotting Pf2 factors and weights
 """
-from .common import subplotLabel, getSetup, openPf2
+from anndata import read_h5ad
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotFactors import (
     plotFactors,
     plotWeight,
@@ -18,8 +19,8 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 30
-    X = openPf2(rank, "Thomson")
+    X = read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+
     drugNames = groupDrugs(X.obs["Condition"])
 
     plotFactors(X, ax[0:3], reorder=(0, 2), cond_group_labels=drugNames)

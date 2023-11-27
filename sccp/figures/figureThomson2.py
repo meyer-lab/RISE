@@ -1,10 +1,10 @@
 """
 Thomson: XX
 """
+from anndata import read_h5ad
 from .common import (
     subplotLabel,
     getSetup,
-    openPf2,
 )
 from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
 from .commonFuncs.plotGeneral import (
@@ -23,8 +23,8 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-    rank = 30
-    X = openPf2(rank, "Thomson")
+
+    X = read_h5ad("factor_cache/Thomson.h5ad", backed="r")
 
     # plotfms(X, 30, ax[0])
     # plotR2X_pf2(X, 15, ax[1])
@@ -59,24 +59,5 @@ def makeFigure():
     ]
     geneSet3 = ["CD163"]
     plotGenePerCategCond(glucs, "Gluco", geneSet3, X, [ax[13]])
-
-    DexGenes1 = X[:, ["MT1G", "MT1H"]].to_memory()
-    gene_plot_cells(
-        DexGenes1,
-        hue="Condition",
-        ax=ax[14],
-        unique="Dexrazoxane HCl (ICRF-187, ADR-529)",
-        average=True,
-    )
-
-    ax[15].clear()
-    DexGenes2 = X[:, ["MT1G", "ZNF311"]].to_memory()
-    gene_plot_cells(
-        DexGenes2,
-        hue="Condition",
-        ax=ax[15],
-        unique="Dexrazoxane HCl (ICRF-187, ADR-529)",
-        average=True,
-    )
 
     return f

@@ -1,10 +1,10 @@
 """
 CITEseq: Plotting weighted projections per component
 """
+from anndata import read_h5ad
 from .common import (
     subplotLabel,
     getSetup,
-    openPf2,
 )
 from .commonFuncs.plotUMAP import (
     plotCmpUMAP,
@@ -19,7 +19,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = openPf2(80, "CITEseq")
+    X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
 
     for i, axi in enumerate(ax):
         plotCmpUMAP(X, i + 1, axi)

@@ -6,7 +6,6 @@ import anndata
 from matplotlib.axes import Axes
 
 from ...factorization import pf2_r2x
-from ...crossVal import CrossVal
 from ...factorization import pf2_fms
 
 
@@ -82,35 +81,6 @@ def plotfms(data, rank, ax: Axes):
         xticks=np.linspace(0, rank, num=8, dtype=int),
         yticks=np.linspace(0, np.max(np.append(fms_vec[0], fms_vec[1])) + 0.01, num=5),
     )
-
-
-def plotCV(data, rank, trainPerc, ax: Axes):
-    """Creates variance explained plot for parafac2 tensor decomposition CV"""
-    cvError = CrossVal(data, rank, trainPerc=trainPerc)
-
-    rank_vec = np.arange(1, rank + 1)
-    labelNames = ["CV: Pf2", "CV: PCA"]
-    colorDecomp = ["r", "b"]
-    markerShape = ["o", "o"]
-
-    for i in range(2):
-        ax.scatter(
-            rank_vec,
-            cvError[i],
-            label=labelNames[i],
-            marker=markerShape[i],
-            c=colorDecomp[i],
-            s=30.0,
-        )
-
-    ax.set(
-        ylabel="Variance Explained",
-        xlabel="Number of Components",
-        xticks=np.linspace(0, rank, num=8, dtype=int),
-        yticks=np.linspace(0, np.max(np.append(cvError[0], cvError[1])) + 0.01, num=5),
-    )
-
-    ax.legend()
 
 
 def plotCellTypePerExpCount(dataDF, condition, ax: Axes):

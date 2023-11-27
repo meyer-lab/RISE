@@ -5,7 +5,7 @@ import tensorly as tl
 import cupy as cp
 from cupyx.scipy import sparse as cupy_sparse
 import scipy.sparse as sps
-from scipy.sparse.linalg import svds
+from cupyx.scipy.sparse.linalg import svds
 from tensorly.decomposition import parafac
 from tensorly.cp_tensor import cp_flip_sign, cp_normalize
 from scipy.optimize import linear_sum_assignment
@@ -82,7 +82,8 @@ def parafac2_nd(
     rank: int,
     n_iter_max: int = 200,
     tol: float = 1e-7,
-    verbose=True,
+    verbose=False,
+    random_state=None,
 ) -> tuple[tuple[np.ndarray, list[np.ndarray], list[np.ndarray]], float]:
     r"""The same interface as regular PARAFAC2."""
     # Index dataset to a list of conditions
@@ -95,14 +96,17 @@ def parafac2_nd(
     # Calculate the norm of the dataset
     norm_tensor = calc_total_norm(X)
 
-    _, _, C = svds(Xarr, k=rank, return_singular_vectors=True)
+    xInit = cupy_sparse.csr_matrix(Xarr[::10])
+
+    cp.random.set_random_state(cp.random.RandomState(random_state))
+    _, _, C = svds(xInit, k=rank, return_singular_vectors=True)
 
     tl.set_backend("cupy")
 
     factors = [
         cp.ones((n_cond, rank)),
         cp.eye(rank),
-        cp.array(C).T,
+        C.T,
     ]
 
     errs = []

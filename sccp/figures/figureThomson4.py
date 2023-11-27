@@ -1,8 +1,9 @@
 """
 Thomson: Compares PCA and Pf2 UMAP labeled by genes and drugs
 """
+import anndata
 from sklearn.decomposition import PCA
-from .common import subplotLabel, getSetup, openPf2
+from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import plotGeneUMAP, plotLabelsUMAP
 import pacmap
 import numpy as np
@@ -16,8 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    rank = 30
-    X = openPf2(rank, dataName="Thomson")
+    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
 
     genes = ["GNLY", "NKG7"]
     for i, gene in enumerate(genes):
@@ -29,7 +29,7 @@ def makeFigure():
         ax[i + 2].set(title=f"Pf2-Based Decomposition")
 
     # PCA dimension reduction
-    pc = PCA(n_components=rank)
+    pc = PCA(n_components=30)
     pcaPoints = pc.fit_transform(np.asarray(X.X.to_memory() - X.var["means"].values))
     X.obsm["embedding"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
