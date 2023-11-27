@@ -86,10 +86,7 @@ def import_lupus() -> anndata.AnnData:
     'SLE_status': SLE status: healthy or SLE}
 
     """
-    X = anndata.read_h5ad("/opt/andrew/lupus/lupusRaw.h5ad")
-
-    # Used to convert back to raw
-    # X = anndata.AnnData(X.raw.X, X.obs, X.raw.var, None, X.obsm)
+    X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
 
     # rename columns to make more sense
     X.obs = X.obs.rename(
@@ -109,7 +106,14 @@ def import_lupus() -> anndata.AnnData:
     # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
     X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
 
-    return prepare_dataset(X, "Condition")
+    # Get the indices for subsetting the data
+    _, sgIndex = np.unique(X.obs_vector("Condition"), return_inverse=True)
+    X.obs["condition_unique_idxs"] = sgIndex
+
+    # Pre-calculate gene means
+    X.var["means"] = np.mean(X.X, axis=0)  # type: ignore
+
+    return X
 
 
 def import_citeseq() -> anndata.AnnData:
