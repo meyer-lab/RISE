@@ -21,9 +21,7 @@ def makeFigure():
 
     names = X.var_names[X.var["feature_types"] == "Antibody Capture"]
 
-    protNames = names[0:4].tolist()
-
-    for i, name in enumerate(protNames):
+    for i, name in enumerate(names[0:4]):
         plotGeneUMAP(name, "Pf2", X, ax[i])
 
     return f

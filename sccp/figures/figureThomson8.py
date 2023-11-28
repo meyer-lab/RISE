@@ -4,7 +4,6 @@ Thomson: Plots all top and bottom genes Pf2 weights
 import anndata
 from .common import getSetup
 from .commonFuncs.plotGeneral import plotGeneFactors
-import numpy as np
 
 
 def makeFigure():
@@ -14,7 +13,7 @@ def makeFigure():
 
     X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
 
-    for i in np.arange(0, X.uns["Pf2_A"].shape[1]):
+    for i in range(X.uns["Pf2_A"].shape[1]):
         plotGeneFactors(i + 1, X, ax[2 * i], geneAmount=5, top=True)
         plotGeneFactors(i + 1, X, ax[2 * i + 1], geneAmount=5, top=False)
 

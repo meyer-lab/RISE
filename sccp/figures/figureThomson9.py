@@ -2,7 +2,6 @@
 Thomson: Boxplots of weighted projectoins per component
 """
 import anndata
-import numpy as np
 from .common import getSetup
 from .commonFuncs.plotUMAP import plotCmpPerCellType
 from ..gating import gateThomsonCells
@@ -17,8 +16,7 @@ def makeFigure():
 
     gateThomsonCells(X)
 
-    component = np.arange(1, X.uns["Pf2_A"].shape[1] + 1, 1)
-    for i, comp in enumerate(component):
-        plotCmpPerCellType(X, comp, ax[i], outliers=False)
+    for i in range(X.uns["Pf2_A"].shape[1]):
+        plotCmpPerCellType(X, i + 1, ax[i], outliers=False)
 
     return f
