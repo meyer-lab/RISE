@@ -4,7 +4,9 @@ Thomson: Plotting Pf2 factors and weights
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotFactors import (
-    plotFactors,
+    plotConditionsFactors,
+    plotCellState,
+    plotGeneFactors,
     plotWeight,
 )
 import numpy as np
@@ -23,8 +25,10 @@ def makeFigure():
 
     drugNames = groupDrugs(X.obs["Condition"])
 
-    plotFactors(X, ax[0:3], reorder=(0, 2), cond_group_labels=drugNames)
-    plotWeight(X.uns["Pf2_weights"], ax[3])
+    plotConditionsFactors(X, ax[0], drugNames, ThomsonNorm=True)
+    plotCellState(X, ax[1])
+    plotGeneFactors(X, ax[2])
+    plotWeight(X, ax[3])
 
     return f
 

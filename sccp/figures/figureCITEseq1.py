@@ -3,7 +3,12 @@ CITEseq: Plotting Pf2 factors, weights, and UMAP labeled by all conditions
 """
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotFactors import plotFactors, plotWeight
+from .commonFuncs.plotFactors import (
+    plotConditionsFactors,
+    plotCellState,
+    plotGeneFactors,
+    plotWeight,
+)
 from .commonFuncs.plotUMAP import plotLabelsUMAP
 
 
@@ -17,8 +22,10 @@ def makeFigure():
 
     X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
 
-    plotFactors(X, ax[0:3], reorder=(0, 2))
-    plotWeight(X.uns["Pf2_weights"], ax[3])
+    plotConditionsFactors(X, ax[0])
+    plotCellState(X, ax[1])
+    plotGeneFactors(X, ax[2])
+    plotWeight(X, ax[3])
 
     plotLabelsUMAP(X, "Condition", ax[4])
 
