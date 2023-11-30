@@ -31,27 +31,17 @@ def Thomson_Doublet():
     X = an.read_h5ad("/opt/andrew/thomson_raw.h5ad")
     sc.pp.filter_genes(X, min_cells=1)
     clf = doubletdetection.BoostClassifier(
-    n_iters=10,
-    clustering_algorithm="louvain",
-    standard_scaling=True,
-    pseudocount=0.1,
-    n_jobs=-1,
+        n_iters=10,
+        clustering_algorithm="louvain",
+        standard_scaling=True,
+        pseudocount=0.1,
+        n_jobs=-1,
     )
     doublets = clf.fit(X.X).predict(p_thresh=1e-16, voter_thresh=0.5)
     doublet_score = clf.doublet_score()
     X.obs["doublet"] = doublets
     X.obs["doublet_score"] = doublet_score
     X.obs["doublet"].to_csv("sccp/data/Thomson/ThomsonDoublets.csv")
-
-
-def markThomsonDoublets(X) -> npt.ArrayLike:
-    """Manually gates cell types for Thomson UMAP"""
-    doubletDF = pd.read_csv("sccp/data/Thomson/ThomsonDoublets.csv", index_col=0)
-    doubletDF.index.name = "cell_barcode"
-    X.obs = X.obs.join(doubletDF, on="cell_barcode", how="inner")
-    #X.obs["doublet"] = X.obs["doublet"].astype(str)
-
-    return X
 
 
 thomson_layer1 = {

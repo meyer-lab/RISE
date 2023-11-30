@@ -8,10 +8,9 @@ import scipy.cluster.hierarchy as sch
 from matplotlib.patches import Patch
 
 
-def plotConditionsFactors(data: AnnData,
-    ax,
-    reorder=bool,
-    cond_group_labels: Optional[pd.Series] = None):
+def plotConditionsFactors(
+    data: AnnData, ax, reorder=bool, cond_group_labels: Optional[pd.Series] = None
+):
     """Plots parafac2 factors."""
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
@@ -96,7 +95,12 @@ def plotFactors(
     for i in range(3):
         # The single cell mode has a square factors matrix
         if i == 0:
-            plotConditionsFactors(data, axs[0], reorder=(0 in reorder), cond_group_labels=cond_group_labels)
+            plotConditionsFactors(
+                data,
+                axs[0],
+                reorder=(0 in reorder),
+                cond_group_labels=cond_group_labels,
+            )
             continue
         elif i == 1:
             X = data.uns["Pf2_B"]
