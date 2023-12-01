@@ -5,7 +5,6 @@ import anndata
 import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
-from ..gating import gateThomsonCells
 
 
 def makeFigure():
@@ -17,7 +16,6 @@ def makeFigure():
     subplotLabel(ax)
 
     X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
-    X = gateThomsonCells(X)
 
     df = pd.DataFrame(
         {"Cell Type": X.obs["Cell Type"], "Condition": X.obs["Condition"]}

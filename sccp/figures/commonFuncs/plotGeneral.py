@@ -122,15 +122,15 @@ def plotGenePerCellType(genes, adata, ax):
     )
 
 
-def plotGenePerCategCond(conds, categoryCond, genes, adata, axs, mean=True):
+def plotGenePerCategCond(conds, categoryCond, gene, adata, ax, mean=True):
     """Plots average gene expression across cell types for a category of drugs"""
-    genesV = adata[:, genes]
+    genesV = adata[:, gene]
     dataDF = genesV.to_df()
     dataDF = dataDF.subtract(genesV.var["means"].values)
     dataDF["Condition"] = genesV.obs["Condition"].values
     dataDF["Cell Type"] = genesV.obs["Cell Type"].values
 
-    df = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=genes).rename(
+    df = pd.melt(dataDF, id_vars=["Condition", "Cell Type"], value_vars=gene).rename(
         columns={"variable": "Gene", "value": "Value"}
     )
     if mean is True:
@@ -142,15 +142,15 @@ def plotGenePerCategCond(conds, categoryCond, genes, adata, axs, mean=True):
     for i in conds:
         df = df.replace({"Condition": {i: categoryCond}})
 
-    for i, gene in enumerate(genes):
-        sns.boxplot(
-            data=df.loc[df["Gene"] == gene],
-            x="Cell Type",
-            y="Average Gene Expression For Drugs",
-            hue="Condition",
-            ax=axs[i],
-        )
-        axs[i].set(title=gene)
+
+    sns.boxplot(
+        data=df.loc[df["Gene"] == gene],
+        x="Cell Type",
+        y="Average Gene Expression For Drugs",
+        hue="Condition",
+        ax=ax,
+    )
+    ax.set(title=gene)
 
 
 def plotGeneFactors(

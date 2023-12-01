@@ -7,7 +7,6 @@ from .common import (
     getSetup,
 )
 from .commonFuncs.plotGeneral import cell_comp_hist
-from ..gating import gateThomsonCells
 
 
 def makeFigure():
@@ -20,7 +19,6 @@ def makeFigure():
 
     # Import data
     X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
-    gateThomsonCells(X)
     cell_comp_hist(X, "Condition", 26, "Dexrazoxane HCl (ICRF-187, ADR-529)", ax[0])
     cell_comp_hist(X, "Cell Type", 12, unique=None, ax=ax[1])
 

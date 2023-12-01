@@ -7,6 +7,7 @@ import scanpy as sc
 from scipy.sparse import spmatrix
 from sklearn.utils.sparsefuncs import inplace_column_scale, mean_variance_axis
 from .factorization import pf2
+from .gating import gateThomsonCells
 
 
 def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
@@ -63,7 +64,8 @@ def import_thomson() -> anndata.AnnData:
             "Condition": pd.Categorical(metafile["sample_id"]),
         }
     )
-
+    gateThomsonCells(X)
+    
     doubletDF = pd.read_csv("sccp/data/Thomson/ThomsonDoublets.csv", index_col=0)
     doubletDF.index.name = "cell_barcode"
     X.obs = X.obs.join(doubletDF, on="cell_barcode", how="inner")
@@ -72,7 +74,7 @@ def import_thomson() -> anndata.AnnData:
     X.obs = X.obs.reset_index()
     X = X[singlet_indices, :]
     X.obs = X.obs.set_index("cell_barcode")
-
+    
     return prepare_dataset(X, "Condition")
 
 
