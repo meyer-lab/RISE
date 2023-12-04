@@ -224,7 +224,7 @@ def gene_plot_cells(
 
     if unique is not None:
         dataDF[hue] = dataDF[hue].astype(str)
-        dataDF.loc[dataDF[hue] != unique, hue] = "Other"
+        dataDF.loc[~dataDF[hue].isin(unique), hue] = "Other"
 
     sns.scatterplot(
         data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, size=-0.1, alpha=alpha

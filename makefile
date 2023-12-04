@@ -27,7 +27,7 @@ factor_cache/CITEseq.h5ad: sccp/parafac2.py sccp/factorization.py
 
 factor_cache/Thomson.h5ad: sccp/parafac2.py sccp/factorization.py
 	@ mkdir -p ./factor_cache
-	poetry run factor Thomson 30
+	poetry run factor Thomson 20
 
 test:
 	poetry run pytest -s -x -v
