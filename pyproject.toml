@@ -16,7 +16,6 @@ tensorly = { git = "https://github.com/meyer-lab/tensorly.git", rev = "ad5eb9262
 h5netcdf = "^1.1.0"
 anndata = "^0.10.3"
 datashader = "^0.16"
-mygene = "^3.2.2"
 gseapy = "^1.1"
 scanpy = "^1.9"
 pacmap = "^0.7.1"

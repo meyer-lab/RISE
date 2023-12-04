@@ -5,24 +5,22 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotGeneOntology import plotCombGO, plotPvalGO
 from ..geneontology import geneOntology
+import anndata
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((20, 10), (2, 3))
+    ax, f = getSetup((20, 10), (2, 2))
 
     # Add subplot labels
     subplotLabel(ax)
 
-    # value = "Underexpressed"
-    value = "Overexpressed"
+    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
 
-    # combDF, pvalDF = geneOntology(cmpNumb=26, dataName="Thomson", rank=30, geneAmount=30, goTerms=5, geneValue=value)
+    df = geneOntology(X, 26)
 
-    # plotCombGO(combDF, geneValue=value, axs=ax[0:3])
-    # plotPvalGO(pvalDF, geneValue=value, axs=ax[3:6])
+    print(df)
 
     return f
