@@ -33,4 +33,14 @@ def test_GateThomson():
             "Condition": pd.Categorical(metafile["sample_id"]),
         }
     )
+
+    doubletDF = pd.read_csv("sccp/data/Thomson/ThomsonDoublets.csv", index_col=0)
+    doubletDF.index.name = "cell_barcode"
+    X.obs = X.obs.join(doubletDF, on="cell_barcode", how="inner")
+
+    singlet_indices = X.obs.loc[X.obs["doublet"] == 0].index.values
+    X.obs = X.obs.reset_index(drop=True)
+    X = X[singlet_indices, :]
+    
+    X.obs = X.obs.set_index("cell_barcode")
     gateThomsonCells(X)
