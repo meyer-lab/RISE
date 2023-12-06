@@ -19,10 +19,10 @@ def makeFigure():
 
     # Import data
     X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
-    cell_comp_hist(X, "Condition", 26, "Dexrazoxane HCl (ICRF-187, ADR-529)", ax[0])
+    #cell_comp_hist(X, "Condition", 26, "Dexrazoxane HCl (ICRF-187, ADR-529)", ax[0])
     cell_comp_hist(X, "Cell Type", 12, unique=None, ax=ax[1])
 
-    cell_comp_hist(X, "Condition", 30, "Triamcinolone Acetonide", ax[2])
-    cell_comp_hist(X, "Cell Type", 30, unique=None, ax=ax[3])
+    #cell_comp_hist(X, "Condition", 30, "Triamcinolone Acetonide", ax[2])
+    #cell_comp_hist(X, "Cell Type", 30, unique=None, ax=ax[3])
 
     return f

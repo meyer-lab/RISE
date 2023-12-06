@@ -14,6 +14,6 @@ def makeFigure():
     X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
 
     for i in range(X.uns["Pf2_A"].shape[1]):
-        plotCmpPerCellType(X, i + 1, ax[i], outliers=False)
+        plotCmpPerCellType(X, i + 1, ax[i], outliers=False, cellType="Cell Type2")
 
     return f

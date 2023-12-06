@@ -19,7 +19,7 @@ def makeFigure():
 
     X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
 
-    df = geneOntology(X, 26)
+    df = geneOntology(X, 20)
 
     print(df)
 
