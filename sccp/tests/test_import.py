@@ -41,6 +41,6 @@ def test_GateThomson():
     singlet_indices = X.obs.loc[X.obs["doublet"] == 0].index.values
     X.obs = X.obs.reset_index(drop=True)
     X = X[singlet_indices, :]
-    
+
     X.obs = X.obs.set_index("cell_barcode")
     gateThomsonCells(X)

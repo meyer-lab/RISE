@@ -10,28 +10,32 @@ from matplotlib.axes import Axes
 
 cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
+
 def plotConditionsFactors(
-    data: AnnData, ax: Axes, cond_group_labels: Optional[pd.Series] = None, 
-        ThomsonNorm = False):
+    data: AnnData,
+    ax: Axes,
+    cond_group_labels: Optional[pd.Series] = None,
+    ThomsonNorm=False,
+):
     """Plots Pf2 condition factors"""
     pd.set_option("display.max_rows", None)
     yt = pd.Series(np.unique(data.obs["Condition"]))
     X = np.array(data.uns["Pf2_A"])
-    
+
     X = np.log10(X)
     if ThomsonNorm is True:
         controls = yt.str.contains("CTRL")
         XX = X[controls]
-    else: 
+    else:
         XX = X
-    
-    X -= np.median(XX, axis=0) 
+
+    X -= np.median(XX, axis=0)
     X /= np.std(XX, axis=0)
 
     ind = reorder_table(X)
     X = X[ind]
     yt = yt.iloc[ind]
-    
+
     xticks = [f"Cmp. {i}" for i in np.arange(1, X.shape[1] + 1)]
     sns.heatmap(
         data=X,
@@ -42,7 +46,7 @@ def plotConditionsFactors(
         cmap=cmap,
     )
     ax.tick_params(axis="y", rotation=0)
-    
+
     if cond_group_labels is not None:
         cond_group_labels = cond_group_labels.iloc[ind]
         ind = cond_group_labels.argsort()
@@ -77,10 +81,10 @@ def plotConditionsFactors(
             )
         # add a little legend
         ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
-        
+
     ax.set_title("Components by Condition")
 
-    
+
 def plotCellState(data: AnnData, ax: Axes):
     """Plots Pf2 cell state factors"""
     rank = data.uns["Pf2_B"].shape[1]
@@ -101,8 +105,8 @@ def plotCellState(data: AnnData, ax: Axes):
         vmax=1,
     )
     ax.set_title("Components by Cell State")
-    
-    
+
+
 def plotGeneFactors(data: AnnData, ax: Axes, trim=True):
     """Plots Pf2 gene factors"""
     rank = data.varm["Pf2_C"].shape[1]
@@ -132,8 +136,8 @@ def plotGeneFactors(data: AnnData, ax: Axes, trim=True):
         vmax=1,
     )
     ax.set_title("Components by Gene")
-    
-    
+
+
 def plotWeight(X: AnnData, ax: Axes):
     """Plots weights from Pf2 model"""
     df = pd.DataFrame(data=np.transpose(X.uns["Pf2_weights"]), columns=["Value"])
@@ -141,11 +145,10 @@ def plotWeight(X: AnnData, ax: Axes):
     df["Component"] = [f"Cmp. {i}" for i in np.arange(1, len(X.uns["Pf2_weights"]) + 1)]
     sns.barplot(data=df, x="Component", y="Value", ax=ax)
     ax.tick_params(axis="x", rotation=90)
-    
+
 
 def reorder_table(projs: np.ndarray) -> np.ndarray:
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2
     Z = sch.linkage(projs, method="complete", optimal_ordering=True)
     return sch.leaves_list(Z)
-

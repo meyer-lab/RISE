@@ -25,7 +25,9 @@ def makeFigure():
     dataX = pf2(X, rank, random_state=1)
 
     factors = [dataX.uns["Pf2_A"], dataX.uns["Pf2_B"], dataX.varm["Pf2_C"]]
-    plotConditionsFactors(dataX, ax[0], groupDrugs(dataX.obs["Condition"]), ThomsonNorm=True)
+    plotConditionsFactors(
+        dataX, ax[0], groupDrugs(dataX.obs["Condition"]), ThomsonNorm=True
+    )
     plotCellState(dataX, ax[1])
     plotGeneFactors(dataX, ax[2])
     dataXcp = CPTensor(
@@ -42,7 +44,9 @@ def makeFigure():
         sampledX.uns["Pf2_B"],
         sampledX.varm["Pf2_C"],
     ]
-    plotConditionsFactors(sampledX, ax[3], groupDrugs(dataX.obs["Condition"]), ThomsonNorm=True)
+    plotConditionsFactors(
+        sampledX, ax[3], groupDrugs(dataX.obs["Condition"]), ThomsonNorm=True
+    )
     plotCellState(sampledX, ax[4])
     plotGeneFactors(sampledX, ax[5])
     sampledXcp = CPTensor(
@@ -51,7 +55,7 @@ def makeFigure():
             sampled_factors,
         )
     )
-    
+
     # factor score match
     fmsScore = fms(dataXcp, sampledXcp, consider_weights=True, skip_mode=None)
     print(fmsScore)

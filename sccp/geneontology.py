@@ -3,7 +3,7 @@ import gseapy as gp
 from anndata import AnnData
 
 
-def geneOntology(X: AnnData, cmpNumb: int):
+def geneOntology(X: AnnData, cmpNumb: int) -> pd.DataFrame:
     """Plots top Gene Ontology terms for molecular function,
     biological process, cellular component. Uses factors as
     input for function"""
@@ -15,7 +15,7 @@ def geneOntology(X: AnnData, cmpNumb: int):
         "GO_Molecular_Function_2021",
     ]
 
-    geneRank = pd.DataFrame(X.varm["Pf2_C"][:, cmpNumb - 1], index=X.var_names)
+    geneRank = pd.Series(X.varm["Pf2_C"][:, cmpNumb - 1], index=X.var_names)
 
     df = gp.prerank(
         geneRank,

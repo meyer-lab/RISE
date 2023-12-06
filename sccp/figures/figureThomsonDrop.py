@@ -22,17 +22,20 @@ def makeFigure():
 
     origX = pf2(data, rank, doEmbedding=False)
 
-    plotConditionsFactors(origX, ax[0], groupDrugs(origX.obs["Condition"]), ThomsonNorm=True)
+    plotConditionsFactors(
+        origX, ax[0], groupDrugs(origX.obs["Condition"]), ThomsonNorm=True
+    )
     plotCellState(origX, ax[1])
     plotGeneFactors(origX, ax[2])
 
     # sampled_data = data
 
     sampledX = pf2(sampled_data, rank, doEmbedding=False)
-    
-    plotConditionsFactors(sampledX, ax[3], groupDrugs(origX.obs["Condition"]), ThomsonNorm=True)
+
+    plotConditionsFactors(
+        sampledX, ax[3], groupDrugs(origX.obs["Condition"]), ThomsonNorm=True
+    )
     plotCellState(sampledX, ax[4])
     plotGeneFactors(sampledX, ax[5])
-
 
     return f

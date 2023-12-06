@@ -117,11 +117,13 @@ def plotGenePerCellType(genes, adata, ax, cellType="Cell Type"):
         y="Average Gene Expression For Drugs",
         hue="Cell Type",
         ax=ax,
-        fliersize=0
+        fliersize=0,
     )
 
 
-def plotGenePerCategCond(conds, categoryCond, gene, adata, ax, mean=True, cellType="Cell Type"):
+def plotGenePerCategCond(
+    conds, categoryCond, gene, adata, ax, mean=True, cellType="Cell Type"
+):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = adata[:, gene]
     dataDF = genesV.to_df()
@@ -140,7 +142,6 @@ def plotGenePerCategCond(conds, categoryCond, gene, adata, ax, mean=True, cellTy
     df["Condition"] = np.where(df["Condition"].isin(conds), df["Condition"], "Other")
     for i in conds:
         df = df.replace({"Condition": {i: categoryCond}})
-
 
     sns.boxplot(
         data=df.loc[df["Gene"] == gene],
@@ -226,9 +227,7 @@ def gene_plot_cells(
         dataDF[hue] = dataDF[hue].astype(str)
         dataDF.loc[~dataDF[hue].isin(unique), hue] = "Other"
 
-    sns.scatterplot(
-        data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, alpha=alpha
-    )
+    sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, alpha=alpha)
     if kde:
         sns.kdeplot(
             data=dataDF,
@@ -261,13 +260,9 @@ def gene_plot_conditions(X, condition: str, genes, ax: Axes, hue=None, unique=No
         dataDF[condition] = dataDF[condition].astype(str)
         dataDF.loc[dataDF[condition] != unique, condition] = "Other"
     if hue is not None:
-        sns.scatterplot(
-            data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, alpha=5
-        )
+        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, alpha=5)
     else:
-        sns.scatterplot(
-            data=dataDF, x=genes[0], y=genes[1], ax=ax, alpha=0.2
-        )
+        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], ax=ax, alpha=0.2)
 
 
 def geneSig_plot_cells(
@@ -315,8 +310,14 @@ def geneSig_plot_cells(
         ylabel="Comp. " + str(comps[1]) + " Signature",
     )
 
+
 def plot_cell_gene_corr(
-    X: anndata.AnnData, hue: str, cells: list, ax: Axes, unique=None, cellType="Cell Type"
+    X: anndata.AnnData,
+    hue: str,
+    cells: list,
+    ax: Axes,
+    unique=None,
+    cellType="Cell Type",
 ):
     """Plots two genes on either a per cell or per cell type basis"""
     assert X.shape[1] == 2
@@ -331,14 +332,34 @@ def plot_cell_gene_corr(
 
     corrDF = pd.DataFrame()
     for cond in dataDF[hue].unique():
-        cell_gene1 = dataDF.loc[(dataDF[hue] == cond) & (dataDF["Cell Type"] == cells[0])][genes[0]].values
-        cell_gene2 = dataDF.loc[(dataDF[hue] == cond) & (dataDF["Cell Type"] == cells[1])][genes[1]].values
-        corrDF = pd.concat([corrDF, pd.DataFrame({hue: cond, cells[0] + " " + genes[0]: cell_gene1, cells[1] + " " + genes[1]: cell_gene2})])
+        cell_gene1 = dataDF.loc[
+            (dataDF[hue] == cond) & (dataDF["Cell Type"] == cells[0])
+        ][genes[0]].values
+        cell_gene2 = dataDF.loc[
+            (dataDF[hue] == cond) & (dataDF["Cell Type"] == cells[1])
+        ][genes[1]].values
+        corrDF = pd.concat(
+            [
+                corrDF,
+                pd.DataFrame(
+                    {
+                        hue: cond,
+                        cells[0] + " " + genes[0]: cell_gene1,
+                        cells[1] + " " + genes[1]: cell_gene2,
+                    }
+                ),
+            ]
+        )
 
     if unique is not None:
         corrDF[hue] = corrDF[hue].astype(str)
         corrDF.loc[~corrDF[hue].isin(unique), hue] = "Other"
 
     sns.scatterplot(
-        data=corrDF, x=cells[0] + " " + genes[0], y=cells[1] + " " + genes[1], hue=hue, ax=ax, alpha=alpha
+        data=corrDF,
+        x=cells[0] + " " + genes[0],
+        y=cells[1] + " " + genes[1],
+        hue=hue,
+        ax=ax,
+        alpha=alpha,
     )
