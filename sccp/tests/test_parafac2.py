@@ -12,7 +12,7 @@ from tensorly.parafac2_tensor import (
 )
 
 from ..factorization import pf2, pf2_r2x
-from ..parafac2 import calc_total_norm, project_data, reconstruction_error
+from parafac2.utils import calc_total_norm, project_data, reconstruction_error
 from ..imports import import_thomson
 
 
