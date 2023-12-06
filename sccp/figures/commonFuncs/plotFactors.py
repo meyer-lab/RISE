@@ -36,27 +36,16 @@ def plotConditionsFactors(
     X = X[ind]
     yt = yt.iloc[ind]
 
-    xticks = [f"Cmp. {i}" for i in np.arange(1, X.shape[1] + 1)]
-    sns.heatmap(
-        data=X,
-        xticklabels=xticks,
-        yticklabels=yt,
-        ax=ax,
-        center=0,
-        cmap=cmap,
-    )
-    ax.tick_params(axis="y", rotation=0)
-
     if cond_group_labels is not None:
         cond_group_labels = cond_group_labels.iloc[ind]
         ind = cond_group_labels.argsort()
         cond_group_labels = cond_group_labels.iloc[ind]
         X = X[ind]
         yt = yt.iloc[ind]
-        # add little boxes to denote SLE/healthy rows
         ax.tick_params(
             axis="y", which="major", pad=20, length=0
-        )  # extra padding to leave room for the row colors
+        )  
+        # extra padding to leave room for the row colors
         # get list of colors for each label:
         colors = sns.color_palette(
             n_colors=pd.Series(cond_group_labels).nunique()
@@ -81,9 +70,17 @@ def plotConditionsFactors(
             )
         # add a little legend
         ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
-
-    ax.set_title("Components by Condition")
-
+        
+    xticks = [f"Cmp. {i}" for i in np.arange(1, X.shape[1] + 1)]
+    sns.heatmap(
+        data=X,
+        xticklabels=xticks,
+        yticklabels=yt,
+        ax=ax,
+        center=0,
+        cmap=cmap,
+    )
+    ax.tick_params(axis="y", rotation=0)
 
 def plotCellState(data: AnnData, ax: Axes):
     """Plots Pf2 cell state factors"""
