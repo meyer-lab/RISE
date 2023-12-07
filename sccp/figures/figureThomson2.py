@@ -30,22 +30,22 @@ def makeFigure():
     plotLabelsUMAP(X, "Cell Type2", ax[1])
 
     plotCmpUMAP(X, 16, ax[2], 0.2)  # pDC
-    plotCmpUMAP(X, 19, ax[3], 0.2)  # Alpro
-    plotCmpUMAP(X, 20, ax[4], 0.2)  # Gluco
-
-    plotGeneFactors(16, X, ax[5], geneAmount=10, top=True)
-    plotGeneFactors(19, X, ax[6], geneAmount=10, top=True)
-    plotGeneFactors(20, X, ax[7], geneAmount=10, top=True)
-    plotGeneFactors(20, X, ax[8], geneAmount=15, top=False)
-
+    plotGeneFactors(15, X, ax[3], geneAmount=10, top=True)
     geneSet1 = ["FXYD2", "SERPINF1", "RARRES2"]
+    plotGenePerCellType(geneSet1, X, ax[4], cellType="Cell Type2")
 
-    plotGenePerCellType(geneSet1, X, ax[9], cellType="Cell Type2")
 
+    plotCmpUMAP(X, 19, ax[5], 0.2)  # Alpro
+    plotGeneFactors(19, X, ax[6], geneAmount=10, top=True)
     X_genes = X[:, ["THBS1", "VEGFA"]].to_memory()
+    X_genes = X_genes[X_genes.obs["Cell Type"] == "DCs", :]
     gene_plot_cells(
-        X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[10], kde=False
+        X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[7], kde=False
     )
+    ax[7].set(title="Gene Expression in DCs")
+
+    plotCmpUMAP(X, 20, ax[8], 0.2)  # Gluco
+    plotGeneFactors(20, X, ax[9], geneAmount=10, top=True)
 
     glucs = [
         "Betamethasone Valerate",
@@ -54,11 +54,10 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Meprednisone",
     ]
-    geneSet3 = ["CD163", "NDRG2"]
-    for i in range(len(geneSet3)):
-        plotGenePerCategCond(
-            glucs, "Gluco", geneSet3[i], X, ax[i + 11], cellType="Cell Type2"
-        )
+    plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
+        
+    plotGeneFactors(20, X, ax[11], geneAmount=10, top=False)
+    plotGenePerCategCond(glucs, "Gluco", "NDRG2", X, ax[12], cellType="Cell Type2")
 
     X_genes = X[:, ["CD163", "NDRG2"]].to_memory()
     plot_cell_gene_corr(
@@ -69,5 +68,7 @@ def makeFigure():
         cellType="Cell Type2",
         ax=ax[13],
     )
+    X_genes = X[:, ["VEGFA", "TNF"]].to_memory()
+
 
     return f

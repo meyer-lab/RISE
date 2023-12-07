@@ -209,14 +209,14 @@ def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
 
 
 def gene_plot_cells(
-    X: anndata.AnnData, hue: str, ax: Axes, unique=None, average=False, kde=False
+    X: anndata.AnnData, hue: str, ax: Axes, unique=None, average=False, kde=False, cellType="Cell Type"
 ):
     """Plots two genes on either a per cell or per cell type basis"""
     assert X.shape[1] == 2
     genes = X.var_names
-    sc.pp.subsample(X, fraction=0.5, random_state=0)
     dataDF = X.to_df()
     dataDF[hue] = X.obs[hue].values
+    dataDF["Cell Type"] = X.obs[cellType].values
     alpha = 0.3
 
     if average:
