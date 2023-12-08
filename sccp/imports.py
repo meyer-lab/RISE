@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
@@ -154,10 +155,14 @@ def factorSave():
     if sys.argv[1] == "CITEseq":
         X = import_citeseq()
         pf2(X, int(sys.argv[2]))
-        X.write("factor_cache/CITEseq.h5ad")
+        X.write(Path("factor_cache/CITEseq.h5ad"))
     elif sys.argv[1] == "Thomson":
         X = import_thomson()
         pf2(X, int(sys.argv[2]))
-        X.write("factor_cache/Thomson.h5ad")
+        X.write(Path("factor_cache/Thomson.h5ad"))
+    elif sys.argv[1] == "Lupus":
+        X = import_lupus()
+        pf2(X, int(sys.argv[2]))
+        X.write(Path("factor_cache/Lupus.h5ad"))
     else:
         raise RuntimeError("Dataset not recognized.")

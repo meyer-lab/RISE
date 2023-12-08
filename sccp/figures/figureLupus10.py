@@ -1,7 +1,7 @@
 """
 Lupus: Plot 2 Pf2 factors for conditions
 """
-import anndata
+from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotGeneral import (
     gene_plot_cells,
@@ -18,7 +18,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     # NOTE These plots are way, way, way too big. The figure file ends up being 2GB and 20 mins to build.
     # If you need to plot individual cells, make sure it is being plotted by datashader.

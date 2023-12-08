@@ -1,7 +1,7 @@
 """
 Lupus: Plot factor weights correlations for donor SLE prediction
 """
-import anndata
+from anndata import read_h5ad
 import itertools
 import numpy as np
 import seaborn as sns
@@ -18,7 +18,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     status = X.obs[
         ["pool", "patient", "SLE_status", "Processing_Cohort"]

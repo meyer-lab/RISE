@@ -42,9 +42,7 @@ def plotConditionsFactors(
         cond_group_labels = cond_group_labels.iloc[ind]
         X = X[ind]
         yt = yt.iloc[ind]
-        ax.tick_params(
-            axis="y", which="major", pad=20, length=0
-        )  
+        ax.tick_params(axis="y", which="major", pad=20, length=0)
         # extra padding to leave room for the row colors
         # get list of colors for each label:
         colors = sns.color_palette(
@@ -70,7 +68,7 @@ def plotConditionsFactors(
             )
         # add a little legend
         ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
-        
+
     xticks = [f"Cmp. {i}" for i in np.arange(1, X.shape[1] + 1)]
     sns.heatmap(
         data=X,
@@ -81,6 +79,7 @@ def plotConditionsFactors(
         cmap=cmap,
     )
     ax.tick_params(axis="y", rotation=0)
+
 
 def plotCellState(data: AnnData, ax: Axes):
     """Plots Pf2 cell state factors"""

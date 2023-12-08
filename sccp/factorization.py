@@ -77,7 +77,15 @@ def pf2(
     random_state=1,
     doEmbedding: bool = True,
 ):
-    pf_out, _ = parafac2_nd(X, rank=rank, random_state=random_state)
+    if isinstance(X.X, sps.sparray):
+        XX = X
+    else:
+        sgi = X.obs["condition_unique_idxs"]
+        means = X.var["means"].to_numpy()
+
+        XX = [X[sgi == i, :].X.toarray() - means for i in range(np.amax(sgi) + 1)]  # type: ignore
+
+    pf_out, _ = parafac2_nd(XX, rank=rank, random_state=random_state)
 
     X = store_pf2(X, pf_out)
 

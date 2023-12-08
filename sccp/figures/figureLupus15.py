@@ -1,7 +1,7 @@
 """
 Lupus: Plots of amount of cells and cell type distribution across all experiments
 """
-import anndata
+from anndata import read_h5ad
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -17,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     df = X.obs[["Cell Type", "SLE_status", "Condition"]].reset_index(drop=True)
 

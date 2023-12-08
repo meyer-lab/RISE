@@ -1,7 +1,7 @@
 """
 Lupus: Plot 2 Pf2 factors for conditions
 """
-import anndata
+from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import plot2DSeparationByComp
 import numpy as np
@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     predict = "SLE_status"
     condStatus = X.obs[["Condition", predict]].drop_duplicates()

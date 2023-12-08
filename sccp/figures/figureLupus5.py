@@ -20,7 +20,7 @@ def makeFigure():
 
     predict = "SLE_status"
 
-    X = read_h5ad(f"/opt/pf2/Lupus_analyzed_40comps.h5ad", backed="r")
+    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     condStatus = X.obs[["Condition", predict]].drop_duplicates()
     condStatus = condStatus.set_index("Condition")
