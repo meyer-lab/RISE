@@ -3,7 +3,7 @@ Lupus: Plot 2 Pf2 factors for conditions
 """
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import plot2DSeparationByComp
+from .commonFuncs.plotLupus import plot2DSeparationByComp, getSamplesObs
 import numpy as np
 import pandas as pd
 
@@ -19,7 +19,7 @@ def makeFigure():
     X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     predict = "SLE_status"
-    condStatus = X.obs[["Condition", predict]].drop_duplicates()
+    condStatus = getSamplesObs(X.obs)
     condStatus = condStatus.set_index("Condition")
 
     df = pd.DataFrame(

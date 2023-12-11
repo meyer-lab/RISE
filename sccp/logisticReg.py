@@ -4,7 +4,7 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import roc_auc_score
 from .factorization import pf2
@@ -70,20 +70,6 @@ def testPf2Ranks(
 
     # concatenate all the results into one frame for viewing:
     return pd.concat(results, ignore_index=True)
-
-
-def getCompContribs(A_matrix, target, penalty_amt: float = 50) -> pd.DataFrame:
-    """Fit logistic regression model, return coefficients of that model"""
-    log_fit = LogisticRegression(
-        random_state=0, max_iter=5000, penalty="l1", solver="saga", C=penalty_amt
-    ).fit(A_matrix, target)
-
-    coefs = pd.DataFrame(
-        log_fit.densify().coef_,
-        columns=[f"Cmp. {i}" for i in np.arange(1, A_matrix.shape[1] + 1)],
-    ).melt(var_name="Component", value_name="Weight")
-
-    return coefs
 
 
 def getPf2ROC(

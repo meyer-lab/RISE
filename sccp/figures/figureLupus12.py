@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
 from .common import subplotLabel, getSetup
+from .commonFuncs.plotLupus import getSamplesObs
 
 
 def makeFigure():
@@ -20,9 +21,7 @@ def makeFigure():
 
     X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
-    status = X.obs[
-        ["pool", "patient", "SLE_status", "Processing_Cohort"]
-    ].drop_duplicates()
+    status = getSamplesObs(X.obs)
 
     Lupus_comp_scan_plot(ax[0], X.uns["Pf2_A"], status)
 

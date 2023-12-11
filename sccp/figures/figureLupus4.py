@@ -8,6 +8,7 @@ from .common import (
     getSetup,
 )
 from .commonFuncs.plotLupus import plotPf2RankTest
+from .commonFuncs.plotLupus import getSamplesObs
 
 
 def makeFigure():
@@ -21,10 +22,7 @@ def makeFigure():
     X = import_lupus()
     X = X.to_memory()
 
-    condStatus = X.obs[
-        ["Condition", "SLE_status", "Processing_Cohort"]
-    ].drop_duplicates()
-    condStatus = condStatus.set_index("Condition")
+    condStatus = lupusStatus = getSamplesObs(X.obs)
 
     rank = [2, 3]
     # results = testPf2Ranks(

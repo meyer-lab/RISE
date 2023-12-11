@@ -7,6 +7,12 @@ from sklearn.metrics import RocCurveDisplay, auc
 from sklearn.model_selection import StratifiedGroupKFold
 
 
+def getSamplesObs(obs: pd.DataFrame) -> pd.DataFrame:
+    df_samples = obs.drop_duplicates(subset="condition_unique_idxs")
+    df_samples = df_samples.sort_values("condition_unique_idxs")
+    return df_samples
+
+
 def plotPf2RankTest(
     rank_test_results, ax: Axes, error_metric="accuracy", palette="tab10"
 ):
@@ -30,15 +36,6 @@ def plotPf2RankTest(
     )
     ax.set_title(error_metric + " by Hyperparameter input")
     ax.set(ylim=[-0.05, 1.05])
-
-
-def plotCmpRegContributions(contribs, predicting: str, ax: Axes):
-    """Plots weights of components in logistic regression from `getCompContribs`"""
-    sns.barplot(
-        data=contribs, x="Component", y="Weight", color="k", errorbar=None, ax=ax
-    )
-    ax.tick_params(axis="x", rotation=90)
-    ax.set_title("Weight of Pf2 Cmps in Logsitic Regression: Predicting " + predicting)
 
 
 def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float = 0.05):

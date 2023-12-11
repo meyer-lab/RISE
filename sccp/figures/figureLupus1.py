@@ -9,6 +9,7 @@ from .commonFuncs.plotFactors import (
     plotGeneFactors,
     plotWeight,
 )
+from .commonFuncs.plotLupus import getSamplesObs
 
 
 def makeFigure():
@@ -21,8 +22,7 @@ def makeFigure():
 
     X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
-    lupusStatus = X.obs[["Condition", "SLE_status"]].drop_duplicates("Condition")
-    lupusStatus = lupusStatus.set_index("Condition")["SLE_status"]
+    lupusStatus = getSamplesObs(X.obs)["SLE_status"]
 
     plotConditionsFactors(X, ax[0], lupusStatus)
     plotCellState(X, ax[1])

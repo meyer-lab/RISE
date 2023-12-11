@@ -209,7 +209,13 @@ def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
 
 
 def gene_plot_cells(
-    X: anndata.AnnData, hue: str, ax: Axes, unique=None, average=False, kde=False, cellType="Cell Type"
+    X: anndata.AnnData,
+    hue: str,
+    ax: Axes,
+    unique=None,
+    average=False,
+    kde=False,
+    cellType="Cell Type",
 ):
     """Plots two genes on either a per cell or per cell type basis"""
     assert X.shape[1] == 2

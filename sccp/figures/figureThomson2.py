@@ -34,7 +34,6 @@ def makeFigure():
     geneSet1 = ["FXYD2", "SERPINF1", "RARRES2"]
     plotGenePerCellType(geneSet1, X, ax[4], cellType="Cell Type2")
 
-
     plotCmpUMAP(X, 19, ax[5], 0.2)  # Alpro
     plotGeneFactors(19, X, ax[6], geneAmount=10, top=True)
     X_genes = X[:, ["THBS1", "VEGFA"]].to_memory()
@@ -55,7 +54,7 @@ def makeFigure():
         "Meprednisone",
     ]
     plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
-        
+
     plotGeneFactors(20, X, ax[11], geneAmount=10, top=False)
     plotGenePerCategCond(glucs, "Gluco", "NDRG2", X, ax[12], cellType="Cell Type2")
 
@@ -69,6 +68,5 @@ def makeFigure():
         ax=ax[13],
     )
     X_genes = X[:, ["VEGFA", "TNF"]].to_memory()
-
 
     return f
