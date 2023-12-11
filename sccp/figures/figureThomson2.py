@@ -13,13 +13,14 @@ from .commonFuncs.plotGeneral import (
     plotGeneFactors,
     gene_plot_cells,
     plot_cell_gene_corr,
+    heatmapGeneFactors
 )
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((16, 16), (4, 4))
+    ax, f = getSetup((15, 18), (4, 3))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -28,24 +29,19 @@ def makeFigure():
 
     plotLabelsUMAP(X, "Cell Type", ax[0])
     plotLabelsUMAP(X, "Cell Type2", ax[1])
+    heatmapGeneFactors([15, 19, 20], X, ax[2], geneAmount=5)
 
-    plotCmpUMAP(X, 16, ax[2], 0.2)  # pDC
-    plotGeneFactors(15, X, ax[3], geneAmount=10, top=True)
+    plotCmpUMAP(X, 15, ax[3], 0.2)  # pDC
     geneSet1 = ["FXYD2", "SERPINF1", "RARRES2"]
     plotGenePerCellType(geneSet1, X, ax[4], cellType="Cell Type2")
 
     plotCmpUMAP(X, 19, ax[5], 0.2)  # Alpro
-    plotGeneFactors(19, X, ax[6], geneAmount=10, top=True)
     X_genes = X[:, ["THBS1", "VEGFA"]].to_memory()
     X_genes = X_genes[X_genes.obs["Cell Type"] == "DCs", :]
-    gene_plot_cells(
-        X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[7], kde=False
-    )
-    ax[7].set(title="Gene Expression in DCs")
+    gene_plot_cells(X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[6], kde=False)
+    ax[6].set(title="Gene Expression in DCs")
 
-    plotCmpUMAP(X, 20, ax[8], 0.2)  # Gluco
-    plotGeneFactors(20, X, ax[9], geneAmount=10, top=True)
-
+    plotCmpUMAP(X, 20, ax[7], 0.2)  # Gluco
     glucs = [
         "Betamethasone Valerate",
         "Loteprednol etabonate",
@@ -53,10 +49,8 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Meprednisone",
     ]
-    plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
-
-    plotGeneFactors(20, X, ax[11], geneAmount=10, top=False)
-    plotGenePerCategCond(glucs, "Gluco", "NDRG2", X, ax[12], cellType="Cell Type2")
+    plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[8], cellType="Cell Type2")
+    plotGenePerCategCond(glucs, "Gluco", "NDRG2", X, ax[9], cellType="Cell Type2")
 
     X_genes = X[:, ["CD163", "NDRG2"]].to_memory()
     plot_cell_gene_corr(
@@ -65,8 +59,12 @@ def makeFigure():
         hue="Condition",
         cells=["Intermediate Monocytes", "Myeloid DCs"],
         cellType="Cell Type2",
-        ax=ax[13],
+        ax=ax[10],
     )
-    X_genes = X[:, ["VEGFA", "TNF"]].to_memory()
+
+    ax[6].set(xlim=(0, 0.8), ylim=(0, 0.8))
+    ax[8].set(ylim=(0, 0.2))
+    ax[9].set(ylim=(0, 0.3))
+    ax[10].set(xlim=(0, 0.3), ylim=(0, 0.3))
 
     return f

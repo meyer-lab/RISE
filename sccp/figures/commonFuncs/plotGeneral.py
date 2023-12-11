@@ -177,6 +177,32 @@ def plotGeneFactors(
     ax.tick_params(axis="x", rotation=90)
 
 
+def heatmapGeneFactors(
+    cmps: list, dataIn: anndata.AnnData, ax: Axes, geneAmount: int = 20
+):
+    """Plotting weights for gene factors for both most negatively/positively weighted terms"""
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
+    df = pd.DataFrame(
+            data=dataIn.varm["Pf2_C"], index=dataIn.var_names, columns=range(1, dataIn.varm["Pf2_C"].shape[1] + 1)
+        )
+    df = df.reset_index(names="Gene")
+
+    genes = np.array([])
+    for cmp in cmps:
+        sortDF = df.sort_values(by=cmp)
+        top = sortDF.iloc[-geneAmount:, :].Gene.values
+        bottom = sortDF.iloc[:geneAmount:, :].Gene.values
+        genes = np.concatenate((genes, np.flip(top)))
+        genes = np.concatenate((genes, bottom))
+
+    heatmapDF = df.loc[df.Gene.isin(genes)][cmps + ["Gene"]].set_index("Gene")
+    vmax = np.abs(heatmapDF.values).max()
+
+    sns.heatmap(
+        data=heatmapDF.transpose()[genes], ax=ax, cmap=cmap, vmin=-vmax, vmax=vmax
+    )
+
+
 def population_bar_chart(
     adata: anndata.AnnData, cellType: str, category: str, ax: Axes
 ):
@@ -223,7 +249,7 @@ def gene_plot_cells(
     dataDF = X.to_df()
     dataDF[hue] = X.obs[hue].values
     dataDF["Cell Type"] = X.obs[cellType].values
-    alpha = 0.3
+    alpha = 1
 
     if average:
         dataDF = dataDF.groupby([hue], observed=True).mean().reset_index()
