@@ -21,8 +21,11 @@ def makeFigure():
 
     df = getSamplesObs(X.obs)
 
-    plotConditionsFactors(X, ax[0], df["pool"])
-    plotConditionsFactors(X, ax[1], df["Processing_Cohort"])
-    plotConditionsFactors(X, ax[2], df["Status"])
+    plotConditionsFactors(X, ax[0], df["pool"], groupConditions=True)
+    ax[0].set(yticks=[])
+    plotConditionsFactors(X, ax[1], df["Processing_Cohort"], groupConditions=True)
+    ax[1].set(yticks=[])
+    plotConditionsFactors(X, ax[2], df["Status"], groupConditions=True)
+    ax[2].set(yticks=[])
 
     return f

@@ -25,7 +25,7 @@ def makeFigure():
 
     drugNames = groupDrugs(X.obs["Condition"])
 
-    plotConditionsFactors(X, ax[0], drugNames, ThomsonNorm=True)
+    plotConditionsFactors(X, ax[0], drugNames, ThomsonNorm=True, groupConditions=True)
     plotCellState(X, ax[1])
     plotGeneFactors(X, ax[2])
     plotWeight(X, ax[3])
