@@ -25,10 +25,10 @@ def cwSNR(
     for i in range(X.uns["Pf2_A"].shape[0]):
         # Parafac2 to slice
         B_i = W_proj[sgIndex == i]
-        slice = np.dot(B_i * a[i], np.array(X.varm["Pf2_C"]).T)
+        tslice = np.dot(B_i * a[i], np.array(X.varm["Pf2_C"]).T)
 
         X_condition_arr = Xarr[sgIndex == i] - X.var["means"].to_numpy()
-        err_norm_here = float(np.linalg.norm(X_condition_arr - slice) ** 2.0)
+        err_norm_here = float(np.linalg.norm(X_condition_arr - tslice) ** 2.0)
         SNR[i, :] /= err_norm_here
 
     return SNR

@@ -90,7 +90,7 @@ def import_lupus() -> anndata.AnnData:
     'louvain': louvain cluster group assignment,
     'cg_cov': broad cell type,
     'ct_cov': lymphocyte-specific cell type,
-    'L3': not super clear,
+    'L3': marks a balanced subset of batch 4 used for model training,
     'ind_cov_batch_cov': combination of patient and pool, proxy for sample ID,
     'Age':	age of patient,
     'Sex': sex of patient,

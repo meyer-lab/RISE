@@ -177,7 +177,7 @@ marker_genes_1 = {
 # This is a list of genes which I assembled to label the second layer of cell annotation. I assembled this using several sources.
 marker_genes_2 = {
     "B cells": ["PXK", "MS4A1", "CD19", "CD74", "CD79A", "BANK1", "PTPRC", "CR2"],
-    "B Memory": ["NPIB15", "BACH2", "IL7", "NMBR", "MS4A1", "MBL2", "LY86" "CD27"],
+    "B Memory": ["NPIB15", "BACH2", "IL7", "NMBR", "MS4A1", "MBL2", "LY86", "CD27"],
     "B Naive": ["P2RX5", "SIK1", "SLC12A1", "SELL", "RALGPS2", "PTPRCAP", "PSG2"],
     "Basophils": ["CCL4", "NPL", "WRN", "NFIL3", "TEC", "OTUB2", "FAR2"],
     "cDCs": ["ITGAX", "ZBTB46", "LAMP3", "CXCR1", "ITGAM", "FCER1A", "IL6", "IRF4"],
