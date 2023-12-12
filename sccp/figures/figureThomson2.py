@@ -31,17 +31,17 @@ def makeFigure():
     plotLabelsUMAP(X, "Cell Type2", ax[1])
     heatmapGeneFactors([15, 19, 20], X, ax[2], geneAmount=5)
 
-    plotCmpUMAP(X, 15, ax[3], 0.2)  # pDC
+    plotCmpUMAP(X, 15, ax[3], 0.4)  # pDC
     geneSet1 = ["FXYD2", "SERPINF1", "RARRES2"]
     plotGenePerCellType(geneSet1, X, ax[4], cellType="Cell Type2")
 
-    plotCmpUMAP(X, 19, ax[5], 0.2)  # Alpro
-    X_genes = X[:, ["THBS1", "VEGFA"]].to_memory()
+    plotCmpUMAP(X, 19, ax[5], 0.4)  # Alpro
+    X_genes = X[:, ["THBS1", "EREG"]].to_memory()
     X_genes = X_genes[X_genes.obs["Cell Type"] == "DCs", :]
     gene_plot_cells(X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[6], kde=False)
     ax[6].set(title="Gene Expression in DCs")
 
-    plotCmpUMAP(X, 20, ax[7], 0.2)  # Gluco
+    plotCmpUMAP(X, 20, ax[7], 0.4)  # Gluco
     glucs = [
         "Betamethasone Valerate",
         "Loteprednol etabonate",
@@ -62,9 +62,9 @@ def makeFigure():
         ax=ax[10],
     )
 
-    ax[6].set(xlim=(0, 0.8), ylim=(0, 0.8))
-    ax[8].set(ylim=(0, 0.2))
-    ax[9].set(ylim=(0, 0.3))
-    ax[10].set(xlim=(0, 0.3), ylim=(0, 0.3))
+    ax[6].set(xlim=(-0.05, 0.6), ylim=(-.05, 0.6))
+    ax[8].set(ylim=(-0.05, 0.2))
+    ax[9].set(ylim=(-0.05, 0.3))
+    ax[10].set(xlim=(-0.05, 0.3), ylim=(-0.05, 0.3))
 
     return f
