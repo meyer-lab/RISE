@@ -149,7 +149,7 @@ def plotGenePerCategCond(
         y="Average Gene Expression For Drugs",
         hue="Condition",
         ax=ax,
-        showfliers = False
+        showfliers=False,
     )
     ax.set(title=gene)
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
@@ -184,8 +184,10 @@ def heatmapGeneFactors(
     """Plotting weights for gene factors for both most negatively/positively weighted terms"""
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
     df = pd.DataFrame(
-            data=dataIn.varm["Pf2_C"], index=dataIn.var_names, columns=range(1, dataIn.varm["Pf2_C"].shape[1] + 1)
-        )
+        data=dataIn.varm["Pf2_C"],
+        index=dataIn.var_names,
+        columns=range(1, dataIn.varm["Pf2_C"].shape[1] + 1),
+    )
     df = df.reset_index(names="Gene")
 
     genes = np.array([])
