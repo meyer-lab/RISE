@@ -24,9 +24,7 @@ def makeFigure():
     y_test, sle_decisions = getPf2ROC(np.array(X.uns["Pf2_A"]), condStatus)
 
     RocCurveDisplay.from_predictions(
-        y_test, sle_decisions, pos_label="SLE", plot_chance_level=True, ax=ax[0]
+        y_test, sle_decisions, pos_label=True, plot_chance_level=True, ax=ax[0]
     )
-
-    ax[0].set_title("OOS ROC: " + str(X.uns["Pf2_A"].shape[1]) + " Component LASSO")
 
     return f
