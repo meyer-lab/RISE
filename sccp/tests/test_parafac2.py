@@ -2,7 +2,6 @@
 Test the parafac2 method.
 """
 import numpy as np
-
 from ..factorization import pf2, pf2_r2x
 from ..imports import import_thomson
 
