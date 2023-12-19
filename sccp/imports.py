@@ -125,8 +125,14 @@ def import_lupus() -> anndata.AnnData:
     # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
     X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
 
+    # Get the indices for subsetting the data
+    _, sgIndex = np.unique(X.obs_vector("Condition"), return_inverse=True)
+    X.obs["condition_unique_idxs"] = sgIndex
 
-    return prepare_dataset(X, "Condition")
+    # Pre-calculate gene means
+    X.var["means"] = np.mean(X.X, axis=0)  # type: ignore
+
+    return X
 
 
 def import_citeseq() -> anndata.AnnData:
@@ -160,9 +166,9 @@ def factorSave():
         X = import_thomson()
         pf2(X, int(sys.argv[2]))
         X.write(Path("factor_cache/Thomson.h5ad"))
-    elif sys.argv[1] == "RawLupus":
+    elif sys.argv[1] == "Lupus":
         X = import_lupus()
         pf2(X, int(sys.argv[2]))
-        X.write(Path("factor_cache/RawLupus.h5ad"))
+        X.write(Path("factor_cache/Lupus.h5ad"))
     else:
         raise RuntimeError("Dataset not recognized.")

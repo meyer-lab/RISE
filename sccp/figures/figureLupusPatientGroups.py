@@ -17,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/RawLupus.h5ad", backed="r")
+    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
 
     df = getSamplesObs(X.obs)
 
