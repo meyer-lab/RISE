@@ -12,10 +12,10 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((24, 24), (10, 8))
 
-    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
-
-    for i in np.arange(0, 3):
-        plotGeneFactors(i + 1, X, ax[2 * i], geneAmount=5, top=True)
-        plotGeneFactors(i + 1, X, ax[2 * i + 1], geneAmount=5, top=False)
+    X = read_h5ad("factor_cache/RawLupus.h5ad", backed="r")
+    cmp = [4, 19, 23, 46, 47]
+    for i, c in enumerate(cmp):
+        plotGeneFactors(c, X, ax[2 * i], geneAmount=10, top=True)
+        plotGeneFactors(c, X, ax[2 * i + 1], geneAmount=10, top=False)
 
     return f

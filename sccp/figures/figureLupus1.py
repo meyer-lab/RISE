@@ -20,8 +20,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
-
+    X = read_h5ad("factor_cache/RawLupus.h5ad", backed="r")
 
     lupusStatus = getSamplesObs(X.obs)["SLE_status"]
 
