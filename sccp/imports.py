@@ -11,13 +11,13 @@ from .factorization import pf2
 from .gating import gateThomsonCells
 
 
-def prepare_dataset(X: anndata.AnnData, condition_name: str) -> anndata.AnnData:
+def prepare_dataset(X: anndata.AnnData, condition_name: str, geneThreshold=0.01) -> anndata.AnnData:
     assert isinstance(X.X, spmatrix)
     assert np.amin(X.X.data) >= 0.0  # type: ignore
 
     # Filter out genes with too few reads
     readmean, _ = mean_variance_axis(X.X, axis=0)  # type: ignore
-    X = X[:, readmean > 0.01]
+    X = X[:, readmean > geneThreshold]
 
     # Normalize read depth
     sc.pp.normalize_total(X, exclude_highly_expressed=False, inplace=True)
@@ -126,7 +126,7 @@ def import_lupus() -> anndata.AnnData:
     # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
     X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
 
-    return prepare_dataset(X, "Condition")
+    return prepare_dataset(X, "Condition", geneThreshold=0.1)
 
 
 def import_citeseq() -> anndata.AnnData:
