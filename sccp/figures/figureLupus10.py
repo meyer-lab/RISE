@@ -23,7 +23,7 @@ def makeFigure():
     # NOTE These plots are way, way, way too big. The figure file ends up being 2GB and 20 mins to build.
     # If you need to plot individual cells, make sure it is being plotted by datashader.
 
-    X_genes = X[:, ["PPBP", "FHIT"]].to_memory()
+    # X_genes = X[:, ["PPBP", "FHIT"]].to_memory()
     # gene_plot_cells(X_genes, hue="SLE_status", ax=ax[0], kde=True)
     # gene_plot_cells(X_genes, hue="Cell Type", ax=ax[1])
     # gene_plot_cells(X_genes, hue="Cell Type", ax=ax[2], average=True)

@@ -148,5 +148,5 @@ def plotWeight(X: AnnData, ax: Axes):
 def reorder_table(projs: np.ndarray) -> np.ndarray:
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2
-    Z = sch.linkage(projs, method="complete", optimal_ordering=True)
+    Z = sch.linkage(projs, method="complete", metric="cosine", optimal_ordering=True)
     return sch.leaves_list(Z)

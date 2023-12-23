@@ -11,7 +11,7 @@ from .factorization import pf2
 from .gating import gateThomsonCells
 
 
-def prepare_dataset(X: anndata.AnnData, condition_name: str, geneThreshold=0.01) -> anndata.AnnData:
+def prepare_dataset(X: anndata.AnnData, condition_name: str, geneThreshold: float) -> anndata.AnnData:
     assert isinstance(X.X, spmatrix)
     assert np.amin(X.X.data) >= 0.0  # type: ignore
 
@@ -77,7 +77,7 @@ def import_thomson() -> anndata.AnnData:
     X.obs = X.obs.set_index("cell_barcode")
     gateThomsonCells(X)
 
-    return prepare_dataset(X, "Condition")
+    return prepare_dataset(X, "Condition", geneThreshold=0.01)
 
 
 def import_lupus() -> anndata.AnnData:
@@ -148,7 +148,7 @@ def import_citeseq() -> anndata.AnnData:
 
     X = anndata.concat(data, merge="same", label="Condition")
 
-    return prepare_dataset(X, "Condition")
+    return prepare_dataset(X, "Condition", geneThreshold=0.1)
 
 
 def factorSave():
