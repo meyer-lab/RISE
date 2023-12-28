@@ -27,7 +27,7 @@ def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((5, 8), (2, 1)) 
+    ax, f = getSetup((5, 8), (2, 1))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -39,12 +39,12 @@ def makeFigure():
 
     contribsStatus = getCompContribs(X, df_y["SLE_status"])
     sns.barplot(
-    data=contribsStatus,
-    x="Component",
-    y="Weight",
-    color="k",
-    errorbar=None,
-    ax=ax[0],
+        data=contribsStatus,
+        x="Component",
+        y="Weight",
+        color="k",
+        errorbar=None,
+        ax=ax[0],
     )
     ax[0].tick_params(axis="x", rotation=90)
     ax[0].set_title("Weight of Pf2 Cmps in Logsitic Regression: Predicting: SLE")

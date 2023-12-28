@@ -19,5 +19,5 @@ def makeFigure():
     comps = [13, 16, 26, 32]
     for i, cmp in enumerate(comps):
         plotCmpPerCellType(X, cmp, ax[(2 * i)])
-        plotCmpUMAP(X, cmp, ax[(2 * i) + 1], cbarMax=.3)
+        plotCmpUMAP(X, cmp, ax[(2 * i) + 1], cbarMax=0.3)
     return f

@@ -29,7 +29,7 @@ output/figureThomson%.svg: sccp/figures/figureThomson%.py factor_cache/Thomson.h
 
 factor_cache/CITEseq.h5ad: sccp/factorization.py
 	@ mkdir -p ./factor_cache
-	poetry run factor CITEseq 80
+	poetry run factor CITEseq 50
 
 factor_cache/Thomson.h5ad: sccp/factorization.py
 	@ mkdir -p ./factor_cache

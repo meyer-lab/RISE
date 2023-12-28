@@ -11,7 +11,9 @@ from .factorization import pf2
 from .gating import gateThomsonCells
 
 
-def prepare_dataset(X: anndata.AnnData, condition_name: str, geneThreshold: float) -> anndata.AnnData:
+def prepare_dataset(
+    X: anndata.AnnData, condition_name: str, geneThreshold: float
+) -> anndata.AnnData:
     assert isinstance(X.X, spmatrix)
     assert np.amin(X.X.data) >= 0.0  # type: ignore
 
