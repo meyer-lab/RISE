@@ -81,7 +81,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     ax.set(title=f"{gene}-{decompType}-Based Decomposition")
 
 
-def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax=1):
+def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float=1.0):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
     values = X.obsm["weighted_projections"][:, cmp - 1]

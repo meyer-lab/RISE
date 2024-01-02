@@ -20,18 +20,17 @@ def makeFigure():
     subplotLabel(ax)
 
     X = import_lupus()
-    X = X.to_memory()
 
-    condStatus = lupusStatus = getSamplesObs(X.obs)
+    condStatus = getSamplesObs(X.obs)
 
-    rank = [2, 3]
-    # results = testPf2Ranks(
-    #     X,
-    #     condStatus,
-    #     rank,
-    #     cv_group="Processing_Cohort",
-    # )
+    rank = list(range(1, 3))
+    results = testPf2Ranks(
+        X,
+        condStatus,
+        rank,
+        cv_group="Processing_Cohort",
+    )
 
-    # plotPf2RankTest(results, ax[0])
+    plotPf2RankTest(results, ax[0])
 
     return f

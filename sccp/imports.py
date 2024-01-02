@@ -104,12 +104,6 @@ def import_lupus() -> anndata.AnnData:
     X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
     X = anndata.AnnData(X.raw.X, X.obs, X.raw.var, X.uns)
 
-    # Remove non-coding genes (these seem to have a very large batch effect)
-    RP_genes = X.var_names.str.match(r"RP([1-9]|1[0-5])-\d")
-    LINC_genes = X.var_names.str.startswith("LINC")
-    CTD_genes = X.var_names.str.startswith("CTD-")
-    X = X[:, ~(RP_genes | LINC_genes | CTD_genes)]
-
     # rename columns to make more sense
     X.obs = X.obs.rename(
         {
