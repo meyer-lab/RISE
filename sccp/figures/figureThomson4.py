@@ -31,7 +31,7 @@ def makeFigure():
     # PCA dimension reduction
     pc = PCA(n_components=30)
     pcaPoints = pc.fit_transform(np.asarray(X.X.to_memory() - X.var["means"].values))
-    X.obsm["embedding"] = pacmap.PaCMAP().fit_transform(pcaPoints)
+    X.obsm["X_pf2_PaCMAP"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
     for i, gene in enumerate(genes):
         plotGeneUMAP(gene, "PCA", X, ax[i + 4])

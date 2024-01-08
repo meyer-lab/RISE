@@ -102,7 +102,10 @@ def import_lupus() -> anndata.AnnData:
 
     """
     X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
-    X = anndata.AnnData(X.raw.X, X.obs, X.raw.var, X.uns)
+    X = anndata.AnnData(X.raw.X, X.obs, X.raw.var, X.uns, X.obsm)
+
+    protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
+    protein_df = protein.to_df()
 
     # rename columns to make more sense
     X.obs = X.obs.rename(
@@ -118,6 +121,8 @@ def import_lupus() -> anndata.AnnData:
         },
         axis=1,
     )
+
+    X.obs = X.obs.merge(protein_df, how="left", left_index=True, right_index=True)
 
     # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
     X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]

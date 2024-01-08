@@ -85,7 +85,7 @@ def pf2(
 
     if doEmbedding:
         pcm = PaCMAP(random_state=random_state)
-        X.obsm["embedding"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
+        X.obsm["X_pf2_PaCMAP"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
 
     return X
 

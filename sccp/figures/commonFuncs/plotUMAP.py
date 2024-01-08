@@ -55,7 +55,7 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
 
     values = geneList
 
-    points = np.array(X.obsm["embedding"])
+    points = np.array(X.obsm["X_pf2_PaCMAP"])
 
     canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=("x", "y"))
@@ -81,11 +81,11 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     ax.set(title=f"{gene}-{decompType}-Based Decomposition")
 
 
-def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float=1.0):
+def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
     """Scatterplot of UMAP visualization weighted by
     projections for a component and cell state"""
     values = X.obsm["weighted_projections"][:, cmp - 1]
-    points = X.obsm["embedding"]
+    points = X.obsm["X_pf2_PaCMAP"]
 
     cmap = sns.diverging_palette(250, 30, l=65, center="dark", as_cmap=True)
 
@@ -123,7 +123,7 @@ def plotLabelsUMAP(
         labels = pd.Series([c if c in condition else "Z Other" for c in labels])
 
     indices = np.argsort(labels)
-    points = X.obsm["embedding"][indices, :]
+    points = X.obsm["X_pf2_PaCMAP"][indices, :]
     labels = labels.iloc[indices]
 
     canvas = _get_canvas(points)
