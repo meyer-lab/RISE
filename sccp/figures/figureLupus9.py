@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad", backed="r")
 
     predict = "SLE_status"
     condStatus = getSamplesObs(X.obs)
@@ -29,7 +29,7 @@ def makeFigure():
     )
     df = df.merge(condStatus, left_index=True, right_index=True)
 
-    twoCmp = [[13, 26], [32, 26]]
+    twoCmp = [[13, 26], [4, 26]]
 
     for i, pair in enumerate(twoCmp):
         plot2DSeparationByComp(df, pair, predict, ax[i])

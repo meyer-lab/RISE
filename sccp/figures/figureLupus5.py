@@ -32,7 +32,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    data = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
+    data = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad", backed="r")
 
     df_y = getSamplesObs(data.obs)
     X = np.array(data.uns["Pf2_A"])

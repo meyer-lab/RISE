@@ -15,7 +15,7 @@ output/figure%.svg: sccp/figures/figure%.py
 	@ mkdir -p ./output
 	poetry run fbuild $*
 
-output/figureLupus%.svg: sccp/figures/figureLupus%.py factor_cache/Lupus.h5ad
+output/figureLupus%.svg: sccp/figures/figureLupus%.py
 	@ mkdir -p ./output
 	poetry run fbuild Lupus$*
 
@@ -34,10 +34,6 @@ factor_cache/CITEseq.h5ad: sccp/factorization.py
 factor_cache/Thomson.h5ad: sccp/factorization.py
 	@ mkdir -p ./factor_cache
 	poetry run factor Thomson 20
-
-factor_cache/Lupus.h5ad: sccp/factorization.py
-	@ mkdir -p ./factor_cache
-	poetry run factor Lupus 30
 
 test:
 	poetry run pytest -s -x -v

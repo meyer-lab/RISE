@@ -161,9 +161,5 @@ def factorSave():
         X = import_thomson()
         pf2(X, int(sys.argv[2]))
         X.write(Path("factor_cache/Thomson.h5ad"))
-    elif sys.argv[1] == "Lupus":
-        X = import_lupus()
-        pf2(X, int(sys.argv[2]))
-        X.write(Path("factor_cache/Lupus.h5ad"))
     else:
         raise RuntimeError("Dataset not recognized.")

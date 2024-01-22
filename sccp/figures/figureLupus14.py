@@ -11,7 +11,7 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((14, 28), (8, 5))
 
-    X = read_h5ad("factor_cache/Lupus.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad", backed="r")
 
     for i in range(3):
         plotCmpPerCellType(X, i + 1, ax[i], outliers=False)
