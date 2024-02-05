@@ -57,9 +57,8 @@ def plotRatio(X, ax, day7=True):
         day=1
         yticks = [2, 1.5, 1, .5, 0]
 
-    
     ax.plot(xticks, ratio)
-    ax.set(xticks=np.arange(1, np.shape(X)[1]+1, 2), yticks=[2, 1.5, 1, .5, 0])
+    ax.set(xticks=np.arange(1, np.shape(X)[1]+1, 2), yticks=yticks)
     ax.set_xlabel("Components")
     ax.set_ylabel(f"IC/SC Ratio Day {day}")
 
