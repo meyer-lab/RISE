@@ -6,13 +6,14 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotGeneral import plotGenePerCellType
 import pandas as pd
 import numpy as np
+import seaborn as sns
+
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((12, 12), (3, 4))
+    ax, f = getSetup((20, 30), (3, 4))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -22,10 +23,11 @@ def makeFigure():
     X.obs["leiden"] = XX.obs["leiden"] 
     
     comps = [22, 33, 47, 48, 23, 31, 43]
-    genes = top_bot_genes(X, cmp=comps[0])
+    genes = top_bot_genes(X, cmp=comps[2], geneAmount=1)
     
     for i, gene in enumerate(genes):
-        plotGenePerCellType(gene, X, ax[i], cellType="leiden")
+        plotGenePerStatus(X, gene, ax[i], cellType="leiden")
+        # ax[i].legend([],[], frameon=False)
 
 
 
@@ -47,3 +49,30 @@ def top_bot_genes(X, cmp, geneAmount=5):
     all_genes = np.concatenate([top, bot])
     
     return all_genes 
+
+
+def plotGenePerStatus(X, gene, ax, cellType="Cell Type"):
+    """Plots average gene expression across cell types for a category of drugs"""
+    adata = X.to_memory()
+    genesV = adata[:, gene]
+    dataDF = genesV.to_df()
+    dataDF = dataDF.subtract(genesV.var["means"].values)
+    dataDF["Condition"] = genesV.obs["Condition"].values
+    dataDF["Cell Type"] = genesV.obs[cellType].values
+
+    df = pd.melt(dataDF, id_vars=["Cell Type", "Condition"], value_vars=gene).rename(
+            columns={"variable": "Gene", "value": "Value"})
+      
+    # df = df.groupby(["Cell Type", "Gene", "Condition"], observed=False).mean()
+    df = df.rename(columns={"Value": "Average Gene Expression"}).reset_index()
+
+
+    sns.boxplot(
+        data=df,
+        x="Condition",
+        y="Average Gene Expression",
+        hue="Cell Type",
+        ax=ax,
+        showfliers=False
+    )
+    ax.set(title=gene)
