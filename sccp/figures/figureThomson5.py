@@ -1,7 +1,7 @@
 """
 Thomson: UMAP labeled by genes 
 """
-import anndata
+from anndata import read_h5ad
 import numpy as np
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import plotGeneUMAP
@@ -15,7 +15,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     cd4 = ["IL7R"]
     cd8 = ["CD8A", "CD8B"]

@@ -21,7 +21,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     drugNames = groupDrugs(X.obs["Condition"])
 

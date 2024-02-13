@@ -6,7 +6,7 @@ from .common import (
     getSetup,
 )
 from ..geneontology import geneOntology
-import anndata
+from anndata import read_h5ad
 
 
 def makeFigure():
@@ -17,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     df = geneOntology(X, 20)
 

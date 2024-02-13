@@ -23,17 +23,13 @@ output/figureCITEseq%.svg: sccp/figures/figureCITEseq%.py factor_cache/CITEseq.h
 	@ mkdir -p ./output
 	poetry run fbuild CITEseq$*
 
-output/figureThomson%.svg: sccp/figures/figureThomson%.py factor_cache/Thomson.h5ad
+output/figureThomson%.svg: sccp/figures/figureThomson%.py 
 	@ mkdir -p ./output
 	poetry run fbuild Thomson$*
 
 factor_cache/CITEseq.h5ad: sccp/factorization.py
 	@ mkdir -p ./factor_cache
 	poetry run factor CITEseq 50
-
-factor_cache/Thomson.h5ad: sccp/factorization.py
-	@ mkdir -p ./factor_cache
-	poetry run factor Thomson 20
 
 test:
 	poetry run pytest -s -x -v

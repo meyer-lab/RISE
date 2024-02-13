@@ -25,7 +25,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     plotLabelsUMAP(X, "Cell Type", ax[0])
     plotLabelsUMAP(X, "Cell Type2", ax[1])

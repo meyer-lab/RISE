@@ -1,7 +1,7 @@
 """
 Thomson dataset: Cell counts and cell type percentages per condition.
 """
-import anndata
+from anndata import read_h5ad
 import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
@@ -15,7 +15,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     df = pd.DataFrame(
         {"Cell Type": X.obs["Cell Type"], "Condition": X.obs["Condition"]}

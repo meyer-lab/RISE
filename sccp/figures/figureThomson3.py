@@ -1,7 +1,7 @@
 """
 Thomson: Plotting weighted projections per component
 """
-import anndata
+from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import (
     plotCmpUMAP,
@@ -16,7 +16,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("factor_cache/Thomson.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     for i in range(0, 8):
         plotCmpUMAP(X, i, ax[i])

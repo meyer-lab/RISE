@@ -157,9 +157,5 @@ def factorSave():
         X = import_citeseq()
         pf2(X, int(sys.argv[2]))
         X.write(Path("factor_cache/CITEseq.h5ad"))
-    elif sys.argv[1] == "Thomson":
-        X = import_thomson()
-        pf2(X, int(sys.argv[2]))
-        X.write(Path("factor_cache/Thomson.h5ad"))
     else:
         raise RuntimeError("Dataset not recognized.")
