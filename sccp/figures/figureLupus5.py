@@ -18,7 +18,6 @@ def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
 
     cmp_col = [f"Cmp. {i}" for i in range(1, X.shape[1] + 1)]
     coefs = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
-    print(coefs)
     print(f"Fitting accuracy: {lr.score(X, y)}")
 
     return coefs

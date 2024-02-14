@@ -21,6 +21,4 @@ def makeFigure():
 
     df = geneOntology(X, 4)
 
-    print(df)
-
     return f

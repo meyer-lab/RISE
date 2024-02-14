@@ -6,9 +6,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import (
-    plotCmpUMAP, plotCmpPerCellType
-)
+from .commonFuncs.plotUMAP import plotCmpUMAP, plotCmpPerCellType
 
 
 def makeFigure():
@@ -21,12 +19,12 @@ def makeFigure():
 
     X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
     XX = read_h5ad("/opt/pf2/CITE_Neighbors.h5ad", backed="r")
-    X.obs["leiden"] = XX.obs["leiden"] 
+    X.obs["leiden"] = XX.obs["leiden"]
 
     comps = [22, 33, 47, 48, 23, 31, 43]
 
     for i, cmp in enumerate(comps):
-        plotCmpPerCellType(X, cmp, ax[2*i], cellType="leiden")
-        plotCmpUMAP(X, cmp, ax[2*i+1], cbarMax=.25)
+        plotCmpPerCellType(X, cmp, ax[2 * i], cellType="leiden")
+        plotCmpUMAP(X, cmp, ax[2 * i + 1], cbarMax=0.25)
 
     return f
