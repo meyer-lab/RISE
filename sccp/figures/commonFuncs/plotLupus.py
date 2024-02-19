@@ -82,17 +82,6 @@ def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float =
     )
 
 
-def plot2DSeparationByComp(df, pair: tuple, predict: str, ax: Axes):
-    """
-    Plots the separation of some observation variable (hue) that is contained in
-    the input merged dataframe across two components, passed as two strings in a tuple (x_y)
-    that denote the names of the columns to be used for the x and y axes.
-    """
-    sns.scatterplot(
-        data=df, x=f"Cmp. {pair[0]}", y=f"Cmp. {pair[1]}", hue=predict, ax=ax
-    )
-
-
 def plotROCAcrossGroups(
     A_matrix,
     group_labs,

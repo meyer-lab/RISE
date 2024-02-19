@@ -1,5 +1,7 @@
 """
 Lupus: Cross validation for determining optimal paramaters for logistic regression
+Lupus is spelled wrong in the figure name to indicate that this figure does not depend
+on cached results.
 """
 from ..imports import import_lupus
 from ..logisticReg import testPf2Ranks

@@ -17,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
 
     genes = ["GNLY", "NKG7"]
     for i, gene in enumerate(genes):
@@ -30,7 +30,7 @@ def makeFigure():
 
     # PCA dimension reduction
     pc = PCA(n_components=30)
-    pcaPoints = pc.fit_transform(np.asarray(X.X.to_memory() - X.var["means"].values))
+    pcaPoints = pc.fit_transform(np.asarray(X.X - X.var["means"].values))
     X.obsm["X_pf2_PaCMAP"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
     for i, gene in enumerate(genes):

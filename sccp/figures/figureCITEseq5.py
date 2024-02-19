@@ -50,8 +50,7 @@ def top_bot_genes(X, cmp, geneAmount=5):
 
 def plotGenePerStatus(X, gene, ax, cellType="Cell Type"):
     """Plots average gene expression across cell types for a category of drugs"""
-    adata = X.to_memory()
-    genesV = adata[:, gene]
+    genesV = X[:, gene].to_memory()
     dataDF = genesV.to_df()
     dataDF = dataDF.subtract(genesV.var["means"].values)
     dataDF["Condition"] = genesV.obs["Condition"].values

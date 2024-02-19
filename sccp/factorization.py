@@ -76,8 +76,11 @@ def pf2(
     rank: int,
     random_state=1,
     doEmbedding: bool = True,
+    tolerance=1e-10,
 ):
-    pf_out, _ = parafac2_nd(X, rank=rank, random_state=random_state)
+    pf_out, _ = parafac2_nd(
+        X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=1000
+    )
 
     X = store_pf2(X, pf_out)
 
