@@ -11,7 +11,7 @@ def makeFigure():
     # Get list of axis objects
     ax, f = getSetup((12, 10), (3, 4))
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
     comps = [4, 7, 8, 10, 22, 24]
     for i, cmp in enumerate(comps):

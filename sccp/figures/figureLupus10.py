@@ -18,7 +18,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
     # NOTE These plots are way, way, way too big. The figure file ends up being 2GB and 20 mins to build.
     # If you need to plot individual cells, make sure it is being plotted by datashader.
