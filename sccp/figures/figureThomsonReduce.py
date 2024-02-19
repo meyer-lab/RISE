@@ -104,10 +104,10 @@ def makeFigure():
 
     subplotLabel(ax)
 
-    percentList = np.arange(0.0, 11.0, 2.0)
+    percentList = np.arange(0.0, 11.0, 5.0)
     plotFMSpercentDrop(X, ax[0], percentList=percentList, runs=3)
 
-    ranks = list(range(1, 25, 2))
+    ranks = list(range(1, 25, 5))
     plotRankTest(X, ax[2], ranksList=ranks)
 
     return f
