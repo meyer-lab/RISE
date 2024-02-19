@@ -1,7 +1,12 @@
 from pacmap import PaCMAP
 import scipy.sparse as sps
 from tensorly.cp_tensor import CPTensor
-from tlviz.factor_tools import factor_match_score as fms, degeneracy_score
+from sklearn.linear_model import LinearRegression
+from scipy.stats import gmean
+from tlviz.factor_tools import (
+    factor_match_score as fms,
+    degeneracy_score,
+)
 from parafac2.parafac2 import parafac2_nd
 
 
@@ -32,6 +37,26 @@ def cwSNR(
         SNR[i, :] /= err_norm_here
 
     return SNR
+
+
+def correct_conditions(X: anndata.AnnData):
+    """Correct the conditions factors by overall read depth."""
+    sgIndex = X.obs["condition_unique_idxs"]
+    counts = np.zeros((np.amax(sgIndex) + 1, 1))
+
+    cond_mean = gmean(X.uns["Pf2_A"], axis=1)
+
+    x_count = X.X.sum(axis=1)
+
+    for ii in range(counts.size):
+        counts[ii] = np.sum(x_count[X.obs["condition_unique_idxs"] == ii])
+
+    lr = LinearRegression()
+    lr.fit(counts, cond_mean.reshape(-1, 1))
+
+    counts_correct = lr.predict(counts)
+    
+    return X.uns["Pf2_A"] / counts_correct 
 
 
 def store_pf2(

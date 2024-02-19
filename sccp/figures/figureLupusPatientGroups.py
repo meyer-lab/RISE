@@ -7,6 +7,7 @@ from .commonFuncs.plotFactors import (
     plotConditionsFactors,
 )
 from .commonFuncs.plotLupus import getSamplesObs
+from ..factorization import correct_conditions
 
 
 def makeFigure():
@@ -17,7 +18,8 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad")
+    X.uns["Pf2_A"] = correct_conditions(X)
 
     df = getSamplesObs(X.obs)
 

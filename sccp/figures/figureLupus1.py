@@ -10,6 +10,7 @@ from .commonFuncs.plotFactors import (
     plotWeight,
 )
 from .commonFuncs.plotLupus import getSamplesObs
+from ..factorization import correct_conditions
 
 
 def makeFigure():
@@ -20,9 +21,11 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     lupusStatus = getSamplesObs(X.obs)["SLE_status"]
+
+    X.uns["Pf2_A"] = correct_conditions(X)
 
     plotConditionsFactors(X, ax[0], lupusStatus)
     ax[0].set(yticks=[])

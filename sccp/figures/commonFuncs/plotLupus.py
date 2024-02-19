@@ -88,8 +88,6 @@ def plotROCAcrossGroups(
     ax: Axes,
     pred_group="SLE_status",
     cv_group="Processing_Cohort",
-    penalty_type="l1",
-    solver="saga",
     penalty=50,
     n_splits=4,
 ):
@@ -103,7 +101,7 @@ def plotROCAcrossGroups(
     group_cond_labels = condition_labels_all[cv_group]
     # set up log reg specs
     log_reg = LogisticRegression(
-        random_state=0, max_iter=5000, penalty=penalty_type, solver=solver, C=penalty
+        random_state=0, max_iter=5000, penalty="l1", solver="saga", C=penalty
     )
 
     tprs = []

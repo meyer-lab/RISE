@@ -9,6 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import getSamplesObs
+from ..factorization import correct_conditions
 
 
 def makeFigure():
@@ -19,11 +20,11 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     status = getSamplesObs(X.obs)
 
-    Lupus_comp_scan_plot(ax[0], X.uns["Pf2_A"], status)
+    Lupus_comp_scan_plot(ax[0], correct_conditions(X), status)
 
     return f
 

@@ -7,6 +7,7 @@ from .common import subplotLabel, getSetup
 from ..logisticReg import getPf2ROC
 from sklearn.metrics import RocCurveDisplay
 from .commonFuncs.plotLupus import getSamplesObs
+from ..factorization import correct_conditions
 
 
 def makeFigure():
@@ -17,9 +18,10 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad")
 
     condStatus = getSamplesObs(X.obs)
+    X.uns["Pf2_A"] = correct_conditions(X)
 
     y_test, sle_decisions = getPf2ROC(np.array(X.uns["Pf2_A"]), condStatus)
 

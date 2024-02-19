@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.linear_model import LogisticRegressionCV
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import getSamplesObs
+from ..factorization import correct_conditions
 
 
 def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
@@ -31,7 +32,9 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    data = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
+    data = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad")
+
+    data.uns["Pf2_A"] = correct_conditions(data)
 
     df_y = getSamplesObs(data.obs)
     X = np.array(data.uns["Pf2_A"])
