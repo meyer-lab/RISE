@@ -20,6 +20,7 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
+
     predict = "SLE_status"
     condStatus = getSamplesObs(X.obs)
     condStatus = condStatus.set_index("Condition")
