@@ -66,7 +66,7 @@ def makeFigure():
 
     ax[6].set(xlim=(-0.05, 0.6), ylim=(-0.05, 0.6))
     ax[8].set(ylim=(-0.05, 0.2))
-    ax[9].set(ylim=(-0.05, 0.3))
-    ax[10].set(xlim=(-0.05, 0.3), ylim=(-0.05, 0.2))
+    ax[9].set(ylim=(-0.05, 0.2))
+    ax[10].set(xlim=(-0.05, 0.2), ylim=(-0.05, 0.2))
 
     return f
