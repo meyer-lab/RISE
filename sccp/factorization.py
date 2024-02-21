@@ -55,8 +55,8 @@ def correct_conditions(X: anndata.AnnData):
     lr.fit(counts, cond_mean.reshape(-1, 1))
 
     counts_correct = lr.predict(counts)
-    
-    return X.uns["Pf2_A"] / counts_correct 
+
+    return X.uns["Pf2_A"] / counts_correct
 
 
 def store_pf2(
@@ -104,7 +104,7 @@ def pf2(
     tolerance=1e-10,
 ):
     pf_out, _ = parafac2_nd(
-        X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=1000
+        X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=500
     )
 
     X = store_pf2(X, pf_out)
@@ -116,37 +116,3 @@ def pf2(
         X.obsm["X_pf2_PaCMAP"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
 
     return X
-
-
-def pf2_fms(
-    X: anndata.AnnData,
-    max_rank: int,
-    random_state=1,
-) -> np.ndarray:
-    # Get the indices for subsetting the data
-    indices = np.arange(0, X.shape[0])
-
-    rng1 = np.random.default_rng(random_state)
-    indices1 = rng1.choice(indices, size=X.shape[0], replace=True)
-
-    X1 = X[indices1, :].to_memory()
-    X2 = X.to_memory()
-
-    fms_vec = np.empty(max_rank)
-
-    for i in tqdm(range(len(fms_vec)), total=len(fms_vec)):
-        parafac2_output1, _ = parafac2_nd(
-            X1,
-            rank=i + 1,
-        )
-        parafac2_output2, _ = parafac2_nd(
-            X2,
-            rank=i + 1,
-        )
-
-        X1cp = CPTensor((parafac2_output1[0], parafac2_output1[1]))
-        X2cp = CPTensor((parafac2_output2[0], parafac2_output2[1]))
-
-        fms_vec[i] = fms(X1cp, X2cp, consider_weights=True, skip_mode=None)
-
-    return fms_vec

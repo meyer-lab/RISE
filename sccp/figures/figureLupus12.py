@@ -22,7 +22,6 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-
     status = getSamplesObs(X.obs)
 
     Lupus_comp_scan_plot(ax[0], correct_conditions(X), status)

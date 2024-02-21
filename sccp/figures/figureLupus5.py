@@ -32,7 +32,6 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-
     data = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad")
     data.uns["Pf2_A"] = correct_conditions(data)
 
