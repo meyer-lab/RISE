@@ -40,7 +40,7 @@ def makeFigure():
         / dfCellType.groupby("Condition", observed=True)["Count"].transform("sum")
     )
 
-    for i, (name, group) in enumerate(dfCellType.groupby("Cell Type")):
+    for i, (name, group) in enumerate(dfCellType.groupby("Cell Type", observed=True)):
         sns.histplot(
             data=group,
             x="Cell Type Percentage",

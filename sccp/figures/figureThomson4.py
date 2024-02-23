@@ -26,7 +26,7 @@ def makeFigure():
     drugs = ["Triamcinolone Acetonide", "Alprostadil"]
     for i, drug in enumerate(drugs):
         plotLabelsUMAP(X, "Condition", ax[i + 2], drug, cmap="Set1")
-        ax[i + 2].set(title=f"Pf2-Based Decomposition")
+        ax[i + 2].set(title="Pf2-Based Decomposition")
 
     # PCA dimension reduction
     pc = PCA(n_components=30)
@@ -38,6 +38,6 @@ def makeFigure():
 
     for i, drug in enumerate(drugs):
         plotLabelsUMAP(X, "Condition", ax[i + 6], drug, cmap="Set1")
-        ax[i + 6].set(title=f"PCA-Based Decomposition")
+        ax[i + 6].set(title="PCA-Based Decomposition")
 
     return f

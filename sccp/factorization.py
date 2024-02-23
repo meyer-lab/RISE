@@ -1,12 +1,8 @@
 from pacmap import PaCMAP
 import scipy.sparse as sps
-from tensorly.cp_tensor import CPTensor
 from sklearn.linear_model import LinearRegression
 from scipy.stats import gmean
-from tlviz.factor_tools import (
-    factor_match_score as fms,
-    degeneracy_score,
-)
+from tlviz.factor_tools import degeneracy_score
 from parafac2.parafac2 import parafac2_nd
 
 

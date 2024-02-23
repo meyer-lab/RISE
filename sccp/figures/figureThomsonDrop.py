@@ -6,7 +6,6 @@ from .commonFuncs.plotFactors import (
     plotCellState,
     plotGeneFactors,
 )
-from ..imports import import_thomson
 from .figureThomson1 import groupDrugs
 
 

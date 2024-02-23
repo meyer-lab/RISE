@@ -19,6 +19,6 @@ def makeFigure():
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
-    df = geneOntology(X, 20)
+    geneOntology(X, 20)
 
     return f

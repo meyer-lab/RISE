@@ -6,11 +6,10 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP, plotGeneUMAP
+from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
 from .commonFuncs.plotGeneral import (
     plotGenePerCellType,
     plotGenePerCategCond,
-    plotGeneFactors,
     gene_plot_cells,
     plot_cell_gene_corr,
     heatmapGeneFactors,

@@ -30,7 +30,7 @@ def getSetup(
     figsize: tuple[int, int], gridd: tuple[int, int]
 ) -> tuple[list[plt.Axes], Figure]:
     """Establish figure set-up with subplots."""
-    sns.set(
+    sns.set_theme(
         style="whitegrid",
         font_scale=0.7,
         color_codes=True,
@@ -67,7 +67,7 @@ def genFigure():
     nameOut = "figure" + sys.argv[1]
 
     exec(f"from sccp.figures.{nameOut} import makeFigure", globals())
-    ff = makeFigure()
+    ff = makeFigure()  # noqa: F821
 
     if ff is not None:
         ff.savefig(

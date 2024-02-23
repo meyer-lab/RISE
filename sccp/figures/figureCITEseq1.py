@@ -11,7 +11,6 @@ from .commonFuncs.plotFactors import (
 )
 from .commonFuncs.plotUMAP import plotLabelsUMAP
 import numpy as np
-import pandas as pd
 
 
 def makeFigure():
@@ -43,7 +42,6 @@ def plotRatio(X, ax, day7=True):
     """Plots ratio of condition factors for day 1 or 7"""
     p = np.unique(X.obs["Condition"])
     p = [p[2], p[1], p[0], p[3], p[4]]
-    yt = pd.Series(p)
     d = X.uns["Pf2_A"]
     X = np.array([d[2], d[1], d[0], d[3], d[4]])
     xticks = np.arange(1, np.shape(X)[1] + 1)
