@@ -73,10 +73,8 @@ def store_pf2(
     return X
 
 
-def pf2_r2x(
-    X: anndata.AnnData,
-    ranks: int,
-) -> np.ndarray:
+def pf2_r2x(X: anndata.AnnData, ranks: np.ndarray):
+
     X = X.to_memory()
 
     r2x_vec = np.empty(ranks.size)

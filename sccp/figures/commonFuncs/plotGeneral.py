@@ -56,27 +56,6 @@ def plotR2X_pf2(data, ranks, ax: Axes):
     )
 
 
-def plotfms(data, rank, ax: Axes):
-    """Creates R2X plot for parafac2 tensor decomposition"""
-    fms_vec = pf2_fms(data, rank)
-
-    rank_vec = np.arange(1, rank + 1)
-
-    ax.scatter(
-        rank_vec,
-        fms_vec,
-        c="k",
-        s=30.0,
-    )
-
-    ax.set(
-        ylabel="Factor Match Score",
-        xlabel="Number of Components",
-        xticks=np.linspace(0, rank, num=8, dtype=int),
-        yticks=np.linspace(0, np.max(np.append(fms_vec[0], fms_vec[1])) + 0.01, num=5),
-    )
-
-
 def plotCellTypePerExpCount(dataDF, condition, ax: Axes):
     """Plots historgram of cell counts per experiment"""
     sns.histplot(data=dataDF, x="Cell Type", hue="Cell Type", ax=ax)

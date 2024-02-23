@@ -17,6 +17,6 @@ def test_factor_thomson():
     X = pf2(X, 10, doEmbedding=False)
     np.testing.assert_allclose(np.array(X.varm["Pf2_C"]), C_first, atol=1e-5, rtol=1e-5)
 
-    r2x = pf2_r2x(X, [1, 2, 3])
+    r2x = pf2_r2x(X, np.array([1, 2, 3]))
     assert np.all(r2x > np.array([0.002, 0.005, 0.007]))
     print(r2x)
