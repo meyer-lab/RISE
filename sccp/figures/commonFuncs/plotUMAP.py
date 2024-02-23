@@ -121,8 +121,9 @@ def plotLabelsUMAP(
 
     if condition is not None:
         labels = pd.Series([c if c in condition else "Z Other" for c in labels])
-
+    labels = labels.cat.set_categories(np.sort(labels.cat.categories.values), ordered=True)
     indices = np.argsort(labels)
+    
     points = X.obsm["X_pf2_PaCMAP"][indices, :]
     labels = labels.iloc[indices]
 
@@ -132,7 +133,9 @@ def plotLabelsUMAP(
     data["label"] = pd.Categorical(labels)
     aggregation = canvas.points(data, "x", "y", agg=ds.count_cat("label"))
 
-    unique_labels = np.unique(labels)
+    unique_labels = np.unique(labels)#.tolist()
+    #unique_labels.sort(key=str.lower)
+    #unique_labels = np.array(unique_labels)
     num_labels = unique_labels.shape[0]
     color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, num_labels)))
     legend_elements = [

@@ -1,22 +1,24 @@
 """
-Lupus: UMAP labeled by cell type
+Lupus: UMAP and boxplots of weighted projectoins per component
 """
+import numpy as np
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotLabelsUMAP
+from .commonFuncs.plotGeneral import plotR2X_pf2
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((15, 7.5), (1, 2))
+    ax, f = getSetup((3, 3), (1, 1))
 
     # Add subplot labels
     subplotLabel(ax)
+    ranks = np.arange(5, 55, 5)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
-    plotLabelsUMAP(X, "Cell Type", ax[0])
-    plotLabelsUMAP(X, "Cell Type2", ax[1])
+    plotR2X_pf2(X, ranks, ax[0])
+    ax[0].set(xlim=(0, 55), ylim=(0, 0.15))
 
     return f

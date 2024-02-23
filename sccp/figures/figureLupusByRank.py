@@ -3,6 +3,7 @@ Lupus: Cross validation for determining optimal paramaters for logistic regressi
 Lupus is spelled wrong in the figure name to indicate that this figure does not depend
 on cached results.
 """
+import numpy as np
 from ..imports import import_lupus
 from ..logisticReg import testPf2Ranks
 from .common import (
@@ -25,7 +26,7 @@ def makeFigure():
 
     condStatus = getSamplesObs(X.obs)
 
-    rank = list(range(1, 3))
+    rank = np.arange(5, 55, 5)
     results = testPf2Ranks(
         X,
         condStatus,

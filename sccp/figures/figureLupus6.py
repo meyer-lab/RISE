@@ -18,7 +18,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted.h5ad")
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     condStatus = getSamplesObs(X.obs)
     X.uns["Pf2_A"] = correct_conditions(X)
