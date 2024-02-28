@@ -150,12 +150,3 @@ def import_citeseq() -> anndata.AnnData:
     X = anndata.concat(data, merge="same", label="Condition")
 
     return prepare_dataset(X, "Condition", geneThreshold=0.1)
-
-
-def factorSave():
-    if sys.argv[1] == "CITEseq":
-        X = import_citeseq()
-        pf2(X, int(sys.argv[2]))
-        X.write(Path("factor_cache/CITEseq.h5ad"))
-    else:
-        raise RuntimeError("Dataset not recognized.")

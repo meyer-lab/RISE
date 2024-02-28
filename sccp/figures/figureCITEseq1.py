@@ -11,7 +11,7 @@ from .commonFuncs.plotFactors import (
 )
 from .commonFuncs.plotUMAP import plotLabelsUMAP
 import numpy as np
-
+import seaborn as sns
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -21,9 +21,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
-    XX = read_h5ad("/opt/pf2/CITE_Neighbors.h5ad", backed="r")
-    X.obs["leiden"] = XX.obs["leiden"]
+    X = read_h5ad("/opt/pf2/CITEseq_fitted_annotated.h5ad", backed="r")
 
     plotConditionsFactors(X, ax[0])
     plotCellState(X, ax[1])
@@ -31,7 +29,7 @@ def makeFigure():
     plotWeight(X, ax[3])
 
     plotLabelsUMAP(X, "Condition", ax[4])
-    plotLabelsUMAP(X, "leiden", ax[5])
+    # plotLabelsUMAP(X, "leiden", ax[5])
     plotRatio(X, ax[6], day7=False)
     plotRatio(X, ax[7], day7=True)
 
@@ -60,3 +58,4 @@ def plotRatio(X, ax, day7=True):
     ax.set(xticks=np.arange(1, np.shape(X)[1] + 1, 2), yticks=yticks)
     ax.set_xlabel("Components")
     ax.set_ylabel(f"IC/SC Ratio Day {day}")
+

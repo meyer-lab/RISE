@@ -19,17 +19,13 @@ output/figureLupus%.svg: sccp/figures/figureLupus%.py
 	@ mkdir -p ./output
 	poetry run fbuild Lupus$*
 
-output/figureCITEseq%.svg: sccp/figures/figureCITEseq%.py factor_cache/CITEseq.h5ad
+output/figureCITEseq%.svg: sccp/figures/figureCITEseq%.py
 	@ mkdir -p ./output
 	poetry run fbuild CITEseq$*
 
 output/figureThomson%.svg: sccp/figures/figureThomson%.py 
 	@ mkdir -p ./output
 	poetry run fbuild Thomson$*
-
-factor_cache/CITEseq.h5ad: sccp/factorization.py
-	@ mkdir -p ./factor_cache
-	poetry run factor CITEseq 50
 
 test:
 	poetry run pytest -s -x -v

@@ -17,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/CITEseq_fitted_annotated.h5ad", backed="r")
     comps = [22, 33, 47, 48, 23, 31, 43]
 
     for i, cmp in enumerate(comps):

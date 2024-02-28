@@ -14,21 +14,18 @@ import seaborn as sns
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((20, 30), (3, 4))
+    ax, f = getSetup((15, 42), (20, 1))
 
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
-    XX = read_h5ad("/opt/pf2/CITE_Neighbors.h5ad", backed="r")
-    X.obs["leiden"] = XX.obs["leiden"]
+    X = read_h5ad("/opt/pf2/CITEseq_fitted_annotated.h5ad", backed="r")
 
     comps = [22, 33, 47, 48, 23, 31, 43]
-    genes = top_bot_genes(X, cmp=comps[2], geneAmount=1)
+    genes = top_bot_genes(X, cmp=comps[6], geneAmount=10)
 
     for i, gene in enumerate(genes):
         plotGenePerStatus(X, gene, ax[i], cellType="leiden")
-        # ax[i].legend([],[], frameon=False)
 
     return f
 
@@ -40,10 +37,10 @@ def top_bot_genes(X, cmp, geneAmount=5):
     )
     df = df.reset_index(names="Gene")
     df = df.sort_values(by="Component")
-
+    
     top = df.iloc[-geneAmount:, 0].values
     bot = df.iloc[:geneAmount, 0].values
-    all_genes = np.concatenate([top, bot])
+    all_genes = np.concatenate([bot, top])
 
     return all_genes
 
@@ -60,14 +57,13 @@ def plotGenePerStatus(X, gene, ax, cellType="Cell Type"):
         columns={"variable": "Gene", "value": "Value"}
     )
 
-    # df = df.groupby(["Cell Type", "Gene", "Condition"], observed=False).mean()
     df = df.rename(columns={"Value": "Average Gene Expression"}).reset_index()
 
     sns.boxplot(
         data=df,
-        x="Condition",
+        x="Cell Type",
         y="Average Gene Expression",
-        hue="Cell Type",
+        hue="Condition",
         ax=ax,
         showfliers=False,
     )

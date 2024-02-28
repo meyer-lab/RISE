@@ -17,7 +17,7 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("factor_cache/CITEseq.h5ad", backed="r")
+    X = read_h5ad("/opt/pf2/CITEseq_fitted_annotated.h5ad", backed="r")
 
     names = X.var_names[X.var["feature_types"] == "Antibody Capture"]
 
