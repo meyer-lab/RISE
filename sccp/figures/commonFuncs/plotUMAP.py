@@ -114,7 +114,7 @@ def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
 
 
 def plotLabelsUMAP(
-    X: anndata.AnnData, labelType: str, ax: Axes, condition=None, cmap="tab20"
+    X: anndata.AnnData, labelType: str, ax: Axes, condition=None, cmap="tab20", color_key=None
 ):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
     labels = X.obs[labelType]
@@ -133,11 +133,10 @@ def plotLabelsUMAP(
     data["label"] = pd.Categorical(labels)
     aggregation = canvas.points(data, "x", "y", agg=ds.count_cat("label"))
 
-    unique_labels = np.unique(labels)#.tolist()
-    #unique_labels.sort(key=str.lower)
-    #unique_labels = np.array(unique_labels)
+    unique_labels = np.unique(labels)
     num_labels = unique_labels.shape[0]
-    color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, num_labels)))
+    if color_key is None:
+        color_key = _to_hex(plt.get_cmap(cmap)(np.linspace(0, 1, num_labels)))
     legend_elements = [
         Patch(facecolor=color_key[i], label=k) for i, k in enumerate(unique_labels)
     ]

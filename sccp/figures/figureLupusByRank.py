@@ -17,7 +17,7 @@ from .commonFuncs.plotLupus import getSamplesObs
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((8, 8), (1, 1))  # fig size  # grid size
+    ax, f = getSetup((4, 4), (1, 1))  # fig size  # grid size
 
     # Add subplot labels
     subplotLabel(ax)
@@ -35,5 +35,6 @@ def makeFigure():
     )
 
     plotPf2RankTest(results, ax[0])
+    ax[0].set(xlim=(0, np.amax(rank)), ylim=(0, 1))
 
     return f
