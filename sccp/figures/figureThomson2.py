@@ -4,6 +4,7 @@ Thomson: XX
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import statsmodels.api as sm
 from anndata import read_h5ad
 from .common import (
     subplotLabel,
@@ -111,13 +112,13 @@ def getCellCountDF(X, celltype="Cell Type", cellPerc=True):
     dfCellType["Count"] = dfCellType["Count"].astype("float")
 
     if cellPerc is True:
+        dfCellType["Cell Type Percentage"] = 0.
         for i, cond in enumerate(np.unique(df["Condition"])):
-            dfCellType.loc[dfCellType["Condition"] == cond, "Count"] = (
+            dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
                 100
                 * dfCellType.loc[dfCellType["Condition"] == cond, "Count"].to_numpy()
                 / dfCond.loc[dfCond["Condition"] == cond]["Cell Number"].to_numpy()
             )
-        dfCellType.rename(columns={"Count": "Cell Type Percentage"}, inplace=True)
 
     dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
 
@@ -125,6 +126,7 @@ def getCellCountDF(X, celltype="Cell Type", cellPerc=True):
 
 
 def plot_cell_perc_corr(cellDF, pop1, pop2, ax):
+    """Plots correlation of cell percentages against each other"""
     newDF = pd.DataFrame()
     newDF2 = pd.DataFrame()
     newDF[[pop1, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop1][["Cell Type Percentage", "Condition"]]
@@ -134,6 +136,7 @@ def plot_cell_perc_corr(cellDF, pop1, pop2, ax):
 
 
 def plot_cell_perc_comp_corr(X, cellDF, pop, comp, ax, unique=None):
+    """Plots correlation of cell percentages against each conditions component value"""
     newDF = pd.DataFrame()
     newDF[[pop, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop][["Cell Type Percentage", "Condition"]]
     newDF2 = pd.DataFrame({"Comp. " + str(comp): X.uns["Pf2_A"][:, comp - 1], "Condition": np.unique(X.obs["Condition"])})
@@ -153,3 +156,21 @@ def cell_perc_box(cellDF, unique, uniqueLabel, ax):
     hue_order = ["Other", uniqueLabel]
     sns.boxplot(data=cellDF, x="Cell Type", y="Cell Type Percentage", hue="Category", showfliers=False, hue_order=hue_order, ax=ax)
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
+    pValDF = diff_abund_test(cellDF)
+    print(pValDF)
+
+
+def diff_abund_test(cellDF):
+    """Calculates whether cells are statistically signicantly different"""
+    pvalDF = pd.DataFrame()
+    cellDF["Y"] = 1
+    cellDF.loc[cellDF.Category == "Other", "Y"] = 0
+    for cell in cellDF["Cell Type"].unique():
+        Y = cellDF.loc[cellDF["Cell Type"] == cell]["Cell Type Percentage"].values
+        X = cellDF.loc[cellDF["Cell Type"] == cell].Y.values
+        weights = np.power(cellDF.loc[cellDF["Cell Type"] == cell]["Count"].values, 1)
+        mod_wls = sm.WLS(Y, sm.tools.tools.add_constant(X), weights=weights)
+        res_wls = mod_wls.fit()
+        pvalDF = pd.concat([pvalDF, pd.DataFrame({"Cell Type": [cell], "p Value": res_wls.pvalues[1] * cellDF["Cell Type"].unique().size})])
+
+    return pvalDF
