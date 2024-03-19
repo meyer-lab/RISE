@@ -10,7 +10,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP, plotGeneUMAP
+from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
 from .commonFuncs.plotGeneral import (
     plotGenePerCellType,
     plotGenePerCategCond,
@@ -68,13 +68,14 @@ def makeFigure():
         ax=ax[10],
     )
 
-
-    X.obs['Condition_gluc'] = X.obs['Condition'].cat.add_categories('Other')
-    X.obs['Condition_gluc'] = X.obs['Condition_gluc'].cat.add_categories('Glucocorticoids')
+    X.obs["Condition_gluc"] = X.obs["Condition"].cat.add_categories("Other")
+    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.add_categories(
+        "Glucocorticoids"
+    )
     X.obs.loc[~X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Other"
     X.obs.loc[X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Glucocorticoids"
-    X.obs['Condition_gluc'] = X.obs['Condition_gluc'].cat.remove_unused_categories()
-    
+    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
+
     color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
     plotLabelsUMAP(X, "Condition_gluc", ax[11], color_key=color_key)
 
@@ -95,7 +96,6 @@ def makeFigure():
     return f
 
 
-
 def getCellCountDF(X, celltype="Cell Type", cellPerc=True):
     """Returns DF with percentages of cells"""
 
@@ -112,7 +112,7 @@ def getCellCountDF(X, celltype="Cell Type", cellPerc=True):
     dfCellType["Count"] = dfCellType["Count"].astype("float")
 
     if cellPerc is True:
-        dfCellType["Cell Type Percentage"] = 0.
+        dfCellType["Cell Type Percentage"] = 0.0
         for i, cond in enumerate(np.unique(df["Condition"])):
             dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
                 100
@@ -129,8 +129,12 @@ def plot_cell_perc_corr(cellDF, pop1, pop2, ax):
     """Plots correlation of cell percentages against each other"""
     newDF = pd.DataFrame()
     newDF2 = pd.DataFrame()
-    newDF[[pop1, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop1][["Cell Type Percentage", "Condition"]]
-    newDF2[[pop2, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop2][["Cell Type Percentage", "Condition"]]
+    newDF[[pop1, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop1][
+        ["Cell Type Percentage", "Condition"]
+    ]
+    newDF2[[pop2, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop2][
+        ["Cell Type Percentage", "Condition"]
+    ]
     newDF = newDF.merge(newDF2, on="Condition")
     sns.scatterplot(newDF, x=pop1, y=pop2, hue="Condition", ax=ax)
 
@@ -138,23 +142,38 @@ def plot_cell_perc_corr(cellDF, pop1, pop2, ax):
 def plot_cell_perc_comp_corr(X, cellDF, pop, comp, ax, unique=None):
     """Plots correlation of cell percentages against each conditions component value"""
     newDF = pd.DataFrame()
-    newDF[[pop, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop][["Cell Type Percentage", "Condition"]]
-    newDF2 = pd.DataFrame({"Comp. " + str(comp): X.uns["Pf2_A"][:, comp - 1], "Condition": np.unique(X.obs["Condition"])})
+    newDF[[pop, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop][
+        ["Cell Type Percentage", "Condition"]
+    ]
+    newDF2 = pd.DataFrame(
+        {
+            "Comp. " + str(comp): X.uns["Pf2_A"][:, comp - 1],
+            "Condition": np.unique(X.obs["Condition"]),
+        }
+    )
     newDF = newDF.merge(newDF2, on="Condition")
 
     if unique is not None:
         newDF["Condition"] = newDF["Condition"].astype(str)
         newDF.loc[~newDF["Condition"].isin(unique), "Condition"] = "Other"
-    
+
     sns.scatterplot(newDF, x="Comp. " + str(comp), y=pop, hue="Condition", ax=ax)
- 
+
 
 def cell_perc_box(cellDF, unique, uniqueLabel, ax):
     """Plots percentages of cells against each other"""
     cellDF["Category"] = uniqueLabel
     cellDF.loc[~cellDF.Condition.isin(unique), "Category"] = "Other"
     hue_order = ["Other", uniqueLabel]
-    sns.boxplot(data=cellDF, x="Cell Type", y="Cell Type Percentage", hue="Category", showfliers=False, hue_order=hue_order, ax=ax)
+    sns.boxplot(
+        data=cellDF,
+        x="Cell Type",
+        y="Cell Type Percentage",
+        hue="Category",
+        showfliers=False,
+        hue_order=hue_order,
+        ax=ax,
+    )
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
     pValDF = diff_abund_test(cellDF)
     print(pValDF)
@@ -171,6 +190,17 @@ def diff_abund_test(cellDF):
         weights = np.power(cellDF.loc[cellDF["Cell Type"] == cell]["Count"].values, 1)
         mod_wls = sm.WLS(Y, sm.tools.tools.add_constant(X), weights=weights)
         res_wls = mod_wls.fit()
-        pvalDF = pd.concat([pvalDF, pd.DataFrame({"Cell Type": [cell], "p Value": res_wls.pvalues[1] * cellDF["Cell Type"].unique().size})])
+        pvalDF = pd.concat(
+            [
+                pvalDF,
+                pd.DataFrame(
+                    {
+                        "Cell Type": [cell],
+                        "p Value": res_wls.pvalues[1]
+                        * cellDF["Cell Type"].unique().size,
+                    }
+                ),
+            ]
+        )
 
     return pvalDF

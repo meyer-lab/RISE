@@ -1,5 +1,3 @@
-from pathlib import Path
-import sys
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
@@ -7,7 +5,6 @@ import anndata
 import scanpy as sc
 from scipy.sparse import spmatrix
 from sklearn.utils.sparsefuncs import inplace_column_scale, mean_variance_axis
-from .factorization import pf2
 from .gating import gateThomsonCells
 
 

@@ -11,7 +11,7 @@ from .commonFuncs.plotFactors import (
 )
 from .commonFuncs.plotUMAP import plotLabelsUMAP
 import numpy as np
-import seaborn as sns
+
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -58,4 +58,3 @@ def plotRatio(X, ax, day7=True):
     ax.set(xticks=np.arange(1, np.shape(X)[1] + 1, 2), yticks=yticks)
     ax.set_xlabel("Components")
     ax.set_ylabel(f"IC/SC Ratio Day {day}")
-

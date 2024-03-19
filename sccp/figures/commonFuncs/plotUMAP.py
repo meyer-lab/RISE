@@ -114,16 +114,23 @@ def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
 
 
 def plotLabelsUMAP(
-    X: anndata.AnnData, labelType: str, ax: Axes, condition=None, cmap="tab20", color_key=None
+    X: anndata.AnnData,
+    labelType: str,
+    ax: Axes,
+    condition=None,
+    cmap="tab20",
+    color_key=None,
 ):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
     labels = X.obs[labelType]
 
     if condition is not None:
         labels = pd.Series([c if c in condition else "Z Other" for c in labels])
-    labels = labels.cat.set_categories(np.sort(labels.cat.categories.values), ordered=True)
+    labels = labels.cat.set_categories(
+        np.sort(labels.cat.categories.values), ordered=True
+    )
     indices = np.argsort(labels)
-    
+
     points = X.obsm["X_pf2_PaCMAP"][indices, :]
     labels = labels.iloc[indices]
 

@@ -74,19 +74,12 @@ def store_pf2(
 
 
 def pf2_r2x(X: anndata.AnnData, ranks: np.ndarray):
-
     X = X.to_memory()
 
     r2x_vec = np.empty(ranks.size)
 
     for i in tqdm(range(len(r2x_vec)), total=len(r2x_vec)):
-        _, R2X = parafac2_nd(
-            X,
-            rank=i + 1,
-            random_state=1,
-            tol=1e-10,
-            n_iter_max=500
-        )
+        _, R2X = parafac2_nd(X, rank=i + 1, random_state=1, tol=1e-10, n_iter_max=500)
 
         r2x_vec[i] = R2X
 
