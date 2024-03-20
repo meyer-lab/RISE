@@ -24,12 +24,12 @@ def makeFigure():
 
     status = getSamplesObs(X.obs)
 
-    Lupus_comp_scan_plot(ax[0], correct_conditions(X), status)
+    lupus_comp_scan_plot(correct_conditions(X), status, ax[0])
 
     return f
 
 
-def Lupus_comp_scan_plot(ax, X, status_DF):
+def lupus_comp_scan_plot(X, status_DF, ax):
     """Plot factor weights for donor SLE prediction"""
     lrmodel = LogisticRegression(penalty=None)
     y = preprocessing.label_binarize(
@@ -44,17 +44,23 @@ def Lupus_comp_scan_plot(ax, X, status_DF):
             LR_CoH = lrmodel.fit(compFacs, y)
             acc[comps[0], comps[1]] = LR_CoH.score(compFacs, y)
             acc[comps[1], comps[0]] = acc[comps[0], comps[1]]
-
+            
+    mask = np.triu(np.ones_like(acc, dtype=bool))
+    
+    for i in range(len(mask)):
+        mask[i,i] = False
+    
     sns.heatmap(
         data=acc,
         vmin=0.5,
         vmax=1,
-        xticklabels=all_comps + 1,
-        yticklabels=all_comps + 1,
-        cbar_kws={"label": "Classification Accuracy"},
+        xticklabels=all_comps+1,
+        yticklabels=all_comps+1,
+        mask=mask,
+        cbar_kws={"label": "Prediction Accuracy"},
         ax=ax,
     )
 
-    ax.set(xlabel="First Component", ylabel="Second Component")
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+    ax.set(xlabel="Component", ylabel="Component")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=0)
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)

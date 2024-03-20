@@ -17,17 +17,16 @@ def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
         random_state=0, max_iter=100000, penalty="l1", solver="saga"
     ).fit(X, y)
 
-    cmp_col = [f"Cmp. {i}" for i in range(1, X.shape[1] + 1)]
-    coefs = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
-    print(f"Fitting accuracy: {lr.score(X, y)}")
-
-    return coefs
+    cmp_col = [i for i in range(1, X.shape[1] + 1)]
+    df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
+    
+    return df, lr.score(X, y)
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((5, 8), (2, 1))
+    ax, f = getSetup((5, 4), (2, 1))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -38,34 +37,32 @@ def makeFigure():
     df_y = getSamplesObs(data.obs)
     X = np.array(data.uns["Pf2_A"])
 
-    contribsStatus = getCompContribs(X, df_y["SLE_status"])
+    dfWeights, score, = getCompContribs(X, df_y["SLE_status"])
     sns.barplot(
-        data=contribsStatus,
+        data=dfWeights,
         x="Component",
         y="Weight",
         color="k",
         errorbar=None,
         ax=ax[0],
     )
-    ax[0].tick_params(axis="x", rotation=90)
-    ax[0].set_title("Weight of Pf2 Cmps in Logsitic Regression: Predicting: SLE")
+   
+    ax[0].set(ylim=[-10, 10], title="Logistic Regression: Prediction Accuracy - " + str(np.round(score, 3)))
 
     df_y["ancestry"] = df_y["ancestry"] == "European"
-    contribsAnc = getCompContribs(X, df_y["ancestry"])
+    dfAnc, _ = getCompContribs(X, df_y["ancestry"])
 
-    contribsStatus["Predicting"] = "SLE Status"
-    contribsAnc["Predicting"] = "Euro-Ancestry"
-    contribs = pd.concat([contribsStatus, contribsAnc])
+    dfWeights["Predicting"] = "SLE Status"
+    dfAnc["Predicting"] = "Euro-Ancestry"
+    combinedWeights = pd.concat([dfWeights, dfAnc])
 
     sns.barplot(
-        data=contribs,
+        data=combinedWeights,
         x="Component",
         y="Weight",
         hue="Predicting",
         errorbar=None,
         ax=ax[1],
     )
-    ax[1].tick_params(axis="x", rotation=90)
-    ax[1].set_title("Weight of Pf2 Cmps in Logsitic Regression")
 
     return f
