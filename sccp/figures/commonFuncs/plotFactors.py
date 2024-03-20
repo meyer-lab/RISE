@@ -150,3 +150,18 @@ def reorder_table(projs: np.ndarray) -> np.ndarray:
     assert projs.ndim == 2
     Z = sch.linkage(projs, method="complete", metric="cosine", optimal_ordering=True)
     return sch.leaves_list(Z)
+
+
+def bot_top_genes(X, cmp, geneAmount=5):
+    """Saves most pos/negatively genes"""
+    df = pd.DataFrame(
+        data=X.varm["Pf2_C"][:, cmp - 1], index=X.var_names, columns=["Component"]
+    )
+    df = df.reset_index(names="Gene")
+    df = df.sort_values(by="Component")
+
+    top = df.iloc[-geneAmount:, 0].values
+    bot = df.iloc[:geneAmount, 0].values
+    all_genes = np.concatenate([bot, top])
+
+    return all_genes
