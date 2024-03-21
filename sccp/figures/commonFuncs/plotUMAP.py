@@ -126,9 +126,10 @@ def plotLabelsUMAP(
 
     if condition is not None:
         labels = pd.Series([c if c in condition else "Z Other" for c in labels])
-    labels = labels.cat.set_categories(
-        np.sort(labels.cat.categories.values), ordered=True
-    )
+    if labels.dtype == "category":
+        labels = labels.cat.set_categories(
+            np.sort(labels.cat.categories.values), ordered=True
+        )
     indices = np.argsort(labels)
 
     points = X.obsm["X_pf2_PaCMAP"][indices, :]
