@@ -14,7 +14,7 @@ def makeFigure():
 
     # Add subplot labels
     subplotLabel(ax)
-    ranks = np.arange(5, 55, 5)
+    ranks = np.arange(5, 11, 5)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
