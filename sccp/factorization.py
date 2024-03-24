@@ -79,7 +79,7 @@ def pf2_r2x(X: anndata.AnnData, ranks: np.ndarray):
     r2x_vec = np.empty(ranks.size)
 
     for i in tqdm(range(len(r2x_vec)), total=len(r2x_vec)):
-        _, R2X = parafac2_nd(X, rank=i + 1, random_state=1, tol=1e-10, n_iter_max=500)
+        _, R2X = parafac2_nd(X, rank=i + 1)
 
         r2x_vec[i] = R2X
 
@@ -91,7 +91,7 @@ def pf2(
     rank: int,
     random_state=1,
     doEmbedding: bool = True,
-    tolerance=1e-10,
+    tolerance=1e-9,
 ):
     pf_out, _ = parafac2_nd(
         X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=500
