@@ -174,6 +174,7 @@ def cell_perc_box(cellDF, unique, uniqueLabel, ax):
         hue_order=hue_order,
         ax=ax,
     )
+    ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
     pValDF = diff_abund_test(cellDF)
     print(pValDF)

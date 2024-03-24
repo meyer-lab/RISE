@@ -125,6 +125,7 @@ def plotGenePerCategCond(
         showfliers=False,
     )
     ax.set(title=gene)
+    ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
 
 

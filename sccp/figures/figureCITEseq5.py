@@ -7,7 +7,6 @@ from .common import (
     getSetup,
 )
 import pandas as pd
-import numpy as np
 import seaborn as sns
 from .commonFuncs.plotFactors import bot_top_genes
 

@@ -62,5 +62,7 @@ def lupus_comp_scan_plot(X, status_DF, ax):
     )
 
     ax.set(xlabel="Component", ylabel="Component")
+    ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0)
+    ax.set_yticks(ax.get_yticks())
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
