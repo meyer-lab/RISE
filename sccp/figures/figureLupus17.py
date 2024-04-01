@@ -23,7 +23,8 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     cellPercDF = getCellCountPercDF(X, celltype="Cell Type2", cellPerc=True)
-    sns.boxplot(data=cellPercDF, x="Cell Type", y="Cell Type Percentage", hue="Status", showfliers=False, ax=ax[0])
+    celltype = np.unique(cellPercDF["Cell Type"])
+    sns.boxplot(data=cellPercDF, x="Cell Type", y="Cell Type Percentage", hue="Status", order=celltype, showfliers=False, ax=ax[0])
     ax[0].set_xticks(ax[0].get_xticks())
     ax[0].set_xticklabels(labels=ax[0].get_xticklabels(), rotation=90)
 
