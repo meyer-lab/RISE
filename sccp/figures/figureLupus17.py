@@ -9,7 +9,7 @@ from .common import (
 import numpy as np
 import seaborn as sns
 import pandas as pd
-from scipy.stats import linregress
+from scipy.stats import linregress, pearsonr, spearmanr
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -27,10 +27,11 @@ def makeFigure():
     ax[0].set_xticks(ax[0].get_xticks())
     ax[0].set_xticklabels(labels=ax[0].get_xticklabels(), rotation=90)
 
-    cmp=14
+    cmp=22
     idx = len(np.unique(cellPercDF["Cell Type"]))
     cellCountDF = getCellCountPercDF(X, celltype="Cell Type2", cellPerc=False)
-    plotCmpPerCellCount(X, cmp, cellCountDF, ax[1:idx+1], cellPerc=False)
+    plotCmpPerCellCount(X, cmp, cellCountDF, ax[1:idx+2], cellPerc=False)
+
 
     return f
 
@@ -74,6 +75,7 @@ def plotCmpPerCellCount(X, cmp, cellcountDF, ax, cellPerc=True):
         cellPerc = "Cell Count"
 
     totaldf = pd.DataFrame([])
+    correlationdf = pd.DataFrame([])
     cellcountDF["Condition"] = pd.Categorical(cellcountDF["Condition"], yt)
 
     for i, celltype in enumerate(np.unique(cellcountDF["Cell Type"])):
@@ -91,6 +93,21 @@ def plotCmpPerCellCount(X, cmp, cellcountDF, ax, cellPerc=True):
 
         df = totaldf.loc[totaldf["Cell Type"] == celltype]   
         _, _, r_value, _, _ = linregress(df["Cmp"], df[cellPerc])
+        pearson = pearsonr(df["Cmp"], df[cellPerc])[0]
+        spearman = spearmanr(df["Cmp"], df[cellPerc])[0]
 
         sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="Status", ax=ax[i])
         ax[i].set(title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}", xlabel=f"Cmp. {cmp}")
+        
+        correl = [np.round(r_value**2, 3), spearman, pearson]
+        test = ["R2 Value ", "Pearson", "Spearman"]
+        
+        for k in range(3):
+            correlationdf = pd.concat([correlationdf, pd.DataFrame({"Cell Type": celltype, "Correlation": [test[k]], "Value": [correl[k]]})])
+            
+    sns.barplot(data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax[-1])
+    ax[-1].set_xticks(ax[-1].get_xticks())
+    ax[-1].set_xticklabels(labels=ax[-1].get_xticklabels(), rotation=90)
+    ax[-1].set(title=f"Cmp. {cmp} V. Cell Count")
+            
+    
