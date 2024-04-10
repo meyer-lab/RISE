@@ -23,7 +23,7 @@ from .commonFuncs.plotGeneral import (
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((18, 22.5), (5, 4))
+    ax, f = getSetup((18, 25), (6, 4))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -36,18 +36,19 @@ def makeFigure():
     heatmapGeneFactors([15, 19, 20], X, ax[2], geneAmount=5)
 
     plotCmpUMAP(X, 15, ax[3], 0.2)  # pDC
-    geneSet1 = ["FXYD2", "SERPINF1", "RARRES2"]
-    plotGenePerCellType(geneSet1, X, ax[4], cellType="Cell Type2")
+    plotGenePerCellType(["FXYD2"], X, ax[4], cellType="Cell Type2")
+    plotGenePerCellType(["SERPINF1"], X, ax[5], cellType="Cell Type2")
+    plotGenePerCellType(["RARRES2"], X, ax[6], cellType="Cell Type2")
 
-    plotCmpUMAP(X, 19, ax[5], 0.2)  # Alpro
+    plotCmpUMAP(X, 19, ax[7], 0.2)  # Alpro
     X_genes = X[:, ["THBS1", "EREG"]].to_memory()
     X_genes = X_genes[X_genes.obs["Cell Type"] == "DCs", :]
     gene_plot_cells(
-        X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[6], kde=False
+        X_genes, unique=["Alprostadil"], hue="Condition", ax=ax[8], kde=False
     )
-    ax[6].set(title="Gene Expression in DCs")
+    ax[8].set(title="Gene Expression in DCs")
 
-    plotCmpUMAP(X, 20, ax[7], 0.2)  # Gluco
+    plotCmpUMAP(X, 20, ax[9], 0.2)  # Gluco
     glucs = [
         "Betamethasone Valerate",
         "Loteprednol etabonate",
@@ -55,8 +56,8 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Meprednisone",
     ]
-    plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[8], cellType="Cell Type2")
-    plotGenePerCategCond(glucs, "Gluco", "MS4A6A", X, ax[9], cellType="Cell Type2")
+    plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
+    plotGenePerCategCond(glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2")
 
     X_genes = X[:, ["CD163", "MS4A6A"]].to_memory()
     plot_cell_gene_corr(
@@ -65,7 +66,7 @@ def makeFigure():
         hue="Condition",
         cells=["Intermediate Monocytes", "Myeloid Suppressors"],
         cellType="Cell Type2",
-        ax=ax[10],
+        ax=ax[12],
     )
 
     X.obs["Condition_gluc"] = X.obs["Condition"].cat.add_categories("Other")
@@ -77,21 +78,24 @@ def makeFigure():
     X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
 
     color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
-    plotLabelsUMAP(X, "Condition_gluc", ax[11], color_key=color_key)
+    plotLabelsUMAP(X, "Condition_gluc", ax[13], color_key=color_key)
 
-    plot_cell_perc_comp_corr(X, cellDF, "Classical Monocytes", 20, ax[12], unique=glucs)
-    plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[13], unique=glucs)
+    plot_cell_perc_comp_corr(X, cellDF, "Classical Monocytes", 20, ax[14], unique=glucs)
+    plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[15], unique=glucs)
 
-    cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[14])
-    plotCmpUMAP(X, 9, ax[15], 0.2)  # Gluco
+    cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[16])
+    plotCmpUMAP(X, 9, ax[17], 0.2)  # Gluco
 
-    ax[6].set(xlim=(-0.05, 0.6), ylim=(-0.05, 0.6))
-    ax[8].set(ylim=(-0.05, 0.2))
-    ax[9].set(ylim=(-0.05, 0.2))
-    ax[10].set(xlim=(-0.05, 0.2), ylim=(-0.05, 0.2))
-    ax[12].set(xlim=(0, 0.5), ylim=(0, 70))
-    ax[13].set(xlim=(0, 0.5), ylim=(0, 70))
-    ax[14].set(ylim=(-10, 70))
+    ax[4].set(ylim=(-0.1, 1.2))
+    ax[5].set(ylim=(-0.1, 1.2))
+    ax[6].set(ylim=(-0.1, 1.2))
+    ax[8].set(xlim=(-0.05, 0.6), ylim=(-0.05, 0.6))
+    ax[10].set(ylim=(-0.05, 0.2))
+    ax[11].set(ylim=(-0.05, 0.2))
+    ax[12].set(xlim=(-0.05, 0.2), ylim=(-0.05, 0.2))
+    ax[14].set(xlim=(0, 0.5), ylim=(0, 70))
+    ax[15].set(xlim=(0, 0.5), ylim=(0, 70))
+    ax[16].set(ylim=(-10, 70))
 
     return f
 
