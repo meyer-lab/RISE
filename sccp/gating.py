@@ -44,6 +44,36 @@ def Thomson_Doublet():
     X.obs["doublet"].to_csv("sccp/data/Thomson/ThomsonDoublets.csv")
 
 
+def getHiResOldLupus(X) -> npt.ArrayLike:
+    """Manually gates cell types for Thomson UMAP"""
+    X.obs["Cell Type Old2"] = X.obs["Cell Type Old"].astype(str)
+    X.obs.cell_type_lympho = X.obs.cell_type_lympho.astype(str)
+    X.obs.loc[X.obs["cell_type_lympho"] != "nan", "Cell Type Old2"] = X.obs.loc[X.obs["cell_type_lympho"]!= "nan"].cell_type_lympho.values
+    X.obs = X.obs.replace({"Cell Type Old2": cell_type_conv})
+
+    return X
+
+
+cell_type_conv = {
+    "T4_naive": "T4 Naive",
+    "B_naive": "B Naive",
+    "CytoT_GZMH+": "T8 GZMH",
+    "T4_em": "T4 EM",
+    "NK_dim": "NK Dim",
+    "CytoT_GZMK+": "T8 GZMK",
+    "T8_naive": "T8 Naive",
+    "ncM": "nCM",
+    "B_mem": "B mem",
+    "T4_reg": "T4 Reg",
+    "cDC": "cDC2",
+    "T_mait": "T mait",
+    "B_plasma": "B plasma",
+    "NK_bright": "NK Bright",
+    "B_atypical": "B Atypical",
+    "cM": "CM"
+}
+
+
 thomson_layer1 = {
     "0": "NK Cells",
     "1": "T Cells",
