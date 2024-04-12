@@ -133,5 +133,6 @@ dmypy.json
 output
 factor_cache
 *.ipynb
+nohup.out
 
 .DS_Store
