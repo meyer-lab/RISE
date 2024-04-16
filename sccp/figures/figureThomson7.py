@@ -10,7 +10,7 @@ from .common import subplotLabel, getSetup
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((8, 6), (6, 6))
+    ax, f = getSetup((11, 14), (4, 2))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -25,8 +25,11 @@ def makeFigure():
     dfCond = (
         df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
     )
-    sns.histplot(data=dfCond, x="Cell Number", bins=15, color="k", ax=ax[0])
-    ax[0].set(ylabel="# of Experiments")
+    
+    sns.barplot(data=dfCond, x="Condition", y="Cell Number", color="k", ax=ax[0])
+    ax[0].set(ylabel="Number of Cells")
+    rotate_axis(ax[0])
+
 
     # Per condition cell type percentages
     dfCellType = (
@@ -41,17 +44,20 @@ def makeFigure():
     )
 
     for i, (name, group) in enumerate(dfCellType.groupby("Cell Type", observed=True)):
-        sns.histplot(
+        sns.barplot(
             data=group,
-            x="Cell Type Percentage",
-            bins=15,
+            x="Condition", 
+            y="Cell Type Percentage",
             color="k",
-            ax=ax[i + 1],
+            ax=ax[i+1],
         )
-        ax[i + 1].set(
-            title=name,
-            ylabel="# of Experiments",
-            xlim=(0.0, group["Cell Type Percentage"].max()),
-        )
+        rotate_axis(ax[i+1])
+        ax[i+1].set(ylabel=f"{name} Percentage")
+       
+
 
     return f
+
+def rotate_axis(ax):
+    ax.set_xticks(ax.get_xticks())
+    ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=90)

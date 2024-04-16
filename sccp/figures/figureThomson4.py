@@ -12,20 +12,20 @@ import numpy as np
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((15, 13), (3, 3))
+    ax, f = getSetup((8, 6), (3, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
 
-    genes = ["GNLY", "NKG7"]
+    genes = ["NKG7"]
     for i, gene in enumerate(genes):
         plotGeneUMAP(gene, "Pf2", X, ax[i])
 
-    drugs = ["Triamcinolone Acetonide", "Alprostadil"]
+    drugs = ["Triamcinolone Acetonide", "Alprostadil", "Budesonide"]
     for i, drug in enumerate(drugs):
-        plotLabelsUMAP(X, "Condition", ax[i + 2], drug, cmap="Set1")
+        plotLabelsUMAP(X, "Condition", ax[i+1], drug, cmap="Set1")
         ax[i + 2].set(title="Pf2-Based Decomposition")
 
     # PCA dimension reduction
@@ -34,10 +34,10 @@ def makeFigure():
     X.obsm["X_pf2_PaCMAP"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
     for i, gene in enumerate(genes):
-        plotGeneUMAP(gene, "PCA", X, ax[i + 4])
+        plotGeneUMAP(gene, "PCA", X, ax[i+4])
 
     for i, drug in enumerate(drugs):
-        plotLabelsUMAP(X, "Condition", ax[i + 6], drug, cmap="Set1")
+        plotLabelsUMAP(X, "Condition", ax[i+5], drug, cmap="Set1")
         ax[i + 6].set(title="PCA-Based Decomposition")
 
     return f
