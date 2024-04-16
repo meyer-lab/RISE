@@ -10,27 +10,30 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from scipy.stats import linregress, pearsonr, spearmanr
+from ..gating import getHiResOldLupus
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((18, 16), (5, 4))
+    ax, f = getSetup((5, 5), (2, 2))
 
 
     # Add subplot labels
     subplotLabel(ax)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    X = getHiResOldLupus(X)
+    print(X)
 
-    cellPercDF = getCellCountPercDF(X, celltype="Cell Type2", cellPerc=True)
-    celltype = np.unique(cellPercDF["Cell Type"])
-    sns.boxplot(data=cellPercDF, x="Cell Type", y="Cell Type Percentage", hue="Status", order=celltype, showfliers=False, ax=ax[0])
-    ax[0].set_xticks(ax[0].get_xticks())
-    ax[0].set_xticklabels(labels=ax[0].get_xticklabels(), rotation=90)
+    cellPercDF = getCellCountPercDF(X, celltype="Cell Type Old2", cellPerc=True)
+    # celltype = np.unique(cellPercDF["Cell Type"])
+    # sns.boxplot(data=cellPercDF, x="Cell Type", y="Cell Type Percentage", hue="Status", order=celltype, showfliers=False, ax=ax[0])
+    # ax[0].set_xticks(ax[0].get_xticks())
+    # ax[0].set_xticklabels(labels=ax[0].get_xticklabels(), rotation=90)
 
-    cmp=22
+    cmp=27
     idx = len(np.unique(cellPercDF["Cell Type"]))
-    cellCountDF = getCellCountPercDF(X, celltype="Cell Type2", cellPerc=False)
+    cellCountDF = getCellCountPercDF(X, celltype="Cell Type Old2", cellPerc=False)
     plotCmpPerCellCount(X, cmp, cellCountDF, ax[1:idx+2], cellPerc=False)
 
 
@@ -39,7 +42,7 @@ def makeFigure():
 
 def getCellCountPercDF(X, celltype="Cell Type", cellPerc=True):
     """Determine cell count or cell type percentage per condition and patient"""
-    df = X.obs[["Cell Type", "SLE_status", "Condition", "Cell Type2"]].reset_index(drop=True)
+    df = X.obs[["Cell Type", "SLE_status", "Condition", "Cell Type Old2"]].reset_index(drop=True)
     dfCond = (
         df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
     )
@@ -97,8 +100,8 @@ def plotCmpPerCellCount(X, cmp, cellcountDF, ax, cellPerc=True):
         pearson = pearsonr(df["Cmp"], df[cellPerc])[0]
         spearman = spearmanr(df["Cmp"], df[cellPerc])[0]
 
-        sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="Status", ax=ax[i])
-        ax[i].set(title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}", xlabel=f"Cmp. {cmp}")
+        # sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="Status", ax=ax[i])
+        # ax[i].set(title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}", xlabel=f"Cmp. {cmp}")
         
         correl = [np.round(r_value**2, 3), spearman, pearson]
         test = ["R2 Value ", "Pearson", "Spearman"]
