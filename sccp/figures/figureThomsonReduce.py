@@ -8,6 +8,7 @@ from matplotlib.axes import Axes
 from tlviz.factor_tools import factor_match_score as fms
 from tensorly.cp_tensor import CPTensor
 import seaborn as sns
+import pandas as pd
 
 
 def calculateFMS(A: anndata.AnnData, B: anndata.AnnData) -> float:
@@ -45,26 +46,36 @@ def plotFMSpercentDrop(
     # loop to do multiple runs
     for j in range(0, runs, 1):
         scores = [1.0]
-
+        
         # loop to compare sampled dataset to original
         for i in percentList[1:]:
-            sampled_data: anndata.AnnData = sc.pp.subsample(X, fraction=1 - (i / 100), copy=True)  # type: ignore
-            sampledX = pf2(sampled_data, rank, doEmbedding=False)
+            sampled_data: anndata.AnnData = sc.pp.subsample(X, fraction=1 - (i / 100), random_state=j, copy=True)  # type: ignore
+            sampledX = pf2(sampled_data, rank, random_state = j+2, doEmbedding=False)
 
             fmsScore = calculateFMS(dataX, sampledX)
             scores.append(fmsScore)
 
         fmsLists.append(scores)
 
-    random_colors = sns.color_palette("husl", len(fmsLists))
-    for n in range(0, runs, 1):
-        ax.plot(percentList, fmsLists[n], label=f"Run {n+1}", color=random_colors[n])
+    # making dataframe based on runs, percent list, and fms
+    runsList_df = []
+    for i in range(0,runs):
+        for j in range(0,len(percentList)):
+            runsList_df.append(i)
+    percentList_df = []
+    for i in range(0,runs):
+        for j in range(0,len(percentList)):
+            percentList_df.append(percentList[j])
+    fmsList_df = []
+    for sublist in fmsLists:
+        fmsList_df += sublist
+    df = pd.DataFrame({'runs': runsList_df, 'percent': percentList_df, 'fms': fmsList_df}) 
 
     # percent dropped vs fms graph
+    sns.lineplot(data=df, x="percent", y="fms", ax=ax)
     ax.set_xlabel("Percentage of Data Dropped")
     ax.set_ylabel("FMS")
-    ax.set_title("Percent of Data Dropped vs FMS")
-    ax.legend()
+    ax.set_ylim(0, 1)
 
 
 def resample(data: anndata.AnnData) -> anndata.AnnData:
@@ -77,30 +88,49 @@ def plotRankTest(
     X: anndata.AnnData,
     ax: Axes,
     ranksList: list[int],
+    runs: int,
 ):
-    fmsList = []
+    fmsLists = []
 
+    for j in range(0,runs,1):
+        scores = []
     # testing different ranks input into function with one percent valued dropped
-    for i in ranksList:
-        dataX = pf2(X, rank=i, doEmbedding=False)
+        for i in ranksList:
+            dataX = pf2(X, rank=i, random_state=j, doEmbedding=False)
 
-        sampledX = pf2(resample(X), rank=i, doEmbedding=False)
+            sampledX = pf2(resample(X), rank=i, random_state=j, doEmbedding=False)
 
-        fmsScore = calculateFMS(dataX, sampledX)
-        fmsList.append(fmsScore)
+            fmsScore = calculateFMS(dataX, sampledX)
+            scores.append(fmsScore)
+        fmsLists.append(scores)
+    
+    # making dataframe based on runs, ranks, and fms
+    runsList_df = []
+    for i in range(0,runs):
+        for j in range(0,len(ranksList)):
+            runsList_df.append(i)
+    ranksList_df = []
+    for i in range(0,runs):
+        for j in range(0,len(ranksList)):
+            ranksList_df.append(ranksList[j])
+    fmsList_df = []
+    for sublist in fmsLists:
+        fmsList_df += sublist
+    df = pd.DataFrame({'runs': runsList_df, 'ranks': ranksList_df, 'fms': fmsList_df}) 
+
+
 
     # rank vs fms graph
-    ax.plot(ranksList, fmsList, color="pink")
+    sns.lineplot(data=df, x="ranks", y="fms", ax=ax)
     ax.set_xlabel("Rank")
     ax.set_ylabel("FMS")
-    ax.set_title("Rank vs FMS")
-
+    ax.set_ylim(0, 1)
 
 # testing functions
 def makeFigure():
     X = import_thomson()
 
-    ax, f = getSetup((15, 5), (1, 3))
+    ax, f = getSetup((6, 3), (1, 2))
 
     subplotLabel(ax)
 
@@ -108,6 +138,7 @@ def makeFigure():
     plotFMSpercentDrop(X, ax[0], percentList=percentList, runs=3)
 
     ranks = list(range(1, 3))
-    plotRankTest(X, ax[2], ranksList=ranks)
+    plotRankTest(X, ax[1], ranksList=ranks, runs=3)
 
     return f
+
