@@ -28,7 +28,7 @@ def makeFigure():
     ]
 
     plot_weights_across_percents(
-        data, "B Cells", "CTRL4", 0, 1, 0.1, rank, bCellGeneSet, ax[0]
+        data, "B Cells", "CTRL4", 0, 1, 0.25, rank, bCellGeneSet, ax[0]
     )
 
     ### Can add other cell types here
