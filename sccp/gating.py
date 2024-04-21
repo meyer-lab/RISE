@@ -48,7 +48,9 @@ def getHiResOldLupus(X) -> npt.ArrayLike:
     """Manually gates cell types for Thomson UMAP"""
     X.obs["Cell Type Old2"] = X.obs["Cell Type Old"].astype(str)
     X.obs.cell_type_lympho = X.obs.cell_type_lympho.astype(str)
-    X.obs.loc[X.obs["cell_type_lympho"] != "nan", "Cell Type Old2"] = X.obs.loc[X.obs["cell_type_lympho"]!= "nan"].cell_type_lympho.values
+    X.obs.loc[X.obs["cell_type_lympho"] != "nan", "Cell Type Old2"] = X.obs.loc[
+        X.obs["cell_type_lympho"] != "nan"
+    ].cell_type_lympho.values
     X.obs = X.obs.replace({"Cell Type Old2": cell_type_conv})
 
     return X
@@ -70,7 +72,7 @@ cell_type_conv = {
     "B_plasma": "B plasma",
     "NK_bright": "NK Bright",
     "B_atypical": "B Atypical",
-    "cM": "CM"
+    "cM": "CM",
 }
 
 

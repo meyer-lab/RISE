@@ -1,6 +1,7 @@
 """
 Thomson dataset: Cell counts and cell type percentages per condition.
 """
+
 from anndata import read_h5ad
 import pandas as pd
 import seaborn as sns
@@ -25,11 +26,10 @@ def makeFigure():
     dfCond = (
         df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
     )
-    
+
     sns.barplot(data=dfCond, x="Condition", y="Cell Number", color="k", ax=ax[0])
     ax[0].set(ylabel="Number of Cells")
     rotate_axis(ax[0])
-
 
     # Per condition cell type percentages
     dfCellType = (
@@ -46,17 +46,16 @@ def makeFigure():
     for i, (name, group) in enumerate(dfCellType.groupby("Cell Type", observed=True)):
         sns.barplot(
             data=group,
-            x="Condition", 
+            x="Condition",
             y="Cell Type Percentage",
             color="k",
-            ax=ax[i+1],
+            ax=ax[i + 1],
         )
-        rotate_axis(ax[i+1])
-        ax[i+1].set(ylabel=f"{name} Percentage")
-       
-
+        rotate_axis(ax[i + 1])
+        ax[i + 1].set(ylabel=f"{name} Percentage")
 
     return f
+
 
 def rotate_axis(ax):
     ax.set_xticks(ax.get_xticks())

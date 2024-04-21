@@ -1,6 +1,7 @@
 """
 Lupus: Plotting weighted projections per component
 """
+
 from anndata import read_h5ad
 from .common import getSetup
 from .commonFuncs.plotUMAP import plotCmpPerCellType

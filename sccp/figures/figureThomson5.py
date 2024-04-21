@@ -1,6 +1,7 @@
 """
-Thomson: UMAP labeled by genes 
+Thomson: UMAP labeled by genes
 """
+
 from anndata import read_h5ad
 import numpy as np
 from .common import subplotLabel, getSetup

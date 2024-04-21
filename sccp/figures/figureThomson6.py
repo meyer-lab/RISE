@@ -1,6 +1,7 @@
 """
 Thomson: Gene ontology for gene factors of Pf2
 """
+
 from .common import (
     subplotLabel,
     getSetup,

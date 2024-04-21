@@ -100,7 +100,6 @@ def import_lupus() -> anndata.AnnData:
     """
     X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
     X = anndata.AnnData(X.raw.X, X.obs, X.raw.var, X.uns, X.obsm)
-    
 
     protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
     protein_df = protein.to_df()
