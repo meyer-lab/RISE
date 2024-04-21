@@ -7,8 +7,6 @@ corresponding weight for the condition removed significantly dropped.
 from .common import getSetup
 from ..imports import import_thomson
 from ..factorization import pf2
-from ..imports import import_thomson
-from .commonFuncs.plotFactors import reorder_table
 import pandas as pd
 import numpy as np
 from anndata import AnnData
@@ -19,9 +17,9 @@ from scipy.stats import linregress
 def makeFigure():
     rank = 20
     data = import_thomson()
-    
+
     ax, f = getSetup((6, 3), (1, 2))
-   
+
     plotDifferentialExpression(data, "CTRL4", "B Cells", rank, ax[0:2])
 
     ### Uncomment to plot other cell types
@@ -65,7 +63,7 @@ def plotDifferentialExpression(
     cell_type: str,
     rank: int,
     axes: list[Axes],
-    ct2:bool = False,
+    ct2: bool = False,
     override: tuple[int, int] = (-1, -1),
 ):
     """
@@ -92,31 +90,40 @@ def plotDifferentialExpression(
 
     sampledX = pf2(sampled_data, rank, doEmbedding=False)
     yt = pd.Series(np.unique(origX.obs["Condition"]))
-    numberOfCellType = [len(data[(data.obs["Condition"] == txt) & (data.obs[ctarg] == cell_type)]) for txt in yt] # Number of cells in the chosen condition
+    numberOfCellType = [
+        len(data[(data.obs["Condition"] == txt) & (data.obs[ctarg] == cell_type)])
+        for txt in yt
+    ]  # Number of cells in the chosen condition
 
-    if override == (-1, -1): # Use r^2 values to find the most important component
+    if override == (-1, -1):  # Use r^2 values to find the most important component
         X, X2 = np.array(origX.uns["Pf2_A"]), np.array(sampledX.uns["Pf2_A"])
-        all_r2, all_r2_2 = [linregress(X[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])], \
-            [linregress(X2[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])]
+        all_r2, all_r2_2 = (
+            [linregress(X[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])],
+            [linregress(X2[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])],
+        )
         most_exp_cmp, most_exp_cmp2 = int(np.argmax(all_r2)), int(np.argmax(all_r2_2))
-    else: # Use the override component numbers
+    else:  # Use the override component numbers
         most_exp_cmp, most_exp_cmp2 = override[0], override[1]
         all_r2 = [0] * rank
-        all_r2[most_exp_cmp] = linregress(np.array(origX.uns["Pf2_A"])[:, most_exp_cmp], numberOfCellType)[2] ** 2
+        all_r2[most_exp_cmp] = (
+            linregress(np.array(origX.uns["Pf2_A"])[:, most_exp_cmp], numberOfCellType)[
+                2
+            ]
+            ** 2
+        )
 
-    X, Y = np.array(origX.uns["Pf2_A"])[:, most_exp_cmp], np.array(sampledX.uns["Pf2_A"])[:, most_exp_cmp2]
+    X, Y = (
+        np.array(origX.uns["Pf2_A"])[:, most_exp_cmp],
+        np.array(sampledX.uns["Pf2_A"])[:, most_exp_cmp2],
+    )
 
     colors = ["r" if txt == condition else "b" for txt in yt]
 
     axes[0].scatter(X, Y, c=colors)
     a, b = np.polyfit(X, Y, 1)
-    axes[0].axline(
-        (0, b),
-        slope=a,
-        linestyle='--'
-    )
-    axes[0].scatter([], [], c='b', label='Other Conditions')
-    axes[0].scatter([], [], c='r', label=condition)
+    axes[0].axline((0, b), slope=a, linestyle="--")
+    axes[0].scatter([], [], c="b", label="Other Conditions")
+    axes[0].scatter([], [], c="r", label=condition)
     axes[0].set_xlabel(f"Component {most_exp_cmp + 1} Weight (Full Data)")
     axes[0].set_ylabel(f"Component {most_exp_cmp + 1} Weight (Sampled Data)")
     axes[0].set_title(f"Full Data vs {cell_type} removed from {condition}")
@@ -132,7 +139,7 @@ def plotDifferentialExpression(
         (0, b),
         slope=a,
         label=f"R^2 value: {int(all_r2[most_exp_cmp]*100)/100}",
-        linestyle='--'
+        linestyle="--",
     )
     axes[1].set_ylim(bottom=0)
     axes[1].set_xlim(left=0)

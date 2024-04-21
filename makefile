@@ -42,4 +42,4 @@ testprofile:
 	gprof2dot -f pstats --node-thres=5.0 profile | dot -Tsvg -o profile.svg
 
 mypy:
-	poetry run mypy --install-types --non-interactive --ignore-missing-imports sccp
+	poetry run mypy --install-types --non-interactive --ignore-missing-imports --check-untyped-defs sccp

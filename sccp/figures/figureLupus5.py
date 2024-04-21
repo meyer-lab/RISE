@@ -1,6 +1,7 @@
 """
 Lupus: Plot logistic regression weights for SLE and/or ancestry
 """
+
 from anndata import read_h5ad
 import numpy as np
 import pandas as pd
@@ -19,7 +20,7 @@ def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
 
     cmp_col = [i for i in range(1, X.shape[1] + 1)]
     df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
-    
+
     return df, lr.score(X, y)
 
 
@@ -37,7 +38,10 @@ def makeFigure():
     df_y = getSamplesObs(data.obs)
     X = np.array(data.uns["Pf2_A"])
 
-    dfWeights, score, = getCompContribs(X, df_y["SLE_status"])
+    (
+        dfWeights,
+        score,
+    ) = getCompContribs(X, df_y["SLE_status"])
     sns.barplot(
         data=dfWeights,
         x="Component",
@@ -46,8 +50,11 @@ def makeFigure():
         errorbar=None,
         ax=ax[0],
     )
-   
-    ax[0].set(ylim=[-10, 10], title="Logistic Regression: Prediction Accuracy - " + str(np.round(score, 3)))
+
+    ax[0].set(
+        ylim=[-10, 10],
+        title="Logistic Regression: Prediction Accuracy - " + str(np.round(score, 3)),
+    )
 
     df_y["ancestry"] = df_y["ancestry"] == "European"
     dfAnc, _ = getCompContribs(X, df_y["ancestry"])

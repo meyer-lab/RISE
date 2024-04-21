@@ -28,7 +28,7 @@ matplotlib.rcParams["svg.fonttype"] = "none"
 
 
 def getSetup(
-    figsize: tuple[int, int], gridd: tuple[int, int]
+    figsize: tuple[float, float], gridd: tuple[int, int]
 ) -> tuple[list[plt.Axes], Figure]:
     """Establish figure set-up with subplots."""
     sns.set_theme(
@@ -68,7 +68,7 @@ def genFigure():
     nameOut = "figure" + sys.argv[1]
 
     exec(f"from sccp.figures.{nameOut} import makeFigure", globals())
-    ff = makeFigure()  # noqa: F821
+    ff = makeFigure()  # type: ignore # noqa: F821
 
     if ff is not None:
         ff.savefig(

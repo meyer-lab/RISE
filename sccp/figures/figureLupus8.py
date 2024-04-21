@@ -1,6 +1,7 @@
 """
 Lupus: Plots percentages of cell types in weighted proejctions above a threshold for a component
 """
+
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import investigate_comp

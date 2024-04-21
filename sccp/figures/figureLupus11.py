@@ -1,6 +1,7 @@
 """
 Lupus: Gene ontology for gene factors of Pf2
 """
+
 from anndata import read_h5ad
 from .common import (
     subplotLabel,

@@ -1,6 +1,7 @@
 """
 Lupus: UMAP and boxplots of weighted projectoins per component
 """
+
 import numpy as np
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup

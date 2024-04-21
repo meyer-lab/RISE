@@ -1,6 +1,7 @@
 """
 Lupus: Plot factor weights correlations for donor SLE prediction
 """
+
 from anndata import read_h5ad
 import itertools
 import numpy as np
@@ -44,18 +45,18 @@ def lupus_comp_scan_plot(X, status_DF, ax):
             LR_CoH = lrmodel.fit(compFacs, y)
             acc[comps[0], comps[1]] = LR_CoH.score(compFacs, y)
             acc[comps[1], comps[0]] = acc[comps[0], comps[1]]
-            
+
     mask = np.triu(np.ones_like(acc, dtype=bool))
-    
+
     for i in range(len(mask)):
-        mask[i,i] = False
-    
+        mask[i, i] = False
+
     sns.heatmap(
         data=acc,
         vmin=0.5,
         vmax=1,
-        xticklabels=all_comps+1,
-        yticklabels=all_comps+1,
+        xticklabels=all_comps + 1,
+        yticklabels=all_comps + 1,
         mask=mask,
         cbar_kws={"label": "Prediction Accuracy"},
         ax=ax,

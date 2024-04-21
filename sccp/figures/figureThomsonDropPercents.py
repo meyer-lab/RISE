@@ -50,7 +50,9 @@ def plot_weights_across_percents(
     """
     Plots the raw weight of the identifying component across the percentages dropped
     """
-    all_percents, all_weights = [], []
+    all_percents: list[int] = []
+    all_weights: list[float] = []
+
     for i in range(5):
         vals = {}
         for percent in np.arange(percent_min, percent_max, percent_step):
@@ -60,7 +62,7 @@ def plot_weights_across_percents(
 
             # Calculate the number of cells to drop based on the percentage
             false_idx = idx[~idx].index
-            size = int(len(false_idx) * (1 - percent)) 
+            size = int(len(false_idx) * (1 - percent))
 
             idx[np.random.choice(false_idx, size=size, replace=False)] = True
             sampled_data = data[idx]
@@ -68,10 +70,14 @@ def plot_weights_across_percents(
             sampledX = pf2(sampled_data, rank, doEmbedding=False)
             gene_values = np.array(sampledX.varm["Pf2_C"])[
                 [i for i, gene in enumerate(data.var.index.values) if gene in geneset]
-            ] # Sum of the gene expression for the marker genes
-            most_exp_cmp = np.argmax(np.sum(np.abs(gene_values), axis=0)) # The component with the highest sum of gene expression
+            ]  # Sum of the gene expression for the marker genes
+            most_exp_cmp = np.argmax(
+                np.sum(np.abs(gene_values), axis=0)
+            )  # The component with the highest sum of gene expression
             Y = np.array(sampledX.uns["Pf2_A"])[:, most_exp_cmp]
-            idx = np.where(np.unique(sampledX.obs["Condition"]) == condition)[0][0]  # Aims to find the index of the condition to set its corresponding weight
+            idx = np.where(np.unique(sampledX.obs["Condition"]) == condition)[0][
+                0
+            ]  # Aims to find the index of the condition to set its corresponding weight
             vals[percent] = Y[idx]
 
         percents, weights = zip(*sorted((int(p * 100), w) for p, w in vals.items()))

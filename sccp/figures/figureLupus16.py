@@ -1,6 +1,7 @@
 """
 Thomson: Plotting normalized genes and separating data by status (and celltype)
 """
+
 from anndata import read_h5ad
 from .common import (
     subplotLabel,

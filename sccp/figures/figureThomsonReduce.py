@@ -46,11 +46,13 @@ def plotFMSpercentDrop(
     # loop to do multiple runs
     for j in range(0, runs, 1):
         scores = [1.0]
-        
+
         # loop to compare sampled dataset to original
         for i in percentList[1:]:
-            sampled_data: anndata.AnnData = sc.pp.subsample(X, fraction=1 - (i / 100), random_state=j, copy=True)  # type: ignore
-            sampledX = pf2(sampled_data, rank, random_state = j+2, doEmbedding=False)
+            sampled_data: anndata.AnnData = sc.pp.subsample(
+                X, fraction=1 - (i / 100), random_state=j, copy=True
+            )  # type: ignore
+            sampledX = pf2(sampled_data, rank, random_state=j + 2, doEmbedding=False)
 
             fmsScore = calculateFMS(dataX, sampledX)
             scores.append(fmsScore)
@@ -59,17 +61,19 @@ def plotFMSpercentDrop(
 
     # making dataframe based on runs, percent list, and fms
     runsList_df = []
-    for i in range(0,runs):
-        for j in range(0,len(percentList)):
+    for i in range(0, runs):
+        for j in range(0, len(percentList)):
             runsList_df.append(i)
     percentList_df = []
-    for i in range(0,runs):
-        for j in range(0,len(percentList)):
+    for i in range(0, runs):
+        for j in range(0, len(percentList)):
             percentList_df.append(percentList[j])
     fmsList_df = []
     for sublist in fmsLists:
         fmsList_df += sublist
-    df = pd.DataFrame({'runs': runsList_df, 'percent': percentList_df, 'fms': fmsList_df}) 
+    df = pd.DataFrame(
+        {"runs": runsList_df, "percent": percentList_df, "fms": fmsList_df}
+    )
 
     # percent dropped vs fms graph
     sns.lineplot(data=df, x="percent", y="fms", ax=ax)
@@ -92,9 +96,9 @@ def plotRankTest(
 ):
     fmsLists = []
 
-    for j in range(0,runs,1):
+    for j in range(0, runs, 1):
         scores = []
-    # testing different ranks input into function with one percent valued dropped
+        # testing different ranks input into function with one percent valued dropped
         for i in ranksList:
             dataX = pf2(X, rank=i, random_state=j, doEmbedding=False)
 
@@ -103,28 +107,27 @@ def plotRankTest(
             fmsScore = calculateFMS(dataX, sampledX)
             scores.append(fmsScore)
         fmsLists.append(scores)
-    
+
     # making dataframe based on runs, ranks, and fms
     runsList_df = []
-    for i in range(0,runs):
-        for j in range(0,len(ranksList)):
+    for i in range(0, runs):
+        for j in range(0, len(ranksList)):
             runsList_df.append(i)
     ranksList_df = []
-    for i in range(0,runs):
-        for j in range(0,len(ranksList)):
+    for i in range(0, runs):
+        for j in range(0, len(ranksList)):
             ranksList_df.append(ranksList[j])
     fmsList_df = []
     for sublist in fmsLists:
         fmsList_df += sublist
-    df = pd.DataFrame({'runs': runsList_df, 'ranks': ranksList_df, 'fms': fmsList_df}) 
-
-
+    df = pd.DataFrame({"runs": runsList_df, "ranks": ranksList_df, "fms": fmsList_df})
 
     # rank vs fms graph
     sns.lineplot(data=df, x="ranks", y="fms", ax=ax)
     ax.set_xlabel("Rank")
     ax.set_ylabel("FMS")
     ax.set_ylim(0, 1)
+
 
 # testing functions
 def makeFigure():
@@ -141,4 +144,3 @@ def makeFigure():
     plotRankTest(X, ax[1], ranksList=ranks, runs=3)
 
     return f
-

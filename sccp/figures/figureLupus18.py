@@ -1,6 +1,7 @@
 """
 Lupus: UMAP labeled by cell type
 """
+
 from anndata import read_h5ad
 import pandas as pd
 import seaborn as sns
@@ -20,7 +21,9 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
     X = getHiResOldLupus(X)
-    X.obs["Cell Type2"] = X.obs["Cell Type2"].cat.set_categories(np.sort(X.obs["Cell Type2"].cat.categories.values))
+    X.obs["Cell Type2"] = X.obs["Cell Type2"].cat.set_categories(
+        np.sort(X.obs["Cell Type2"].cat.categories.values)
+    )
     popCrossTabPlot(X, "Cell Type2", "Cell Type Old2", ax[2])
 
     plotLabelsUMAP(X, "Cell Type2", ax[0])

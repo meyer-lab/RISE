@@ -1,6 +1,7 @@
 """
 Lupus: UMAP labeled by cell type
 """
+
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import plotLabelsUMAP
