@@ -348,3 +348,9 @@ def plot_cell_gene_corr(
         ax=ax,
         alpha=alpha,
     )
+    
+  
+def rotate_xaxis(ax): 
+    """Rotates text by 90 degrees for x-axis"""  
+    ax.set_xticks(ax.get_xticks())
+    ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=90)

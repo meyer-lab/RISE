@@ -11,6 +11,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from scipy.stats import linregress, pearsonr, spearmanr
+from ..figures.commonFuncs.plotGeneral import rotate_xaxis
 
 
 def makeFigure():
@@ -141,6 +142,5 @@ def plotCmpPerCellCount(X, cmp, cellcountDF, ax, cellPerc=True):
     sns.barplot(
         data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax[-1]
     )
-    ax[-1].set_xticks(ax[-1].get_xticks())
-    ax[-1].set_xticklabels(labels=ax[-1].get_xticklabels(), rotation=90)
+    rotate_xaxis(ax[-1])
     ax[-1].set(title=f"Cmp. {cmp} V. Cell Count")
