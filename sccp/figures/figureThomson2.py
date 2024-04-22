@@ -18,6 +18,7 @@ from .commonFuncs.plotGeneral import (
     gene_plot_cells,
     plot_cell_gene_corr,
     heatmapGeneFactors,
+    cell_count_perc_df
 )
 
 
@@ -30,7 +31,7 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
-    cellDF = getCellCountDF(X, "Cell Type2")
+    cellDF = cell_count_perc_df(X, "Cell Type2")
 
     plotLabelsUMAP(X, "Cell Type", ax[0])
     plotLabelsUMAP(X, "Cell Type2", ax[1])
@@ -101,35 +102,6 @@ def makeFigure():
     return f
 
 
-def getCellCountDF(X, celltype="Cell Type", cellPerc=True):
-    """Returns DF with percentages of cells"""
-
-    df = X.obs[["Cell Type", "Condition", "Cell Type2"]].reset_index(drop=True)
-
-    dfCond = (
-        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Number")
-    )
-    dfCellType = (
-        df.groupby([celltype, "Condition"], observed=True)
-        .size()
-        .reset_index(name="Count")
-    )
-    dfCellType["Count"] = dfCellType["Count"].astype("float")
-
-    if cellPerc is True:
-        dfCellType["Cell Type Percentage"] = 0.0
-        for i, cond in enumerate(np.unique(df["Condition"])):
-            dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
-                100
-                * dfCellType.loc[dfCellType["Condition"] == cond, "Count"].to_numpy()
-                / dfCond.loc[dfCond["Condition"] == cond]["Cell Number"].to_numpy()
-            )
-
-    dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
-
-    return dfCellType
-
-
 def plot_cell_perc_corr(cellDF, pop1, pop2, ax):
     """Plots correlation of cell percentages against each other"""
     newDF = pd.DataFrame()
@@ -193,7 +165,7 @@ def diff_abund_test(cellDF):
     for cell in cellDF["Cell Type"].unique():
         Y = cellDF.loc[cellDF["Cell Type"] == cell]["Cell Type Percentage"].values
         X = cellDF.loc[cellDF["Cell Type"] == cell].Y.values
-        weights = np.power(cellDF.loc[cellDF["Cell Type"] == cell]["Count"].values, 1)
+        weights = np.power(cellDF.loc[cellDF["Cell Type"] == cell]["Cell Count"].values, 1)
         mod_wls = sm.WLS(Y, sm.tools.tools.add_constant(X), weights=weights)
         res_wls = mod_wls.fit()
         pvalDF = pd.concat(

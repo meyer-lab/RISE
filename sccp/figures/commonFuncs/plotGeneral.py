@@ -154,14 +154,6 @@ def heatmapGeneFactors(
     )
 
 
-def population_bar_chart(
-    adata: anndata.AnnData, cellType: str, category: str, ax: Axes
-):
-    """Plots proportion of cells by type stratified by an identifying condition or patient attribute (i.e. Lupus Status)"""
-    cellDF = pd.crosstab(adata.obs[category], adata.obs[cellType], normalize="index")
-    cellDF.plot.bar(ax=ax, stacked=True).legend(loc="upper right")
-    ax.set(ylim=(0, 1), ylabel="Proportion of Cells")
-
 
 def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
     """Plots weighted projections of each cell according to category"""
@@ -349,6 +341,38 @@ def plot_cell_gene_corr(
         alpha=alpha,
     )
     
+def cell_count_perc_df(X, celltype="Cell Type", status=False):
+    """Returns DF with cell counts and percentages for experiment"""
+    if status is False:
+        grouping = [celltype, "Condition"]
+    else:
+        grouping = [celltype, "Condition", "SLE_status"]
+        
+    df = X.obs[grouping].reset_index(drop=True)
+
+    dfCond = (
+        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
+    )
+    dfCellType = (
+        df.groupby(grouping, observed=True)
+        .size()
+        .reset_index(name="Cell Count")
+    )
+    dfCellType["Cell Count"] = dfCellType["Cell Count"].astype("float")
+
+
+    dfCellType["Cell Type Percentage"] = 0.0
+    for cond in np.unique(df["Condition"]):
+        dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
+            100
+            * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
+            / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
+        )
+
+    dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
+
+    return dfCellType
+
   
 def rotate_xaxis(ax): 
     """Rotates text by 90 degrees for x-axis"""  
