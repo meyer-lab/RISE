@@ -12,18 +12,6 @@ from .commonFuncs.plotLupus import getSamplesObs
 from ..factorization import correct_conditions
 
 
-def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
-    """Fit logistic regression model, return coefficients of that model"""
-    lr = LogisticRegressionCV(
-        random_state=0, max_iter=100000, penalty="l1", solver="saga"
-    ).fit(X, y)
-
-    cmp_col = [i for i in range(1, X.shape[1] + 1)]
-    df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
-
-    return df, lr.score(X, y)
-
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
@@ -73,3 +61,15 @@ def makeFigure():
     )
 
     return f
+
+
+def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
+    """Fit logistic regression model, return coefficients of that model"""
+    lr = LogisticRegressionCV(
+        random_state=0, max_iter=100000, penalty="l1", solver="saga"
+    ).fit(X, y)
+
+    cmp_col = [i for i in range(1, X.shape[1] + 1)]
+    df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
+
+    return df, lr.score(X, y)
