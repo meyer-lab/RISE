@@ -1,17 +1,16 @@
 from pacmap import PaCMAP
-import scipy.sparse as sps
 from sklearn.linear_model import LinearRegression
 from scipy.stats import gmean
 from tlviz.factor_tools import degeneracy_score
 from parafac2.parafac2 import parafac2_nd
-
-
+from sklearn.decomposition import PCA
 import anndata
+import scipy.sparse as sps
 import numpy as np
 from tqdm import tqdm
 
 
-def cwSNR(
+def cw_snr(
     X: anndata.AnnData,
 ) -> np.ndarray:
     """Calculate the columnwise signal-to-noise ratio for each dataset and overall error."""
@@ -72,20 +71,6 @@ def store_pf2(
 
     return X
 
-
-def pf2_r2x(X: anndata.AnnData, ranks: np.ndarray):
-    X = X.to_memory()
-
-    r2x_vec = np.empty(ranks.size)
-
-    for i in tqdm(range(len(r2x_vec)), total=len(r2x_vec)):
-        _, R2X = parafac2_nd(X, rank=i + 1)
-
-        r2x_vec[i] = R2X
-
-    return r2x_vec
-
-
 def pf2(
     X: anndata.AnnData,
     rank: int,
@@ -106,3 +91,20 @@ def pf2(
         X.obsm["X_pf2_PaCMAP"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
 
     return X
+
+
+def pf2_pca_r2x(X: anndata.AnnData, ranks):
+    X = X.to_memory()
+    XX = sps.csr_array(X.X)
+
+    r2x_pf2 = np.zeros(len(ranks))
+
+    for i in tqdm(range(len(r2x_pf2)), total=len(r2x_pf2)):
+        _, R2X = parafac2_nd(X, rank=i+1)
+        r2x_pf2[i] = R2X
+
+    pca = PCA(n_components=ranks[-1], svd_solver="arpack")
+    pca.fit(XX)
+    r2x_pca = np.cumsum(pca.explained_variance_ratio_)
+
+    return r2x_pf2, r2x_pca[np.array(ranks)-1]

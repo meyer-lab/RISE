@@ -5,7 +5,7 @@ Lupus: UMAP and boxplots of weighted projectoins per component
 import numpy as np
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotGeneral import plotR2X_pf2
+from .commonFuncs.plotGeneral import plot_r2x
 
 
 def makeFigure():
@@ -19,7 +19,8 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
-    plotR2X_pf2(X, ranks, ax[0])
-    ax[0].set(xlim=(0, 55), ylim=(0, 0.15))
+    ranks = np.arange(5, 10, 5)
+    plot_r2x(X, ranks, ax[0])
+ 
 
     return f

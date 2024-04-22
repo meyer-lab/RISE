@@ -4,19 +4,15 @@ import seaborn as sns
 import scanpy as sc
 import anndata
 from matplotlib.axes import Axes
+from ...factorization import pf2_pca_r2x
 
-from ...factorization import pf2_r2x
 
-
-def plotR2X(data, rank, ax: Axes):
-    """Creates R2X plot for parafac2 tensor decomposition"""
-    r2xError = pf2_r2x(data, rank)
-
-    rank_vec = np.arange(1, rank + 1)
+def plot_r2x(data, rank_vec, ax: Axes):
+    """Creates R2X plot for parafac2 tensor decomposition and pca"""
+    r2xError = pf2_pca_r2x(data, rank_vec)
     labelNames = ["Fit: Pf2", "Fit: PCA"]
     colorDecomp = ["r", "b"]
     markerShape = ["o", "o"]
-
     for i in range(2):
         ax.scatter(
             rank_vec,
@@ -26,35 +22,13 @@ def plotR2X(data, rank, ax: Axes):
             c=colorDecomp[i],
             s=30.0,
         )
-
     ax.set(
         ylabel="Variance Explained",
         xlabel="Number of Components",
-        xticks=np.linspace(0, rank, num=8, dtype=int),
+        xticks=np.linspace(0, rank_vec[-1], num=6, dtype=int),
         yticks=np.linspace(
             0, np.max(np.append(r2xError[0], r2xError[1])) + 0.01, num=5
-        ),
-    )
-
-    ax.legend()
-
-
-def plotR2X_pf2(data, ranks, ax: Axes):
-    """Creates R2X plot for parafac2 tensor decomposition"""
-    r2xError = pf2_r2x(data, ranks)
-
-    ax.scatter(
-        ranks,
-        r2xError,
-        c="k",
-        s=30.0,
-    )
-
-    ax.set(
-        ylabel="R2X",
-        xlabel="Number of Components",
-    )
-
+        ))
 
 def plotCellTypePerExpCount(dataDF, condition, ax: Axes):
     """Plots historgram of cell counts per experiment"""
