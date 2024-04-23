@@ -95,7 +95,7 @@ def plot_fms_percent_drop(
     )
 
     # percent dropped vs fms graph
-    sns.lineplot(data=df, x="Percent", y="FMS", ax=ax)
+    sns.lineplot(data=df, x="Percentage of Data Dropped", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
 
 

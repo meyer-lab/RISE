@@ -7,7 +7,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plot_wp_pacmap, plot_labels_pacmap
+from .commonFuncs.plotUMAP import plot_wp_pacmap, plot_wp_per_celltype
 
 
 def makeFigure():
@@ -23,7 +23,7 @@ def makeFigure():
     comps = [22, 33, 47, 48, 23, 31, 43]
 
     for i, cmp in enumerate(comps):
-        plot_labels_pacmap(X, cmp, ax[2 * i], cellType="leiden")
+        plot_wp_per_celltype(X, cmp, ax[2 * i], cellType="leiden")
         plot_wp_pacmap(X, cmp, ax[2 * i + 1], cbarMax=0.25)
 
     return f
