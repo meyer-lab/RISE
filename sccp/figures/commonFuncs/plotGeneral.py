@@ -374,7 +374,7 @@ def cell_count_perc_df(X, celltype="Cell Type", status=False):
     return dfCellType
 
   
-def rotate_xaxis(ax): 
+def rotate_xaxis(ax, rotation=90): 
     """Rotates text by 90 degrees for x-axis"""  
     ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=90)
+    ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=rotation)

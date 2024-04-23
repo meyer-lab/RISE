@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
 
-def plotConditionsFactors(
+def plot_condition_factors(
     data: AnnData,
     ax: Axes,
     cond_group_labels: Optional[pd.Series] = None,
@@ -71,7 +71,7 @@ def plotConditionsFactors(
         # add a little legend
         ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
 
-    xticks = [f"Cmp. {i}" for i in np.arange(1, X.shape[1] + 1)]
+    xticks = np.arange(1, X.shape[1] + 1)
     sns.heatmap(
         data=X,
         xticklabels=xticks,
@@ -81,16 +81,16 @@ def plotConditionsFactors(
         cmap=cmap,
     )
     ax.tick_params(axis="y", rotation=0)
+    ax.set(xlabel="Component")
 
 
-def plotCellState(data: AnnData, ax: Axes):
-    """Plots Pf2 cell state factors"""
+def plot_eigenstate_factors(data: AnnData, ax: Axes):
+    """Plots Pf2 eigenstate factors"""
     rank = data.uns["Pf2_B"].shape[1]
-    xticks = [f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-
+    xticks = np.arange(1, rank + 1)
     X = data.uns["Pf2_B"]
     X = X / np.max(np.abs(np.array(X)))
-    yt = [f"Cell State {i}" for i in np.arange(1, rank + 1)]
+    yt = np.arange(1, rank + 1)
 
     sns.heatmap(
         data=X,
@@ -102,10 +102,10 @@ def plotCellState(data: AnnData, ax: Axes):
         vmin=-1,
         vmax=1,
     )
-    ax.set_title("Components by Cell State")
+    ax.set(xlabel="Component")
 
 
-def plotGeneFactors(data: AnnData, ax: Axes, trim=True):
+def plot_gene_factors(data: AnnData, ax: Axes, trim=True):
     """Plots Pf2 gene factors"""
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
@@ -121,7 +121,7 @@ def plotGeneFactors(data: AnnData, ax: Axes, trim=True):
     X = X[ind]
     X = X / np.max(np.abs(X))
     yt = [yt[ii] for ii in ind]
-    xticks = [f"Cmp. {i}" for i in np.arange(1, rank)]
+    xticks = np.arange(1, rank+1)
 
     sns.heatmap(
         data=X,
@@ -133,14 +133,14 @@ def plotGeneFactors(data: AnnData, ax: Axes, trim=True):
         vmin=-1,
         vmax=1,
     )
-    ax.set_title("Components by Gene")
+    ax.set(xlabel="Component")
 
 
-def plotWeight(X: AnnData, ax: Axes):
+def plot_factor_weight(X: AnnData, ax: Axes):
     """Plots weights from Pf2 model"""
     df = pd.DataFrame(data=np.transpose(X.uns["Pf2_weights"]), columns=["Value"])
     df["Value"] = df["Value"] / np.max(df["Value"])
-    df["Component"] = [f"Cmp. {i}" for i in np.arange(1, len(X.uns["Pf2_weights"]) + 1)]
+    df["Component"] = np.arange(1, len(X.uns["Pf2_weights"]) + 1)
     sns.barplot(data=df, x="Component", y="Value", ax=ax)
     ax.tick_params(axis="x", rotation=90)
 

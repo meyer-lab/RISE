@@ -3,7 +3,6 @@ Thomson dataset: Cell counts and cell type percentages per condition.
 """
 
 from anndata import read_h5ad
-import pandas as pd
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
@@ -43,6 +42,6 @@ def plot_cell_count(X, ax):
 
     sns.barplot(data=dfCond, x="Condition", y="Cell Count", color="k", ax=ax)
     rotate_xaxis(ax)
+    
+    
 
-
-    return 

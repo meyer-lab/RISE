@@ -4,9 +4,7 @@ Lupus: Plotting Pf2 factors and weights
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotFactors import (
-    plotConditionsFactors,
-)
+from .commonFuncs.plotFactors import plot_condition_factors
 from .commonFuncs.plotLupus import getSamplesObs
 from ..factorization import correct_conditions
 
@@ -24,11 +22,11 @@ def makeFigure():
 
     df = getSamplesObs(X.obs)
 
-    plotConditionsFactors(X, ax[0], df["pool"], groupConditions=True)
+    plot_condition_factors(X, ax[0], df["pool"], groupConditions=True)
     ax[0].set(yticks=[])
-    plotConditionsFactors(X, ax[1], df["Processing_Cohort"], groupConditions=True)
+    plot_condition_factors(X, ax[1], df["Processing_Cohort"], groupConditions=True)
     ax[1].set(yticks=[])
-    plotConditionsFactors(X, ax[2], df["Status"], groupConditions=True)
+    plot_condition_factors(X, ax[2], df["Status"], groupConditions=True)
     ax[2].set(yticks=[])
 
     return f

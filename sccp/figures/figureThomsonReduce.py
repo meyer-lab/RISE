@@ -11,6 +11,25 @@ import seaborn as sns
 import pandas as pd
 
 
+def makeFigure():
+    ax, f = getSetup((6, 3), (1, 2))
+
+    subplotLabel(ax)
+    
+    X = import_thomson()
+
+    percentList = np.arange(0.0, 8.0, 5.0)
+    plot_fms_percent_drop(X, ax[0], percentList=percentList, runs=3)
+
+    ranks = list(range(1, 3))
+    plot_fms_diff_ranks(X, ax[1], ranksList=ranks, runs=3)
+
+
+    return f
+
+
+
+
 def calculateFMS(A: anndata.AnnData, B: anndata.AnnData) -> float:
     factors = [A.uns["Pf2_A"], A.uns["Pf2_B"], A.varm["Pf2_C"]]
     A_CP = CPTensor(
@@ -31,7 +50,7 @@ def calculateFMS(A: anndata.AnnData, B: anndata.AnnData) -> float:
     return fms(A_CP, B_CP, consider_weights=False, skip_mode=1)  # type: ignore
 
 
-def plotFMSpercentDrop(
+def plot_fms_percent_drop(
     X: anndata.AnnData,
     ax: Axes,
     percentList: np.ndarray,
@@ -72,13 +91,11 @@ def plotFMSpercentDrop(
     for sublist in fmsLists:
         fmsList_df += sublist
     df = pd.DataFrame(
-        {"runs": runsList_df, "percent": percentList_df, "fms": fmsList_df}
+        {"Run": runsList_df, "Percentage of Data Dropped": percentList_df, "FMS": fmsList_df}
     )
 
     # percent dropped vs fms graph
-    sns.lineplot(data=df, x="percent", y="fms", ax=ax)
-    ax.set_xlabel("Percentage of Data Dropped")
-    ax.set_ylabel("FMS")
+    sns.lineplot(data=df, x="Percent", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
 
 
@@ -88,7 +105,7 @@ def resample(data: anndata.AnnData) -> anndata.AnnData:
     return data
 
 
-def plotRankTest(
+def plot_fms_diff_ranks(
     X: anndata.AnnData,
     ax: Axes,
     ranksList: list[int],
@@ -98,7 +115,6 @@ def plotRankTest(
 
     for j in range(0, runs, 1):
         scores = []
-        # testing different ranks input into function with one percent valued dropped
         for i in ranksList:
             dataX = pf2(X, rank=i, random_state=j, doEmbedding=False)
 
@@ -120,27 +136,9 @@ def plotRankTest(
     fmsList_df = []
     for sublist in fmsLists:
         fmsList_df += sublist
-    df = pd.DataFrame({"runs": runsList_df, "ranks": ranksList_df, "fms": fmsList_df})
+    df = pd.DataFrame({"Run": runsList_df, "Component": ranksList_df, "FMS": fmsList_df})
 
-    # rank vs fms graph
-    sns.lineplot(data=df, x="ranks", y="fms", ax=ax)
-    ax.set_xlabel("Rank")
-    ax.set_ylabel("FMS")
+    sns.lineplot(data=df, x="Component", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
 
 
-# testing functions
-def makeFigure():
-    X = import_thomson()
-
-    ax, f = getSetup((6, 3), (1, 2))
-
-    subplotLabel(ax)
-
-    percentList = np.arange(0.0, 8.0, 5.0)
-    plotFMSpercentDrop(X, ax[0], percentList=percentList, runs=3)
-
-    ranks = list(range(1, 3))
-    plotRankTest(X, ax[1], ranksList=ranks, runs=3)
-
-    return f
