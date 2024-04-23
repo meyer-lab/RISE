@@ -6,7 +6,6 @@ from anndata import read_h5ad
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.linear_model import LogisticRegressionCV
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
@@ -67,8 +66,8 @@ def logreg_weights_scores(X, y: pd.Series) -> pd.DataFrame:
     """Fit logistic regression model, return coefficients of that model"""
     cond_factors = np.array(X.uns["Pf2_A"])
     lr = logistic_regression("accuracy").fit(cond_factors, y)
+    cmp_col = [i for i in range(1, cond_factors.shape[1] + 1)]
 
-    cmp_col = [i for i in range(1, X.shape[1] + 1)]
     df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
 
-    return df, lr.score(X, y)
+    return df, lr.score(cond_factors, y)
