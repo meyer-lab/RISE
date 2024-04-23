@@ -5,7 +5,7 @@ Thomson: Compares PCA and Pf2 UMAP labeled by genes and drugs
 from anndata import read_h5ad
 from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotGeneUMAP, plotLabelsUMAP
+from .commonFuncs.plotUMAP import plot_gene_pacmap, plot_labels_pacmap
 import pacmap
 import numpy as np
 
@@ -22,11 +22,11 @@ def makeFigure():
 
     genes = ["NKG7"]
     for i, gene in enumerate(genes):
-        plotGeneUMAP(gene, "Pf2", X, ax[i])
+        plot_gene_pacmap(gene, "Pf2", X, ax[i])
 
     drugs = ["Triamcinolone Acetonide", "Alprostadil", "Budesonide"]
     for i, drug in enumerate(drugs):
-        plotLabelsUMAP(X, "Condition", ax[i + 1], drug, cmap="Set1")
+        plot_labels_pacmap(X, "Condition", ax[i + 1], drug, cmap="Set1")
         ax[i + 2].set(title="Pf2-Based Decomposition")
 
     # PCA dimension reduction
@@ -35,10 +35,10 @@ def makeFigure():
     X.obsm["X_pf2_PaCMAP"] = pacmap.PaCMAP().fit_transform(pcaPoints)
 
     for i, gene in enumerate(genes):
-        plotGeneUMAP(gene, "PCA", X, ax[i + 4])
+        plot_gene_pacmap(gene, "PCA", X, ax[i + 4])
 
     for i, drug in enumerate(drugs):
-        plotLabelsUMAP(X, "Condition", ax[i + 5], drug, cmap="Set1")
+        plot_labels_pacmap(X, "Condition", ax[i + 5], drug, cmap="Set1")
         ax[i + 6].set(title="PCA-Based Decomposition")
 
     return f

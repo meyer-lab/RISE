@@ -4,7 +4,7 @@ Lupus: UMAP labeled by cell type
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotLabelsUMAP
+from .commonFuncs.plotUMAP import plot_labels_pacmap
 import numpy as np
 import seaborn as sns
 import pandas as pd
@@ -19,8 +19,8 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
-    plotLabelsUMAP(X, "Cell Type", ax[0])
-    plotLabelsUMAP(X, "Cell Type2", ax[1])
+    plot_labels_pacmap(X, "Cell Type", ax[0])
+    plot_labels_pacmap(X, "Cell Type2", ax[1])
     
     plot_pair_gene_factors(X, 22, 28, ax[2])
     

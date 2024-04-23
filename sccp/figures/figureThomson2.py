@@ -11,7 +11,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plotLabelsUMAP, plotCmpUMAP
+from .commonFuncs.plotUMAP import plot_labels_pacmap, plot_wp_pacmap
 from .commonFuncs.plotGeneral import (
     plotGenePerCellType,
     plotGenePerCategCond,
@@ -33,16 +33,16 @@ def makeFigure():
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
     cellDF = cell_count_perc_df(X, "Cell Type2")
 
-    plotLabelsUMAP(X, "Cell Type", ax[0])
-    plotLabelsUMAP(X, "Cell Type2", ax[1])
+    plot_labels_pacmap(X, "Cell Type", ax[0])
+    plot_labels_pacmap(X, "Cell Type2", ax[1])
     heatmapGeneFactors([15, 19, 20], X, ax[2], geneAmount=5)
 
-    plotCmpUMAP(X, 15, ax[3], 0.2)  # pDC
+    plot_wp_pacmap(X, 15, ax[3], 0.2)  # pDC
     plotGenePerCellType(["FXYD2"], X, ax[4], cellType="Cell Type2")
     plotGenePerCellType(["SERPINF1"], X, ax[5], cellType="Cell Type2")
     plotGenePerCellType(["RARRES2"], X, ax[6], cellType="Cell Type2")
 
-    plotCmpUMAP(X, 19, ax[7], 0.2)  # Alpro
+    plot_wp_pacmap(X, 19, ax[7], 0.2)  # Alpro
     X_genes = X[:, ["THBS1", "EREG"]].to_memory()
     X_genes = X_genes[X_genes.obs["Cell Type"] == "DCs", :]
     gene_plot_cells(
@@ -50,7 +50,7 @@ def makeFigure():
     )
     ax[8].set(title="Gene Expression in DCs")
 
-    plotCmpUMAP(X, 20, ax[9], 0.2)  # Gluco
+    plot_wp_pacmap(X, 20, ax[9], 0.2)  # Gluco
     glucs = [
         "Betamethasone Valerate",
         "Loteprednol etabonate",
@@ -80,13 +80,13 @@ def makeFigure():
     X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
 
     color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
-    plotLabelsUMAP(X, "Condition_gluc", ax[13], color_key=color_key)
+    plot_labels_pacmap(X, "Condition_gluc", ax[13], color_key=color_key)
 
     plot_cell_perc_comp_corr(X, cellDF, "Classical Monocytes", 20, ax[14], unique=glucs)
     plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[15], unique=glucs)
 
     cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[16])
-    plotCmpUMAP(X, 9, ax[17], 0.2)  # Gluco
+    plot_wp_pacmap(X, 9, ax[17], 0.2)  # Gluco
 
     ax[4].set(ylim=(-0.1, 1.2))
     ax[5].set(ylim=(-0.1, 1.2))

@@ -7,7 +7,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plotGeneUMAP
+from .commonFuncs.plotUMAP import plot_gene_pacmap
 
 
 def makeFigure():
@@ -23,6 +23,6 @@ def makeFigure():
     names = X.var_names[X.var["feature_types"] == "Antibody Capture"]
 
     for i, name in enumerate(names[0:4]):
-        plotGeneUMAP(name, "Pf2", X, ax[i])
+        plot_gene_pacmap(name, "Pf2", X, ax[i])
 
     return f

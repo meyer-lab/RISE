@@ -5,7 +5,7 @@ Thomson: Plotting weighted projections per component
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotUMAP import (
-    plotCmpUMAP,
+    plot_wp_pacmap,
 )
 
 
@@ -20,6 +20,6 @@ def makeFigure():
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     for i in range(1, 21):
-        plotCmpUMAP(X, i, ax[i-1], cbarMax=.3)
+        plot_wp_pacmap(X, i, ax[i-1], cbarMax=.3)
 
     return f

@@ -42,6 +42,3 @@ def plot_cell_count(X, ax):
 
     sns.barplot(data=dfCond, x="Condition", y="Cell Count", color="k", ax=ax)
     rotate_xaxis(ax)
-    
-    
-

@@ -5,7 +5,7 @@ Thomson: UMAP labeled by genes
 from anndata import read_h5ad
 import numpy as np
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotGeneUMAP
+from .commonFuncs.plotUMAP import plot_gene_pacmap
 
 
 def makeFigure():
@@ -28,6 +28,6 @@ def makeFigure():
     genes = np.concatenate((cd4, cd8, nk, mono1, mono2, dc, b))
 
     for i, gene in enumerate(genes):
-        plotGeneUMAP(gene, "Pf2", X, ax[i])
+        plot_gene_pacmap(gene, "Pf2", X, ax[i])
 
     return f

@@ -44,8 +44,8 @@ def ds_show(result, ax):
     ax.imshow(mpl_img)
 
 
-def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
-    """Scatterplot of UMAP visualization weighted by gene"""
+def plot_gene_pacmap(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
+    """Scatterplot of PaCMAP visualization weighted by gene"""
     geneList = X[:, gene].X
     if isinstance(geneList, spmatrix):
         geneList = geneList.toarray()
@@ -77,13 +77,13 @@ def plotGeneUMAP(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
     plt.colorbar(psm, ax=ax)
 
-    ax = assignAxes(ax)
+    ax = assign_labels(ax)
     ax.set(title=f"{gene}-{decompType}-Based Decomposition")
 
 
-def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
+def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
     """Scatterplot of UMAP visualization weighted by
-    projections for a component and cell state"""
+    projections for a component and eigenstate"""
     values = X.obsm["weighted_projections"][:, cmp - 1]
     points = X.obsm["X_pf2_PaCMAP"]
 
@@ -110,10 +110,10 @@ def plotCmpUMAP(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
     psm = plt.pcolormesh([[-cbarMax, cbarMax], [-cbarMax, cbarMax]], cmap=cmap)
     plt.colorbar(psm, ax=ax)
     ax.set(title="Cmp. " + str(cmp))
-    ax = assignAxes(ax)
+    ax = assign_labels(ax)
 
 
-def plotLabelsUMAP(
+def plot_labels_pacmap(
     X: anndata.AnnData,
     labelType: str,
     ax: Axes,
@@ -157,10 +157,10 @@ def plotLabelsUMAP(
 
     ds_show(result, ax)
     ax.legend(handles=legend_elements)
-    ax = assignAxes(ax)
+    ax = assign_labels(ax)
 
 
-def plotCmpPerCellType(
+def plot_wp_per_celltype(
     X: anndata.AnnData, cmp: int, ax: Axes, outliers: bool = False, cellType="Cell Type"
 ):
     """Boxplot of weighted projections for one component across cell types"""
@@ -183,6 +183,6 @@ def plotCmpPerCellType(
     ax.set_title(cmpName)
 
 
-def assignAxes(ax):
+def assign_labels(ax):
     ax.set(xlabel="PaCMAP1", ylabel="PaCMAP2", xticks=[], yticks=[])
     return ax

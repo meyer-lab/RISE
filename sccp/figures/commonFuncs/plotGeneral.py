@@ -103,29 +103,6 @@ def plotGenePerCategCond(
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
 
 
-def plotGeneFactors(
-    cmp: int, dataIn: anndata.AnnData, ax: Axes, geneAmount: int = 20, top=True
-):
-    """Plotting weights for gene factors for both most negatively/positively weighted terms"""
-    cmpName = f"Cmp. {cmp}"
-
-    df = pd.DataFrame(
-        data=dataIn.varm["Pf2_C"][:, cmp - 1], index=dataIn.var_names, columns=[cmpName]
-    )
-
-    df = df.reset_index(names="Gene")
-    df = df.sort_values(by=cmpName)
-
-    if top:
-        sns.barplot(
-            data=df.iloc[-geneAmount:, :], x="Gene", y=cmpName, color="k", ax=ax
-        )
-    else:
-        sns.barplot(data=df.iloc[:geneAmount, :], x="Gene", y=cmpName, color="k", ax=ax)
-
-    ax.tick_params(axis="x", rotation=90)
-
-
 def heatmapGeneFactors(
     cmps: list, dataIn: anndata.AnnData, ax: Axes, geneAmount: int = 20
 ):

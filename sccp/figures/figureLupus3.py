@@ -4,7 +4,7 @@ Lupus: UMAP and boxplots of weighted projectoins per component
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotCmpUMAP
+from .commonFuncs.plotUMAP import plot_wp_pacmap
 
 
 def makeFigure():
@@ -18,7 +18,7 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
     for i in range(1, 31):
-        plotCmpUMAP(X, i, ax[i-1], cbarMax=.3)
+        plot_wp_pacmap(X, i, ax[i-1], cbarMax=.3)
         
         
     return f

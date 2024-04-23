@@ -135,6 +135,28 @@ def plot_gene_factors(data: AnnData, ax: Axes, trim=True):
     )
     ax.set(xlabel="Component")
 
+        
+def plot_gene_factors_partial(
+    cmp: int, dataIn: AnnData, ax: Axes, geneAmount: int = 5, top=True
+):
+    """Plotting weights for gene factors for both most negatively/positively weighted terms"""
+    cmpName = f"Cmp. {cmp}"
+
+    df = pd.DataFrame(
+        data=dataIn.varm["Pf2_C"][:, cmp - 1], index=dataIn.var_names, columns=[cmpName]
+    )
+    df = df.reset_index(names="Gene")
+    df = df.sort_values(by=cmpName)
+
+    if top:
+        sns.barplot(
+            data=df.iloc[-geneAmount:, :], x="Gene", y=cmpName, color="k", ax=ax
+        )
+    else:
+        sns.barplot(data=df.iloc[:geneAmount, :], x="Gene", y=cmpName, color="k", ax=ax)
+
+    ax.tick_params(axis="x", rotation=90)
+
 
 def plot_factor_weight(X: AnnData, ax: Axes):
     """Plots weights from Pf2 model"""
@@ -143,6 +165,7 @@ def plot_factor_weight(X: AnnData, ax: Axes):
     df["Component"] = np.arange(1, len(X.uns["Pf2_weights"]) + 1)
     sns.barplot(data=df, x="Component", y="Value", ax=ax)
     ax.tick_params(axis="x", rotation=90)
+
 
 
 def reorder_table(projs: np.ndarray) -> np.ndarray:
@@ -165,3 +188,4 @@ def bot_top_genes(X, cmp, geneAmount=5):
     all_genes = np.concatenate([bot, top])
 
     return all_genes
+

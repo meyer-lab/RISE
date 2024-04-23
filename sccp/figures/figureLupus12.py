@@ -25,12 +25,12 @@ def makeFigure():
 
     status = getSamplesObs(X.obs)
 
-    lupus_comp_scan_plot(correct_conditions(X), status, ax[0])
+    pair_logistic_regression(correct_conditions(X), status, ax[0])
 
     return f
 
 
-def lupus_comp_scan_plot(X, status_DF, ax):
+def pair_logistic_regression(X, status_DF, ax):
     """Plot factor weights for donor SLE prediction"""
     lrmodel = LogisticRegression(penalty=None)
     y = preprocessing.label_binarize(

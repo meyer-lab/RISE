@@ -10,7 +10,7 @@ from .commonFuncs.plotFactors import (
     plot_gene_factors,
     plot_factor_weight
 )
-from .commonFuncs.plotUMAP import plotLabelsUMAP
+from .commonFuncs.plotUMAP import plot_labels_pacmap
 import numpy as np
 
 
@@ -29,8 +29,8 @@ def makeFigure():
     plot_gene_factors(X, ax[2])
     plot_factor_weight(X, ax[3])
 
-    plotLabelsUMAP(X, "Condition", ax[4])
-    # plotLabelsUMAP(X, "leiden", ax[5])
+    plot_labels_pacmap(X, "Condition", ax[4])
+    # plot_labels_pacmap(X, "leiden", ax[5])
     plot_condition_factor_ratio(X, ax[6], day7=False)
     plot_condition_factor_ratio(X, ax[7], day7=True)
 

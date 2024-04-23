@@ -7,7 +7,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotGeneral import plotGeneFactors
+from .commonFuncs.plotFactors import plot_gene_factors_partial
 
 
 def makeFigure():
@@ -22,7 +22,8 @@ def makeFigure():
     comps = [22, 33, 47, 48, 23, 31, 43]
 
     for i, cmp in enumerate(comps):
-        plotGeneFactors(cmp, X, ax[2 * i], geneAmount=10, top=True)
-        plotGeneFactors(cmp, X, ax[2 * i + 1], geneAmount=10, top=False)
+        plot_gene_factors_partial(cmp, X, ax[2 * i], geneAmount=10, top=True)
+        plot_gene_factors_partial(cmp, X, ax[2 * i + 1], geneAmount=10, top=False)
 
     return f
+

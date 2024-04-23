@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotLabelsUMAP
+from .commonFuncs.plotUMAP import plot_labels_pacmap
 from ..gating import getHiResOldLupus
 
 
@@ -26,8 +26,8 @@ def makeFigure():
     )
     popCrossTabPlot(X, "Cell Type2", "Cell Type Old2", ax[2])
 
-    plotLabelsUMAP(X, "Cell Type2", ax[0])
-    plotLabelsUMAP(X, "Cell Type Old2", ax[1])
+    plot_labels_pacmap(X, "Cell Type2", ax[0])
+    plot_labels_pacmap(X, "Cell Type Old2", ax[1])
 
     return f
 
