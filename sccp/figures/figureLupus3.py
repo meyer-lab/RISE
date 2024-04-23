@@ -4,7 +4,7 @@ Lupus: UMAP and boxplots of weighted projectoins per component
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plotCmpPerCellType, plotCmpUMAP
+from .commonFuncs.plotUMAP import plotCmpUMAP
 
 
 def makeFigure():
