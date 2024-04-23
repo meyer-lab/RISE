@@ -5,17 +5,15 @@
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegressionCV
-from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import roc_auc_score
 from .factorization import pf2
 
 
-def testPf2Ranks(
+def predaccuracy_ranks_lupus(
     pfx2_data,
     condition_labels_all,
-    ranks_to_test: list[int],
+    ranks_to_test,
     error_metric="accuracy",
-    cv_group=None,
 ):
     """Tests various numbers of components for Pf2 by optimizing some error metric in logisitic regression (predicting SLE status)
     pfx2_data: data in Pf2X format
@@ -26,80 +24,69 @@ def testPf2Ranks(
     """
 
     results = []
+    pfx2_data = pfx2_data.to_memory()
     for rank in ranks_to_test:
-        # perform pf2 on the given rank
-        print(f"\n\nPARAFAC2 FITTING: RANK {rank}")
-
-        X = pf2(pfx2_data, rank=rank, doEmbedding=False)
-
-        A_matrix = X.uns["Pf2_A"]
+        print(f"\n\n Component:{rank}")
+        
+        pf2_output = pf2(pfx2_data, rank=int(rank), doEmbedding=False)
+         
+        A_matrix = pf2_output.uns["Pf2_A"]
         condition_labels = condition_labels_all["SLE_status"]
 
-        # train a logisitic regression model on that rank, using cross validation
-        # if we want cross validation groups made across a certain feature (like batch or patient); make them
-        cvs = None
-
-        if cv_group is not None:
-            sgkf = StratifiedGroupKFold(n_splits=4)
-            # get labels for the group that you want to do cross validation by
-            group_cond_labels = condition_labels_all[cv_group]
-            cvs = sgkf.split(
-                A_matrix, condition_labels.to_numpy(), group_cond_labels.to_numpy()
-            )
-
-        log_reg = LogisticRegressionCV(
-            random_state=0,
-            max_iter=5000,
-            cv=cvs,  # type: ignore
-            penalty="l1",
-            solver="saga",
-            scoring=error_metric,
-            n_jobs=5,
-        )
+        log_reg = logistic_regression(scoring=error_metric)
 
         log_fit = log_reg.fit(A_matrix, condition_labels.to_numpy())
-
-        # grab fit results as a pandas dataframe, indicate which rank these are from
+        
         initial_results = pd.DataFrame(
-            {"penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
+            {"Penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
         )
-        initial_results["rank"] = rank
+        initial_results["Component"] = rank
 
-        # save best results into results list
         results.append(initial_results)
 
-    # concatenate all the results into one frame for viewing:
     return pd.concat(results, ignore_index=True)
 
 
-def getPf2ROC(
-    A_matrix: np.ndarray, condition_batch_labels: pd.DataFrame
+def roc_lupus_fourtbatch(
+    X, condition_batch_labels: pd.DataFrame,
+    error_metric="roc_auc",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Train a logistic regression model using CV on some cohorts, test on another
     A_matrix: first factor matrix (Pf2 output)
     condition_batch_labels: unique list of observation categories, indexed by sample ID
     """
+    
+    cond_factors = np.array(X.uns["Pf2_A"])
+    
     cohort_four = (condition_batch_labels["Processing_Cohort"] == "4.0").to_numpy(
         dtype=bool
     )
     y = (condition_batch_labels["SLE_status"] == "SLE").to_numpy(dtype=bool)
 
     # train + fit a logisitic regression model using cross validation ON ONLY THE TRAINING (GROUP 4) DATA
-    log_reg = LogisticRegressionCV(
+    log_reg = logistic_regression(scoring=error_metric)
+    log_fit = log_reg.fit(cond_factors[cohort_four], y[cohort_four])
+
+    # Decision function for ROC AUC
+    sle_decisions = log_fit.decision_function(cond_factors[~cohort_four])
+    y_test = y[~cohort_four]
+
+    roc_auc = roc_auc_score(y_test, sle_decisions)
+    print("ROC AUC: ", roc_auc)
+
+    return y_test, sle_decisions
+
+
+def logistic_regression(scoring):
+    """Standardizing LogReg for all functions"""
+    lrcv = LogisticRegressionCV(
         random_state=0,
         max_iter=10000,
         penalty="l1",
         solver="saga",
-        scoring="roc_auc",
+        scoring=scoring,
     )
-    log_fit = log_reg.fit(A_matrix[cohort_four], y[cohort_four])
-
-    # get decision function for ROC AUC
-    sle_decisions = log_fit.decision_function(A_matrix[~cohort_four])
-    y_test = y[~cohort_four]
-
-    # validate the ROC AUC of the model
-    roc_auc = roc_auc_score(y_test, sle_decisions)
-    print("The best ROC AUC is: ", roc_auc)
-
-    return y_test, sle_decisions
+    
+    return lrcv
+    
+    

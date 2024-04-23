@@ -8,7 +8,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.linear_model import LogisticRegressionCV
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import getSamplesObs
+from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
 
 
@@ -20,11 +20,11 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    data = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
-    data.uns["Pf2_A"] = correct_conditions(data)
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    X.uns["Pf2_A"] = correct_conditions(X)
 
-    df_y = getSamplesObs(data.obs)
-    X = np.array(data.uns["Pf2_A"])
+    df_y = samples_only_lupus(X)
+    X = np.array(X.uns["Pf2_A"])
 
     (
         dfWeights,

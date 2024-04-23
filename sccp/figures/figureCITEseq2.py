@@ -7,7 +7,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plot_wp_pacmap, plot_wp_per_celltype
+from .commonFuncs.plotPaCMAP import plot_wp_pacmap, plot_wp_per_celltype
 
 
 def makeFigure():

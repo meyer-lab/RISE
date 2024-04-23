@@ -4,7 +4,7 @@ Lupus: UMAP labeled by cell type
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plot_labels_pacmap
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 import numpy as np
 import seaborn as sns
 import pandas as pd

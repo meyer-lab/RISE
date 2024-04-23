@@ -7,7 +7,7 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plot_gene_pacmap
+from .commonFuncs.plotPaCMAP import plot_gene_pacmap
 
 
 def makeFigure():

@@ -10,7 +10,7 @@ from .commonFuncs.plotFactors import (
     plot_gene_factors,
     plot_factor_weight
 )
-from .commonFuncs.plotUMAP import plot_labels_pacmap
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 import numpy as np
 
 

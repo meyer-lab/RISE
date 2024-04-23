@@ -4,7 +4,7 @@ Thomson: Boxplots of weighted projectoins per component
 
 from anndata import read_h5ad
 from .common import getSetup
-from .commonFuncs.plotUMAP import plot_wp_per_celltype
+from .commonFuncs.plotPaCMAP import plot_wp_per_celltype
 
 
 def makeFigure():

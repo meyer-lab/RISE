@@ -2,39 +2,41 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from matplotlib.axes import Axes
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import RocCurveDisplay, auc
 from sklearn.model_selection import StratifiedGroupKFold
+from ...logisticReg import predaccuracy_ranks_lupus, logistic_regression
 
 
-def getSamplesObs(obs: pd.DataFrame) -> pd.DataFrame:
-    df_samples = obs.drop_duplicates(subset="condition_unique_idxs")
+def samples_only_lupus(X) -> pd.DataFrame:
+    """Obtain samples once only with corresponding observations"""
+    samples = X.obs
+    df_samples = samples.drop_duplicates(subset="condition_unique_idxs")
     df_samples = df_samples.sort_values("condition_unique_idxs")
     return df_samples
 
 
-def plotPf2RankTest(
-    rank_test_results, ax: Axes, error_metric="accuracy", palette="tab10"
+def plot_predaccuracy_ranks_lupus(
+    X, ranks, ax: Axes, error_metric="accuracy", palette="tab10"
 ):
     """Plots results from Pf2 test of various ranks using defined error metric and logistic reg"""
+    pred_accuracy_df = predaccuracy_ranks_lupus(X, samples_only_lupus(X), ranks)
     sns.lineplot(
-        data=rank_test_results,
-        x="rank",
+        data=pred_accuracy_df,
+        x="Component",
         y=error_metric,
-        hue="penalty",
+        hue="Penalty",
         palette=palette,
         ax=ax,
     )
     sns.scatterplot(
-        data=rank_test_results,
-        x="rank",
+        data=pred_accuracy_df,
+        x="Component",
         y=error_metric,
-        hue="penalty",
+        hue="Penalty",
         palette=palette,
         legend=False,
         ax=ax,
     )
-    ax.set_title(error_metric + " by Hyperparameter input")
     ax.set(ylim=[-0.05, 1.05])
 
 
@@ -82,13 +84,12 @@ def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float =
     )
 
 
-def plotROCAcrossGroups(
+def plot_roc_allbatches_lupus(
     A_matrix,
     group_labs,
     ax: Axes,
     pred_group="SLE_status",
     cv_group="Processing_Cohort",
-    penalty=50,
     n_splits=4,
 ):
     condition_labels_all = group_labs
@@ -99,10 +100,8 @@ def plotROCAcrossGroups(
 
     # get labels for the group that you want to do cross validation by
     group_cond_labels = condition_labels_all[cv_group]
-    # set up log reg specs
-    log_reg = LogisticRegression(
-        random_state=0, max_iter=5000, penalty="l1", solver="saga", C=penalty
-    )
+  
+    log_reg = logistic_regression(scoring="roc_auc")
 
     tprs = []
     aucs = []

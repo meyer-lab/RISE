@@ -11,9 +11,9 @@ from .common import (
     subplotLabel,
     getSetup,
 )
-from .commonFuncs.plotUMAP import plot_labels_pacmap, plot_wp_pacmap
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
 from .commonFuncs.plotGeneral import (
-    plotGenePerCellType,
+    plot_avegene_per_celltype,
     plotGenePerCategCond,
     gene_plot_cells,
     plot_cell_gene_corr,
@@ -38,9 +38,9 @@ def makeFigure():
     heatmapGeneFactors([15, 19, 20], X, ax[2], geneAmount=5)
 
     plot_wp_pacmap(X, 15, ax[3], 0.2)  # pDC
-    plotGenePerCellType(["FXYD2"], X, ax[4], cellType="Cell Type2")
-    plotGenePerCellType(["SERPINF1"], X, ax[5], cellType="Cell Type2")
-    plotGenePerCellType(["RARRES2"], X, ax[6], cellType="Cell Type2")
+    plot_avegene_per_celltype(X, ["FXYD2"], ax[4], cellType="Cell Type2")
+    plot_avegene_per_celltype(X, ["SERPINF1"], ax[5], cellType="Cell Type2")
+    plot_avegene_per_celltype(X, ["RARRES2"], ax[6], cellType="Cell Type2")
 
     plot_wp_pacmap(X, 19, ax[7], 0.2)  # Alpro
     X_genes = X[:, ["THBS1", "EREG"]].to_memory()

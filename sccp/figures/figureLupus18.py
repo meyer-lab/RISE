@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plot_labels_pacmap
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 from ..gating import getHiResOldLupus
 
 

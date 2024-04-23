@@ -4,7 +4,7 @@ Lupus: Plot AUC ROC curve for logistic regression for each batch
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import plotROCAcrossGroups, getSamplesObs
+from .commonFuncs.plotLupus import plot_roc_allbatches_lupus, samples_only_lupus
 from ..factorization import correct_conditions
 
 
@@ -19,9 +19,9 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
     X.uns["Pf2_A"] = correct_conditions(X)
 
-    plotROCAcrossGroups(
+    plot_roc_allbatches_lupus(
         X.uns["Pf2_A"],
-        getSamplesObs(X.obs),
+        samples_only_lupus(X),
         ax[0],
         pred_group="SLE_status",
         cv_group="Processing_Cohort",

@@ -30,23 +30,8 @@ def plot_r2x(data, rank_vec, ax: Axes):
             0, np.max(np.append(r2xError[0], r2xError[1])) + 0.01, num=5
         ))
 
-def plotCellTypePerExpCount(dataDF, condition, ax: Axes):
-    """Plots historgram of cell counts per experiment"""
-    sns.histplot(data=dataDF, x="Cell Type", hue="Cell Type", ax=ax)
-    ax.set(title=condition)
 
-
-def plotCellTypePerExpPerc(dataDF, condition, ax: Axes):
-    """Plots historgram of cell types percentages per experiment"""
-    df = dataDF.groupby(["Cell Type"]).size().reset_index(name="Count")
-    perc = df["Count"].values / np.sum(df["Count"].values)
-    df["Count"] = perc
-
-    sns.barplot(data=df, x="Cell Type", y="Count", ax=ax)
-    ax.set(title=condition)
-
-
-def plotGenePerCellType(genes, adata, ax, cellType="Cell Type"):
+def plot_avegene_per_celltype(adata, genes, ax, cellType="Cell Type"):
     """Plots average gene expression across cell types for all conditions"""
     genesV = adata[:, genes]
     dataDF = genesV.to_df()
@@ -57,11 +42,11 @@ def plotGenePerCellType(genes, adata, ax, cellType="Cell Type"):
         columns={"variable": "Gene", "value": "Value"}
     )
     df = data.groupby(["Condition", "Cell Type", "Gene"], observed=False).mean()
-    df = df.rename(columns={"Value": "Average Gene Expression For Drugs"})
+    df = df.rename(columns={"Value": "Average Gene Expression"})
     sns.boxplot(
         data=df,
         x="Gene",
-        y="Average Gene Expression For Drugs",
+        y="Average Gene Expression",
         hue="Cell Type",
         ax=ax,
         fliersize=0,

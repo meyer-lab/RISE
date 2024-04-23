@@ -10,7 +10,7 @@ from .commonFuncs.plotFactors import (
     plot_gene_factors,
     plot_factor_weight
 )
-from .commonFuncs.plotLupus import getSamplesObs
+from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
 
 
@@ -24,7 +24,7 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    lupusStatus = getSamplesObs(X.obs)["SLE_status"]
+    lupusStatus = samples_only_lupus(X)["SLE_status"]
 
     X.uns["Pf2_A"] = correct_conditions(X)
 

@@ -9,7 +9,7 @@ import seaborn as sns
 from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import getSamplesObs
+from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
 
 
@@ -23,7 +23,7 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    status = getSamplesObs(X.obs)
+    status = samples_only_lupus(X)
 
     pair_logistic_regression(correct_conditions(X), status, ax[0])
 

@@ -5,7 +5,7 @@ Thomson: Compares PCA and Pf2 UMAP labeled by genes and drugs
 from anndata import read_h5ad
 from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import plot_gene_pacmap, plot_labels_pacmap
+from .commonFuncs.plotPaCMAP import plot_gene_pacmap, plot_labels_pacmap
 import pacmap
 import numpy as np
 

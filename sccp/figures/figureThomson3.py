@@ -4,7 +4,7 @@ Thomson: Plotting weighted projections per component
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotUMAP import (
+from .commonFuncs.plotPaCMAP import (
     plot_wp_pacmap,
 )
 

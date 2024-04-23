@@ -4,7 +4,7 @@ Lupus: Plot 2 Pf2 factors for conditions
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import getSamplesObs
+from .commonFuncs.plotLupus import samples_only_lupus
 import seaborn as sns
 import numpy as np
 import pandas as pd
@@ -22,7 +22,7 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     predict = "SLE_status"
-    condStatus = getSamplesObs(X.obs)
+    condStatus = samples_only_lupus(X)
     condStatus = condStatus.set_index("Condition")
 
     df = pd.DataFrame(
