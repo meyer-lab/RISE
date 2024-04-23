@@ -24,7 +24,7 @@ def makeFigure():
     X.obs["Cell Type2"] = X.obs["Cell Type2"].cat.set_categories(
         np.sort(X.obs["Cell Type2"].cat.categories.values)
     )
-    popCrossTabPlot(X, "Cell Type2", "Cell Type Old2", ax[2])
+    plot_pop_crosstab(X, "Cell Type2", "Cell Type Old2", ax[2])
 
     plot_labels_pacmap(X, "Cell Type2", ax[0])
     plot_labels_pacmap(X, "Cell Type Old2", ax[1])
@@ -32,7 +32,7 @@ def makeFigure():
     return f
 
 
-def popCrossTabPlot(X, column1, column2, ax):
+def plot_pop_crosstab(X, column1, column2, ax):
     """Makes confsion matrix for old and new cell type labels"""
     conf = pd.crosstab(X.obs[column1], X.obs[column2])
     conf = conf / conf.sum(axis=0)

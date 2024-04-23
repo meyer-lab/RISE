@@ -27,13 +27,13 @@ def makeFigure():
 
 
     for i, gene in enumerate(np.ravel(genes)):
-        plotGenePerStatus(X, gene, ax[i])
+        plot_avegene_per_status(X, gene, ax[i])
 
 
     return f
 
 
-def plotGenePerStatus(X, gene, ax, cellType="Cell Type"):
+def plot_avegene_per_status(X, gene, ax, cellType="Cell Type"):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = X[:, gene]
     dataDF = genesV.to_df()
