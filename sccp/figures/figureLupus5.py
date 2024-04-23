@@ -63,7 +63,7 @@ def makeFigure():
     return f
 
 
-def logreg_weights_scores(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
+def logreg_weights_scores(X, y: pd.Series) -> pd.DataFrame:
     """Fit logistic regression model, return coefficients of that model"""
     cond_factors = np.array(X.uns["Pf2_A"])
     lr = logistic_regression("accuracy").fit(cond_factors, y)
