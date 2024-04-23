@@ -53,7 +53,7 @@ def plot_avegene_per_celltype(adata, genes, ax, cellType="Cell Type"):
     )
 
 
-def plotGenePerCategCond(
+def plot_avegene_per_category(
     conds, categoryCond, gene, adata, ax, mean=True, cellType="Cell Type"
 ):
     """Plots average gene expression across cell types for a category of drugs"""

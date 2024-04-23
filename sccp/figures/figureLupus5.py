@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegressionCV
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
+from ..logisticReg import logistic_regression
 
 
 def makeFigure():
@@ -24,12 +25,11 @@ def makeFigure():
     X.uns["Pf2_A"] = correct_conditions(X)
 
     df_y = samples_only_lupus(X)
-    X = np.array(X.uns["Pf2_A"])
 
-    (
-        dfWeights,
-        score,
-    ) = getCompContribs(X, df_y["SLE_status"])
+    (dfWeights,
+        score
+    ) = logreg_weights_scores(X, df_y["SLE_status"])
+    
     sns.barplot(
         data=dfWeights,
         x="Component",
@@ -45,7 +45,7 @@ def makeFigure():
     )
 
     df_y["ancestry"] = df_y["ancestry"] == "European"
-    dfAnc, _ = getCompContribs(X, df_y["ancestry"])
+    dfAnc, _ = logreg_weights_scores(X, df_y["ancestry"])
 
     dfWeights["Predicting"] = "SLE Status"
     dfAnc["Predicting"] = "Euro-Ancestry"
@@ -63,11 +63,10 @@ def makeFigure():
     return f
 
 
-def getCompContribs(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
+def logreg_weights_scores(X: np.ndarray, y: pd.Series) -> pd.DataFrame:
     """Fit logistic regression model, return coefficients of that model"""
-    lr = LogisticRegressionCV(
-        random_state=0, max_iter=100000, penalty="l1", solver="saga"
-    ).fit(X, y)
+    cond_factors = np.array(X.uns["Pf2_A"])
+    lr = logistic_regression("accuracy").fit(cond_factors, y)
 
     cmp_col = [i for i in range(1, X.shape[1] + 1)]
     df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})

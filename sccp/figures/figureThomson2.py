@@ -14,7 +14,7 @@ from .common import (
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
 from .commonFuncs.plotGeneral import (
     plot_avegene_per_celltype,
-    plotGenePerCategCond,
+    plot_avegene_per_category,
     gene_plot_cells,
     plot_cell_gene_corr,
     heatmapGeneFactors,
@@ -58,8 +58,8 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Meprednisone",
     ]
-    plotGenePerCategCond(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
-    plotGenePerCategCond(glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2")
+    plot_avegene_per_category(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
+    plot_avegene_per_category(glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2")
 
     X_genes = X[:, ["CD163", "MS4A6A"]].to_memory()
     plot_cell_gene_corr(
