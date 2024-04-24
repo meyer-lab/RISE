@@ -12,6 +12,7 @@ import seaborn as sns
 import pandas as pd
 from scipy.stats import linregress, pearsonr, spearmanr
 from ..figures.commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from ..stats import wls_stats_comparison
 
 
 def makeFigure():
@@ -36,6 +37,12 @@ def makeFigure():
         ax=ax[0],
     )
     rotate_xaxis(ax[0])
+    
+    pval_df = wls_stats_comparison(df, 
+                                  column_comparison_name="Cell Type Percentage", 
+                                  category_name="SLE_status", 
+                                  status_name="SLE")
+    print(pval_df)
 
     cmp = 22
     idx = len(np.unique(df["Cell Type"]))

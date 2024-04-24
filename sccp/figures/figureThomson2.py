@@ -5,7 +5,6 @@ Thomson: XX
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import statsmodels.api as sm
 from anndata import read_h5ad
 from .common import (
     subplotLabel,
@@ -20,6 +19,7 @@ from .commonFuncs.plotGeneral import (
     heatmapGeneFactors,
     cell_count_perc_df
 )
+from ..stats import wls_stats_comparison
 
 
 def makeFigure():
@@ -87,17 +87,8 @@ def makeFigure():
 
     cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[16])
     plot_wp_pacmap(X, 9, ax[17], 0.2)  # Gluco
-
-    ax[4].set(ylim=(-0.1, 1.2))
-    ax[5].set(ylim=(-0.1, 1.2))
-    ax[6].set(ylim=(-0.1, 1.2))
-    ax[8].set(xlim=(-0.05, 0.6), ylim=(-0.05, 0.6))
-    ax[10].set(ylim=(-0.05, 0.2))
-    ax[11].set(ylim=(-0.05, 0.2))
-    ax[12].set(xlim=(-0.05, 0.2), ylim=(-0.05, 0.2))
-    ax[14].set(xlim=(0, 0.5), ylim=(0, 70))
-    ax[15].set(xlim=(0, 0.5), ylim=(0, 70))
-    ax[16].set(ylim=(-10, 70))
+    
+    set_xy_limits(ax)
 
     return f
 
@@ -153,32 +144,24 @@ def cell_perc_box(cellDF, unique, uniqueLabel, ax):
     )
     ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
-    pValDF = diff_abund_test(cellDF)
+    
+    pValDF = wls_stats_comparison(cellDF, 
+                                  column_comparison_name="Cell Type Percentage", 
+                                  category_name="Category", 
+                                  status_name="Other")
     print(pValDF)
 
 
-def diff_abund_test(cellDF):
-    """Calculates whether cells are statistically signicantly different"""
-    pvalDF = pd.DataFrame()
-    cellDF["Y"] = 1
-    cellDF.loc[cellDF.Category == "Other", "Y"] = 0
-    for cell in cellDF["Cell Type"].unique():
-        Y = cellDF.loc[cellDF["Cell Type"] == cell]["Cell Type Percentage"].values
-        X = cellDF.loc[cellDF["Cell Type"] == cell].Y.values
-        weights = np.power(cellDF.loc[cellDF["Cell Type"] == cell]["Cell Count"].values, 1)
-        mod_wls = sm.WLS(Y, sm.tools.tools.add_constant(X), weights=weights)
-        res_wls = mod_wls.fit()
-        pvalDF = pd.concat(
-            [
-                pvalDF,
-                pd.DataFrame(
-                    {
-                        "Cell Type": [cell],
-                        "p Value": res_wls.pvalues[1]
-                        * cellDF["Cell Type"].unique().size,
-                    }
-                ),
-            ]
-        )
+def set_xy_limits(ax):
+    ax[4].set(ylim=(-0.1, 1.2))
+    ax[5].set(ylim=(-0.1, 1.2))
+    ax[6].set(ylim=(-0.1, 1.2))
+    ax[8].set(xlim=(-0.05, 0.6), ylim=(-0.05, 0.6))
+    ax[10].set(ylim=(-0.05, 0.2))
+    ax[11].set(ylim=(-0.05, 0.2))
+    ax[12].set(xlim=(-0.05, 0.2), ylim=(-0.05, 0.2))
+    ax[14].set(xlim=(0, 0.5), ylim=(0, 70))
+    ax[15].set(xlim=(0, 0.5), ylim=(0, 70))
+    ax[16].set(ylim=(-10, 70))
 
-    return pvalDF
+    

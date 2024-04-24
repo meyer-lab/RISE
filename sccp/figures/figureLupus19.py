@@ -11,6 +11,7 @@ import seaborn as sns
 import pandas as pd
 import scanpy as sc
 from ..figures.commonFuncs.plotGeneral import rotate_xaxis
+from ..stats import wls_stats_comparison
 
 
 def makeFigure():
@@ -45,10 +46,15 @@ def plot_score(X, ax, cellType="Cell Type"):
     df["Status"] = X.obs["SLE_status"].values
     df["Condition"] = X.obs["Condition"].values
     df["Cell Type"] = X.obs[cellType].values
-    df = df.groupby(["Status", "Cell Type", "Condition"], observed=False).mean().reset_index()
+    dfMean = df.groupby(["Status", "Cell Type", "Condition"], observed=False).mean().reset_index(
+        ).dropna().sort_values(["Cell Type", "Condition"])
+    dfCount = df.groupby(["Cell Type", "Condition"], observed=False).size().reset_index(
+        name="Cell Count").sort_values(["Cell Type", "Condition"])
+
+    dfMean["Cell Count"] = dfCount["Cell Count"].to_numpy()
     
     sns.boxplot(
-        data=df,
+        data=dfMean,
         x="Cell Type",
         y="Score",
         hue="Status",
@@ -57,3 +63,11 @@ def plot_score(X, ax, cellType="Cell Type"):
         showfliers=False)
     
     rotate_xaxis(ax)
+    
+    pval_df = wls_stats_comparison(dfMean, 
+                                  column_comparison_name="Score", 
+                                  category_name="Status", 
+                                  status_name="SLE")
+    
+    print(pval_df)
+    
