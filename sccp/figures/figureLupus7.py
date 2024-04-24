@@ -1,17 +1,17 @@
 """
-Lupus: Plot AUC ROC curve for logistic regression for each batch
+Lupus: Plot AUC ROC curve for logistic regression 
 """
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import plot_roc_allbatches_lupus, samples_only_lupus
+from .commonFuncs.plotLupus import plot_roc_allbatches_lupus, plot_roc_fourthbatch
 from ..factorization import correct_conditions
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((3, 3), (1, 1))
+    ax, f = getSetup((5, 3), (1, 2))
     
     # Add subplot labels
     subplotLabel(ax)
@@ -20,11 +20,12 @@ def makeFigure():
     X.uns["Pf2_A"] = correct_conditions(X)
 
     plot_roc_allbatches_lupus(
-        X.uns["Pf2_A"],
-        samples_only_lupus(X),
+        X,
         ax[0],
         pred_group="SLE_status",
         cv_group="Processing_Cohort",
     )
+    
+    plot_roc_fourthbatch(X, ax[1])
 
     return f
