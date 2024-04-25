@@ -1,5 +1,6 @@
 """
-Lupus
+Lupus: Cell type percentage between status (with stats comparison) and 
+correlation between component and cell count/percentage for each cell type
 """
 
 from anndata import read_h5ad
@@ -11,8 +12,10 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from scipy.stats import linregress, pearsonr, spearmanr
-from ..figures.commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 from ..stats import wls_stats_comparison
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -25,10 +28,10 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
-    celltype = np.unique(df["Cell Type"])
+    celltype_count_perc_df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
+    celltype = np.unique(celltype_count_perc_df["Cell Type"])
     sns.boxplot(
-        data=df,
+        data=celltype_count_perc_df,
         x="Cell Type",
         y="Cell Type Percentage",
         hue="SLE_status",
@@ -38,20 +41,20 @@ def makeFigure():
     )
     rotate_xaxis(ax[0])
     
-    pval_df = wls_stats_comparison(df, 
+    pval_df = wls_stats_comparison(celltype_count_perc_df, 
                                   column_comparison_name="Cell Type Percentage", 
                                   category_name="SLE_status", 
                                   status_name="SLE")
     print(pval_df)
 
     cmp = 22
-    idx = len(np.unique(df["Cell Type"]))
-    plot_correlation_cmp_cell_count_perc(X, cmp, df, ax[1 : idx + 2], cellPerc=False)
+    idx = len(np.unique(celltype_count_perc_df["Cell Type"]))
+    plot_correlation_cmp_cell_count_perc(X, cmp, celltype_count_perc_df, ax[1 : idx + 2], cellPerc=False)
 
     return f
 
 
-def plot_correlation_cmp_cell_count_perc(X, cmp, cellcountDF, ax, cellPerc=True):
+def plot_correlation_cmp_cell_count_perc(X: anndata, cmp: int, cellcountDF: pd.DataFrame, ax: list[Axes], cellPerc=True):
     """Plot component weights by cell type count or percentage for a cell type"""
     yt = np.unique(X.obs["Condition"])
     factorsA = np.array(X.uns["Pf2_A"])

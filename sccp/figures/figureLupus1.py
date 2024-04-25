@@ -1,5 +1,5 @@
 """
-Lupus: Plotting Pf2 factors and weights
+Lupus: Pf2 factors and weights
 """
 
 from anndata import read_h5ad

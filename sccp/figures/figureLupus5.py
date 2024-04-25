@@ -1,5 +1,5 @@
 """
-Lupus: Plot logistic regression weights for SLE and/or ancestry
+Lupus: Logistic regression weights for SLE and/or ancestry
 """
 
 from anndata import read_h5ad
@@ -10,6 +10,8 @@ from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
 from ..logisticReg import logistic_regression
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -23,51 +25,59 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
     X.uns["Pf2_A"] = correct_conditions(X)
 
-    df_y = samples_only_lupus(X)
+    samples_only_df = samples_only_lupus(X)
 
-    (dfWeights,
-        score
-    ) = logreg_weights_scores(X, df_y["SLE_status"])
+    logreg_weights_status, logreg_score_status = logreg_weights_scores(X, samples_only_df, "SLE_status")
+    plot_logreg_weights_status(logreg_weights_status, logreg_score_status, ax[0])
+
+    samples_only_df["ancestry"] = samples_only_df["ancestry"] == "European"
+    logreg_weights_anc, _ = logreg_weights_scores(X, samples_only_df, "ancestry")
+    logreg_weights_status["Predicting"] = "SLE Status"
+    logreg_weights_anc["Predicting"] = "Euro-Ancestry"
+    logreg_weights_comb = pd.concat([logreg_weights_status, logreg_weights_anc])
     
-    sns.barplot(
-        data=dfWeights,
-        x="Component",
-        y="Weight",
-        color="k",
-        errorbar=None,
-        ax=ax[0],
-    )
+    plot_logreg_weights_comb(logreg_weights_comb, ax[1])
 
-    ax[0].set(
-        ylim=[-10, 10],
-        title="Logistic Regression: Prediction Accuracy - " + str(np.round(score, 3)),
-    )
-
-    df_y["ancestry"] = df_y["ancestry"] == "European"
-    dfAnc, _ = logreg_weights_scores(X, df_y["ancestry"])
-
-    dfWeights["Predicting"] = "SLE Status"
-    dfAnc["Predicting"] = "Euro-Ancestry"
-    combinedWeights = pd.concat([dfWeights, dfAnc])
-
-    sns.barplot(
-        data=combinedWeights,
-        x="Component",
-        y="Weight",
-        hue="Predicting",
-        errorbar=None,
-        ax=ax[1],
-    )
-
+   
     return f
 
 
-def logreg_weights_scores(X, y: pd.Series) -> pd.DataFrame:
+def logreg_weights_scores(X: anndata.AnnData ,y: pd.Series, prediction: str) -> pd.DataFrame:
     """Fit logistic regression model, return coefficients of that model"""
+    status = y[prediction]
     cond_factors = np.array(X.uns["Pf2_A"])
-    lr = logistic_regression("accuracy").fit(cond_factors, y)
+    lr = logistic_regression("accuracy").fit(cond_factors, status)
     cmp_col = [i for i in range(1, cond_factors.shape[1] + 1)]
 
     df = pd.DataFrame({"Component": cmp_col, "Weight": lr.coef_.flatten()})
 
-    return df, lr.score(cond_factors, y)
+    return df, lr.score(cond_factors, status)
+
+
+def plot_logreg_weights_status(logreg_weights_df: pd.DataFrame, logreg_predaccuracy: float, ax: Axes):
+    """Plots logistic regression weights for predicting by status"""
+    sns.barplot(
+        data=logreg_weights_df,
+        x="Component",
+        y="Weight",
+        color="k",
+        errorbar=None,
+        ax=ax,
+    )
+    ax.set(
+        ylim=[-10, 10],
+        title="LR Prediction Accuracy: " + str(np.round(logreg_predaccuracy, 3)),
+    )
+     
+     
+def plot_logreg_weights_comb(logreg_weights_combined: pd.DataFrame, ax: Axes):
+    """Plots logistic regression weights for predicting by status and ancestry"""
+    sns.barplot(
+        data=logreg_weights_combined,
+        x="Component",
+        y="Weight",
+        hue="Predicting",
+        errorbar=None,
+        ax=ax,
+    )
+ 

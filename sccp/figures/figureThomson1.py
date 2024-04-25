@@ -12,6 +12,7 @@ from .commonFuncs.plotFactors import (
 )
 import numpy as np
 import pandas as pd
+import anndata
 
 
 def makeFigure():
@@ -24,8 +25,8 @@ def makeFigure():
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
-    drugNames = groupDrugs(X.obs["Condition"])
-
+    drugNames = groupDrugs(X, "Condition")
+                        
     plot_condition_factors(X, ax[0], drugNames, ThomsonNorm=True, groupConditions=True)
     plot_eigenstate_factors(X, ax[1])
     plot_gene_factors(X, ax[2])
@@ -34,8 +35,9 @@ def makeFigure():
     return f
 
 
-def groupDrugs(labels):
+def groupDrugs(X: anndata, label_name: str):
     """Groups drugs of similar category"""
+    labels =  X.obs[label_name]
     names = np.unique(labels)
 
     glucs = [
@@ -46,7 +48,7 @@ def groupDrugs(labels):
         "Meprednisone",
     ]
     for i in glucs:
-        names[names == i] = "Glucocoritcoids"
+        names[names == i] = "Glucocorticoids"
 
     ctrl = ["CTRL1", "CTRL2", "CTRL3", "CTRL4", "CTRL5", "CTRL6"]
     for i in ctrl:
@@ -58,7 +60,7 @@ def groupDrugs(labels):
     names[names == "Cyclosporine"] = "Calcineruin Inhibitor"
 
     condition = [
-        "Glucocoritcoids",
+        "Glucocorticoids",
         "Control",
         "Prostaglandin",
         "mTOR Inhibitor",

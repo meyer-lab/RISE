@@ -1,5 +1,5 @@
 """
-CITEseq: Plotting genes per component
+CITEseq: Highly weighted genes per component 
 """
 
 from anndata import read_h5ad

@@ -1,5 +1,5 @@
 """
-Lupus: UMAP and boxplots of weighted projectoins per component
+Lupus: PaCMAP for all components 
 """
 
 from anndata import read_h5ad

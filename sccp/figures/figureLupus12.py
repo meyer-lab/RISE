@@ -1,5 +1,6 @@
 """
-Lupus: Plot factor weights correlations for donor SLE prediction
+Lupus: Prediction accuracy for all two 
+pair logistic regression combinations
 """
 
 from anndata import read_h5ad
@@ -11,6 +12,11 @@ from sklearn import preprocessing
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
+from .commonFuncs.plotGeneral import rotate_xaxis, rotate_yaxis
+from matplotlib.axes import Axes
+import anndata
+import pandas as pd
+
 
 
 def makeFigure():
@@ -30,11 +36,11 @@ def makeFigure():
     return f
 
 
-def pair_logistic_regression(X, status_DF, ax):
+def pair_logistic_regression(X: anndata.AnnData, status_df: pd.DataFrame, ax: Axes):
     """Plot factor weights for donor SLE prediction"""
     lrmodel = LogisticRegression(penalty=None)
     y = preprocessing.label_binarize(
-        status_DF.SLE_status, classes=["Healthy", "SLE"]
+        status_df.SLE_status, classes=["Healthy", "SLE"]
     ).flatten()
     all_comps = np.arange(X.shape[1])
     acc = np.zeros((X.shape[1], X.shape[1]))
@@ -63,7 +69,6 @@ def pair_logistic_regression(X, status_DF, ax):
     )
 
     ax.set(xlabel="Component", ylabel="Component")
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=0)
-    ax.set_yticks(ax.get_yticks())
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    rotate_xaxis(ax, rotation=0)
+    rotate_yaxis(ax, rotation=0)
+

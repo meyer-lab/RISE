@@ -1,5 +1,5 @@
 """
-Thomson: Compares PCA and Pf2 UMAP labeled by genes and drugs
+Thomson: PCA and Pf2 PaCMAP labeled by genes and drugs
 """
 
 from anndata import read_h5ad

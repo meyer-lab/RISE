@@ -1,8 +1,11 @@
 """
-CITEseq: Plotting Pf2 factors, weights, and UMAP labeled by all conditions
+CITEseq: Pf2 factors, weights, PaCMAP labeled by all conditions/leiden clusters,
+and ratio of condition components based on days 
 """
 
 from anndata import read_h5ad
+from matplotlib.axes import Axes
+import anndata
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotFactors import (
     plot_condition_factors,
@@ -37,7 +40,7 @@ def makeFigure():
     return f
 
 
-def plot_condition_factor_ratio(X, ax, day7=True):
+def plot_condition_factor_ratio(X: anndata.AnnData, ax: Axes, day7=True):
     """Plots ratio of condition factors for day 1 or 7"""
     p = np.unique(X.obs["Condition"])
     p = [p[2], p[1], p[0], p[3], p[4]]
@@ -56,6 +59,5 @@ def plot_condition_factor_ratio(X, ax, day7=True):
         yticks = [2, 1.5, 1, 0.5, 0]
 
     ax.plot(xticks, ratio)
-    ax.set(xticks=np.arange(1, np.shape(X)[1] + 1, 2), yticks=yticks)
-    ax.set_xlabel("Components")
-    ax.set_ylabel(f"IC/SC Ratio Day {day}")
+    ax.set(xticks=np.arange(1, np.shape(X)[1] + 1, 2), yticks=yticks, 
+           xlabel="Component", ylabel=(f"IC/SC Ratio Day {day}"))

@@ -1,5 +1,5 @@
 """
-Lupus: UMAP and boxplots of weighted projectoins per component
+Lupus: R2X for PCA/Pf2 and prediction accuracy for different components
 """
 
 import numpy as np

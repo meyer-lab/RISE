@@ -1,5 +1,5 @@
 """
-Lupus
+Lupus: Average cytotoxic score for each cell type 
 """
 from anndata import read_h5ad
 from .common import (
@@ -10,8 +10,10 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import scanpy as sc
-from ..figures.commonFuncs.plotGeneral import rotate_xaxis
+from .commonFuncs.plotGeneral import rotate_xaxis
 from ..stats import wls_stats_comparison
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -32,7 +34,7 @@ def makeFigure():
     return f
 
 
-def cytotoxic_score(X):
+def cytotoxic_score(X: anndata.AnnData):
     """Scanpy average gene score for all cells"""
     cytotoxic_genes = ["PRF1", "GZMH", "GZMB"]
     X = sc.tl.score_genes(adata=X, gene_list=cytotoxic_genes, copy=True, use_raw=False)
@@ -40,21 +42,21 @@ def cytotoxic_score(X):
     return X
 
 
-def plot_score(X, ax, cellType="Cell Type"):
+def plot_score(X: anndata, ax: Axes, cellType="Cell Type"):
     """Plots average score  across cell types and patient status"""
     df = pd.DataFrame({"Score": X.obs["score"].values})
     df["Status"] = X.obs["SLE_status"].values
     df["Condition"] = X.obs["Condition"].values
     df["Cell Type"] = X.obs[cellType].values
-    dfMean = df.groupby(["Status", "Cell Type", "Condition"], observed=False).mean().reset_index(
+    df_mean_score = df.groupby(["Status", "Cell Type", "Condition"], observed=False).mean().reset_index(
         ).dropna().sort_values(["Cell Type", "Condition"])
-    dfCount = df.groupby(["Cell Type", "Condition"], observed=False).size().reset_index(
+    df_count = df.groupby(["Cell Type", "Condition"], observed=False).size().reset_index(
         name="Cell Count").sort_values(["Cell Type", "Condition"])
 
-    dfMean["Cell Count"] = dfCount["Cell Count"].to_numpy()
+    df_mean_score["Cell Count"] = df_count["Cell Count"].to_numpy()
     
     sns.boxplot(
-        data=dfMean,
+        data=df_mean_score,
         x="Cell Type",
         y="Score",
         hue="Status",
@@ -64,7 +66,7 @@ def plot_score(X, ax, cellType="Cell Type"):
     
     rotate_xaxis(ax)
     
-    pval_df = wls_stats_comparison(dfMean, 
+    pval_df = wls_stats_comparison(df_mean_score, 
                                   column_comparison_name="Score", 
                                   category_name="Status", 
                                   status_name="SLE")

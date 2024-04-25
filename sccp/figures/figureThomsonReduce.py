@@ -1,3 +1,5 @@
+"""FMS removing percentages of dataset and FMS across different components"""
+
 import numpy as np
 import scanpy as sc
 import anndata
@@ -26,8 +28,6 @@ def makeFigure():
 
 
     return f
-
-
 
 
 def calculateFMS(A: anndata.AnnData, B: anndata.AnnData) -> float:

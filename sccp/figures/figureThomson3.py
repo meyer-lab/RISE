@@ -1,5 +1,5 @@
 """
-Thomson: Plotting weighted projections per component
+Thomson: PaCMAP of weighted projections 
 """
 
 from anndata import read_h5ad

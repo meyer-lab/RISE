@@ -1,5 +1,5 @@
 """
-Thomson: UMAP labeled by genes
+Thomson: PaCMAP labeled by genes
 """
 
 from anndata import read_h5ad

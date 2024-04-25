@@ -1,11 +1,13 @@
 """
-Lupus: Plots of amount of cells and cell type distribution across all experiments
+Lupus: Cell count/percentage for each cell type and status
 """
 
 from anndata import read_h5ad
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -35,7 +37,7 @@ def makeFigure():
 
     return f
 
-def plot_cell_count_status(X, ax):
+def plot_cell_count_status(X: anndata.AnnData, ax: Axes):
     """Plots overall cell count for SLE and healthy patients"""
     df = X.obs[["SLE_status", "Condition"]].reset_index(drop=True)
     dfCond = df.groupby(["Condition","SLE_status"], observed=True).size().reset_index(name="Cell Count")

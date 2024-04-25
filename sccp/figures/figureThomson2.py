@@ -1,5 +1,7 @@
 """
-Thomson: XX
+Thomson: PaCMAP for components, gene factors, average
+gene expression per cell type/category, correlation between 
+cell percentages and componnets, and correlation of genes
 """
 
 import numpy as np

@@ -1,5 +1,5 @@
 """
-Lupus: Plots all top and bottom genes Pf2 weights
+Lupus: Highly weighted genes per component 
 """
 
 from anndata import read_h5ad

@@ -1,11 +1,14 @@
 """
-Thomson dataset: Cell counts and cell type percentages per condition.
+Thomson: Cell counts and cell type percentages per condition
 """
 
 from anndata import read_h5ad
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from matplotlib.axes import Axes
+import anndata
+
 
 
 def makeFigure():
@@ -35,7 +38,7 @@ def makeFigure():
     return f
 
 
-def plot_cell_count(X, ax):
+def plot_cell_count(X: anndata.AnnData, ax: Axes):
     """Plots overall cell count for Chen et al."""
     df = X.obs[["Condition"]].reset_index(drop=True)
     dfCond = df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")

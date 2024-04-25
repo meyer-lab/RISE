@@ -1,5 +1,5 @@
 """
-Lupus: Plot AUC ROC curve for logistic regression 
+Lupus: AUC ROC curve for predicing only fourth batch and each batch
 """
 
 from anndata import read_h5ad

@@ -1,5 +1,5 @@
 """
-Lupus: UMAP labeled by cell type
+Lupus: Overlap between Perez et al. cell types annotations and Meyer Lab
 """
 
 from anndata import read_h5ad
@@ -9,6 +9,8 @@ import numpy as np
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 from ..gating import getHiResOldLupus
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -32,7 +34,7 @@ def makeFigure():
     return f
 
 
-def plot_pop_crosstab(X, column1, column2, ax):
+def plot_pop_crosstab(X: anndata.AnnData, column1: str, column2: str, ax: Axes):
     """Makes confsion matrix for old and new cell type labels"""
     conf = pd.crosstab(X.obs[column1], X.obs[column2])
     conf = conf / conf.sum(axis=0)

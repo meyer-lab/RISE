@@ -1,5 +1,5 @@
 """
-CITEseq: Plotting weighted projections per component
+CITEseq: Weighted projections per component in PaCMAP and boxplot
 """
 
 from anndata import read_h5ad

@@ -1,5 +1,5 @@
 """
-Lupus: UMAP labeled by cell type
+Lupus: PaCMAP labeled by cell type and gene factor weights for 2 components
 """
 
 from anndata import read_h5ad
@@ -8,6 +8,9 @@ from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 import numpy as np
 import seaborn as sns
 import pandas as pd
+from matplotlib.axes import Axes
+import anndata
+
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
@@ -28,7 +31,7 @@ def makeFigure():
     return f
 
 
-def plot_pair_gene_factors(X, cmp1, cmp2, ax):
+def plot_pair_gene_factors(X: anndata.AnnData, cmp1: int, cmp2: int, ax: Axes):
     """Plots two gene components weights"""
     cmpWeights = np.concatenate(([X.varm["Pf2_C"][:, cmp1-1]], [X.varm["Pf2_C"][:, cmp2-1]]))
     df = pd.DataFrame(data=cmpWeights.transpose(), columns=[f"Cmp. {cmp1}", f"Cmp. {cmp2}"])

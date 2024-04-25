@@ -1,5 +1,5 @@
 """
-Lupus: Plot 2 Pf2 factors for conditions
+Lupus: Two components weighted by condition factors 
 """
 
 from anndata import read_h5ad
@@ -9,6 +9,8 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 from ..factorization import correct_conditions
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -21,7 +23,6 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
     
-    
     plot_pair_cond_factors(X, cmp1=27, cmp2=28, ax=ax[0])
     plot_pair_cond_factors(X, cmp1=14, cmp2=4, ax=ax[1])
 
@@ -30,7 +31,7 @@ def makeFigure():
 
 
 
-def plot_pair_cond_factors(X, cmp1, cmp2, ax):
+def plot_pair_cond_factors(X: anndata.AnnData, cmp1: int, cmp2: int, ax: Axes):
     """Plots two condition components weights"""
     cond_factors = correct_conditions(X)
     condStatus = samples_only_lupus(X)

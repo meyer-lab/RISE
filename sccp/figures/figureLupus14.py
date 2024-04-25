@@ -1,5 +1,5 @@
 """
-Thomson: Plotting normalized genes and separating data by status (and celltype)
+Lupus: Average gene expression stratified by cell type and status
 """
 
 from anndata import read_h5ad
@@ -11,6 +11,8 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from .commonFuncs.plotFactors import bot_top_genes
+from matplotlib.axes import Axes
+import anndata
 
 
 def makeFigure():
@@ -33,7 +35,7 @@ def makeFigure():
     return f
 
 
-def plot_avegene_per_status(X, gene, ax, cellType="Cell Type"):
+def plot_avegene_per_status(X: anndata.AnnData, gene: str, ax: Axes, cellType="Cell Type"):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = X[:, gene]
     dataDF = genesV.to_df()

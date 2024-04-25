@@ -1,5 +1,5 @@
 """
-CITEseq: Plotting genes per component
+CITEseq: Average gene expression stratified by Leiden cluster and condition
 """
 
 from anndata import read_h5ad
