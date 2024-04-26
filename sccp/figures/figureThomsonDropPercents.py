@@ -1,7 +1,7 @@
 """
-Plots the differences in the identifying component weight with 
-different percentages of a cell type removed from the data. 
-The determining component is the component that has the highest 
+Plots the differences in the identifying component weight with
+different percentages of a cell type removed from the data.
+The determining component is the component that has the highest
 correlation with the number of cells in the cell type selected.
 """
 

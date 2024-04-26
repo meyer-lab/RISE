@@ -27,16 +27,16 @@ def predaccuracy_ranks_lupus(
     pfx2_data = pfx2_data.to_memory()
     for rank in ranks_to_test:
         print(f"\n\n Component:{rank}")
-        
+
         pf2_output = pf2(pfx2_data, rank=int(rank), doEmbedding=False)
-         
+
         A_matrix = pf2_output.uns["Pf2_A"]
         condition_labels = condition_labels_all["SLE_status"]
 
         log_reg = logistic_regression(scoring=error_metric)
 
         log_fit = log_reg.fit(A_matrix, condition_labels.to_numpy())
-        
+
         initial_results = pd.DataFrame(
             {"Penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
         )
@@ -48,16 +48,17 @@ def predaccuracy_ranks_lupus(
 
 
 def roc_lupus_fourtbatch(
-    X, condition_batch_labels: pd.DataFrame,
+    X,
+    condition_batch_labels: pd.DataFrame,
     error_metric="roc_auc",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Train a logistic regression model using CV on some cohorts, test on another
     A_matrix: first factor matrix (Pf2 output)
     condition_batch_labels: unique list of observation categories, indexed by sample ID
     """
-    
+
     cond_factors = np.array(X.uns["Pf2_A"])
-    
+
     cohort_four = (condition_batch_labels["Processing_Cohort"] == "4.0").to_numpy(
         dtype=bool
     )
@@ -86,7 +87,5 @@ def logistic_regression(scoring):
         solver="saga",
         scoring=scoring,
     )
-    
+
     return lrcv
-    
-    

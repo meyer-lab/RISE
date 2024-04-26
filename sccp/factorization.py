@@ -71,6 +71,7 @@ def store_pf2(
 
     return X
 
+
 def pf2(
     X: anndata.AnnData,
     rank: int,
@@ -100,11 +101,11 @@ def pf2_pca_r2x(X: anndata.AnnData, ranks):
     r2x_pf2 = np.zeros(len(ranks))
 
     for i in tqdm(range(len(r2x_pf2)), total=len(r2x_pf2)):
-        _, R2X = parafac2_nd(X, rank=i+1)
+        _, R2X = parafac2_nd(X, rank=i + 1)
         r2x_pf2[i] = R2X
 
     pca = PCA(n_components=ranks[-1], svd_solver="arpack")
     pca.fit(XX)
     r2x_pca = np.cumsum(pca.explained_variance_ratio_)
 
-    return r2x_pf2, r2x_pca[np.array(ranks)-1]
+    return r2x_pf2, r2x_pca[np.array(ranks) - 1]

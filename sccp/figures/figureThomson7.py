@@ -10,7 +10,6 @@ from matplotlib.axes import Axes
 import anndata
 
 
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
@@ -20,9 +19,9 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
-    
+
     plot_cell_count(X, ax[0])
-    
+
     df = cell_count_perc_df(X, celltype="Cell Type")
     for i, (name, group) in enumerate(df.groupby("Cell Type", observed=True)):
         sns.barplot(
@@ -41,7 +40,9 @@ def makeFigure():
 def plot_cell_count(X: anndata.AnnData, ax: Axes):
     """Plots overall cell count for Chen et al."""
     df = X.obs[["Condition"]].reset_index(drop=True)
-    dfCond = df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
+    dfCond = (
+        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
+    )
 
     sns.barplot(data=dfCond, x="Condition", y="Cell Count", color="k", ax=ax)
     rotate_xaxis(ax)

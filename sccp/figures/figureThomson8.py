@@ -1,5 +1,5 @@
 """
-Thomson:  Highly weighted genes per component 
+Thomson:  Highly weighted genes per component
 """
 
 from anndata import read_h5ad
@@ -17,6 +17,5 @@ def makeFigure():
     for i in range(X.uns["Pf2_A"].shape[1]):
         plot_gene_factors_partial(i + 1, X, ax[2 * i], geneAmount=20, top=True)
         plot_gene_factors_partial(i + 1, X, ax[2 * i + 1], geneAmount=20, top=False)
-
 
     return f

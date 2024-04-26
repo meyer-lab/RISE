@@ -17,9 +17,9 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/CITEseq_fitted_annotated.h5ad", backed="r")
-        
+
     df = cell_count_perc_df(X, celltype="leiden")
-    
+
     sns.barplot(
         data=df,
         x="Cell Type",
@@ -28,6 +28,5 @@ def makeFigure():
         ax=ax[0],
         errorbar=None,
     )
-
 
     return f

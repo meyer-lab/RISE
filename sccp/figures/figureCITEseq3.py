@@ -1,5 +1,5 @@
 """
-CITEseq: PaCMAP labeled by gene/protein expression 
+CITEseq: PaCMAP labeled by gene/protein expression
 """
 
 from anndata import read_h5ad

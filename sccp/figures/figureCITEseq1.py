@@ -1,6 +1,6 @@
 """
 CITEseq: Pf2 factors, weights, PaCMAP labeled by all conditions/leiden clusters,
-and ratio of condition components based on days 
+and ratio of condition components based on days
 """
 
 from anndata import read_h5ad
@@ -11,7 +11,7 @@ from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
-    plot_factor_weight
+    plot_factor_weight,
 )
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 import numpy as np
@@ -59,5 +59,9 @@ def plot_condition_factor_ratio(X: anndata.AnnData, ax: Axes, day7=True):
         yticks = [2, 1.5, 1, 0.5, 0]
 
     ax.plot(xticks, ratio)
-    ax.set(xticks=np.arange(1, np.shape(X)[1] + 1, 2), yticks=yticks, 
-           xlabel="Component", ylabel=(f"IC/SC Ratio Day {day}"))
+    ax.set(
+        xticks=np.arange(1, np.shape(X)[1] + 1, 2),
+        yticks=yticks,
+        xlabel="Component",
+        ylabel=(f"IC/SC Ratio Day {day}"),
+    )

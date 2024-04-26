@@ -28,7 +28,8 @@ def plot_r2x(data, rank_vec, ax: Axes):
         xticks=np.linspace(0, rank_vec[-1], num=6, dtype=int),
         yticks=np.linspace(
             0, np.max(np.append(r2xError[0], r2xError[1])) + 0.01, num=5
-        ))
+        ),
+    )
 
 
 def plot_avegene_per_celltype(adata, genes, ax, cellType="Cell Type"):
@@ -114,7 +115,6 @@ def heatmapGeneFactors(
     sns.heatmap(
         data=heatmapDF.transpose()[genes], ax=ax, cmap=cmap, vmin=-vmax, vmax=vmax
     )
-
 
 
 def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
@@ -302,26 +302,24 @@ def plot_cell_gene_corr(
         ax=ax,
         alpha=alpha,
     )
-    
+
+
 def cell_count_perc_df(X, celltype="Cell Type", status=False):
     """Returns DF with cell counts and percentages for experiment"""
     if status is False:
         grouping = [celltype, "Condition"]
     else:
         grouping = [celltype, "Condition", "SLE_status"]
-        
+
     df = X.obs[grouping].reset_index(drop=True)
 
     dfCond = (
         df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
     )
     dfCellType = (
-        df.groupby(grouping, observed=True)
-        .size()
-        .reset_index(name="Cell Count")
+        df.groupby(grouping, observed=True).size().reset_index(name="Cell Count")
     )
     dfCellType["Cell Count"] = dfCellType["Cell Count"].astype("float")
-
 
     dfCellType["Cell Type Percentage"] = 0.0
     for cond in np.unique(df["Condition"]):
@@ -335,14 +333,14 @@ def cell_count_perc_df(X, celltype="Cell Type", status=False):
 
     return dfCellType
 
-  
-def rotate_xaxis(ax, rotation=90): 
-    """Rotates text by 90 degrees for x-axis"""  
+
+def rotate_xaxis(ax, rotation=90):
+    """Rotates text by 90 degrees for x-axis"""
     ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=rotation)
-    
-  
-def rotate_yaxis(ax, rotation=90): 
-    """Rotates text by 90 degrees for y-axis"""  
+
+
+def rotate_yaxis(ax, rotation=90):
+    """Rotates text by 90 degrees for y-axis"""
     ax.set_yticks(ax.get_yticks())
     ax.set_yticklabels(labels=ax.get_yticklabels(), rotation=rotation)

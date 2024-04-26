@@ -1,5 +1,5 @@
 """
-Thomson: Weighted projections per cell type 
+Thomson: Weighted projections per cell type
 """
 
 from anndata import read_h5ad
@@ -16,6 +16,5 @@ def makeFigure():
 
     for i in range(X.uns["Pf2_A"].shape[1]):
         plot_wp_per_celltype(X, i + 1, ax[i], outliers=False, cellType="Cell Type2")
-
 
     return f

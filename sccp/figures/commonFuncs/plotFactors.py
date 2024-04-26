@@ -121,7 +121,7 @@ def plot_gene_factors(data: AnnData, ax: Axes, trim=True):
     X = X[ind]
     X = X / np.max(np.abs(X))
     yt = [yt[ii] for ii in ind]
-    xticks = np.arange(1, rank+1)
+    xticks = np.arange(1, rank + 1)
 
     sns.heatmap(
         data=X,
@@ -135,7 +135,7 @@ def plot_gene_factors(data: AnnData, ax: Axes, trim=True):
     )
     ax.set(xlabel="Component")
 
-        
+
 def plot_gene_factors_partial(
     cmp: int, dataIn: AnnData, ax: Axes, geneAmount: int = 5, top=True
 ):
@@ -167,7 +167,6 @@ def plot_factor_weight(X: AnnData, ax: Axes):
     ax.tick_params(axis="x", rotation=90)
 
 
-
 def reorder_table(projs: np.ndarray) -> np.ndarray:
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2
@@ -188,4 +187,3 @@ def bot_top_genes(X, cmp, geneAmount=5):
     all_genes = np.concatenate([bot, top])
 
     return all_genes
-

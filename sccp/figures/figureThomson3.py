@@ -1,5 +1,5 @@
 """
-Thomson: PaCMAP of weighted projections 
+Thomson: PaCMAP of weighted projections
 """
 
 from anndata import read_h5ad
@@ -20,6 +20,6 @@ def makeFigure():
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     for i in range(1, 21):
-        plot_wp_pacmap(X, i, ax[i-1], cbarMax=.3)
+        plot_wp_pacmap(X, i, ax[i - 1], cbarMax=0.3)
 
     return f

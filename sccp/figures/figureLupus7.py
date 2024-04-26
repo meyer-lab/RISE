@@ -12,7 +12,7 @@ def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
     ax, f = getSetup((5, 3), (1, 2))
-    
+
     # Add subplot labels
     subplotLabel(ax)
 
@@ -25,7 +25,7 @@ def makeFigure():
         pred_group="SLE_status",
         cv_group="Processing_Cohort",
     )
-    
+
     plot_roc_fourthbatch(X, ax[1])
 
     return f

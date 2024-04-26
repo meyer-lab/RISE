@@ -1,5 +1,5 @@
 """
-Lupus: Prediction accuracy for all two 
+Lupus: Prediction accuracy for all two
 pair logistic regression combinations
 """
 
@@ -18,11 +18,10 @@ import anndata
 import pandas as pd
 
 
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((6, 6), (1, 1)) 
+    ax, f = getSetup((6, 6), (1, 1))
 
     # Add subplot labels
     subplotLabel(ax)
@@ -71,4 +70,3 @@ def pair_logistic_regression(X: anndata.AnnData, status_df: pd.DataFrame, ax: Ax
     ax.set(xlabel="Component", ylabel="Component")
     rotate_xaxis(ax, rotation=0)
     rotate_yaxis(ax, rotation=0)
-

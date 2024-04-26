@@ -23,26 +23,43 @@ def makeFigure():
     celltype = ["Cell Type", "Cell Type2", "leiden"]
     label = ["Cell Type Percentage", "Cell Count"]
     plot = 0
-    
+
     for i in range(len(celltype)):
         for j in range(len(label)):
             df = cell_count_perc_df(X, celltype=celltype[i], status=True)
-            sns.boxplot(data=df, x="Cell Type", y=label[j], 
-                        hue="SLE_status", showfliers=False, ax=ax[plot])
+            sns.boxplot(
+                data=df,
+                x="Cell Type",
+                y=label[j],
+                hue="SLE_status",
+                showfliers=False,
+                ax=ax[plot],
+            )
             rotate_xaxis(ax[plot])
-            plot+=1
+            plot += 1
 
     plot_cell_count_status(X, ax[6])
-    f.delaxes(ax[7])   
+    f.delaxes(ax[7])
 
     return f
+
 
 def plot_cell_count_status(X: anndata.AnnData, ax: Axes):
     """Plots overall cell count for SLE and healthy patients"""
     df = X.obs[["SLE_status", "Condition"]].reset_index(drop=True)
-    dfCond = df.groupby(["Condition","SLE_status"], observed=True).size().reset_index(name="Cell Count")
+    dfCond = (
+        df.groupby(["Condition", "SLE_status"], observed=True)
+        .size()
+        .reset_index(name="Cell Count")
+    )
 
-    sns.boxplot(data=dfCond, x="SLE_status", y="Cell Count", hue="SLE_status", showfliers=False, ax=ax)
+    sns.boxplot(
+        data=dfCond,
+        x="SLE_status",
+        y="Cell Count",
+        hue="SLE_status",
+        showfliers=False,
+        ax=ax,
+    )
 
-
-    return 
+    return

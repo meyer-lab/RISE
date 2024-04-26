@@ -17,7 +17,7 @@ def makeFigure():
     ax, f = getSetup((6, 3), (1, 2))
 
     subplotLabel(ax)
-    
+
     X = import_thomson()
 
     percentList = np.arange(0.0, 8.0, 5.0)
@@ -25,7 +25,6 @@ def makeFigure():
 
     ranks = list(range(1, 3))
     plot_fms_diff_ranks(X, ax[1], ranksList=ranks, runs=3)
-
 
     return f
 
@@ -91,7 +90,11 @@ def plot_fms_percent_drop(
     for sublist in fmsLists:
         fmsList_df += sublist
     df = pd.DataFrame(
-        {"Run": runsList_df, "Percentage of Data Dropped": percentList_df, "FMS": fmsList_df}
+        {
+            "Run": runsList_df,
+            "Percentage of Data Dropped": percentList_df,
+            "FMS": fmsList_df,
+        }
     )
 
     # percent dropped vs fms graph
@@ -136,9 +139,9 @@ def plot_fms_diff_ranks(
     fmsList_df = []
     for sublist in fmsLists:
         fmsList_df += sublist
-    df = pd.DataFrame({"Run": runsList_df, "Component": ranksList_df, "FMS": fmsList_df})
+    df = pd.DataFrame(
+        {"Run": runsList_df, "Component": ranksList_df, "FMS": fmsList_df}
+    )
 
     sns.lineplot(data=df, x="Component", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
-
-

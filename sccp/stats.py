@@ -20,8 +20,7 @@ def wls_stats_comparison(df, column_comparison_name, category_name, status_name)
                 pd.DataFrame(
                     {
                         "Cell Type": [cell],
-                        "p Value": res_wls.pvalues[1]
-                        * df["Cell Type"].unique().size,
+                        "p Value": res_wls.pvalues[1] * df["Cell Type"].unique().size,
                     }
                 ),
             ]

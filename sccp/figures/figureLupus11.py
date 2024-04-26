@@ -1,5 +1,5 @@
 """
-Lupus: Cell type percentage between status (with stats comparison) and 
+Lupus: Cell type percentage between status (with stats comparison) and
 correlation between component and cell count/percentage for each cell type
 """
 
@@ -40,21 +40,27 @@ def makeFigure():
         ax=ax[0],
     )
     rotate_xaxis(ax[0])
-    
-    pval_df = wls_stats_comparison(celltype_count_perc_df, 
-                                  column_comparison_name="Cell Type Percentage", 
-                                  category_name="SLE_status", 
-                                  status_name="SLE")
+
+    pval_df = wls_stats_comparison(
+        celltype_count_perc_df,
+        column_comparison_name="Cell Type Percentage",
+        category_name="SLE_status",
+        status_name="SLE",
+    )
     print(pval_df)
 
     cmp = 22
     idx = len(np.unique(celltype_count_perc_df["Cell Type"]))
-    plot_correlation_cmp_cell_count_perc(X, cmp, celltype_count_perc_df, ax[1 : idx + 2], cellPerc=False)
+    plot_correlation_cmp_cell_count_perc(
+        X, cmp, celltype_count_perc_df, ax[1 : idx + 2], cellPerc=False
+    )
 
     return f
 
 
-def plot_correlation_cmp_cell_count_perc(X: anndata, cmp: int, cellcountDF: pd.DataFrame, ax: list[Axes], cellPerc=True):
+def plot_correlation_cmp_cell_count_perc(
+    X: anndata, cmp: int, cellcountDF: pd.DataFrame, ax: list[Axes], cellPerc=True
+):
     """Plot component weights by cell type count or percentage for a cell type"""
     yt = np.unique(X.obs["Condition"])
     factorsA = np.array(X.uns["Pf2_A"])

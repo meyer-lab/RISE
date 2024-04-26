@@ -27,7 +27,9 @@ def makeFigure():
 
     samples_only_df = samples_only_lupus(X)
 
-    logreg_weights_status, logreg_score_status = logreg_weights_scores(X, samples_only_df, "SLE_status")
+    logreg_weights_status, logreg_score_status = logreg_weights_scores(
+        X, samples_only_df, "SLE_status"
+    )
     plot_logreg_weights_status(logreg_weights_status, logreg_score_status, ax[0])
 
     samples_only_df["ancestry"] = samples_only_df["ancestry"] == "European"
@@ -35,14 +37,15 @@ def makeFigure():
     logreg_weights_status["Predicting"] = "SLE Status"
     logreg_weights_anc["Predicting"] = "Euro-Ancestry"
     logreg_weights_comb = pd.concat([logreg_weights_status, logreg_weights_anc])
-    
+
     plot_logreg_weights_comb(logreg_weights_comb, ax[1])
 
-   
     return f
 
 
-def logreg_weights_scores(X: anndata.AnnData ,y: pd.Series, prediction: str) -> pd.DataFrame:
+def logreg_weights_scores(
+    X: anndata.AnnData, y: pd.Series, prediction: str
+) -> pd.DataFrame:
     """Fit logistic regression model, return coefficients of that model"""
     status = y[prediction]
     cond_factors = np.array(X.uns["Pf2_A"])
@@ -54,7 +57,9 @@ def logreg_weights_scores(X: anndata.AnnData ,y: pd.Series, prediction: str) -> 
     return df, lr.score(cond_factors, status)
 
 
-def plot_logreg_weights_status(logreg_weights_df: pd.DataFrame, logreg_predaccuracy: float, ax: Axes):
+def plot_logreg_weights_status(
+    logreg_weights_df: pd.DataFrame, logreg_predaccuracy: float, ax: Axes
+):
     """Plots logistic regression weights for predicting by status"""
     sns.barplot(
         data=logreg_weights_df,
@@ -68,8 +73,8 @@ def plot_logreg_weights_status(logreg_weights_df: pd.DataFrame, logreg_predaccur
         ylim=[-10, 10],
         title="LR Prediction Accuracy: " + str(np.round(logreg_predaccuracy, 3)),
     )
-     
-     
+
+
 def plot_logreg_weights_comb(logreg_weights_combined: pd.DataFrame, ax: Axes):
     """Plots logistic regression weights for predicting by status and ancestry"""
     sns.barplot(
@@ -80,4 +85,3 @@ def plot_logreg_weights_comb(logreg_weights_combined: pd.DataFrame, ax: Axes):
         errorbar=None,
         ax=ax,
     )
- 

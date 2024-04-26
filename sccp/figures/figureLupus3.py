@@ -1,5 +1,5 @@
 """
-Lupus: PaCMAP for all components 
+Lupus: PaCMAP for all components
 """
 
 from anndata import read_h5ad
@@ -18,7 +18,6 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
     for i in range(1, 31):
-        plot_wp_pacmap(X, i, ax[i-1], cbarMax=.3)
-        
-        
+        plot_wp_pacmap(X, i, ax[i - 1], cbarMax=0.3)
+
     return f

@@ -27,8 +27,5 @@ def makeFigure():
     for i, gene in enumerate(genes):
         plot_avegene_per_celltype(X, gene, ax[i], cellType="leiden")
         ax[i].get_legend().remove()
-        
 
     return f
-
-

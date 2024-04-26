@@ -24,18 +24,18 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
-    
-    genes = bot_top_genes(X, cmp=14, geneAmount=2)
 
+    genes = bot_top_genes(X, cmp=14, geneAmount=2)
 
     for i, gene in enumerate(np.ravel(genes)):
         plot_avegene_per_status(X, gene, ax[i])
 
-
     return f
 
 
-def plot_avegene_per_status(X: anndata.AnnData, gene: str, ax: Axes, cellType="Cell Type"):
+def plot_avegene_per_status(
+    X: anndata.AnnData, gene: str, ax: Axes, cellType="Cell Type"
+):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = X[:, gene]
     dataDF = genesV.to_df()

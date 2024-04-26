@@ -4,7 +4,12 @@ import numpy as np
 from matplotlib.axes import Axes
 from sklearn.metrics import RocCurveDisplay, auc
 from sklearn.model_selection import StratifiedGroupKFold
-from ...logisticReg import predaccuracy_ranks_lupus, logistic_regression, roc_lupus_fourtbatch
+from ...logisticReg import (
+    predaccuracy_ranks_lupus,
+    logistic_regression,
+    roc_lupus_fourtbatch,
+)
+
 
 def samples_only_lupus(X) -> pd.DataFrame:
     """Obtain samples once only with corresponding observations"""
@@ -90,7 +95,6 @@ def plot_roc_allbatches_lupus(
     cv_group="Processing_Cohort",
     n_splits=4,
 ):
-    
     cond_factors = X.uns["Pf2_A"]
     condition_labels_all = samples_only_lupus(X)
 
@@ -100,7 +104,7 @@ def plot_roc_allbatches_lupus(
 
     # get labels for the group that you want to do cross validation by
     group_cond_labels = condition_labels_all[cv_group]
-  
+
     log_reg = logistic_regression(scoring="roc_auc")
 
     tprs = []
@@ -108,7 +112,9 @@ def plot_roc_allbatches_lupus(
     mean_fpr = np.linspace(0, 1, 100)
 
     for fold, (train, test) in enumerate(
-        sgkf.split(cond_factors, condition_labels.to_numpy(), group_cond_labels.to_numpy())
+        sgkf.split(
+            cond_factors, condition_labels.to_numpy(), group_cond_labels.to_numpy()
+        )
     ):
         # adding escape option for the second fold (@ index 1) because it has no SLE cases.
         # otherwise we just get NA for our mean and NA for that fold. which isn't super helpful
@@ -155,12 +161,10 @@ def plot_roc_allbatches_lupus(
     ax.legend(loc="lower right")
 
 
-
 def plot_roc_fourthbatch(X, ax):
-    """Plots ROC curve for prediction """
+    """Plots ROC curve for prediction"""
     y_test, sle_decisions = roc_lupus_fourtbatch(X, samples_only_lupus(X))
 
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label=True, plot_chance_level=True, ax=ax
     )
-

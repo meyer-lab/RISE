@@ -1,6 +1,6 @@
 """
 Thomson: PaCMAP for components, gene factors, average
-gene expression per cell type/category, correlation between 
+gene expression per cell type/category, correlation between
 cell percentages and componnets, and correlation of genes
 """
 
@@ -19,7 +19,7 @@ from .commonFuncs.plotGeneral import (
     gene_plot_cells,
     plot_cell_gene_corr,
     heatmapGeneFactors,
-    cell_count_perc_df
+    cell_count_perc_df,
 )
 from ..stats import wls_stats_comparison
 
@@ -61,7 +61,9 @@ def makeFigure():
         "Meprednisone",
     ]
     plot_avegene_per_category(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
-    plot_avegene_per_category(glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2")
+    plot_avegene_per_category(
+        glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2"
+    )
 
     X_genes = X[:, ["CD163", "MS4A6A"]].to_memory()
     plot_cell_gene_corr(
@@ -89,7 +91,7 @@ def makeFigure():
 
     cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[16])
     plot_wp_pacmap(X, 9, ax[17], 0.2)  # Gluco
-    
+
     set_xy_limits(ax)
 
     return f
@@ -146,11 +148,13 @@ def cell_perc_box(cellDF, unique, uniqueLabel, ax):
     )
     ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
-    
-    pValDF = wls_stats_comparison(cellDF, 
-                                  column_comparison_name="Cell Type Percentage", 
-                                  category_name="Category", 
-                                  status_name="Other")
+
+    pValDF = wls_stats_comparison(
+        cellDF,
+        column_comparison_name="Cell Type Percentage",
+        category_name="Category",
+        status_name="Other",
+    )
     print(pValDF)
 
 
@@ -165,5 +169,3 @@ def set_xy_limits(ax):
     ax[14].set(xlim=(0, 0.5), ylim=(0, 70))
     ax[15].set(xlim=(0, 0.5), ylim=(0, 70))
     ax[16].set(ylim=(-10, 70))
-
-    

@@ -1,5 +1,5 @@
 """
-CITEseq: Highly weighted genes per component 
+CITEseq: Highly weighted genes per component
 """
 
 from anndata import read_h5ad
@@ -26,4 +26,3 @@ def makeFigure():
         plot_gene_factors_partial(cmp, X, ax[2 * i + 1], geneAmount=10, top=False)
 
     return f
-
