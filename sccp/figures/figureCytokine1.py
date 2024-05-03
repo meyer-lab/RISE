@@ -28,9 +28,9 @@ def makeFigure():
     ranks = [10, 20, 30]
     for rank in ranks:
         cytok_pf2 = pf2(X, rank)
-        cytok_pf2.write_h5ad("/home/brianoj/scCP/cytok_pf2/cytok_pf2_" + str(rank))
+        cytok_pf2.write_h5ad("/opt/extra-storage/pf2_results/cytok_pf2_" + str(rank))
     """
-    X = read_h5ad("sccp/notebooks/cytok/cytok_pf2_30.h5ad")
+    X = read_h5ad("/opt/extra-storage/pf2_results/cytok_pf2_30.h5ad")
 
     X.uns["Pf2_A"] = correct_conditions(X)
     stimulations = samples_only_lupus(X)["Condition"]
