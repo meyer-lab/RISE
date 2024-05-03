@@ -28,7 +28,7 @@ def makeFigure():
     for i, drug in enumerate(drugs):
         plot_labels_pacmap(X, "Condition", ax[i + 1], drug, cmap="Set1")
         ax[i + 1].set(title="Pf2-Based Decomposition")
-        
+
     plot_labels_pacmap(X, "Cell Type", ax[4])
     plot_labels_pacmap(X, "Cell Type2", ax[5])
 
@@ -43,8 +43,7 @@ def makeFigure():
     for i, drug in enumerate(drugs):
         plot_labels_pacmap(X, "Condition", ax[i + 7], drug, cmap="Set1")
         ax[i + 7].set(title="PCA-Based Decomposition")
-        
+
     plot_labels_pacmap(X, "Cell Type", ax[10])
-    
 
     return f
