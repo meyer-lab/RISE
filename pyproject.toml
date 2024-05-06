@@ -13,7 +13,7 @@ scikit-learn = "^1.4"
 seaborn = "^0.13.2"
 pandas = "^2.2.1"
 tensorly = "0.8.1"
-parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "32e2002ae248f35adcb3a59bbb2c25d91e66ca3d" }
+parafac2 = { git = "https://github.com/meyer-lab/parafac2.git", rev = "b0bf58fd3b285d5cf6e598ccd254f7df04c083b9" }
 h5netcdf = "^1.3"
 anndata = "^0.10.3"
 datashader = "^0.16"
