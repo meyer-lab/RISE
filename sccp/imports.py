@@ -213,4 +213,4 @@ def import_cytokine() -> anndata.AnnData:
     # Remove multiplexing identifiers
     X = X[:, ~X.var_names.str.match("^CMO3[0-9]{2}$")]  # type: ignore
 
-    return prepare_dataset(X, "Condition", geneThreshold=0.01)
+    return prepare_dataset(X, "Condition", geneThreshold=0.05)
