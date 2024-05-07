@@ -9,6 +9,7 @@ from ...logisticReg import (
     logistic_regression,
     roc_lupus_fourtbatch,
 )
+from sklearn.metrics import roc_auc_score
 
 
 def samples_only_lupus(X) -> pd.DataFrame:
@@ -23,12 +24,11 @@ def plot_predaccuracy_ranks_lupus(
     X, ranks, ax: Axes, error_metric="accuracy", palette="tab10"
 ):
     """Plots results from Pf2 test of various ranks using defined error metric and logistic reg"""
-    pred_accuracy_df = predaccuracy_ranks_lupus(X, samples_only_lupus(X), ranks)
+    pred_accuracy_df = predaccuracy_ranks_lupus(X, samples_only_lupus(X), ranks, error_metric)
     sns.lineplot(
         data=pred_accuracy_df,
         x="Component",
         y=error_metric,
-        hue="Penalty",
         palette=palette,
         ax=ax,
     )
@@ -36,7 +36,6 @@ def plot_predaccuracy_ranks_lupus(
         data=pred_accuracy_df,
         x="Component",
         y=error_metric,
-        hue="Penalty",
         palette=palette,
         legend=False,
         ax=ax,
@@ -164,6 +163,9 @@ def plot_roc_allbatches_lupus(
 def plot_roc_fourthbatch(X, ax):
     """Plots ROC curve for prediction"""
     y_test, sle_decisions = roc_lupus_fourtbatch(X, samples_only_lupus(X))
+    
+    roc_auc = roc_auc_score(y_test, sle_decisions)
+    print("ROC AUC: ", roc_auc)
 
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label=True, plot_chance_level=True, ax=ax

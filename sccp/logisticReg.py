@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import roc_auc_score
-from .factorization import pf2
+from .factorization import pf2, correct_conditions
 
 
 def predaccuracy_ranks_lupus(
@@ -29,18 +29,39 @@ def predaccuracy_ranks_lupus(
         print(f"\n\n Component:{rank}")
 
         pf2_output = pf2(pfx2_data, rank=int(rank), doEmbedding=False)
+            
+        pf2_output.uns["Pf2_A"] = correct_conditions(pf2_output)
 
         A_matrix = pf2_output.uns["Pf2_A"]
-        condition_labels = condition_labels_all["SLE_status"]
+    
+        cohort_four = (condition_labels_all["Processing_Cohort"] == "4.0").to_numpy(
+            dtype=bool
+        )
+        y = (condition_labels_all["SLE_status"] == "SLE").to_numpy(dtype=bool)
+        
 
         log_reg = logistic_regression(scoring=error_metric)
+        log_fit = log_reg.fit(A_matrix[cohort_four], y[cohort_four])
+        
+        if error_metric == "roc_auc":
+            sle_decisions = log_fit.decision_function(A_matrix[~cohort_four])
+            y_true = y[~cohort_four]
+            score = roc_auc_score(y_true, sle_decisions)
+            initial_results = pd.DataFrame({error_metric: [score]})
 
-        log_fit = log_reg.fit(A_matrix, condition_labels.to_numpy())
+        # else:
 
-        initial_results = pd.DataFrame(
-            {"Penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
-        )
+        #     scores = log_fit.scores_["SLE"].mean(axis=0)
+        #     initial_results = pd.DataFrame(
+        #         {"Penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
+        #     )
+        
+        
         initial_results["Component"] = rank
+        
+        print(initial_results)
+
+    
 
         results.append(initial_results)
 
@@ -58,6 +79,7 @@ def roc_lupus_fourtbatch(
     """
 
     cond_factors = np.array(X.uns["Pf2_A"])
+    X.uns["Pf2_A"] = correct_conditions(X)
 
     cohort_four = (condition_batch_labels["Processing_Cohort"] == "4.0").to_numpy(
         dtype=bool
