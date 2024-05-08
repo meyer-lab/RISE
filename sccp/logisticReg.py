@@ -48,18 +48,9 @@ def predaccuracy_ranks_lupus(
             y_true = y[~cohort_four]
             score = roc_auc_score(y_true, sle_decisions)
             initial_results = pd.DataFrame({error_metric: [score]})
-
-        # else:
-
-        #     scores = log_fit.scores_["SLE"].mean(axis=0)
-        #     initial_results = pd.DataFrame(
-        #         {"Penalty": log_fit.Cs_, error_metric: log_fit.scores_["SLE"].mean(axis=0)}
-        #     )
-        
-        
+   
         initial_results["Component"] = rank
         
-        print(initial_results)
 
     
 

@@ -9,7 +9,6 @@ from ...logisticReg import (
     logistic_regression,
     roc_lupus_fourtbatch,
 )
-from sklearn.metrics import roc_auc_score
 
 
 def samples_only_lupus(X) -> pd.DataFrame:
@@ -163,9 +162,6 @@ def plot_roc_allbatches_lupus(
 def plot_roc_fourthbatch(X, ax):
     """Plots ROC curve for prediction"""
     y_test, sle_decisions = roc_lupus_fourtbatch(X, samples_only_lupus(X))
-    
-    roc_auc = roc_auc_score(y_test, sle_decisions)
-    print("ROC AUC: ", roc_auc)
 
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label=True, plot_chance_level=True, ax=ax
