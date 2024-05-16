@@ -6,7 +6,6 @@ from .common import getSetup
 from .commonFuncs.plotFactors import plot_gene_factors_partial
 from ..imports import import_cytokine
 from ..factorization import correct_conditions
-from ..imports import import_cytokine
 from ..factorization import pf2
 
 

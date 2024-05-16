@@ -13,7 +13,7 @@ def predaccuracy_ranks_lupus(
     pfx2_data,
     condition_labels_all,
     ranks_to_test,
-    error_metric="accuracy",
+    error_metric="roc_auc",
 ):
     """Tests various numbers of components for Pf2 by optimizing some error metric in logisitic regression (predicting SLE status)
     pfx2_data: data in Pf2X format
@@ -29,30 +29,26 @@ def predaccuracy_ranks_lupus(
         print(f"\n\n Component:{rank}")
 
         pf2_output = pf2(pfx2_data, rank=int(rank), doEmbedding=False)
-            
+
         pf2_output.uns["Pf2_A"] = correct_conditions(pf2_output)
 
         A_matrix = pf2_output.uns["Pf2_A"]
-    
+
         cohort_four = (condition_labels_all["Processing_Cohort"] == "4.0").to_numpy(
             dtype=bool
         )
         y = (condition_labels_all["SLE_status"] == "SLE").to_numpy(dtype=bool)
-        
 
         log_reg = logistic_regression(scoring=error_metric)
         log_fit = log_reg.fit(A_matrix[cohort_four], y[cohort_four])
-        
+
         if error_metric == "roc_auc":
             sle_decisions = log_fit.decision_function(A_matrix[~cohort_four])
             y_true = y[~cohort_four]
             score = roc_auc_score(y_true, sle_decisions)
             initial_results = pd.DataFrame({error_metric: [score]})
-   
-        initial_results["Component"] = rank
-        
 
-    
+        initial_results["Component"] = rank
 
         results.append(initial_results)
 
@@ -77,11 +73,9 @@ def roc_lupus_fourtbatch(
     )
     y = (condition_batch_labels["SLE_status"] == "SLE").to_numpy(dtype=bool)
 
-    # train + fit a logisitic regression model using cross validation ON ONLY THE TRAINING (GROUP 4) DATA
     log_reg = logistic_regression(scoring=error_metric)
     log_fit = log_reg.fit(cond_factors[cohort_four], y[cohort_four])
 
-    # Decision function for ROC AUC
     sle_decisions = log_fit.decision_function(cond_factors[~cohort_four])
     y_test = y[~cohort_four]
 

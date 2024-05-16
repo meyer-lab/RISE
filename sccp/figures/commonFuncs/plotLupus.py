@@ -1,12 +1,9 @@
 import seaborn as sns
 import pandas as pd
-import numpy as np
 from matplotlib.axes import Axes
-from sklearn.metrics import RocCurveDisplay, auc
-from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.metrics import RocCurveDisplay
 from ...logisticReg import (
     predaccuracy_ranks_lupus,
-    logistic_regression,
     roc_lupus_fourtbatch,
 )
 
@@ -19,11 +16,13 @@ def samples_only_lupus(X) -> pd.DataFrame:
     return df_samples
 
 
-def plot_predaccuracy_ranks_lupus(
-    X, ranks, ax: Axes, error_metric="accuracy", palette="tab10"
+def plot_accuracy_ranks_lupus(
+    X, ranks, ax: Axes, error_metric="roc_auc", palette="tab10"
 ):
     """Plots results from Pf2 test of various ranks using defined error metric and logistic reg"""
-    pred_accuracy_df = predaccuracy_ranks_lupus(X, samples_only_lupus(X), ranks, error_metric)
+    pred_accuracy_df = predaccuracy_ranks_lupus(
+        X, samples_only_lupus(X), ranks, error_metric
+    )
     sns.lineplot(
         data=pred_accuracy_df,
         x="Component",
@@ -84,79 +83,6 @@ def investigate_comp(X, comp: int, obs_column: str, ax: Axes, threshold: float =
         + " for comp "
         + str(comp)
     )
-
-
-def plot_roc_allbatches_lupus(
-    X,
-    ax: Axes,
-    pred_group="SLE_status",
-    cv_group="Processing_Cohort",
-    n_splits=4,
-):
-    cond_factors = X.uns["Pf2_A"]
-    condition_labels_all = samples_only_lupus(X)
-
-    condition_labels = condition_labels_all[pred_group]
-
-    sgkf = StratifiedGroupKFold(n_splits=n_splits)
-
-    # get labels for the group that you want to do cross validation by
-    group_cond_labels = condition_labels_all[cv_group]
-
-    log_reg = logistic_regression(scoring="roc_auc")
-
-    tprs = []
-    aucs = []
-    mean_fpr = np.linspace(0, 1, 100)
-
-    for fold, (train, test) in enumerate(
-        sgkf.split(
-            cond_factors, condition_labels.to_numpy(), group_cond_labels.to_numpy()
-        )
-    ):
-        # adding escape option for the second fold (@ index 1) because it has no SLE cases.
-        # otherwise we just get NA for our mean and NA for that fold. which isn't super helpful
-        # this if statement shouldn't be used with other data
-        if fold == 1:
-            continue
-        log_reg.fit(cond_factors[train], condition_labels.to_numpy()[train])
-        viz = RocCurveDisplay.from_estimator(
-            log_reg,
-            cond_factors[test],
-            condition_labels.to_numpy()[test],
-            name=f"ROC fold {fold}",
-            alpha=0.3,
-            lw=1,
-            ax=ax,
-            plot_chance_level=(fold == n_splits - 1),
-        )
-        interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
-        interp_tpr[0] = 0.0
-        tprs.append(interp_tpr)
-        aucs.append(viz.roc_auc)
-
-    mean_tpr = np.mean(tprs, axis=0)
-    mean_tpr[-1] = 1.0
-    mean_auc = auc(mean_fpr, mean_tpr)
-    std_auc = np.std(aucs)
-    ax.plot(
-        mean_fpr,
-        mean_tpr,
-        color="b",
-        label=r"Mean ROC (AUC = %0.2f $\pm$ %0.2f)" % (mean_auc, std_auc),
-        lw=2,
-        alpha=0.8,
-    )
-
-    ax.set(
-        xlim=[-0.05, 1.05],
-        ylim=[-0.05, 1.05],
-        xlabel="False Positive Rate",
-        ylabel="True Positive Rate",
-        title="Mean ROC curve with variability",
-    )
-    ax.axis("square")
-    ax.legend(loc="lower right")
 
 
 def plot_roc_fourthbatch(X, ax):
