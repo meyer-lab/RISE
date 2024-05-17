@@ -20,8 +20,8 @@ def makeFigure():
 
     # ranks=[1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     # plot_r2x(X, ranks, ax[0])
-
     # plot_accuracy_ranks_lupus(X, ranks, ax[1], error_metric="roc_auc")
+
     ax[1].set(xticks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
     X = [0, 50]
     Y = [0.84, 0.84]

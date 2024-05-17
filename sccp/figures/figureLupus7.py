@@ -20,6 +20,6 @@ def makeFigure():
     X = pf2(X, rank=int(30), doEmbedding=False)
     X.uns["Pf2_A"] = correct_conditions(X)
 
-    plot_roc_fourthbatch(X, ax[1])
+    plot_roc_fourthbatch(X, ax[0])
 
     return f

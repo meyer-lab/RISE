@@ -28,26 +28,26 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    celltype_count_perc_df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
-    celltype = np.unique(celltype_count_perc_df["Cell Type"])
-    sns.boxplot(
-        data=celltype_count_perc_df,
-        x="Cell Type",
-        y="Cell Type Percentage",
-        hue="SLE_status",
-        order=celltype,
-        showfliers=False,
-        ax=ax[0],
-    )
-    rotate_xaxis(ax[0])
+    celltype_count_perc_df = cell_count_perc_df(X, celltype="leiden", status=True)
+    # celltype = np.unique(celltype_count_perc_df["Cell Type"])
+    # sns.boxplot(
+    #     data=celltype_count_perc_df,
+    #     x="Cell Type",
+    #     y="Cell Type Percentage",
+    #     hue="SLE_status",
+    #     order=celltype,
+    #     showfliers=False,
+    #     ax=ax[0],
+    # )
+    # rotate_xaxis(ax[0])
 
-    pval_df = wls_stats_comparison(
-        celltype_count_perc_df,
-        column_comparison_name="Cell Type Percentage",
-        category_name="SLE_status",
-        status_name="SLE",
-    )
-    print(pval_df)
+    # pval_df = wls_stats_comparison(
+    #     celltype_count_perc_df,
+    #     column_comparison_name="Cell Type Percentage",
+    #     category_name="SLE_status",
+    #     status_name="SLE",
+    # )
+    # print(pval_df)
 
     cmp = 22
     idx = len(np.unique(celltype_count_perc_df["Cell Type"]))
@@ -93,37 +93,42 @@ def plot_correlation_cmp_cell_count_perc(
                         "Cmp": factorsA[j],
                     }
                 )
+
             totaldf = pd.concat([totaldf, smalldf])
+
         df = totaldf.loc[totaldf["Cell Type"] == celltype]
+        print("Cell Type:", celltype)
+        print("Cell Count:", df["Cell Count"].mean())
+        print("Cell Type Percentage:", df["Cell Type Percentage"].mean())
         _, _, r_value, _, _ = linregress(df["Cmp"], df[cellPerc])
         pearson = pearsonr(df["Cmp"], df[cellPerc])[0]
         spearman = spearmanr(df["Cmp"], df[cellPerc])[0]
 
-        sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="SLE_status", ax=ax[i])
-        ax[i].set(
-            title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}",
-            xlabel=f"Cmp. {cmp}",
-        )
+        # sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="SLE_status", ax=ax[i])
+        # ax[i].set(
+        #     title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}",
+        #     xlabel=f"Cmp. {cmp}",
+        # )
 
-        correl = [np.round(r_value**2, 3), spearman, pearson]
-        test = ["R2 Value ", "Pearson", "Spearman"]
+    #     correl = [np.round(r_value**2, 3), spearman, pearson]
+    #     test = ["R2 Value ", "Pearson", "Spearman"]
 
-        for k in range(3):
-            correlationdf = pd.concat(
-                [
-                    correlationdf,
-                    pd.DataFrame(
-                        {
-                            "Cell Type": celltype,
-                            "Correlation": [test[k]],
-                            "Value": [correl[k]],
-                        }
-                    ),
-                ]
-            )
+    #     for k in range(3):
+    #         correlationdf = pd.concat(
+    #             [
+    #                 correlationdf,
+    #                 pd.DataFrame(
+    #                     {
+    #                         "Cell Type": celltype,
+    #                         "Correlation": [test[k]],
+    #                         "Value": [correl[k]],
+    #                     }
+    #                 ),
+    #             ]
+    #         )
 
-    sns.barplot(
-        data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax[-1]
-    )
-    rotate_xaxis(ax[-1])
-    ax[-1].set(title=f"Cmp. {cmp} V. {cellPerc}")
+    # sns.barplot(
+    #     data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax[-1]
+    # )
+    # rotate_xaxis(ax[-1])
+    # ax[-1].set(title=f"Cmp. {cmp} V. {cellPerc}")

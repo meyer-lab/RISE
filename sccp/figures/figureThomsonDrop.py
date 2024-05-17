@@ -29,30 +29,31 @@ def makeFigure():
     #     "CTRL4",
     #     "Naive B Cells",
     #     rank,
-    #     *ax[2:4],
+    #     ax[0:2],
     #     ct2=True,
+    #     override=(11,11)
     # )
     # plotDifferentialExpression(
-    #     data, "CTRL4", "NK Cells", rank, *ax[4:6]
+    #     data, "CTRL4", "NK Cells", rank, ax[0:2]
     # )
-    # plotDifferentialExpression(data, "CTRL4", "DCs", rank, *ax[6:8])
+    # plotDifferentialExpression(data, "CTRL4", "DCs", rank, ax[0:2])
     # plotDifferentialExpression(
     #     data,
     #     "CTRL4",
     #     "pDCs",
     #     rank,
-    #     *ax[8:10],
+    #     ax[0:2],
     #     ct2=True,
     # )
-    # plotDifferentialExpression(data, "CTRL4", "T Cells", rank, *ax[10:12])
+    # plotDifferentialExpression(data, "CTRL4", "T Cells", rank, ax[0:2])
     # plotDifferentialExpression(
-    #     data, "CTRL4", "Cytotoxic T Cells", rank, *ax[12:14], ct2=True
+    #     data, "CTRL4", "Cytotoxic T Cells", rank, ax[0:2], ct2=True
     # )
     # plotDifferentialExpression(
-    #     data, "CTRL4", "Memory T Cells", rank, *ax[14:16], ct2=True
+    #     data, "CTRL4", "Memory T Cells", rank, ax[0:2], ct2=True
     # )
     # plotDifferentialExpression(
-    #     data, "CTRL4", "cDCs", rank, *ax[16:18], ct2=True, override=(14, 15)
+    #     data, "CTRL4", "cDCs", rank, ax[0:2], ct2=True, override=(14, 15)
     # )
     return f
 
@@ -99,7 +100,10 @@ def plotDifferentialExpression(
         X, X2 = np.array(origX.uns["Pf2_A"]), np.array(sampledX.uns["Pf2_A"])
         all_r2, all_r2_2 = (
             [linregress(X[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])],
-            [linregress(X2[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])],
+            [
+                linregress(X2[:, i], numberOfCellType)[2] ** 2
+                for i in range(X2.shape[1])
+            ],
         )
         most_exp_cmp, most_exp_cmp2 = int(np.argmax(all_r2)), int(np.argmax(all_r2_2))
     else:  # Use the override component numbers
@@ -124,14 +128,14 @@ def plotDifferentialExpression(
     axes[0].axline((0, b), slope=a, linestyle="--")
     axes[0].scatter([], [], c="b", label="Other Conditions")
     axes[0].scatter([], [], c="r", label=condition)
-    axes[0].set_xlabel(f"Component {most_exp_cmp + 1} Weight (Full Data)")
-    axes[0].set_ylabel(f"Component {most_exp_cmp + 1} Weight (Sampled Data)")
+    axes[0].set_xlabel(f"{cell_type} Component Weight (Full Data)")
+    axes[0].set_ylabel(f"{cell_type} Component Weight (Sampled Data)")
     axes[0].set_title(f"Full Data vs {cell_type} removed from {condition}")
     axes[0].set_ylim(bottom=0)
     axes[0].set_xlim(left=0)
     axes[0].legend(loc="upper left")
 
-    axes[1].set_xlabel(f"Component {most_exp_cmp + 1} Weight (Full Data)")
+    axes[1].set_xlabel(f"{cell_type} Component Weight Weight (Full Data)")
     axes[1].set_ylabel(f"Number of {cell_type} per condition (Full Data)")
     axes[1].scatter(X, numberOfCellType)
     a, b = np.polyfit(X, numberOfCellType, 1)
@@ -144,3 +148,4 @@ def plotDifferentialExpression(
     axes[1].set_ylim(bottom=0)
     axes[1].set_xlim(left=0)
     axes[1].legend(loc="upper left")
+    print(f"most_exp_cmp: {most_exp_cmp}, most_exp_cmp2: {most_exp_cmp2}")

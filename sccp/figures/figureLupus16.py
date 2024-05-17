@@ -13,7 +13,6 @@ import pandas as pd
 from .commonFuncs.plotFactors import bot_top_genes
 from matplotlib.axes import Axes
 import anndata
-from ..stats import wls_stats_comparison
 
 
 def makeFigure():
@@ -29,15 +28,20 @@ def makeFigure():
     genes = bot_top_genes(X, cmp=27, geneAmount=5)
 
     for i, gene in enumerate(np.ravel(genes)):
-        plot_avegene_per_status_per_cluster(X, gene, ax[i], clusterName1="44", cellType="leiden")
-        
-        
+        plot_avegene_per_status_per_cluster(
+            X, gene, ax[i], clusterName1="44", cellType="leiden"
+        )
 
     return f
 
 
 def plot_avegene_per_status_per_cluster(
-    X: anndata.AnnData, gene: str, ax: Axes,  clusterName1, clusterName2=None, cellType="Cell Type",
+    X: anndata.AnnData,
+    gene: str,
+    ax: Axes,
+    clusterName1,
+    clusterName2=None,
+    cellType="Cell Type",
 ):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = X[:, gene]
@@ -54,24 +58,28 @@ def plot_avegene_per_status_per_cluster(
     df = df.groupby(["Status", "Cell Type", "Gene", "Condition"], observed=False).mean()
     df = df.rename(columns={"Value": "Average Gene Expression"}).reset_index()
 
-    if clusterName2 is None: 
+    if clusterName2 is None:
         dfClust = df.loc[df["Cell Type"] == clusterName1]
         clust_list = dfClust["Cell Type"].to_numpy()
         dfOther = df.loc[df["Cell Type"] != clusterName1]
         other_list = np.repeat("Other", dfOther.shape[0])
-        
+
         dfClust = pd.concat([dfClust, dfOther]).reset_index(drop=True)
         dfClust["Cell Type"] = np.concatenate([clust_list, other_list])
-        
-    else: 
-        dfClust = df.loc[(df["Cell Type"] == clusterName1) & (df["Cell Type"] == clusterName2)]
+
+    else:
+        dfClust = df.loc[
+            (df["Cell Type"] == clusterName1) & (df["Cell Type"] == clusterName2)
+        ]
         clust_list = dfClust["Cell Type"].to_numpy()
-        dfOther = df.loc[(df["Cell Type"] != clusterName1) & (df["Cell Type"] != clusterName2)]
+        dfOther = df.loc[
+            (df["Cell Type"] != clusterName1) & (df["Cell Type"] != clusterName2)
+        ]
         other_list = np.repeat("Other", dfOther.shape[0])
-        
+
         dfClust = pd.concat([dfClust, dfOther]).reset_index(drop=True)
         dfClust["Cell Type"] = np.concatenate([clust_list, other_list])
-        
+
     sns.boxplot(
         data=dfClust,
         x="Cell Type",
@@ -80,11 +88,10 @@ def plot_avegene_per_status_per_cluster(
         ax=ax,
         showfliers=False,
     )
-    
-    ax.set(title=gene,
-           yticks=np.linspace(
+
+    ax.set(
+        title=gene,
+        yticks=np.linspace(
             0, np.max(dfClust["Average Gene Expression"]) + 0.00005, num=5
         ),
     )
-    
-    
