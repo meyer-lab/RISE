@@ -28,26 +28,26 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    celltype_count_perc_df = cell_count_perc_df(X, celltype="leiden", status=True)
-    # celltype = np.unique(celltype_count_perc_df["Cell Type"])
-    # sns.boxplot(
-    #     data=celltype_count_perc_df,
-    #     x="Cell Type",
-    #     y="Cell Type Percentage",
-    #     hue="SLE_status",
-    #     order=celltype,
-    #     showfliers=False,
-    #     ax=ax[0],
-    # )
-    # rotate_xaxis(ax[0])
+    celltype_count_perc_df = cell_count_perc_df(X, celltype="Cell Type", status=True)
+    celltype = np.unique(celltype_count_perc_df["Cell Type"])
+    sns.boxplot(
+        data=celltype_count_perc_df,
+        x="Cell Type",
+        y="Cell Type Percentage",
+        hue="SLE_status",
+        order=celltype,
+        showfliers=False,
+        ax=ax[0],
+    )
+    rotate_xaxis(ax[0])
 
-    # pval_df = wls_stats_comparison(
-    #     celltype_count_perc_df,
-    #     column_comparison_name="Cell Type Percentage",
-    #     category_name="SLE_status",
-    #     status_name="SLE",
-    # )
-    # print(pval_df)
+    pval_df = wls_stats_comparison(
+        celltype_count_perc_df,
+        column_comparison_name="Cell Type Percentage",
+        category_name="SLE_status",
+        status_name="SLE",
+    )
+    print(pval_df)
 
     cmp = 22
     idx = len(np.unique(celltype_count_perc_df["Cell Type"]))
