@@ -104,31 +104,31 @@ def plot_correlation_cmp_cell_count_perc(
         pearson = pearsonr(df["Cmp"], df[cellPerc])[0]
         spearman = spearmanr(df["Cmp"], df[cellPerc])[0]
 
-        # sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="SLE_status", ax=ax[i])
-        # ax[i].set(
-        #     title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}",
-        #     xlabel=f"Cmp. {cmp}",
-        # )
+        sns.scatterplot(data=df, x="Cmp", y=cellPerc, hue="SLE_status", ax=ax[i])
+        ax[i].set(
+            title=f"{celltype}: R2 Value - {np.round(r_value**2, 3)}",
+            xlabel=f"Cmp. {cmp}",
+        )
 
-    #     correl = [np.round(r_value**2, 3), spearman, pearson]
-    #     test = ["R2 Value ", "Pearson", "Spearman"]
+        correl = [np.round(r_value**2, 3), spearman, pearson]
+        test = ["R2 Value ", "Pearson", "Spearman"]
 
-    #     for k in range(3):
-    #         correlationdf = pd.concat(
-    #             [
-    #                 correlationdf,
-    #                 pd.DataFrame(
-    #                     {
-    #                         "Cell Type": celltype,
-    #                         "Correlation": [test[k]],
-    #                         "Value": [correl[k]],
-    #                     }
-    #                 ),
-    #             ]
-    #         )
+        for k in range(3):
+            correlationdf = pd.concat(
+                [
+                    correlationdf,
+                    pd.DataFrame(
+                        {
+                            "Cell Type": celltype,
+                            "Correlation": [test[k]],
+                            "Value": [correl[k]],
+                        }
+                    ),
+                ]
+            )
 
-    # sns.barplot(
-    #     data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax[-1]
-    # )
-    # rotate_xaxis(ax[-1])
-    # ax[-1].set(title=f"Cmp. {cmp} V. {cellPerc}")
+    sns.barplot(
+        data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax[-1]
+    )
+    rotate_xaxis(ax[-1])
+    ax[-1].set(title=f"Cmp. {cmp} V. {cellPerc}")
