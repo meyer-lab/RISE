@@ -27,8 +27,6 @@ def plot_condition_factors(
     if ThomsonNorm is True:
         controls = yt.str.contains("CTRL")
         X = X[controls]
-    else:
-
 
     X -= np.median(X, axis=0)
     X /= np.std(X, axis=0)
