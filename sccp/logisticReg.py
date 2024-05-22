@@ -48,6 +48,10 @@ def predaccuracy_ranks_lupus(
             score = roc_auc_score(y_true, sle_decisions)
             initial_results = pd.DataFrame({error_metric: [score]})
 
+        if error_metric == "accuracy":
+            score = log_fit.score(A_matrix[~cohort_four], y[~cohort_four])
+            initial_results = pd.DataFrame({error_metric: [score]})
+
         initial_results["Component"] = rank
 
         results.append(initial_results)
