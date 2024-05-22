@@ -89,6 +89,37 @@ def plot_avegene_per_category(
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
 
 
+def plot_avegene_per_status(
+    X: anndata.AnnData, gene: str, ax: Axes, cellType="Cell Type"
+):
+    """Plots average gene expression across cell types for a category of drugs"""
+    genesV = X[:, gene]
+    dataDF = genesV.to_df()
+    dataDF = dataDF.subtract(genesV.var["means"].values)
+    dataDF["Status"] = genesV.obs["SLE_status"].values
+    dataDF["Condition"] = genesV.obs["Condition"].values
+    dataDF["Cell Type"] = genesV.obs[cellType].values
+
+    df = pd.melt(
+        dataDF, id_vars=["Status", "Cell Type", "Condition"], value_vars=gene
+    ).rename(columns={"variable": "Gene", "value": "Value"})
+
+    df = df.groupby(["Status", "Cell Type", "Gene", "Condition"], observed=False).mean()
+    df = df.rename(columns={"Value": "Average Gene Expression"}).reset_index()
+
+    sns.boxplot(
+        data=df.loc[df["Gene"] == gene],
+        x="Cell Type",
+        y="Average Gene Expression",
+        hue="Status",
+        ax=ax,
+        showfliers=False,
+    )
+    ax.set(title=gene)
+
+    return df
+
+
 def heatmapGeneFactors(
     cmps: list, dataIn: anndata.AnnData, ax: Axes, geneAmount: int = 20
 ):
