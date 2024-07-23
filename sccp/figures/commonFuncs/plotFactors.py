@@ -156,15 +156,6 @@ def plot_gene_factors_partial(
     ax.tick_params(axis="x", rotation=90)
 
 
-def plot_factor_weight(X: AnnData, ax: Axes):
-    """Plots weights from Pf2 model"""
-    df = pd.DataFrame(data=np.transpose(X.uns["Pf2_weights"]), columns=["Value"])
-    df["Value"] = df["Value"] / np.max(df["Value"])
-    df["Component"] = np.arange(1, len(X.uns["Pf2_weights"]) + 1)
-    sns.barplot(data=df, x="Component", y="Value", ax=ax)
-    ax.tick_params(axis="x", rotation=90)
-
-
 def reorder_table(projs: np.ndarray) -> np.ndarray:
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2

@@ -1,0 +1,36 @@
+"""
+Thomson: PCA and Pf2 PaCMAP labeled by genes and drugs
+"""
+
+from anndata import read_h5ad
+from sklearn.decomposition import PCA
+from .common import subplotLabel, getSetup
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
+import pacmap
+import numpy as np
+
+
+
+def makeFigure():
+    """Get a list of the axis objects and create a figure."""
+    ax, f = getSetup((8, 8), (2, 2))
+    subplotLabel(ax)
+
+    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    
+    drug = ["Alprostadil"]
+    plot_labels_pacmap(X, "Condition", ax[0], drug, cmap="Set1")
+    ax[0].set(title="Pf2-Based Decomposition")
+
+    pc = PCA(n_components=20)
+    pcaPoints = pc.fit_transform(np.asarray(X.X - X.var["means"].values))
+    X.obsm["X_pf2_PaCMAP"] = pacmap.PaCMAP().fit_transform(pcaPoints)
+
+    plot_labels_pacmap(X, "Condition", ax[1], drug, cmap="Set1")
+    ax[1].set(title="PCA-Based Decomposition")
+        
+    plot_labels_pacmap(X, "Cell Type", ax[2])
+    plot_labels_pacmap(X, "Cell Type2", ax[3])
+
+    return f
+

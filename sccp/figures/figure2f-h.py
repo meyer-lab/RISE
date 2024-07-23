@@ -17,10 +17,7 @@ import anndata
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
-    # Get list of axis objects
     ax, f = getSetup((10, 12), (2, 2))
-
-    # Add subplot labels
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
@@ -30,7 +27,6 @@ def makeFigure():
     plot_condition_factors(X, ax[0], drugNames, ThomsonNorm=True, groupConditions=True)
     plot_eigenstate_factors(X, ax[1])
     plot_gene_factors(X, ax[2])
-    plot_factor_weight(X, ax[3])
 
     return f
 

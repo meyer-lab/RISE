@@ -52,45 +52,46 @@ def makeFigure():
     )
     ax[8].set(title="Gene Expression in DCs")
 
-    plot_wp_pacmap(X, 20, ax[9], 0.2)  # Gluco
-    glucs = [
-        "Betamethasone Valerate",
-        "Loteprednol etabonate",
-        "Budesonide",
-        "Triamcinolone Acetonide",
-        "Meprednisone",
-    ]
-    plot_avegene_per_category(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
-    plot_avegene_per_category(
-        glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2"
-    )
+    plot_wp_pacmap(X, 9, ax[9], 0.2)  # Gluco
+    plot_wp_pacmap(X, 20, ax[20], 0.2)  # Gluco
+    # glucs = [
+    #     "Betamethasone Valerate",
+    #     "Loteprednol etabonate",
+    #     "Budesonide",
+    #     "Triamcinolone Acetonide",
+    #     "Meprednisone",
+    # ]
+    # plot_avegene_per_category(glucs, "Gluco", "CD163", X, ax[10], cellType="Cell Type2")
+    # plot_avegene_per_category(
+    #     glucs, "Gluco", "MS4A6A", X, ax[11], cellType="Cell Type2"
+    # )
 
-    X_genes = X[:, ["CD163", "MS4A6A"]].to_memory()
-    plot_cell_gene_corr(
-        X_genes,
-        unique=glucs,
-        hue="Condition",
-        cells=["Intermediate Monocytes", "Myeloid Suppressors"],
-        cellType="Cell Type2",
-        ax=ax[12],
-    )
+    # X_genes = X[:, ["CD163", "MS4A6A"]].to_memory()
+    # plot_cell_gene_corr(
+    #     X_genes,
+    #     unique=glucs,
+    #     hue="Condition",
+    #     cells=["Intermediate Monocytes", "Myeloid Suppressors"],
+    #     cellType="Cell Type2",
+    #     ax=ax[12],
+    # )
 
-    X.obs["Condition_gluc"] = X.obs["Condition"].cat.add_categories("Other")
-    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.add_categories(
-        "Glucocorticoids"
-    )
-    X.obs.loc[~X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Other"
-    X.obs.loc[X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Glucocorticoids"
-    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
+    # X.obs["Condition_gluc"] = X.obs["Condition"].cat.add_categories("Other")
+    # X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.add_categories(
+    #     "Glucocorticoids"
+    # )
+    # X.obs.loc[~X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Other"
+    # X.obs.loc[X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Glucocorticoids"
+    # X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
 
-    color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
-    plot_labels_pacmap(X, "Condition_gluc", ax[13], color_key=color_key)
+    # color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
+    # plot_labels_pacmap(X, "Condition_gluc", ax[13], color_key=color_key)
 
-    plot_cell_perc_comp_corr(X, cellDF, "Classical Monocytes", 20, ax[14], unique=glucs)
-    plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[15], unique=glucs)
+    # plot_cell_perc_comp_corr(X, cellDF, "Classical Monocytes", 20, ax[14], unique=glucs)
+    # plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[15], unique=glucs)
 
-    cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[16])
-    plot_wp_pacmap(X, 9, ax[17], 0.2)  # Gluco
+    # cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[16])
+    # plot_wp_pacmap(X, 9, ax[17], 0.2)  # Gluco
 
     set_xy_limits(ax)
 

@@ -15,7 +15,6 @@ import pandas as pd
 
 def makeFigure():
     ax, f = getSetup((6, 3), (1, 2))
-
     subplotLabel(ax)
 
     X = import_thomson()
