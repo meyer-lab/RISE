@@ -21,8 +21,16 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
-    
-    ranks=[0, 5, 10, 15, 20, 25, 30,]
+
+    ranks = [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+    ]
     plot_r2x(X, ranks, ax[0])
 
     for i in range(3):
@@ -40,7 +48,7 @@ def makeFigure():
     for i, drug in enumerate(drugs):
         plot_labels_pacmap(X, "Condition", ax[i + 3], drug, cmap="Set1")
         ax[i + 3].set(title="PCA-Based Decomposition")
-        
+
     # pf2_batch_df = batch_correction_metrics(X, "projections")
     # pf2_batch_df["Fit"] = "Pf2"
 

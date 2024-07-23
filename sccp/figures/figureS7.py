@@ -119,8 +119,8 @@ def plot_diff_exp(
     axes[1].set_xlim(left=0)
     axes[1].legend(loc="upper left")
     print(f"most_exp_cmp: {most_exp_cmp}, most_exp_cmp2: {most_exp_cmp2}")
-    
-    
+
+
 def plot_weights_across_percents(
     data: AnnData,
     cell_type: str,
@@ -188,4 +188,3 @@ def plot_weights_across_percents(
     ax.set_ylim(bottom=0)
     ax.set_xlim(left=0)
     ax.set_ylabel(f"{cell_type} Component Weight ")
-

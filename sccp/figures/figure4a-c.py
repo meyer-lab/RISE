@@ -4,8 +4,11 @@ Lupus: R2X for PCA/Pf2 and accuracy for different components
 
 from anndata import read_h5ad
 from .common import subplotLabel, getSetup
+from ..factorization import correct_conditions
+
 # from .commonFuncs.plotGeneral import plot_r2x
-# from .commonFuncs.plotLupus import plot_accuracy_ranks_lupus
+from .commonFuncs.plotLupus import plot_accuracy_ranks_lupus, plot_roc_fourthbatch
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 
 
 def makeFigure():
@@ -19,15 +22,15 @@ def makeFigure():
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
 
     # ranks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-    # plot_r2x(X, ranks, ax[0])
-    # plot_accuracy_ranks_lupus(X, ranks, ax[1], error_metric="roc_auc")
-    # plot_accuracy_ranks_lupus(X, ranks, ax[2], error_metric="accuracy")
-
-    for i in range(3):
-        ax[i].set(xticks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
-
+    # plot_accuracy_ranks_lupus(X, ranks, ax[0], error_metric="roc_auc")
+    ax[0].set(xticks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
     X = [0, 50]
     Y = [0.84, 0.84]
-    ax[1].plot(X, Y, linestyle="--")
+    ax[0].plot(X, Y, linestyle="--")
+
+    X.uns["Pf2_A"] = correct_conditions(X)
+    plot_roc_fourthbatch(X, ax[1])
+
+    plot_labels_pacmap(X, "Cell Type", ax[2])
 
     return f

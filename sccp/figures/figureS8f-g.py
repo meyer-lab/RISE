@@ -12,6 +12,7 @@ from ..factorization import correct_conditions
 from ..logisticReg import logistic_regression
 from matplotlib.axes import Axes
 import anndata
+from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 
 
 def makeFigure():
@@ -23,6 +24,18 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+
+    df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
+    sns.boxplot(
+        data=df,
+        x="Cell Type",
+        y="Cell Type Percentage",
+        hue="SLE_status",
+        showfliers=False,
+        ax=ax[0],
+    )
+    rotate_xaxis(ax[0])
+
     X.uns["Pf2_A"] = correct_conditions(X)
 
     samples_only_df = samples_only_lupus(X)
@@ -30,15 +43,7 @@ def makeFigure():
     logreg_weights_status, logreg_score_status = logreg_weights_scores(
         X, samples_only_df, "SLE_status"
     )
-    plot_logreg_weights_status(logreg_weights_status, logreg_score_status, ax[0])
-
-    samples_only_df["ancestry"] = samples_only_df["ancestry"] == "European"
-    logreg_weights_anc, _ = logreg_weights_scores(X, samples_only_df, "ancestry")
-    logreg_weights_status["Predicting"] = "SLE Status"
-    logreg_weights_anc["Predicting"] = "Euro-Ancestry"
-    logreg_weights_comb = pd.concat([logreg_weights_status, logreg_weights_anc])
-
-    plot_logreg_weights_comb(logreg_weights_comb, ax[1])
+    plot_logreg_weights_status(logreg_weights_status, logreg_score_status, ax[1])
 
     return f
 
@@ -72,16 +77,4 @@ def plot_logreg_weights_status(
     ax.set(
         ylim=[-10, 10],
         title="LR Prediction Accuracy: " + str(np.round(logreg_predaccuracy, 3)),
-    )
-
-
-def plot_logreg_weights_comb(logreg_weights_combined: pd.DataFrame, ax: Axes):
-    """Plots logistic regression weights for predicting by status and ancestry"""
-    sns.barplot(
-        data=logreg_weights_combined,
-        x="Component",
-        y="Weight",
-        hue="Predicting",
-        errorbar=None,
-        ax=ax,
     )

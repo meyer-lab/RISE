@@ -27,5 +27,3 @@ def makeFigure():
     ax[0].set_yscale("log")
 
     return f
-
-

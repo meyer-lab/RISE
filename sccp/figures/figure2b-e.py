@@ -10,14 +10,13 @@ import pacmap
 import numpy as np
 
 
-
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     ax, f = getSetup((8, 8), (2, 2))
     subplotLabel(ax)
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
-    
+
     drug = ["Alprostadil"]
     plot_labels_pacmap(X, "Condition", ax[0], drug, cmap="Set1")
     ax[0].set(title="Pf2-Based Decomposition")
@@ -28,9 +27,8 @@ def makeFigure():
 
     plot_labels_pacmap(X, "Condition", ax[1], drug, cmap="Set1")
     ax[1].set(title="PCA-Based Decomposition")
-        
+
     plot_labels_pacmap(X, "Cell Type", ax[2])
     plot_labels_pacmap(X, "Cell Type2", ax[3])
 
     return f
-

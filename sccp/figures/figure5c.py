@@ -12,9 +12,9 @@ import seaborn as sns
 import pandas as pd
 import scanpy as sc
 from .commonFuncs.plotGeneral import rotate_xaxis
-from ..stats import wls_stats_comparison
 from matplotlib.axes import Axes
 import anndata
+from .commonFuncs.plotPaCMAP import plot_gene_pacmap
 
 
 def makeFigure():
@@ -30,6 +30,10 @@ def makeFigure():
     X = cytotoxic_score(X)
     plot_score(X, ax[0], cellType="Cell Type2")
     ax[0].set(ylabel="Cytotoxic Score")
+
+    plot_gene_pacmap("RETN", "Pf2", X, ax[1])
+
+    plot_pair_gene_factors(X, 22, 28, ax[2])
 
     return f
 
@@ -77,11 +81,13 @@ def plot_score(X: anndata, ax: Axes, cellType="Cell Type"):
 
     rotate_xaxis(ax)
 
-    pval_df = wls_stats_comparison(
-        df_mean_score,
-        column_comparison_name="Score",
-        category_name="Status",
-        status_name="SLE",
-    )
 
-    print(pval_df)
+def plot_pair_gene_factors(X: anndata.AnnData, cmp1: int, cmp2: int, ax: Axes):
+    """Plots two gene components weights"""
+    cmpWeights = np.concatenate(
+        ([X.varm["Pf2_C"][:, cmp1 - 1]], [X.varm["Pf2_C"][:, cmp2 - 1]])
+    )
+    df = pd.DataFrame(
+        data=cmpWeights.transpose(), columns=[f"Cmp. {cmp1}", f"Cmp. {cmp2}"]
+    )
+    sns.scatterplot(data=df, x=f"Cmp. {cmp1}", y=f"Cmp. {cmp2}", ax=ax)
