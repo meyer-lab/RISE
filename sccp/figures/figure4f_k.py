@@ -11,12 +11,12 @@ from .common import (
 import numpy as np
 import seaborn as sns
 import pandas as pd
-from scipy.stats import linregress, pearsonr, spearmanr
+from scipy.stats import pearsonr
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
-from ..stats import wls_stats_comparison
 from matplotlib.axes import Axes
 import anndata
-from .commonFuncs.plotGeneral import plot_avegene_per_status
+from .commonFuncs.plotGeneral import avegene_per_status
+from .commonFuncs.plotPaCMAP import plot_wp_pacmap
 
 
 def makeFigure():
@@ -29,25 +29,25 @@ def makeFigure():
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
+    plot_wp_pacmap(X, 14, ax[0], 0.25)
+    plot_wp_pacmap(X, 22, ax[1], 0.25)
+    
     celltype_count_perc_df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
-
     cmps = [14, 22]
-
     for i, cmp in enumerate(cmps):
         plot_correlation_cmp_cell_count_perc(
-            X, cmp, celltype_count_perc_df, ax[i], cellPerc=False
+            X, cmp, celltype_count_perc_df, ax[i+2], cellPerc=False
         )
+        
+    plot_toppfun(ax[4])
 
     genes = ["IFITM3", "APOBEC3A"]
-
     df_total = pd.DataFrame([])
-
     for i, gene in enumerate(np.ravel(genes)):
-        df = plot_avegene_per_status(X, gene, ax[i], cellType="Cell Type2")
-        rotate_xaxis(ax[i])
+        df = avegene_per_status(X, gene, cellType="Cell Type2")
         df_total = pd.concat([df, df_total])
 
-    plot_ave2genes_per_status(df_total, genes[0], genes[1], ax[2])
+    plot_ave2genes_per_status(df_total, genes[0], genes[1], ax[5])
 
     return f
 
@@ -92,16 +92,17 @@ def plot_correlation_cmp_cell_count_perc(
 
         df = totaldf.loc[totaldf["Cell Type"] == celltype]
         pearson = pearsonr(df["Cmp"], df[cellPerc])[0]
+        
+        correlationdf = pd.concat([correlationdf, pd.DataFrame(
+                        {
+                            "Cell Type": celltype,
+                            "Correlation": ["Pearson"],
+                            "Value": [pearson],
+                        })])
+        
 
-        correlationdf = pd.DataFrame(
-            {
-                "Cell Type": celltype,
-                "Correlation": ["Pearson"],
-                "Value": [pearson],
-            }
-        )
     sns.swarmplot(
-        data=correlationdf, x="Cell Type", y="Value", hue="Correlation", ax=ax
+        data=correlationdf, y="Value", hue="Correlation", ax=ax
     )
     rotate_xaxis(ax)
     ax.set(title=f"Cmp. {cmp} V. {cellPerc}")
@@ -151,3 +152,20 @@ def plot_ave2genes_per_status(df_total, gene1, gene2, ax):
 
     ax.set(xlabel=f"Average {gene1}", ylabel=f"Average {gene2}")
     ax.legend()
+
+
+def plot_toppfun(ax):
+    """Plot GSEA results"""
+    df = pd.read_csv("sccp/data/lupus/ToppFun_Cmp14.csv", dtype=str)
+    df = df.drop(columns=["ID", "Verbose ID"])
+    category = df["Category"].to_numpy().astype(str)
+
+    df = df.drop(columns=["Category"])
+    df["Process"] = category
+    df = df.iloc[:1000, :]
+    df["Total Genes"] = df.iloc[:, 2:-1].astype(int).sum(axis=1).to_numpy()
+    df= df.loc[df.loc[:, "Process"] == "GO: Biological Process"]
+    df["pValue"] = df["pValue"].astype(float)
+
+    sns.scatterplot(data=df.iloc[:10, :], x="pValue", y="Name", hue="Total Genes", ax=ax)
+    ax.set(xscale="log")

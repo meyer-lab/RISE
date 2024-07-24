@@ -55,7 +55,7 @@ def plot_avegene_per_celltype(adata, genes, ax, cellType="Cell Type"):
 
 
 def plot_avegene_per_category(
-    conds, categoryCond, gene, adata, ax, mean=True, cellType="Cell Type"
+    conds, categoryCond, gene, adata, ax, mean=True, cellType="Cell Type", swarm=False
 ):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = adata[:, gene]
@@ -76,21 +76,31 @@ def plot_avegene_per_category(
     for i in conds:
         df = df.replace({"Condition": {i: categoryCond}})
 
-    sns.boxplot(
-        data=df.loc[df["Gene"] == gene],
-        x="Cell Type",
-        y="Average Gene Expression For Drugs",
-        hue="Condition",
-        ax=ax,
-        showfliers=False,
-    )
+    if swarm is False:
+        sns.boxplot(
+            data=df.loc[df["Gene"] == gene],
+            x="Cell Type",
+            y="Average Gene Expression For Drugs",
+            hue="Condition",
+            ax=ax,
+            showfliers=False,
+        )
+    else:
+        sns.stripplot(
+            data=df.loc[df["Gene"] == gene],
+            x="Cell Type",
+            y="Average Gene Expression For Drugs",
+            hue="Condition",
+            ax=ax,
+        )
+
     ax.set(title=gene)
     ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
 
 
-def plot_avegene_per_status(
-    X: anndata.AnnData, gene: str, ax: Axes, cellType="Cell Type"
+def avegene_per_status(
+    X: anndata.AnnData, gene: str, cellType="Cell Type"
 ):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = X[:, gene]
@@ -107,45 +117,7 @@ def plot_avegene_per_status(
     df = df.groupby(["Status", "Cell Type", "Gene", "Condition"], observed=False).mean()
     df = df.rename(columns={"Value": "Average Gene Expression"}).reset_index()
 
-    sns.boxplot(
-        data=df.loc[df["Gene"] == gene],
-        x="Cell Type",
-        y="Average Gene Expression",
-        hue="Status",
-        ax=ax,
-        showfliers=False,
-    )
-    ax.set(title=gene)
-
     return df
-
-
-def heatmapGeneFactors(
-    cmps: list, dataIn: anndata.AnnData, ax: Axes, geneAmount: int = 20
-):
-    """Plotting weights for gene factors for both most negatively/positively weighted terms"""
-    cmap = sns.diverging_palette(240, 10, as_cmap=True)
-    df = pd.DataFrame(
-        data=dataIn.varm["Pf2_C"],
-        index=dataIn.var_names,
-        columns=range(1, dataIn.varm["Pf2_C"].shape[1] + 1),
-    )
-    df = df.reset_index(names="Gene")
-
-    genes = np.array([])
-    for cmp in cmps:
-        sortDF = df.sort_values(by=cmp)
-        top = sortDF.iloc[-geneAmount:, :].Gene.values
-        bottom = sortDF.iloc[:geneAmount:, :].Gene.values
-        genes = np.concatenate((genes, np.flip(top)))
-        genes = np.concatenate((genes, bottom))
-
-    heatmapDF = df.loc[df.Gene.isin(genes)][cmps + ["Gene"]].set_index("Gene")
-    vmax = np.abs(heatmapDF.values).max()
-
-    sns.heatmap(
-        data=heatmapDF.transpose()[genes], ax=ax, cmap=cmap, vmin=-vmax, vmax=vmax
-    )
 
 
 def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
@@ -209,75 +181,6 @@ def gene_plot_cells(
             cut=2,
             ax=ax,
         )
-
-
-def gene_plot_conditions(X, condition: str, genes, ax: Axes, hue=None, unique=None):
-    """Plots two genes on either a per cell or per cell type basis"""
-    adata = X[:, [genes[0], genes[1]]]
-    sc.pp.subsample(adata, fraction=0.01, random_state=0)
-
-    dataDF = pd.DataFrame(columns=genes, data=adata.X)
-    dataDF[condition] = adata.obs[condition].values
-    dataDF[condition] = dataDF[condition].astype("str")
-    if hue:
-        dataDF[hue] = adata.obs[hue].values
-        dataDF[hue] = dataDF[hue].astype("str")
-        dataDF = dataDF.groupby([condition, hue]).mean()
-    else:
-        dataDF = dataDF.groupby([condition]).mean()
-    if unique is not None:
-        dataDF[condition] = dataDF[condition].astype(str)
-        dataDF.loc[dataDF[condition] != unique, condition] = "Other"
-    if hue is not None:
-        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], hue=hue, ax=ax, alpha=5)
-    else:
-        sns.scatterplot(data=dataDF, x=genes[0], y=genes[1], ax=ax, alpha=0.2)
-
-
-def geneSig_plot_cells(
-    X, comps: list[int], hue: str, ax: Axes, unique=None, average=False, kde=False
-):
-    """Plots two genes on either a per cell or per cell type basis"""
-
-    geneSigDF = pd.DataFrame()
-    geneVecs = X.varm["Pf2_C"][:, comps]
-    for i, _ in enumerate(comps):
-        geneSigDF[str(comps[i])] = np.matmul(X.X, geneVecs[:, i])
-
-    geneSigDF[hue] = X.obs[hue].values
-    geneSigDF = geneSigDF.sample(n=10000)
-    alpha = 0.3
-
-    if unique is not None:
-        geneSigDF[hue] = geneSigDF[hue].astype(str)
-        geneSigDF.loc[geneSigDF[hue] != unique, hue] = "Other"
-    if average:
-        geneSigDF = geneSigDF.groupby([hue], observed=True).mean()
-        alpha = 1
-    sns.scatterplot(
-        data=geneSigDF,
-        x=str(comps[0]),
-        y=str(comps[1]),
-        hue=hue,
-        ax=ax,
-        alpha=alpha,
-    )
-    if kde:
-        sns.kdeplot(
-            data=geneSigDF,
-            x=str(comps[0]),
-            y=str(comps[1]),
-            hue=hue,
-            levels=5,
-            fill=True,
-            alpha=0.3,
-            cut=2,
-            ax=ax,
-        )
-    ax.set(
-        xlabel="Comp. " + str(comps[0]) + " Signature",
-        ylabel="Comp. " + str(comps[1]) + " Signature",
-    )
 
 
 def plot_cell_gene_corr(

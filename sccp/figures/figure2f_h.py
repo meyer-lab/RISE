@@ -8,7 +8,6 @@ from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
-    plot_factor_weight,
 )
 import numpy as np
 import pandas as pd

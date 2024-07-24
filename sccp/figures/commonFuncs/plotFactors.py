@@ -134,28 +134,6 @@ def plot_gene_factors(data: AnnData, ax: Axes, trim=True):
     ax.set(xlabel="Component")
 
 
-def plot_gene_factors_partial(
-    cmp: int, dataIn: AnnData, ax: Axes, geneAmount: int = 5, top=True
-):
-    """Plotting weights for gene factors for both most negatively/positively weighted terms"""
-    cmpName = f"Cmp. {cmp}"
-
-    df = pd.DataFrame(
-        data=dataIn.varm["Pf2_C"][:, cmp - 1], index=dataIn.var_names, columns=[cmpName]
-    )
-    df = df.reset_index(names="Gene")
-    df = df.sort_values(by=cmpName)
-
-    if top:
-        sns.barplot(
-            data=df.iloc[-geneAmount:, :], x="Gene", y=cmpName, color="k", ax=ax
-        )
-    else:
-        sns.barplot(data=df.iloc[:geneAmount, :], x="Gene", y=cmpName, color="k", ax=ax)
-
-    ax.tick_params(axis="x", rotation=90)
-
-
 def reorder_table(projs: np.ndarray) -> np.ndarray:
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2

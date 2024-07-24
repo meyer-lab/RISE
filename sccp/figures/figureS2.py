@@ -23,7 +23,7 @@ def makeFigure():
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
 
     ranks = [
-        0,
+        1,
         5,
         10,
         15,

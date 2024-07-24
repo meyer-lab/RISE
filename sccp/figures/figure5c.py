@@ -11,29 +11,40 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import scanpy as sc
-from .commonFuncs.plotGeneral import rotate_xaxis
+from .commonFuncs.plotGeneral import rotate_xaxis, cell_count_perc_df
 from matplotlib.axes import Axes
 import anndata
-from .commonFuncs.plotPaCMAP import plot_gene_pacmap
+from .commonFuncs.plotPaCMAP import plot_gene_pacmap, plot_wp_pacmap
+from .figure4f_k import plot_correlation_cmp_cell_count_perc
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
     # Get list of axis objects
-    ax, f = getSetup((4, 2), (1, 1))
+    ax, f = getSetup((8, 8), (3, 3))
 
     # Add subplot labels
     subplotLabel(ax)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    
+    plot_wp_pacmap(X, 4, ax[0], 0.25)
+    plot_wp_pacmap(X, 27, ax[1], 0.25)
 
     X = cytotoxic_score(X)
-    plot_score(X, ax[0], cellType="Cell Type2")
+    plot_score(X, ax[3], cellType="Cell Type2")
     ax[0].set(ylabel="Cytotoxic Score")
 
-    plot_gene_pacmap("RETN", "Pf2", X, ax[1])
+    plot_gene_pacmap("RETN", "Pf2", X, ax[4])
+    
+    celltype_count_perc_df = cell_count_perc_df(X, celltype="leiden", status=True)
+    plot_correlation_cmp_cell_count_perc(
+            X, 28, celltype_count_perc_df, ax[5], cellPerc=False
+        )
+    
+    
 
-    plot_pair_gene_factors(X, 22, 28, ax[2])
+    
 
     return f
 
@@ -81,13 +92,3 @@ def plot_score(X: anndata, ax: Axes, cellType="Cell Type"):
 
     rotate_xaxis(ax)
 
-
-def plot_pair_gene_factors(X: anndata.AnnData, cmp1: int, cmp2: int, ax: Axes):
-    """Plots two gene components weights"""
-    cmpWeights = np.concatenate(
-        ([X.varm["Pf2_C"][:, cmp1 - 1]], [X.varm["Pf2_C"][:, cmp2 - 1]])
-    )
-    df = pd.DataFrame(
-        data=cmpWeights.transpose(), columns=[f"Cmp. {cmp1}", f"Cmp. {cmp2}"]
-    )
-    sns.scatterplot(data=df, x=f"Cmp. {cmp1}", y=f"Cmp. {cmp2}", ax=ax)

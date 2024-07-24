@@ -24,13 +24,13 @@ def makeFigure():
     # ranks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     # plot_accuracy_ranks_lupus(X, ranks, ax[0], error_metric="roc_auc")
     ax[0].set(xticks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
-    X = [0, 50]
-    Y = [0.84, 0.84]
-    ax[0].plot(X, Y, linestyle="--")
+    x = [0, 50]
+    y = [0.84, 0.84]
+    ax[0].plot(x, y, linestyle="--")
 
     X.uns["Pf2_A"] = correct_conditions(X)
     plot_roc_fourthbatch(X, ax[1])
 
-    plot_labels_pacmap(X, "Cell Type", ax[2])
+    plot_labels_pacmap(X, "Cell Type2", ax[2])
 
     return f
