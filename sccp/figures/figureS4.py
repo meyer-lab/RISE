@@ -5,7 +5,8 @@ import scanpy as sc
 import anndata
 from .common import subplotLabel, getSetup
 from ..factorization import pf2
-from ..imports import import_thomson
+
+# from ..imports import import_thomson
 from matplotlib.axes import Axes
 from tlviz.factor_tools import factor_match_score as fms
 from tensorly.cp_tensor import CPTensor
@@ -17,13 +18,12 @@ def makeFigure():
     ax, f = getSetup((6, 3), (1, 2))
     subplotLabel(ax)
 
-    X = import_thomson()
+    # X = import_thomson()
+    # percentList = np.arange(0.0, 8.0, 5.0)
+    # plot_fms_percent_drop(X, ax[0], percentList=percentList, runs=3)
 
-    percentList = np.arange(0.0, 8.0, 5.0)
-    plot_fms_percent_drop(X, ax[0], percentList=percentList, runs=3)
-
-    ranks = list(range(1, 3))
-    plot_fms_diff_ranks(X, ax[1], ranksList=ranks, runs=3)
+    # ranks = list(range(1, 3))
+    # plot_fms_diff_ranks(X, ax[1], ranksList=ranks, runs=3)
 
     return f
 

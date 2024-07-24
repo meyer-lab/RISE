@@ -10,7 +10,6 @@ from .common import (
 import numpy as np
 import seaborn as sns
 import pandas as pd
-from .commonFuncs.plotFactors import bot_top_genes
 from matplotlib.axes import Axes
 import anndata
 from .commonFuncs.plotPaCMAP import plot_wp_pacmap
@@ -25,22 +24,22 @@ def makeFigure():
     subplotLabel(ax)
 
     X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
-    
+
     plot_wp_pacmap(X, 28, ax[2], 0.25)
 
     genes = ["RETN", "S100A9", "S100A12", "S100A8"]
 
     for i, gene in enumerate(np.ravel(genes)):
         plot_avegene_per_status_per_cluster(
-            X, gene, ax[i+2], clusterName1="44", cellType="leiden"
+            X, gene, ax[i + 2], clusterName1="44", cellType="leiden"
         )
-    genes = ["IFITM3"] 
+    genes = ["IFITM3"]
     for i, gene in enumerate(np.ravel(genes)):
         plot_avegene_per_status_per_cluster(
-            X, gene, ax[i+2], clusterName1="21",clusterName2="30", cellType="leiden"
+            X, gene, ax[i + 2], clusterName1="21", clusterName2="30", cellType="leiden"
         )
-        
-    plot_pair_gene_factors(X, 22, 28, ax[5])   
+
+    plot_pair_gene_factors(X, 22, 28, ax[5])
 
     return f
 
@@ -105,7 +104,6 @@ def plot_avegene_per_status_per_cluster(
             0, np.max(dfClust["Average Gene Expression"]) + 0.00005, num=5
         ),
     )
-
 
 
 def plot_pair_gene_factors(X: anndata.AnnData, cmp1: int, cmp2: int, ax: Axes):

@@ -18,9 +18,9 @@ def makeFigure():
     # Add subplot labels
     subplotLabel(ax)
 
-    plot_cell_count_status(X, ax=ax[0])
+    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad", backed="r")
+    plot_cell_count_status(X, ax=ax[0])
 
     # ranks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     # plot_r2x(X, ranks, ax[1])

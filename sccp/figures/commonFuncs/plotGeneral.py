@@ -99,9 +99,7 @@ def plot_avegene_per_category(
     ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=45)
 
 
-def avegene_per_status(
-    X: anndata.AnnData, gene: str, cellType="Cell Type"
-):
+def avegene_per_status(X: anndata.AnnData, gene: str, cellType="Cell Type"):
     """Plots average gene expression across cell types for a category of drugs"""
     genesV = X[:, gene]
     dataDF = genesV.to_df()

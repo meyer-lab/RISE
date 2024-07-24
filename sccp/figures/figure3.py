@@ -20,6 +20,11 @@ from .commonFuncs.plotGeneral import (
     plot_cell_gene_corr,
     cell_count_perc_df,
 )
+from .figure2f_h import groupDrugs
+from .commonFuncs.plotFactors import (
+    plot_condition_factors,
+    plot_gene_factors,
+)
 
 
 def makeFigure():
@@ -32,6 +37,10 @@ def makeFigure():
 
     X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
     cellDF = cell_count_perc_df(X, "Cell Type2")
+
+    drugNames = groupDrugs(X, "Condition")
+    plot_condition_factors(X, ax[0], drugNames, ThomsonNorm=True, groupConditions=True)
+    plot_gene_factors(X, ax[2])
 
     plot_labels_pacmap(X, "Cell Type2", ax[0])
 
