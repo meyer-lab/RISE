@@ -1,29 +1,25 @@
 """
-Lupus: Logistic regression weights for SLE and/or ancestry
+Figure 8f_g: PCA and Pf2 PaCMAP labeled by genes and drugs Logistic regression weights for SLE and/or ancestry
 """
 
-from anndata import read_h5ad
+import anndata
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
 from ..logisticReg import logistic_regression
-from matplotlib.axes import Axes
-import anndata
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
-    # Get list of axis objects
     ax, f = getSetup((5, 4), (2, 1))
-
-    # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    X = anndata.read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
     sns.boxplot(

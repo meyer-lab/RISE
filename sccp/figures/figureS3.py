@@ -1,24 +1,20 @@
 """
-Thomson: Cell counts and cell type percentages per condition
+Figure S3: PCA and Pf2 PaCMAP labeled by genes and drugsCell counts and cell type percentages per condition
 """
 
-from anndata import read_h5ad
 import seaborn as sns
-from .common import subplotLabel, getSetup
-from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 from matplotlib.axes import Axes
 import anndata
+from .common import subplotLabel, getSetup
+from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
-    # Get list of axis objects
     ax, f = getSetup((11, 14), (4, 2))
-
-    # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     plot_cell_count(X, ax[0])
 

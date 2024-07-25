@@ -1,32 +1,28 @@
 """
-Lupus: Prediction accuracy for all two
+Figure 4d: PCA and Pf2 PaCMAP labeled by genes and drugs Prediction accuracy for all two
 pair logistic regression combinations
 """
 
-from anndata import read_h5ad
 import itertools
 import numpy as np
 import seaborn as sns
+from matplotlib.axes import Axes
+import anndata
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotLupus import samples_only_lupus
 from ..factorization import correct_conditions
 from .commonFuncs.plotGeneral import rotate_xaxis, rotate_yaxis
-from matplotlib.axes import Axes
-import anndata
-import pandas as pd
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
-    # Get list of axis objects
     ax, f = getSetup((6, 6), (1, 1))
-
-    # Add subplot labels
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    X = anndata.read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
     status = samples_only_lupus(X)
 

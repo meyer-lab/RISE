@@ -1,5 +1,5 @@
 """
-Thomson: PaCMAP for components, gene factors, average
+Figure 3: PCA and Pf2 PaCMAP labeled by genes and drugs PaCMAP for components, gene factors, average
 gene expression per cell type/category, correlation between
 cell percentages and componnets, and correlation of genes
 """
@@ -7,7 +7,7 @@ cell percentages and componnets, and correlation of genes
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from anndata import read_h5ad
+import anndata
 from .common import (
     subplotLabel,
     getSetup,
@@ -20,39 +20,33 @@ from .commonFuncs.plotGeneral import (
     plot_cell_gene_corr,
     cell_count_perc_df,
 )
-from .figure2f_h import groupDrugs
 from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_gene_factors,
 )
+from .figure2f_h import groupDrugs
 
 
 def makeFigure():
     """Get a list of the axis objects and create a figure."""
-    # Get list of axis objects
-    ax, f = getSetup((22, 22), (4, 4))
-
-    # Add subplot labels
+    ax, f = getSetup((30, 30), (5, 5))
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
     cellDF = cell_count_perc_df(X, "Cell Type2")
-
-    drugNames = groupDrugs(X, "Condition")
-    plot_condition_factors(X, ax[0], drugNames, ThomsonNorm=True, groupConditions=True)
-    plot_gene_factors(X, ax[2])
-
     plot_labels_pacmap(X, "Cell Type2", ax[0])
 
-    plot_avegene_per_celltype(X, ["FXYD2"], ax[1], cellType="Cell Type2")
-    plot_avegene_per_celltype(X, ["SERPINF1"], ax[2], cellType="Cell Type2")
-    plot_avegene_per_celltype(X, ["RARRES2"], ax[3], cellType="Cell Type2")
+    drugNames = groupDrugs(X, "Condition")
+    plot_condition_factors(X, ax[1], drugNames, ThomsonNorm=True, groupConditions=True)
+    plot_gene_factors(X, ax[2])
+    ax[2].yaxis.set_ticklabels([])
 
-    plot_wp_pacmap(X, 15, ax[4], 0.2)
-    plot_wp_pacmap(X, 19, ax[5], 0.2)
-    plot_wp_pacmap(X, 20, ax[6], 0.2)
-    plot_wp_pacmap(X, 9, ax[7], 0.2)
+    plot_wp_pacmap(X, 15, ax[3], 0.2)
+    plot_avegene_per_celltype(X, ["FXYD2"], ax[4], cellType="Cell Type2")
+    plot_avegene_per_celltype(X, ["SERPINF1"], ax[5], cellType="Cell Type2")
+    plot_avegene_per_celltype(X, ["RARRES2"], ax[6], cellType="Cell Type2")
 
+    plot_wp_pacmap(X, 19, ax[7], 0.2)
     plot_avegene_per_category(
         ["Alprostadil"], "Alpro", "EREG", X, ax[8], cellType="Cell Type", swarm=True
     )
@@ -63,6 +57,12 @@ def makeFigure():
     )
     ax[9].set(title="Gene Expression in DCs")
 
+    plot_wp_pacmap(X, 20, ax[9], 0.2)
+
+    X.obs["Condition_gluc"] = X.obs["Condition"].cat.add_categories("Other")
+    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.add_categories(
+        "Glucocorticoids"
+    )
     glucs = [
         "Betamethasone Valerate",
         "Loteprednol etabonate",
@@ -70,8 +70,20 @@ def makeFigure():
         "Triamcinolone Acetonide",
         "Meprednisone",
     ]
+    X.obs.loc[~X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Other"
+    X.obs.loc[X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Glucocorticoids"
+    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
+    color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
+    plot_labels_pacmap(X, "Condition_gluc", ax[10], color_key=color_key)
+
+    cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[11])
+
+    plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[12], unique=glucs)
+
+    plot_wp_pacmap(X, 9, ax[13], 0.2)
+
     plot_avegene_per_category(
-        glucs, "Gluco", "MS4A6A", X, ax[10], cellType="Cell Type2"
+        glucs, "Gluco", "MS4A6A", X, ax[14], cellType="Cell Type2"
     )
 
     X_genes = X[:, ["CD163", "MS4A6A"]].to_memory()
@@ -81,24 +93,10 @@ def makeFigure():
         hue="Condition",
         cells=["Intermediate Monocytes", "Myeloid Suppressors"],
         cellType="Cell Type2",
-        ax=ax[11],
+        ax=ax[15],
     )
 
-    X.obs["Condition_gluc"] = X.obs["Condition"].cat.add_categories("Other")
-    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.add_categories(
-        "Glucocorticoids"
-    )
-    X.obs.loc[~X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Other"
-    X.obs.loc[X.obs["Condition_gluc"].isin(glucs), "Condition_gluc"] = "Glucocorticoids"
-    X.obs["Condition_gluc"] = X.obs["Condition_gluc"].cat.remove_unused_categories()
-
-    color_key = np.flip(sns.color_palette(n_colors=2).as_hex())
-    plot_labels_pacmap(X, "Condition_gluc", ax[12], color_key=color_key)
-
-    plot_cell_perc_comp_corr(X, cellDF, "Myeloid Suppressors", 20, ax[13], unique=glucs)
-
-    cell_perc_box(cellDF, glucs, "Glucocorticoids", ax[14])
-    set_xy_limits(ax)
+    # set_xy_limits(ax)
 
     return f
 

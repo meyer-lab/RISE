@@ -1,17 +1,16 @@
-"""FMS removing percentages of dataset and FMS across different components"""
+"""Figure S4: PCA and Pf2 PaCMAP labeled by genes and drugsFMS removing percentages of dataset and FMS across different components"""
 
 import numpy as np
 import scanpy as sc
 import anndata
-from .common import subplotLabel, getSetup
-from ..factorization import pf2
-
-# from ..imports import import_thomson
 from matplotlib.axes import Axes
 from tlviz.factor_tools import factor_match_score as fms
 from tensorly.cp_tensor import CPTensor
 import seaborn as sns
 import pandas as pd
+from .common import subplotLabel, getSetup
+from ..factorization import pf2
+# from ..imports import import_thomson
 
 
 def makeFigure():
@@ -55,16 +54,13 @@ def plot_fms_percent_drop(
     runs: int,
     rank=20,
 ):
-    # pf2 on original dataset
     dataX = pf2(X, rank, doEmbedding=False)
 
     fmsLists = []
 
-    # loop to do multiple runs
     for j in range(0, runs, 1):
         scores = [1.0]
 
-        # loop to compare sampled dataset to original
         for i in percentList[1:]:
             sampled_data: anndata.AnnData = sc.pp.subsample(
                 X, fraction=1 - (i / 100), random_state=j, copy=True
@@ -76,7 +72,6 @@ def plot_fms_percent_drop(
 
         fmsLists.append(scores)
 
-    # making dataframe based on runs, percent list, and fms
     runsList_df = []
     for i in range(0, runs):
         for j in range(0, len(percentList)):
@@ -96,7 +91,6 @@ def plot_fms_percent_drop(
         }
     )
 
-    # percent dropped vs fms graph
     sns.lineplot(data=df, x="Percentage of Data Dropped", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
 
@@ -126,7 +120,6 @@ def plot_fms_diff_ranks(
             scores.append(fmsScore)
         fmsLists.append(scores)
 
-    # making dataframe based on runs, ranks, and fms
     runsList_df = []
     for i in range(0, runs):
         for j in range(0, len(ranksList)):

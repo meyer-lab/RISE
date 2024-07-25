@@ -1,8 +1,8 @@
 """
-Thomson: Cell counts and cell type percentages per condition
+Figure S5: PCA and Pf2 PaCMAP labeled by genes and drugsCell counts and cell type percentages per condition
 """
 
-from anndata import read_h5ad
+import anndata
 import seaborn as sns
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
@@ -13,7 +13,7 @@ def makeFigure():
     ax, f = getSetup((5, 5), (1, 1))
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
 
     df = cell_count_perc_df(X, celltype="Cell Type2")
     sns.swarmplot(

@@ -26,10 +26,12 @@ def plot_condition_factors(
     X = np.log10(X)
     if ThomsonNorm is True:
         controls = yt.str.contains("CTRL")
-        X = X[controls]
+        XX = X[controls]
+    else:
+        XX = X
 
-    X -= np.median(X, axis=0)
-    X /= np.std(X, axis=0)
+    X -= np.median(XX, axis=0)
+    X /= np.std(XX, axis=0)
 
     ind = reorder_table(X)
     X = X[ind]
@@ -43,8 +45,6 @@ def plot_condition_factors(
             X = X[ind]
             yt = yt.iloc[ind]
         ax.tick_params(axis="y", which="major", pad=20, length=0)
-        # extra padding to leave room for the row colors
-        # get list of colors for each label:
         colors = sns.color_palette(
             n_colors=pd.Series(cond_group_labels).nunique()
         ).as_hex()
@@ -66,7 +66,6 @@ def plot_condition_factors(
                     clip_on=False,
                 )
             )
-        # add a little legend
         ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
 
     xticks = np.arange(1, X.shape[1] + 1)
@@ -139,18 +138,3 @@ def reorder_table(projs: np.ndarray) -> np.ndarray:
     assert projs.ndim == 2
     Z = sch.linkage(projs, method="complete", metric="cosine", optimal_ordering=True)
     return sch.leaves_list(Z)
-
-
-def bot_top_genes(X, cmp, geneAmount=5):
-    """Saves most pos/negatively genes"""
-    df = pd.DataFrame(
-        data=X.varm["Pf2_C"][:, cmp - 1], index=X.var_names, columns=["Component"]
-    )
-    df = df.reset_index(names="Gene")
-    df = df.sort_values(by="Component")
-
-    top = df.iloc[-geneAmount:, 0].values
-    bot = df.iloc[:geneAmount, 0].values
-    all_genes = np.concatenate([bot, top])
-
-    return all_genes

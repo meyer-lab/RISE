@@ -1,17 +1,16 @@
 """
-Thomson: Plotting Pf2 factors and weights
+Figure 2f_h: PCA and Pf2 PaCMAP labeled by genes and drugs Plotting Pf2 factors and weights
 """
 
-from anndata import read_h5ad
+import numpy as np
+import pandas as pd
+import anndata
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
 )
-import numpy as np
-import pandas as pd
-import anndata
 
 
 def makeFigure():
@@ -19,13 +18,14 @@ def makeFigure():
     ax, f = getSetup((10, 12), (2, 2))
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
 
     drugNames = groupDrugs(X, "Condition")
 
     plot_condition_factors(X, ax[0], drugNames, ThomsonNorm=True, groupConditions=True)
     plot_eigenstate_factors(X, ax[1])
     plot_gene_factors(X, ax[2])
+    ax[2].yaxis.set_ticklabels([])
 
     return f
 

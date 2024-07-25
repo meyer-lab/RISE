@@ -1,18 +1,19 @@
 """
+Figure S7: PCA and Pf2 PaCMAP labeled by genes and drugs
 Describes the model's reaction to the removal of specific pieces of the
 dataset. It can clearly be observed for all cell types that had an identifying component that the
 corresponding weight for the condition removed significantly dropped.
 """
 
-from .common import getSetup, subplotLabel
-from ..imports import import_thomson
-from ..factorization import pf2
 import pandas as pd
 import numpy as np
 from anndata import AnnData
 from matplotlib.axes import Axes
 from scipy.stats import linregress
 import seaborn as sns
+from .common import getSetup, subplotLabel
+from ..imports import import_thomson
+from ..factorization import pf2
 
 
 def makeFigure():

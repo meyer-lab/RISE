@@ -1,13 +1,13 @@
 """
-Thomson: PCA and Pf2 PaCMAP labeled by genes and drugs
+Figure 2b_e: PCA and Pf2 PaCMAP labeled by genes and drugs
 """
 
-from anndata import read_h5ad
+import pacmap
+import numpy as np
+import anndata
 from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
-import pacmap
-import numpy as np
 
 
 def makeFigure():
@@ -15,11 +15,13 @@ def makeFigure():
     ax, f = getSetup((8, 8), (2, 2))
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
 
     drug = ["Alprostadil"]
     plot_labels_pacmap(X, "Condition", ax[0], drug, cmap="Set1")
     ax[0].set(title="Pf2-Based Decomposition")
+
+    plot_labels_pacmap(X, "Cell Type", ax[2])
 
     pc = PCA(n_components=20)
     pcaPoints = pc.fit_transform(np.asarray(X.X - X.var["means"].values))
@@ -28,7 +30,6 @@ def makeFigure():
     plot_labels_pacmap(X, "Condition", ax[1], drug, cmap="Set1")
     ax[1].set(title="PCA-Based Decomposition")
 
-    plot_labels_pacmap(X, "Cell Type", ax[2])
-    plot_labels_pacmap(X, "Cell Type2", ax[3])
+    plot_labels_pacmap(X, "Cell Type", ax[3])
 
     return f

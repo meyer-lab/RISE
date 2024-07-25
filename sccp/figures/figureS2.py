@@ -1,18 +1,19 @@
 """
-Thomson: PCA and Pf2 PaCMAP labeled by genes and drugs
+Figure S2: PCA and Pf2 PaCMAP labeled by genes and drugs PCA and Pf2 PaCMAP labeled by genes and drugs
 """
 
-from anndata import read_h5ad
-from sklearn.decomposition import PCA
-from .common import subplotLabel, getSetup
-from .commonFuncs.plotPaCMAP import plot_labels_pacmap
-from .commonFuncs.plotGeneral import plot_r2x
+import anndata
 import pacmap
 import numpy as np
 import scib
 import scanpy as sc
 import pandas as pd
+
 # import seaborn as sns
+from sklearn.decomposition import PCA
+from .common import subplotLabel, getSetup
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
+from .commonFuncs.plotGeneral import plot_r2x
 
 
 def makeFigure():
@@ -20,7 +21,7 @@ def makeFigure():
     ax, f = getSetup((8, 8), (3, 3))
     subplotLabel(ax)
 
-    X = read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
 
     ranks = [
         1,
