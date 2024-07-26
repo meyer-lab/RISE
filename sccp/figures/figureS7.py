@@ -62,9 +62,9 @@ def plot_diff_exp(
     numberOfCellType = [
         len(data[(data.obs["Condition"] == txt) & (data.obs[ctarg] == cell_type)])
         for txt in yt
-    ]  # Number of cells in the chosen condition
+    ]
 
-    if override == (-1, -1):  # Use r^2 values to find the most important component
+    if override == (-1, -1):  # Use R^2 values to find  most important component
         X, X2 = np.array(origX.uns["Pf2_A"]), np.array(sampledX.uns["Pf2_A"])
         all_r2, all_r2_2 = (
             [linregress(X[:, i], numberOfCellType)[2] ** 2 for i in range(X.shape[1])],
@@ -74,7 +74,7 @@ def plot_diff_exp(
             ],
         )
         most_exp_cmp, most_exp_cmp2 = int(np.argmax(all_r2)), int(np.argmax(all_r2_2))
-    else:  # Use the override component numbers
+    else:  # Uses specific component number
         most_exp_cmp, most_exp_cmp2 = override[0], override[1]
         all_r2 = [0] * rank
         all_r2[most_exp_cmp] = (

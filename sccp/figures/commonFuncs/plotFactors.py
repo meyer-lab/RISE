@@ -133,7 +133,7 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, trim=True):
     ax.set(xlabel="Component")
 
 
-def reorder_table(projs: np.ndarray) -> np.ndarray:
+def reorder_table(projs: np.ndarray):
     """Reorder a table's rows using heirarchical clustering"""
     assert projs.ndim == 2
     Z = sch.linkage(projs, method="complete", metric="cosine", optimal_ordering=True)

@@ -49,7 +49,7 @@ def cytotoxic_score(X: anndata.AnnData):
     return X
 
 
-def plot_score(X: anndata, ax: Axes, cellType="Cell Type"):
+def plot_score(X: anndata.AnnData, ax: Axes, cellType: str = "Cell Type"):
     """Plots average score  across cell types and patient status"""
     df = pd.DataFrame({"Score": X.obs["score"].values})
     df["Status"] = X.obs["SLE_status"].values

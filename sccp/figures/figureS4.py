@@ -29,7 +29,8 @@ def makeFigure():
     return f
 
 
-def calculateFMS(A: anndata.AnnData, B: anndata.AnnData) -> float:
+def calculateFMS(A: anndata.AnnData, B: anndata.AnnData):
+    """Calculates FMS between 2 factors"""
     factors = [A.uns["Pf2_A"], A.uns["Pf2_B"], A.varm["Pf2_C"]]
     A_CP = CPTensor(
         (
@@ -54,8 +55,9 @@ def plot_fms_percent_drop(
     ax: Axes,
     percentList: np.ndarray,
     runs: int,
-    rank=20,
+    rank: int = 20,
 ):
+    """Plots FMS score when percentage is removed from data"""
     dataX = pf2(X, rank, doEmbedding=False)
 
     fmsLists = []
@@ -98,6 +100,7 @@ def plot_fms_percent_drop(
 
 
 def resample(data: anndata.AnnData) -> anndata.AnnData:
+    """Bootstrapping dataset"""
     indices = np.random.randint(0, data.shape[0], size=(data.shape[0],))
     data = data[indices].copy()
     return data
@@ -109,6 +112,7 @@ def plot_fms_diff_ranks(
     ranksList: list[int],
     runs: int,
 ):
+    """Plots FMS when using different Pf2 components"""
     fmsLists = []
 
     for j in range(0, runs, 1):

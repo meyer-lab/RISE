@@ -8,12 +8,11 @@ import numpy as np
 import scib
 import scanpy as sc
 import pandas as pd
-
-# import seaborn as sns
 from sklearn.decomposition import PCA
 from .common import subplotLabel, getSetup
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 from .commonFuncs.plotGeneral import plot_r2x
+# import seaborn as sns
 
 
 def makeFigure():
@@ -63,7 +62,7 @@ def makeFigure():
     return f
 
 
-def batch_correction_metrics(X, embed):
+def batch_correction_metrics(X: anndata.AnnData, embed: str):
     """Returns SCIB metrics for batch correction and biological conservation"""
     clisi = scib.me.clisi_graph(
         X.to_memory(), label_key="Cell Type", type_="embed", use_rep=embed

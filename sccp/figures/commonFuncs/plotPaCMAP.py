@@ -11,7 +11,7 @@ import anndata
 from scipy.sparse import spmatrix
 
 
-def _get_canvas(points: np.ndarray) -> ds.Canvas:
+def _get_canvas(points: np.ndarray):
     """Compute bounds on a space with appropriate padding"""
     min_xy = np.nanmin(points, axis=0)
     assert min_xy.size == 2
@@ -34,7 +34,7 @@ def _to_hex(arr):
     return [matplotlib.colors.to_hex(c) for c in arr]
 
 
-def ds_show(result, ax):
+def ds_show(result, ax: Axes):
     result = tf.set_background(result, "white")
     img_rev = result.data[::-1]
     mpl_img = np.dstack(
@@ -60,7 +60,6 @@ def plot_gene_pacmap(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=("x", "y"))
 
-    # Color by values
     values -= np.min(values)
     values /= np.max(values)
     data["val_cat"] = values
@@ -117,14 +116,14 @@ def plot_labels_pacmap(
     labelType: str,
     ax: Axes,
     condition=None,
-    cmap="tab20",
+    cmap: str = "tab20",
     color_key=None,
 ):
     """Scatterplot of UMAP visualization weighted by condition or cell type"""
     labels = X.obs[labelType]
 
     if condition is not None:
-        labels = pd.Series([c if c in condition else "Z Other" for c in labels])
+        labels = pd.Series([c if c in condition else "Other" for c in labels])
     if labels.dtype == "category":
         labels = labels.cat.set_categories(
             np.sort(labels.cat.categories.values), ordered=True

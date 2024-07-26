@@ -4,6 +4,7 @@ Figure 8a_c
 
 import anndata
 import seaborn as sns
+from matplotlib.axes import Axes
 from .common import subplotLabel, getSetup
 # from .commonFuncs.plotGeneral import plot_r2x
 # from .commonFuncs.plotLupus import plot_accuracy_ranks_lupus
@@ -28,7 +29,7 @@ def makeFigure():
     return f
 
 
-def plot_cell_count_status(X: anndata.AnnData, ax):
+def plot_cell_count_status(X: anndata.AnnData, ax: Axes):
     """Plots overall cell count for SLE and healthy patients"""
     df = X.obs[["SLE_status", "Condition"]].reset_index(drop=True)
     dfCond = (
