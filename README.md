@@ -1,1 +1,1 @@
-# PARAFAC2 for single cell tensor decompositions
+# Integrative, high-resolution analysis of single cells across experimental conditions with PARAFAC2
