@@ -1,4 +1,6 @@
-"""Figure S4: PCA and Pf2 PaCMAP labeled by genes and drugsFMS removing percentages of dataset and FMS across different components"""
+"""
+Figure S4
+"""
 
 import numpy as np
 import scanpy as sc

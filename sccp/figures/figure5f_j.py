@@ -1,5 +1,5 @@
 """
-Figure 5f_j: PCA and Pf2 PaCMAP labeled by genes and drugs Average gene expression stratified by cell type and status
+Figure 5f_j
 """
 
 import numpy as np

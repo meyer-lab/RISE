@@ -1,5 +1,5 @@
 """
-Figure 8d: PCA and Pf2 PaCMAP labeled by genes and drugsPf2 factors and weights
+Figure 8d:
 """
 
 import anndata

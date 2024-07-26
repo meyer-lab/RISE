@@ -1,5 +1,5 @@
 """
-Figure 5a_e: PCA and Pf2 PaCMAP labeled by genes and drugs Average cytotoxic score for each cell type
+Figure 5a_e
 """
 
 import numpy as np

@@ -1,5 +1,5 @@
 """
-Figure S9: PCA and Pf2 PaCMAP labeled by genes and drugs PaCMAP for all components
+Figure S9
 """
 
 import anndata

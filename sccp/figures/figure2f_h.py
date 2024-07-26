@@ -1,5 +1,5 @@
 """
-Figure 2f_h: PCA and Pf2 PaCMAP labeled by genes and drugs Plotting Pf2 factors and weights
+Figure 2f_h
 """
 
 import numpy as np

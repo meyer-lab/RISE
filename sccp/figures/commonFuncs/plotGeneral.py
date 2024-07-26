@@ -117,28 +117,6 @@ def avegene_per_status(X: anndata.AnnData, gene: str, cellType="Cell Type"):
     return df
 
 
-def cell_comp_hist(X, category: str, comp: int, unique, ax: Axes):
-    """Plots weighted projections of each cell according to category"""
-    w_proj = X.obsm["weighted_projections"][:, comp - 1]
-    obsDF = pd.DataFrame({category: X.obs[category].astype(str).values})
-    w_proj = X.obsm["weighted_projections"][:, comp - 1]
-    if category is not None:
-        if unique is not None:
-            obsDF.loc[obsDF[category] != unique, category] = "Other"
-        labels = obsDF[category]
-        # obsDF[category] = obsDF[category].astype(str)
-        histDF = pd.DataFrame({"Component " + str(comp): w_proj, category: labels})
-        sns.histplot(
-            data=histDF,
-            x="Component " + str(comp),
-            hue=category,
-            kde=True,
-            ax=ax,
-            stat="density",
-            common_norm=False,
-        )
-
-
 def gene_plot_cells(
     X: anndata.AnnData,
     hue: str,

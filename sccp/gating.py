@@ -6,7 +6,7 @@ import doubletdetection
 
 
 def gateThomsonCellsLeiden(X) -> npt.ArrayLike:
-    """Manually gates cell types for Thomson UMAP"""
+    """Manually gates cell types for Thomson PaCMAP"""
     sc.pp.neighbors(X, n_neighbors=15, use_rep="projections", random_state=0)
     sc.tl.leiden(X, resolution=3, random_state=0)
     X.obs["Cell Type"] = X.obs.leiden.replace(thomson_layer1).astype(str)
@@ -16,7 +16,7 @@ def gateThomsonCellsLeiden(X) -> npt.ArrayLike:
 
 
 def gateThomsonCells(X) -> npt.ArrayLike:
-    """Manually gates cell types for Thomson UMAP"""
+    """Manually gates cell types for Thomson PaCMAP"""
     cellTypeDF = pd.read_csv("sccp/data/Thomson/ThomsonCellTypes.csv", index_col=0)
     cellTypeDF.index.name = "cell_barcode"
     X.obs = X.obs.join(cellTypeDF, on="cell_barcode", how="inner")
@@ -28,6 +28,7 @@ def gateThomsonCells(X) -> npt.ArrayLike:
 
 
 def Thomson_Doublet():
+    """Detects doublets in scRNA-seq"""
     X = an.read_h5ad("/opt/andrew/thomson_raw.h5ad")
     sc.pp.filter_genes(X, min_cells=1)
     clf = doubletdetection.BoostClassifier(
@@ -45,7 +46,7 @@ def Thomson_Doublet():
 
 
 def getHiResOldLupus(X) -> npt.ArrayLike:
-    """Manually gates cell types for Thomson UMAP"""
+    """Manually gates cell types for SLE PaCMAP"""
     X.obs["Cell Type Old2"] = X.obs["Cell Type Old"].astype(str)
     X.obs.cell_type_lympho = X.obs.cell_type_lympho.astype(str)
     X.obs.loc[X.obs["cell_type_lympho"] != "nan", "Cell Type Old2"] = X.obs.loc[
@@ -206,7 +207,7 @@ marker_genes_1 = {
 }
 
 
-# This is a list of genes which I assembled to label the second layer of cell annotation. I assembled this using several sources.
+# Take from various resources to annotate level 2
 marker_genes_2 = {
     "B cells": ["PXK", "MS4A1", "CD19", "CD74", "CD79A", "BANK1", "PTPRC", "CR2"],
     "B Memory": ["NPIB15", "BACH2", "IL7", "NMBR", "MS4A1", "MBL2", "LY86", "CD27"],

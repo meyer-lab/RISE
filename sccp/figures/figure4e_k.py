@@ -1,6 +1,5 @@
 """
-Figure 4e_k: PCA and Pf2 PaCMAP labeled by genes and drugsCell type percentage between status (with stats comparison) and
-correlation between component and cell count/percentage for each cell type
+Figure 4e_k
 """
 
 import numpy as np

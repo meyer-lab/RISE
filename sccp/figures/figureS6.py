@@ -1,5 +1,5 @@
 """
-Figure S6: PCA and Pf2 PaCMAP labeled by genes and drugsPaCMAP of weighted projections
+Figure S6
 """
 
 import anndata

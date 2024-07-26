@@ -1,5 +1,5 @@
 """
-Figure S5: PCA and Pf2 PaCMAP labeled by genes and drugsCell counts and cell type percentages per condition
+Figure S5
 """
 
 import anndata

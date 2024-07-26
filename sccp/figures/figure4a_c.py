@@ -1,5 +1,5 @@
 """
-Figure 4a_c: PCA and Pf2 PaCMAP labeled by genes and drugs R2X for PCA/Pf2 and accuracy for different components
+Figure 4a_c
 """
 
 from anndata import read_h5ad

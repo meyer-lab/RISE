@@ -1,5 +1,5 @@
 """
-Figure 8a_c: PCA and Pf2 PaCMAP labeled by genes and drugs R2X for PCA/Pf2 and accuracy for different components
+Figure 8a_c
 """
 
 import anndata
@@ -18,7 +18,7 @@ def makeFigure():
 
     plot_cell_count_status(X, ax=ax[0])
 
-    # ranks=[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    # ranks=[1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
     # plot_r2x(X, ranks, ax[1])
     # plot_accuracy_ranks_lupus(X, ranks, ax[2], error_metric="accuracy")
 

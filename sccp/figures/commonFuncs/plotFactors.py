@@ -1,5 +1,5 @@
 from typing import Optional
-from anndata import AnnData
+import anndata
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -12,7 +12,7 @@ cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
 
 def plot_condition_factors(
-    data: AnnData,
+    data: anndata.AnnData,
     ax: Axes,
     cond_group_labels: Optional[pd.Series] = None,
     ThomsonNorm=False,
@@ -81,7 +81,7 @@ def plot_condition_factors(
     ax.set(xlabel="Component")
 
 
-def plot_eigenstate_factors(data: AnnData, ax: Axes):
+def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     """Plots Pf2 eigenstate factors"""
     rank = data.uns["Pf2_B"].shape[1]
     xticks = np.arange(1, rank + 1)
@@ -102,7 +102,7 @@ def plot_eigenstate_factors(data: AnnData, ax: Axes):
     ax.set(xlabel="Component")
 
 
-def plot_gene_factors(data: AnnData, ax: Axes, trim=True):
+def plot_gene_factors(data: anndata.AnnData, ax: Axes, trim=True):
     """Plots Pf2 gene factors"""
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])

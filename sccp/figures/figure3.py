@@ -1,7 +1,5 @@
 """
-Figure 3: PCA and Pf2 PaCMAP labeled by genes and drugs PaCMAP for components, gene factors, average
-gene expression per cell type/category, correlation between
-cell percentages and componnets, and correlation of genes
+Figure 3
 """
 
 import numpy as np

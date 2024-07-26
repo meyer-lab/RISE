@@ -1,8 +1,5 @@
 """
-Figure S7: PCA and Pf2 PaCMAP labeled by genes and drugs
-Describes the model's reaction to the removal of specific pieces of the
-dataset. It can clearly be observed for all cell types that had an identifying component that the
-corresponding weight for the condition removed significantly dropped.
+Figure S7
 """
 
 import pandas as pd

@@ -1,26 +1,22 @@
-# LOGISTIC REGRESSION HELPER FUNCTIONS
-# for more information about possible inputs/specifications, see the sci-kit learn documentation:
-# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegressionCV.html
-
 import numpy as np
 import pandas as pd
+import anndata
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import roc_auc_score
 from .factorization import pf2, correct_conditions
 
 
 def predaccuracy_ranks_lupus(
-    pfx2_data,
-    condition_labels_all,
-    ranks_to_test,
-    error_metric="roc_auc",
+    pfx2_data: anndata.AnnData,
+    condition_labels_all: pd.DataFrame,
+    ranks_to_test: np.ndarray,
+    error_metric: str = "roc_auc",
 ):
-    """Tests various numbers of components for Pf2 by optimizing some error metric in logisitic regression (predicting SLE status)
-    pfx2_data: data in Pf2X format
-    condition_labels_all: condition labels for both the thing you are predicting (like SLE Status) and your grouping variable (if applicable)
-    ranks_to_test: Pf2 ranks to try
-    error_metric: error metric to pass to the logistic regression `scoring` parameter (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics)
-    cv_group: (str) name of column in `condition_labels_all` that should be grouped by in cross validation
+    """Tests various numbers of components for Pf2 by optimizing metric for predicting SLE status
+    pfx2_data: annData file
+    condition_labels_all: Labels for patient samples
+    ranks_to_test: Pf2 ranks
+    error_metric: Metric used for LR
     """
 
     results = []
@@ -60,13 +56,15 @@ def predaccuracy_ranks_lupus(
 
 
 def roc_lupus_fourtbatch(
-    X,
+    X: anndata.AnnData,
     condition_batch_labels: pd.DataFrame,
-    error_metric="roc_auc",
+    error_metric: str = "roc_auc",
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Train a logistic regression model using CV on some cohorts, test on another
-    A_matrix: first factor matrix (Pf2 output)
-    condition_batch_labels: unique list of observation categories, indexed by sample ID
+    """Train a logistic regression model using CV on a cohort and testing on others
+    X: annData file
+    condition_batch_labels: Labels for patient samples
+    ranks_to_test: Pf2 ranks
+    error_metric: Metric used for LR
     """
 
     cond_factors = np.array(X.uns["Pf2_A"])

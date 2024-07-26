@@ -1,5 +1,5 @@
 """
-Figure 2b_e: PCA and Pf2 PaCMAP labeled by genes and drugs
+Figure 2b_e
 """
 
 import pacmap

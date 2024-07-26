@@ -36,6 +36,7 @@ def pf2(
     doEmbedding: bool = True,
     tolerance=1e-9,
 ):
+    """Run Pf2 model and store results in anndata file"""
     pf_out, _ = parafac2_nd(
         X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=500
     )
@@ -50,6 +51,7 @@ def pf2(
 
 
 def pf2_pca_r2x(X: anndata.AnnData, ranks):
+    """Run Pf2/PCA on data and save R2X values"""
     X = X.to_memory()
     XX = sps.csr_array(X.X)
 

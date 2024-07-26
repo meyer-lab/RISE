@@ -6,18 +6,14 @@ from .gating import gateThomsonCells
 
 def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
-    # Cell barcodes, sample id of treatment and sample number (33482, 3)
+    # Cell barcodes, sample id of treatment and sample number
     metafile = pd.read_csv("sccp/data/Thomson/meta.csv", usecols=[0, 1])
-
-    # read in actual data
     # X = sc.read_10x_mtx(
     #     "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
     # )
-    # Just immediately written from above line, to make loading faster
     X = anndata.read_h5ad("/opt/andrew/thomson_raw.h5ad")
     obs = X.obs.reset_index(names="cell_barcode")
 
-    # Left merging should put the barcodes in order
     metafile = pd.merge(
         obs, metafile, on="cell_barcode", how="left", validate="one_to_one"
     )
@@ -68,7 +64,7 @@ def import_lupus() -> anndata.AnnData:
     protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
     protein_df = protein.to_df()
 
-    # rename columns to make more sense
+    # Rename columns
     X.obs = X.obs.rename(
         {
             "batch_cov": "pool",
@@ -85,7 +81,7 @@ def import_lupus() -> anndata.AnnData:
 
     X.obs = X.obs.merge(protein_df, how="left", left_index=True, right_index=True)
 
-    # get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (only 3 cells)
+    # Get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (Only 3 cells)
     X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
 
     return prepare_dataset(X, "Condition", geneThreshold=0.1)
