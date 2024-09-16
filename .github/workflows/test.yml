@@ -10,16 +10,21 @@ jobs:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v4
-    - name: Install dependencies
-      run: poetry install
-    - name: Run mypy check
-      run: make mypy
-    - name: Run ruff check
-      run: poetry run ruff check sccp
-    - name: Run ruff format check
-      run: poetry run ruff format --check sccp
+    - name: Setup rye
+      uses: eifinger/setup-rye@v4
+      with:
+        enable-cache: true
+        version: '0.39.0'
+    - name: Setup environment
+      run: make .venv
     - name: Test with pytest
       run: make coverage.xml
+    - name: Run pyright check
+      run: make pyright
+    - name: Check formatting
+      run: rye fmt --check sccp
+    - name: Check linting
+      run: rye lint sccp
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:

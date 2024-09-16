@@ -1,11 +1,11 @@
-from pacmap import PaCMAP
-from sklearn.linear_model import LinearRegression
-from scipy.stats import gmean
-from parafac2.parafac2 import parafac2_nd, store_pf2
-from sklearn.decomposition import PCA
 import anndata
-import scipy.sparse as sps
 import numpy as np
+import scipy.sparse as sps
+from pacmap import PaCMAP
+from parafac2.parafac2 import parafac2_nd, store_pf2
+from scipy.stats import gmean
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
 from tqdm import tqdm
 
 

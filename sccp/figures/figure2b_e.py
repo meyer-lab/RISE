@@ -2,11 +2,12 @@
 Figure 2b_e
 """
 
-import pacmap
-import numpy as np
 import anndata
+import numpy as np
+import pacmap
 from sklearn.decomposition import PCA
-from .common import subplotLabel, getSetup
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 
 

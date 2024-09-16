@@ -1,9 +1,10 @@
+import anndata
 import numpy as np
 import pandas as pd
-import anndata
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import roc_auc_score
-from .factorization import pf2, correct_conditions
+
+from .factorization import correct_conditions, pf2
 
 
 def predaccuracy_ranks_lupus(

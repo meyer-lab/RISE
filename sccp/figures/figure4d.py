@@ -3,17 +3,19 @@ Figure 4d
 """
 
 import itertools
+
+import anndata
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
-import anndata
-import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
-from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import samples_only_lupus
+from sklearn.linear_model import LogisticRegression
+
 from ..factorization import correct_conditions
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotGeneral import rotate_xaxis, rotate_yaxis
+from .commonFuncs.plotLupus import samples_only_lupus
 
 
 def makeFigure():

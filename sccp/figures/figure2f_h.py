@@ -2,10 +2,11 @@
 Figure 2f_h
 """
 
+import anndata
 import numpy as np
 import pandas as pd
-import anndata
-from .common import subplotLabel, getSetup
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,

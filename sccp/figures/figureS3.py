@@ -2,10 +2,11 @@
 Figure S3
 """
 
+import anndata
 import seaborn as sns
 from matplotlib.axes import Axes
-import anndata
-from .common import subplotLabel, getSetup
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 
 

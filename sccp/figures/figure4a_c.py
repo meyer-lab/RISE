@@ -3,10 +3,12 @@ Figure 4a_c
 """
 
 from anndata import read_h5ad
-from .common import subplotLabel, getSetup
+
 from ..factorization import correct_conditions
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotLupus import plot_roc_fourthbatch
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
+
 # from .commonFuncs.plotLupus import plot_accuracy_ranks_lupus
 # from .commonFuncs.plotGeneral import plot_r2x
 

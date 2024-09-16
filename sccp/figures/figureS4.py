@@ -2,16 +2,18 @@
 Figure S4
 """
 
-import numpy as np
-import scanpy as sc
 import anndata
-from matplotlib.axes import Axes
-from tlviz.factor_tools import factor_match_score as fms
-from tensorly.cp_tensor import CPTensor
-import seaborn as sns
+import numpy as np
 import pandas as pd
-from .common import subplotLabel, getSetup
+import scanpy as sc
+import seaborn as sns
+from matplotlib.axes import Axes
+from tensorly.cp_tensor import CPTensor
+from tlviz.factor_tools import factor_match_score as fms
+
 from ..factorization import pf2
+from .common import getSetup, subplotLabel
+
 # from ..imports import import_thomson
 
 

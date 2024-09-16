@@ -3,14 +3,15 @@ Figure 8d:
 """
 
 import anndata
-from .common import subplotLabel, getSetup
+
+from ..factorization import correct_conditions
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
 )
 from .commonFuncs.plotLupus import samples_only_lupus
-from ..factorization import correct_conditions
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 
 

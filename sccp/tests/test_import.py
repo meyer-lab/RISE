@@ -2,11 +2,12 @@
 Test the cross validation accuracy.
 """
 
-import pytest
 import numpy as np
+import pytest
+
 from ..imports import (
-    import_thomson,
     import_lupus,
+    import_thomson,
 )
 
 

@@ -1,8 +1,9 @@
+import anndata
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import anndata
 from matplotlib.axes import Axes
+
 from ...factorization import pf2_pca_r2x
 
 

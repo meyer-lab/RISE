@@ -1,8 +1,9 @@
-import seaborn as sns
 import anndata
 import numpy as np
+import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.metrics import RocCurveDisplay
+
 from ...logisticReg import (
     predaccuracy_ranks_lupus,
     roc_lupus_fourtbatch,
@@ -21,7 +22,8 @@ def samples_only_lupus(X: anndata.AnnData):
 def plot_accuracy_ranks_lupus(
     X: anndata.AnnData, ranks: np.ndarray, ax: Axes, error_metric="roc_auc"
 ):
-    """Plots results from Pf2 test of various ranks using defined error metric and logistic reg"""
+    """Plots results from Pf2 test of various ranks using defined error metric
+    and logistic reg"""
     pred_accuracy_df = predaccuracy_ranks_lupus(
         X, samples_only_lupus(X), ranks, error_metric
     )

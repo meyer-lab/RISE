@@ -5,7 +5,9 @@ Figure 8a_c
 import anndata
 import seaborn as sns
 from matplotlib.axes import Axes
-from .common import subplotLabel, getSetup
+
+from .common import getSetup, subplotLabel
+
 # from .commonFuncs.plotGeneral import plot_r2x
 # from .commonFuncs.plotLupus import plot_accuracy_ranks_lupus
 

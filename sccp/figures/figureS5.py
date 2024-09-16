@@ -4,7 +4,8 @@ Figure S5
 
 import anndata
 import seaborn as sns
-from .common import subplotLabel, getSetup
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 
 

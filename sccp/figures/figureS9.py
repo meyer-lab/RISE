@@ -3,7 +3,8 @@ Figure S9
 """
 
 import anndata
-from .common import subplotLabel, getSetup
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotPaCMAP import plot_wp_pacmap
 
 

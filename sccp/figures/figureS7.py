@@ -2,15 +2,16 @@
 Figure S7
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from anndata import AnnData
 from matplotlib.axes import Axes
 from scipy.stats import linregress
-import seaborn as sns
-from .common import getSetup, subplotLabel
-from ..imports import import_thomson
+
 from ..factorization import pf2
+from ..imports import import_thomson
+from .common import getSetup, subplotLabel
 
 
 def makeFigure():
@@ -36,7 +37,9 @@ def plot_diff_exp(
     override: tuple[int, int] = (-1, -1),
 ):
     """
-    Plots the differences in model weights of a gene set in the original data and the data. The determining component is the component that has the highest correlation with the number of cells in the cell type selected.
+    Plots the differences in model weights of a gene set in the original data and the
+    data. The determining component is the component that has the highest correlation
+    with the number of cells in the cell type selected.
     Args:
         data: The AnnData object to be used
         condition: The condition to drop the cell type from
@@ -175,7 +178,9 @@ def plot_weights_across_percents(
             ]  # Aims to find the index of the condition to set its corresponding weight
             vals[percent] = Y[idx]
 
-        percents, weights = zip(*sorted((int(p * 100), w) for p, w in vals.items()))
+        percents, weights = zip(
+            *sorted((int(p * 100), w) for p, w in vals.items()), strict=False
+        )
         all_percents += percents
         all_weights += weights
 

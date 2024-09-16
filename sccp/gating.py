@@ -1,8 +1,8 @@
-import numpy.typing as npt
-import scanpy as sc
-import pandas as pd
 import anndata as an
 import doubletdetection
+import numpy.typing as npt
+import pandas as pd
+import scanpy as sc
 
 
 def gateThomsonCellsLeiden(X) -> npt.ArrayLike:

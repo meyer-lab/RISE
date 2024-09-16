@@ -2,20 +2,21 @@
 Figure 4e_k
 """
 
-import numpy as np
-import seaborn as sns
-import pandas as pd
-from scipy.stats import pearsonr
-from matplotlib.axes import Axes
 import anndata
-from .common import subplotLabel, getSetup
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib.axes import Axes
+from scipy.stats import pearsonr
+
+from .common import getSetup, subplotLabel
+from .commonFuncs.plotFactors import plot_gene_factors
 from .commonFuncs.plotGeneral import (
     avegene_per_status,
     cell_count_perc_df,
     rotate_xaxis,
 )
 from .commonFuncs.plotPaCMAP import plot_wp_pacmap
-from .commonFuncs.plotFactors import plot_gene_factors
 
 
 def makeFigure():

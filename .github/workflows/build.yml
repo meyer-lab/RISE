@@ -8,8 +8,13 @@ jobs:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v4
-    - name: Install dependencies
-      run: poetry install
+    - name: Setup rye
+      uses: eifinger/setup-rye@v4
+      with:
+        enable-cache: true
+        version: '0.39.0'
+    - name: Setup environment
+      run: make .venv
     - name: Build figures
       run: make all -j 2
     - name: Upload files

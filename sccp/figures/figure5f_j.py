@@ -2,12 +2,13 @@
 Figure 5f_j
 """
 
-import numpy as np
-import seaborn as sns
-import pandas as pd
-from matplotlib.axes import Axes
 import anndata
-from .common import subplotLabel, getSetup
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib.axes import Axes
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotPaCMAP import plot_wp_pacmap
 
 

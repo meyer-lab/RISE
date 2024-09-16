@@ -7,11 +7,12 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
-from .common import subplotLabel, getSetup
-from .commonFuncs.plotLupus import samples_only_lupus
+
 from ..factorization import correct_conditions
 from ..logisticReg import logistic_regression
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from .commonFuncs.plotLupus import samples_only_lupus
 
 
 def makeFigure():

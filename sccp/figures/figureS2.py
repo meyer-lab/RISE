@@ -3,15 +3,17 @@ Figure S2
 """
 
 import anndata
-import pacmap
 import numpy as np
-import scib
-import scanpy as sc
+import pacmap
 import pandas as pd
+import scanpy as sc
+import scib
 from sklearn.decomposition import PCA
-from .common import subplotLabel, getSetup
-from .commonFuncs.plotPaCMAP import plot_labels_pacmap
+
+from .common import getSetup, subplotLabel
 from .commonFuncs.plotGeneral import plot_r2x
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap
+
 # import seaborn as sns
 
 

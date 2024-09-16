@@ -2,27 +2,28 @@
 Figure 3
 """
 
+import anndata
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import anndata
 from matplotlib.axes import Axes
+
 from .common import (
-    subplotLabel,
     getSetup,
-)
-from .commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
-from .commonFuncs.plotGeneral import (
-    plot_avegene_per_celltype,
-    plot_avegene_per_category,
-    gene_plot_cells,
-    plot_cell_gene_corr,
-    cell_count_perc_df,
+    subplotLabel,
 )
 from .commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_gene_factors,
 )
+from .commonFuncs.plotGeneral import (
+    cell_count_perc_df,
+    gene_plot_cells,
+    plot_avegene_per_category,
+    plot_avegene_per_celltype,
+    plot_cell_gene_corr,
+)
+from .commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
 from .figure2f_h import groupDrugs
 
 
