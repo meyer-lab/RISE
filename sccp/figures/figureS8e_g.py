@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 from ..factorization import correct_conditions
 from ..logisticReg import logistic_regression
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from .commonFuncs.plotGeneral import cell_count_perc_lupus_df, rotate_xaxis
 from .commonFuncs.plotLupus import samples_only_lupus
 
 
@@ -22,7 +22,7 @@ def makeFigure():
 
     X = anndata.read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
 
-    df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
+    df = cell_count_perc_lupus_df(X, celltype="Cell Type2")
     sns.boxplot(
         data=df,
         x="Cell Type",

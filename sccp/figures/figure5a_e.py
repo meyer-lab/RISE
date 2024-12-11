@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 
 from .common import getSetup, subplotLabel
 from .commonFuncs.plotFactors import plot_gene_factors
-from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from .commonFuncs.plotGeneral import cell_count_perc_lupus_df, rotate_xaxis
 from .commonFuncs.plotPaCMAP import plot_gene_pacmap, plot_wp_pacmap
 from .figure4e_k import plot_correlation_cmp_cell_count_perc
 
@@ -34,7 +34,7 @@ def makeFigure():
 
     plot_gene_pacmap("RETN", "Pf2", X, ax[4])
 
-    celltype_count_perc_df = cell_count_perc_df(X, celltype="leiden", status=True)
+    celltype_count_perc_df = cell_count_perc_lupus_df(X, celltype="leiden")
     plot_correlation_cmp_cell_count_perc(
         X, 28, celltype_count_perc_df, ax[5], cellPerc=False
     )

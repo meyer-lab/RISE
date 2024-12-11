@@ -13,7 +13,7 @@ from .common import getSetup, subplotLabel
 from .commonFuncs.plotFactors import plot_gene_factors
 from .commonFuncs.plotGeneral import (
     avegene_per_status,
-    cell_count_perc_df,
+    cell_count_perc_lupus_df,
     rotate_xaxis,
 )
 from .commonFuncs.plotPaCMAP import plot_wp_pacmap
@@ -31,7 +31,7 @@ def makeFigure():
     plot_wp_pacmap(X, 14, ax[0], 0.25)
     plot_wp_pacmap(X, 22, ax[1], 0.25)
 
-    celltype_count_perc_df = cell_count_perc_df(X, celltype="Cell Type2", status=True)
+    celltype_count_perc_df = cell_count_perc_lupus_df(X, celltype="Cell Type2")
     cmps = [14, 22]
     for i, cmp in enumerate(cmps):
         plot_correlation_cmp_cell_count_perc(
