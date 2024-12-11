@@ -242,14 +242,11 @@ def cell_count_perc_df(X, celltype="Cell Type"):
     return dfCellType
 
 
-def cell_count_perc_lupus_df(X, celltype="Cell Type", status=False):
+def cell_count_perc_lupus_df(X, celltype="Cell Type"):
     """Returns DF with cell counts and percentages for experiment"""
     grouping_all = [celltype, "Condition", "SLE_status", "Processing_Cohort", "condition_unique_idxs"]
-    if status is False:
-        grouping = [celltype, "Condition"]
-    else:
-        grouping = [celltype, "Condition", "SLE_status"]
-    
+    grouping = [celltype, "Condition"]
+
     df = X.obs[grouping_all].reset_index(drop=True)
     status_mapping = X.obs.groupby("Condition", observed=False)["SLE_status"].first()
     cohort_mapping = X.obs.groupby("Condition", observed=False)["Processing_Cohort"].first()
