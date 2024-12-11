@@ -30,10 +30,11 @@ def predaccuracy_ranks_lupus(
         pf2_output.uns["Pf2_A"] = correct_conditions(pf2_output)
 
         A_matrix = pf2_output.uns["Pf2_A"]
-
+        
         cohort_four = (condition_labels_all["Processing_Cohort"] == "4.0").to_numpy(
             dtype=bool
         )
+        
         y = (condition_labels_all["SLE_status"] == "SLE").to_numpy(dtype=bool)
 
         log_reg = logistic_regression(scoring=error_metric)
@@ -54,6 +55,39 @@ def predaccuracy_ranks_lupus(
         results.append(initial_results)
 
     return pd.concat(results, ignore_index=True)
+
+def predaccuracy_lupus(
+    df: pd.DataFrame,
+    error_metric: str = "roc_auc",
+):
+    """Tests various numbers of components for Pf2 by optimizing metric for predicting SLE status
+    pfx2_data: annData file
+    condition_labels_all: Labels for patient samples
+    ranks_to_test: Pf2 ranks
+    error_metric: Metric used for LR
+    """
+
+    full_df = df.reset_index()
+    cohort_four = (full_df["Processing_Cohort"] == "4.0").to_numpy(
+        dtype=bool
+    )
+    y = (full_df["Status"] == "SLE").to_numpy(dtype=bool)
+
+    log_reg = logistic_regression(scoring=error_metric)
+
+    log_fit = log_reg.fit(df[cohort_four], y[cohort_four])
+
+    if error_metric == "roc_auc":
+        sle_decisions = log_fit.decision_function(df[~cohort_four])
+        y_true = y[~cohort_four]
+        score = roc_auc_score(y_true, sle_decisions)
+        results = pd.DataFrame({error_metric: [score]})
+
+    if error_metric == "accuracy":
+        score = log_fit.score(df[~cohort_four], y[~cohort_four])
+        results = pd.DataFrame({error_metric: [score]})
+
+    return results
 
 
 def roc_lupus_fourtbatch(

@@ -214,13 +214,11 @@ def plot_cell_gene_corr(
     )
 
 
-def cell_count_perc_df(X, celltype="Cell Type", status=False):
+def cell_count_perc_df(X, celltype="Cell Type"):
     """Returns DF with cell counts and percentages for experiment"""
-    if status is False:
-        grouping = [celltype, "Condition"]
-    else:
-        grouping = [celltype, "Condition", "SLE_status"]
 
+    grouping = [celltype, "Condition"]
+    
     df = X.obs[grouping].reset_index(drop=True)
 
     dfCond = (
@@ -238,11 +236,47 @@ def cell_count_perc_df(X, celltype="Cell Type", status=False):
             * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
             / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
         )
-
+    
     dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
 
     return dfCellType
 
+
+def cell_count_perc_lupus_df(X, celltype="Cell Type", status=False):
+    """Returns DF with cell counts and percentages for experiment"""
+    grouping_all = [celltype, "Condition", "SLE_status", "Processing_Cohort", "condition_unique_idxs"]
+    if status is False:
+        grouping = [celltype, "Condition"]
+    else:
+        grouping = [celltype, "Condition", "SLE_status"]
+    
+    df = X.obs[grouping_all].reset_index(drop=True)
+    status_mapping = X.obs.groupby("Condition", observed=False)["SLE_status"].first()
+    cohort_mapping = X.obs.groupby("Condition", observed=False)["Processing_Cohort"].first()
+    idx_mapping = X.obs.groupby("Condition", observed=False)["condition_unique_idxs"].first()
+
+    dfCond = (
+        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
+    )
+    dfCellType = (
+        df.groupby(grouping, observed=True).size().reset_index(name="Cell Count")
+    )
+    dfCellType["Cell Count"] = dfCellType["Cell Count"].astype("float")
+
+    dfCellType["Cell Type Percentage"] = 0.0
+    for cond in np.unique(df["Condition"]):
+        dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
+            100
+            * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
+            / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
+        )
+    
+    dfCellType["Status"] = dfCellType["Condition"].map(status_mapping)
+    dfCellType["Processing_Cohort"] = dfCellType["Condition"].map(cohort_mapping)
+    dfCellType["condition_unique_idxs"] = dfCellType["Condition"].map(idx_mapping)
+    dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
+
+    return dfCellType
 
 def rotate_xaxis(ax, rotation=90):
     """Rotates text by 90 degrees for x-axis"""
