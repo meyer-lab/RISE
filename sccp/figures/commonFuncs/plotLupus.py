@@ -57,7 +57,7 @@ def plot_roc_fourthbatch(X: anndata.AnnData, ax: Axes):
 
 def plot_all_bulk_pred(X, ax, accuracy_metric="accuracy"):
     cell_comp_df = cell_count_perc_lupus_df(X, celltype="Cell Type")
-    cell_comp_df = cell_comp_df.pivot(index=["Condition", "Status", "Processing_Cohort", "condition_unique_idxs"], columns="Cell Type", values="Cell Type Percentage")
+    cell_comp_df = cell_comp_df.pivot(index=["Condition", "SLE_status", "Processing_Cohort", "condition_unique_idxs"], columns="Cell Type", values="Cell Type Percentage")
     cell_comp_df = cell_comp_df.sort_values("condition_unique_idxs")
     
     cell_comp_pred = predaccuracy_lupus(cell_comp_df, error_metric=accuracy_metric)
@@ -71,7 +71,7 @@ def plot_all_bulk_pred(X, ax, accuracy_metric="accuracy"):
     y_cell_comp_gene = [cell_comp_gene_pred.iloc[0], cell_comp_gene_pred.iloc[0]]
     
     combined_df = pd.concat([cell_comp_df.reset_index(), cell_comp_gene_df.reset_index(drop=True)], axis=1)
-    combined_df = combined_df.set_index(["Condition", "Status", "Processing_Cohort", "condition_unique_idxs"])
+    combined_df = combined_df.set_index(["Condition", "SLE_status", "Processing_Cohort", "condition_unique_idxs"])
     
     combined_pred = predaccuracy_lupus(combined_df, error_metric=accuracy_metric)
     y_combined = [combined_pred.iloc[0], combined_pred.iloc[0]]
@@ -111,7 +111,7 @@ def aggregate_anndata(adata, celltype_col, condition_col, method="Average"):
                 'Value': agg_values,
                 'Cell Type': ct,
                 'Condition': cond,
-                'Status': sle_status,
+                'SLE_status': sle_status,
                 'Processing_Cohort': cohort,
                 'condition_unique_idxs': idx
             }
@@ -121,7 +121,7 @@ def aggregate_anndata(adata, celltype_col, condition_col, method="Average"):
     
     df = pd.concat(results, ignore_index=True)
     
-    pivot_df = df.pivot_table(index=["Condition", "Status", "Processing_Cohort", "condition_unique_idxs"], columns=["Cell Type", "Gene"], values=["Value"])
+    pivot_df = df.pivot_table(index=["Condition", "SLE_status", "Processing_Cohort", "condition_unique_idxs"], columns=["Cell Type", "Gene"], values=["Value"])
     
     return pivot_df
 

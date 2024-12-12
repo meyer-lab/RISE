@@ -268,7 +268,7 @@ def cell_count_perc_lupus_df(X, celltype="Cell Type"):
             / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
         )
     
-    dfCellType["Status"] = dfCellType["Condition"].map(status_mapping)
+    dfCellType["SLE_status"] = dfCellType["Condition"].map(status_mapping)
     dfCellType["Processing_Cohort"] = dfCellType["Condition"].map(cohort_mapping)
     dfCellType["condition_unique_idxs"] = dfCellType["Condition"].map(idx_mapping)
     dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
