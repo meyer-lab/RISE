@@ -30,6 +30,7 @@ def plot_r2x(data, rank_vec, ax: Axes):
             0, np.max(np.append(r2xError[0], r2xError[1])) + 0.01, num=5
         ),
     )
+    ax.legend() 
 
 
 def plot_avegene_per_celltype(adata, genes, ax, cellType="Cell Type"):
