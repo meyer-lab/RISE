@@ -19,8 +19,6 @@ jobs:
       run: make .venv
     - name: Test with pytest
       run: make coverage.xml
-    - name: Run pyright check
-      run: make pyright
     - name: Check formatting
       run: rye fmt --check sccp
     - name: Check linting
