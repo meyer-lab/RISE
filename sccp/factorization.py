@@ -58,9 +58,10 @@ def pf2_pca_r2x(X: anndata.AnnData, ranks):
 
     r2x_pf2 = np.zeros(len(ranks))
 
-    for i in tqdm(range(len(r2x_pf2)), total=len(r2x_pf2)):
-        _, R2X = parafac2_nd(X, rank=i + 1)
-        r2x_pf2[i] = R2X
+    for index, i in tqdm(enumerate(ranks), total=len(r2x_pf2)):
+        _, R2X = parafac2_nd(X, rank=i)
+        r2x_pf2[index] = R2X
+
 
     # Mean center because this is done within Pf2
     XX = scale(XX.todense(), with_mean=True, with_std=False)
