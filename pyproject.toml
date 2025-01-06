@@ -27,7 +27,11 @@ dependencies = [
     "doubletdetection >=4.2",
     "statsmodels>=0.14.1",
     "dask[dataframe]>=2024.3.1",
-    "scib>=1.1.5"]
+    "scib>=1.1.5",
+    "harmonypy>=0.0.10",
+    "scvi-tools>=1.2.1",
+    "scanorama>=1.7.4",
+]
 
 
 

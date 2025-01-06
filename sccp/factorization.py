@@ -36,10 +36,11 @@ def pf2(
     random_state=1,
     doEmbedding: bool = True,
     tolerance=1e-9,
+    max_iter: int = 500,
 ):
     """Run Pf2 model and store results in anndata file"""
     pf_out, _ = parafac2_nd(
-        X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=500
+        X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=max_iter
     )
 
     X = store_pf2(X, pf_out)
@@ -61,7 +62,6 @@ def pf2_pca_r2x(X: anndata.AnnData, ranks):
     for index, i in tqdm(enumerate(ranks), total=len(r2x_pf2)):
         _, R2X = parafac2_nd(X, rank=i)
         r2x_pf2[index] = R2X
-
 
     # Mean center because this is done within Pf2
     XX = scale(XX.todense(), with_mean=True, with_std=False)
