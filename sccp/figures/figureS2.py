@@ -23,6 +23,7 @@ def makeFigure():
     subplotLabel(ax)
 
     X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
 
     ranks = [
         1,

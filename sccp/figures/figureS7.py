@@ -19,10 +19,11 @@ def makeFigure():
     subplotLabel(ax)
 
     rank = 20
-    data = import_thomson()
-
-    plot_weights_across_percents(data, "B Cells", "CTRL4", 0, 1, 0.25, rank, ax[3])
-    plot_diff_exp(data, "CTRL4", "B Cells", rank, ax[0:2])
+    X = import_thomson()
+    X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
+    
+    plot_weights_across_percents(X, "B Cells", "CTRL4", 0, 1, 0.25, rank, ax[3])
+    plot_diff_exp(X, "CTRL4", "B Cells", rank, ax[0:2])
 
     return f
 
