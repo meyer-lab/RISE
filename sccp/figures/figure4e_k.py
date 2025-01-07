@@ -42,7 +42,7 @@ def makeFigure():
 
     genes = ["IFITM3", "APOBEC3A"]
     df_total = pd.DataFrame([])
-    for i, gene in enumerate(np.ravel(genes)):
+    for gene in np.ravel(genes):
         df = avegene_per_status(X, gene, cellType="Cell Type2")
         df_total = pd.concat([df, df_total])
 
@@ -58,14 +58,11 @@ def plot_correlation_cmp_cell_count_perc(
     yt = np.unique(X.obs["Condition"])
     factorsA = np.array(X.uns["Pf2_A"])
     factorsA = factorsA[:, cmp - 1]
-    if cellPerc is True:
-        cellPerc = "Cell Type Percentage"
-    else:
-        cellPerc = "Cell Count"
+    cellPerc = "Cell Type Percentage" if cellPerc is True else "Cell Count"
     totaldf = pd.DataFrame([])
     correlationdf = pd.DataFrame([])
     cellcountDF["Condition"] = pd.Categorical(cellcountDF["Condition"], yt)
-    for i, celltype in enumerate(np.unique(cellcountDF["Cell Type"])):
+    for celltype in np.unique(cellcountDF["Cell Type"]):
         for j, cond in enumerate(np.unique(cellcountDF["Condition"])):
             status = np.unique(
                 cellcountDF.loc[cellcountDF["Condition"] == cond]["SLE_status"]

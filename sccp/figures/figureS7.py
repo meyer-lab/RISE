@@ -21,7 +21,7 @@ def makeFigure():
     rank = 20
     X = import_thomson()
     X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
-    
+
     plot_weights_across_percents(X, "B Cells", "CTRL4", 0, 1, 0.25, rank, ax[3])
     plot_diff_exp(X, "CTRL4", "B Cells", rank, ax[0:2])
 
@@ -49,7 +49,8 @@ def plot_diff_exp(
         rank: The rank to be used
         *args: The axes to be used
         ct2: Whether to use the second cell type
-        override: The component to be used if not using the highest absolute value weight
+        override: The component to be used if not
+        using the highest absolute value weight
     Returns:
         None
     """

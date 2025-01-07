@@ -30,7 +30,7 @@ def plot_r2x(data, rank_vec, ax: Axes):
             0, np.max(np.append(r2xError[0], r2xError[1])) + 0.01, num=5
         ),
     )
-    ax.legend() 
+    ax.legend()
 
 
 def plot_avegene_per_celltype(adata, genes, ax, cellType="Cell Type"):
@@ -219,7 +219,7 @@ def cell_count_perc_df(X, celltype="Cell Type"):
     """Returns DF with cell counts and percentages for experiment"""
 
     grouping = [celltype, "Condition"]
-    
+
     df = X.obs[grouping].reset_index(drop=True)
 
     dfCond = (
@@ -237,7 +237,7 @@ def cell_count_perc_df(X, celltype="Cell Type"):
             * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
             / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
         )
-    
+
     dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
 
     return dfCellType
@@ -245,13 +245,23 @@ def cell_count_perc_df(X, celltype="Cell Type"):
 
 def cell_count_perc_lupus_df(X, celltype="Cell Type"):
     """Returns DF with cell counts and percentages for experiment"""
-    grouping_all = [celltype, "Condition", "SLE_status", "Processing_Cohort", "condition_unique_idxs"]
+    grouping_all = [
+        celltype,
+        "Condition",
+        "SLE_status",
+        "Processing_Cohort",
+        "condition_unique_idxs",
+    ]
     grouping = [celltype, "Condition"]
 
     df = X.obs[grouping_all].reset_index(drop=True)
     status_mapping = X.obs.groupby("Condition", observed=False)["SLE_status"].first()
-    cohort_mapping = X.obs.groupby("Condition", observed=False)["Processing_Cohort"].first()
-    idx_mapping = X.obs.groupby("Condition", observed=False)["condition_unique_idxs"].first()
+    cohort_mapping = X.obs.groupby("Condition", observed=False)[
+        "Processing_Cohort"
+    ].first()
+    idx_mapping = X.obs.groupby("Condition", observed=False)[
+        "condition_unique_idxs"
+    ].first()
 
     dfCond = (
         df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
@@ -268,13 +278,14 @@ def cell_count_perc_lupus_df(X, celltype="Cell Type"):
             * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
             / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
         )
-    
+
     dfCellType["SLE_status"] = dfCellType["Condition"].map(status_mapping)
     dfCellType["Processing_Cohort"] = dfCellType["Condition"].map(cohort_mapping)
     dfCellType["condition_unique_idxs"] = dfCellType["Condition"].map(idx_mapping)
     dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
 
     return dfCellType
+
 
 def rotate_xaxis(ax, rotation=90):
     """Rotates text by 90 degrees for x-axis"""
