@@ -28,11 +28,17 @@ def plot_accuracy_ranks_lupus(
     ax: Axes,
     error_metric="roc_auc",
     bootstrap: bool = False,
+    cv_fourth_batch: bool = True,
 ):
     """Plots results from Pf2 test of various ranks using defined error metric
     and logistic reg"""
     pred_accuracy_df = predaccuracy_ranks_lupus(
-        X, samples_only_lupus(X), ranks, error_metric, bootstrap
+        X,
+        samples_only_lupus(X),
+        ranks,
+        error_metric,
+        bootstrap,
+        cv_fourth_batch,
     )
 
     sns.lineplot(
@@ -51,9 +57,11 @@ def plot_accuracy_ranks_lupus(
     ax.set(ylim=[-0.05, 1.05])
 
 
-def plot_roc_fourthbatch(X: anndata.AnnData, ax: Axes):
+def plot_roc_fourthbatch(X: anndata.AnnData, ax: Axes, cv_fourth_batch=True):
     """Plots ROC curve for prediction"""
-    y_test, sle_decisions = roc_lupus_fourtbatch(X, samples_only_lupus(X))
+    y_test, sle_decisions = roc_lupus_fourtbatch(
+        X, samples_only_lupus(X), cv_fourth_batch=cv_fourth_batch
+    )
 
     RocCurveDisplay.from_predictions(
         y_test, sle_decisions, pos_label=True, plot_chance_level=True, ax=ax

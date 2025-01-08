@@ -14,6 +14,7 @@ def predaccuracy_ranks_lupus(
     ranks_to_test: np.ndarray,
     error_metric: str = "roc_auc",
     bootstrap: bool = False,
+    cv_fourth_batch: bool = True,
 ):
     """Tests various numbers of components for Pf2
     by optimizing metric for predicting SLE status
@@ -30,13 +31,23 @@ def predaccuracy_ranks_lupus(
         if bootstrap is True:
             for i in range(3):
                 initial_results = log_reg_cohort(
-                    pfx2_data, rank, condition_labels_all, error_metric, bootstrap
+                    pfx2_data,
+                    rank,
+                    condition_labels_all,
+                    error_metric,
+                    bootstrap,
+                    cv_fourth_batch,
                 )
                 initial_results["Run"] = i
                 results.append(initial_results)
         else:
             initial_results = log_reg_cohort(
-                pfx2_data, rank, condition_labels_all, error_metric, bootstrap
+                pfx2_data,
+                rank,
+                condition_labels_all,
+                error_metric,
+                bootstrap,
+                cv_fourth_batch,
             )
             results.append(initial_results)
 
@@ -45,8 +56,10 @@ def predaccuracy_ranks_lupus(
     return df
 
 
-def log_reg_cohort(pfx2_data, rank, condition_labels_all, error_metric, bootstrap):
-    """Description of the function"""
+def log_reg_cohort(
+    pfx2_data, rank, condition_labels_all, error_metric, bootstrap, cv_fourth_batch
+):
+    """Runs Pf2 and predicts SLE status using logistic regression"""
     pf2_output = pf2(pfx2_data, rank=int(rank), doEmbedding=False)
 
     pf2_output.uns["Pf2_A"] = correct_conditions(pf2_output)
@@ -59,25 +72,23 @@ def log_reg_cohort(pfx2_data, rank, condition_labels_all, error_metric, bootstra
 
     y = (condition_labels_all["SLE_status"] == "SLE").to_numpy(dtype=bool)
 
+    cohort = cohort_four if cv_fourth_batch else ~cohort_four
+
     log_reg = logistic_regression(scoring=error_metric)
     if bootstrap is True:
-        A_matrix[cohort_four], y[cohort_four] = resample(
-            A_matrix[cohort_four], y[cohort_four]
-        )
-        A_matrix[~cohort_four], y[~cohort_four] = resample(
-            A_matrix[~cohort_four], y[~cohort_four]
-        )
+        A_matrix[cohort], y[cohort] = resample(A_matrix[cohort], y[cohort])
+        A_matrix[~cohort], y[~cohort] = resample(A_matrix[~cohort], y[~cohort])
 
-    log_fit = log_reg.fit(A_matrix[cohort_four], y[cohort_four])
+    log_fit = log_reg.fit(A_matrix[cohort], y[cohort])
 
     if error_metric == "roc_auc":
-        sle_decisions = log_fit.decision_function(A_matrix[~cohort_four])
-        y_true = y[~cohort_four]
+        sle_decisions = log_fit.decision_function(A_matrix[~cohort])
+        y_true = y[~cohort]
         score = roc_auc_score(y_true, sle_decisions)
         initial_results = pd.DataFrame({error_metric: [score]})
 
     if error_metric == "accuracy":
-        score = log_fit.score(A_matrix[~cohort_four], y[~cohort_four])
+        score = log_fit.score(A_matrix[~cohort], y[~cohort])
         initial_results = pd.DataFrame({error_metric: [score]})
 
     initial_results["Component"] = rank
@@ -122,6 +133,7 @@ def roc_lupus_fourtbatch(
     X: anndata.AnnData,
     condition_batch_labels: pd.DataFrame,
     error_metric: str = "roc_auc",
+    cv_fourth_batch=True,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Train a logistic regression model using CV on a cohort and testing on others
     X: annData file
@@ -138,11 +150,13 @@ def roc_lupus_fourtbatch(
     )
     y = (condition_batch_labels["SLE_status"] == "SLE").to_numpy(dtype=bool)
 
-    log_reg = logistic_regression(scoring=error_metric)
-    log_fit = log_reg.fit(cond_factors[cohort_four], y[cohort_four])
+    cohort = cohort_four if cv_fourth_batch else ~cohort_four
 
-    sle_decisions = log_fit.decision_function(cond_factors[~cohort_four])
-    y_test = y[~cohort_four]
+    log_reg = logistic_regression(scoring=error_metric)
+    log_fit = log_reg.fit(cond_factors[cohort], y[cohort])
+
+    sle_decisions = log_fit.decision_function(cond_factors[~cohort])
+    y_test = y[~cohort]
 
     roc_auc = roc_auc_score(y_test, sle_decisions)
     print("ROC AUC: ", roc_auc)
