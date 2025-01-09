@@ -1,5 +1,5 @@
 """
-Figure 8d:
+Figure 8g
 """
 
 import anndata

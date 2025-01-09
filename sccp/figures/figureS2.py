@@ -11,7 +11,7 @@ import scib
 from sklearn.decomposition import PCA
 
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotGeneral import plot_r2x
+# from .commonFuncs.plotGeneral import plot_r2x
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 
 # import seaborn as sns
@@ -25,16 +25,16 @@ def makeFigure():
     X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
     X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
 
-    ranks = [
-        1,
-        5,
-        10,
-        15,
-        20,
-        25,
-        30,
-    ]
-    plot_r2x(X, ranks, ax[0])
+    # ranks = [
+    #     1,
+    #     5,
+    #     10,
+    #     15,
+    #     20,
+    #     25,
+    #     30,
+    # ]
+    # plot_r2x(X, ranks, ax[0])
 
     for i in range(3):
         ax[i].set(xticks=[0, 5, 10, 15, 20, 25, 30])
