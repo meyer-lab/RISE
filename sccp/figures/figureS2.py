@@ -11,6 +11,7 @@ import scib
 from sklearn.decomposition import PCA
 
 from .common import getSetup, subplotLabel
+
 # from .commonFuncs.plotGeneral import plot_r2x
 from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 
