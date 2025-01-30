@@ -1,3 +1,7 @@
+"""
+Figure 9a_d
+"""
+
 import os
 import time
 import tracemalloc
