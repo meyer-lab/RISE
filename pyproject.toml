@@ -1,5 +1,5 @@
 [project]
-name = "sccp"
+name = "RISE"
 version = "0.1.0"
 description = "Single cell analysis across conditions using PARAFAC2."
 authors = [{name = "Andrew Ramirez"}, {name = "Aaron Meyer", email = "git@asmlab.org" }]
@@ -38,8 +38,8 @@ dependencies = [
 readme = "README.md"
 
 [project.scripts]
-fbuild = "sccp.figures.common:genFigure"
-factor = "sccp.imports:factorSave"
+fbuild = "RISE.figures.common:genFigure"
+factor = "RISE.imports:factorSave"
 
 
 [build-system]
@@ -59,7 +59,7 @@ dev-dependencies = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["sccp"]
+packages = ["RISE"]
 
 [tool.ruff.lint]
 select = [

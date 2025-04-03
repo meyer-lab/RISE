@@ -8,7 +8,7 @@ from .gating import gateThomsonCells
 def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
     # Cell barcodes, sample id of treatment and sample number
-    metafile = pd.read_csv("sccp/data/Thomson/meta.csv", usecols=[0, 1])
+    metafile = pd.read_csv("RISE/data/Thomson/meta.csv", usecols=[0, 1])
     # X = sc.read_10x_mtx(
     #     "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
     # )
@@ -26,7 +26,7 @@ def import_thomson() -> anndata.AnnData:
         }
     )
 
-    doubletDF = pd.read_csv("sccp/data/Thomson/ThomsonDoublets.csv", index_col=0)
+    doubletDF = pd.read_csv("RISE/data/Thomson/ThomsonDoublets.csv", index_col=0)
     doubletDF.index.name = "cell_barcode"
     X.obs = X.obs.join(doubletDF, on="cell_barcode", how="inner")
 

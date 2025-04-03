@@ -155,7 +155,7 @@ def plot_ave2genes_per_status(df_total, gene1, gene2, ax):
 
 def plot_toppfun(ax):
     """Plot GSEA results"""
-    df = pd.read_csv("sccp/data/lupus/ToppFun_Cmp14.csv", dtype=str)
+    df = pd.read_csv("RISE/data/lupus/ToppFun_Cmp14.csv", dtype=str)
     df = df.drop(columns=["ID", "Verbose ID"])
     category = df["Category"].to_numpy().astype(str)
 

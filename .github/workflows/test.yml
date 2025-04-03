@@ -20,9 +20,9 @@ jobs:
     - name: Test with pytest
       run: make coverage.xml
     - name: Check formatting
-      run: rye fmt --check sccp
+      run: rye fmt --check RISE
     - name: Check linting
-      run: rye lint sccp
+      run: rye lint RISE
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:

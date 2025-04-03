@@ -16,9 +16,9 @@ import seaborn as sns
 import torch
 from harmonypy import run_harmony
 
-from sccp.factorization import pf2
-from sccp.figures.common import getSetup, subplotLabel
-from sccp.imports import import_lupus
+from RISE.factorization import pf2
+from RISE.figures.common import getSetup, subplotLabel
+from RISE.imports import import_lupus
 
 # Simplified to single-line comments for configuration flags
 RECOMPUTE = False

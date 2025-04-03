@@ -68,7 +68,7 @@ def genFigure():
     start = time.time()
     nameOut = "figure" + sys.argv[1]
 
-    exec(f"from sccp.figures.{nameOut} import makeFigure", globals())
+    exec(f"from RISE.figures.{nameOut} import makeFigure", globals())
     ff = makeFigure()  # type: ignore # noqa: F821
 
     if ff is not None:
