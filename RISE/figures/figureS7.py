@@ -115,7 +115,7 @@ def plot_diff_exp(
     axes[1].axline(
         (0, b),
         slope=a,
-        label=f"R^2 value: {int(all_r2[most_exp_cmp]*100)/100}",
+        label=f"R^2 value: {int(all_r2[most_exp_cmp] * 100) / 100}",
         linestyle="--",
     )
     axes[1].set_ylim(bottom=0)

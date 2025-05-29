@@ -13,16 +13,21 @@ cmap = sns.diverging_palette(240, 10, as_cmap=True)
 def plot_condition_factors(
     data: anndata.AnnData,
     ax: Axes,
+    cond: str = "Condition",
+    log_transform: bool = True,
     cond_group_labels: pd.Series | None = None,
     ThomsonNorm=False,
-    groupConditions=False,
+    color_key=None,
+    group_cond=False,
 ):
-    """Plots Pf2 condition factors"""
+    """Plots condition factors"""
     pd.set_option("display.max_rows", None)
-    yt = pd.Series(np.unique(data.obs["Condition"]))
+    yt = pd.Series(np.unique(data.obs[cond]))
     X = np.array(data.uns["Pf2_A"])
 
-    X = np.log10(X)
+    if log_transform is True:
+        X = np.log10(X)
+
     if ThomsonNorm is True:
         controls = yt.str.contains("CTRL")
         XX = X[controls]
@@ -38,18 +43,21 @@ def plot_condition_factors(
 
     if cond_group_labels is not None:
         cond_group_labels = cond_group_labels.iloc[ind]
-        if groupConditions is True:
+        if group_cond is True:
             ind = cond_group_labels.argsort()
             cond_group_labels = cond_group_labels.iloc[ind]
             X = X[ind]
             yt = yt.iloc[ind]
         ax.tick_params(axis="y", which="major", pad=20, length=0)
-        colors = sns.color_palette(
-            n_colors=pd.Series(cond_group_labels).nunique()
-        ).as_hex()
+        if color_key is None:
+            colors = sns.color_palette(
+                n_colors=pd.Series(cond_group_labels).nunique()
+            ).as_hex()
+        else:
+            colors = color_key
         lut = {}
         legend_elements = []
-        for index, group in enumerate(pd.Series(cond_group_labels).unique()):
+        for index, group in enumerate(pd.unique(cond_group_labels)):
             lut[group] = colors[index]
             legend_elements.append(Patch(color=colors[index], label=group))
         row_colors = pd.Series(cond_group_labels).map(lut)
@@ -101,7 +109,9 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     ax.set(xlabel="Component")
 
 
-def plot_gene_factors(data: anndata.AnnData, ax: Axes, trim=True):
+def plot_gene_factors(
+    data: anndata.AnnData, ax: Axes, weight=0.08, trim=True, save_genes=False
+):
     """Plots Pf2 gene factors"""
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
@@ -109,7 +119,7 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, trim=True):
 
     if trim is True:
         max_weight = np.max(np.abs(X), axis=1)
-        kept_idxs = max_weight > 0.08
+        kept_idxs = max_weight > weight
         X = X[kept_idxs]
         yt = yt[kept_idxs]
 
@@ -130,6 +140,27 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, trim=True):
         vmax=1,
     )
     ax.set(xlabel="Component")
+
+    if save_genes is True:
+        geneAmount = 30
+        genesTop = np.empty((geneAmount, X.shape[1]), dtype="<U10")
+        genesBottom = np.empty((geneAmount, X.shape[1]), dtype="<U10")
+        sort_idx = np.argsort(X, axis=0)
+        for j in range(rank):
+            rank_idx = [int(x) for x in sort_idx[:, j]]
+            sortGenes = np.array(yt)[np.array(rank_idx)]
+            genesTop[:, j] = np.flip(sortGenes[-geneAmount:])
+            genesBottom[:, j] = sortGenes[:geneAmount]
+
+        dfTop = pd.DataFrame(
+            data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+        )
+        dfBottom = pd.DataFrame(
+            data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+        )
+
+        dfTop.to_csv("pos_gene_factors.csv")
+        dfBottom.to_csv("neg_gene_factors.csv")
 
 
 def reorder_table(projs: np.ndarray):
