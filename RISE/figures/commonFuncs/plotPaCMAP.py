@@ -44,13 +44,11 @@ def ds_show(result, ax: Axes):
     ax.imshow(mpl_img)
 
 
-def plot_gene_pacmap(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
+def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=.9995):
     """Scatterplot of PaCMAP visualization weighted by gene"""
-    geneList = X[:, gene].X
-    if isinstance(geneList, spmatrix):
-        geneList = geneList.toarray()
+    geneList = X[:, gene].to_df().values
 
-    geneList = np.clip(geneList, None, np.quantile(geneList, 0.99))
+    geneList = np.clip(geneList, None, np.quantile(geneList, clip_outliers))
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 
     values = geneList
@@ -77,7 +75,7 @@ def plot_gene_pacmap(gene: str, decompType: str, X: anndata.AnnData, ax: Axes):
     plt.colorbar(psm, ax=ax)
 
     ax = assign_labels(ax)
-    ax.set(title=f"{gene}-{decompType}-Based Decomposition")
+    ax.set(title=f"{gene}")
 
 
 def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
