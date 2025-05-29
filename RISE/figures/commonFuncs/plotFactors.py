@@ -15,6 +15,7 @@ def plot_condition_factors(
     data: anndata.AnnData,
     ax: Axes,
     cond: str = "Condition",
+    log_transform: bool = True,
     cond_group_labels: Optional[pd.Series] = None,
     ThomsonNorm=False,
     color_key = None,
@@ -25,6 +26,9 @@ def plot_condition_factors(
     yt = pd.Series(np.unique(data.obs[cond]))
     X = np.array(data.uns["Pf2_A"])
 
+    if log_transform is True:
+        X = np.log10(X)
+        
     if ThomsonNorm is True:
         controls = yt.str.contains("CTRL")
         XX = X[controls]
