@@ -240,10 +240,10 @@ def generate_synthetic_deg_data():
 
     # Convert to pandas DataFrames
     control_df = pd.DataFrame(
-        control_data, columns=[f"Control_{i+1}" for i in range(n_samples)]
+        control_data, columns=[f"Control_{i + 1}" for i in range(n_samples)]
     )
     treatment_df = pd.DataFrame(
-        treatment_data, columns=[f"Treatment_{i+1}" for i in range(n_samples)]
+        treatment_data, columns=[f"Treatment_{i + 1}" for i in range(n_samples)]
     )
 
     # Perform t-test for each gene to find differentially expressed genes
@@ -261,7 +261,7 @@ def generate_synthetic_deg_data():
     # Create results DataFrame
     results_df = pd.DataFrame(
         {
-            "Gene": [f"Gene_{i+1}" for i in range(n_genes)],
+            "Gene": [f"Gene_{i + 1}" for i in range(n_genes)],
             "Fold Change": fold_changes,
             "P-Value": p_values,
         }
@@ -312,7 +312,7 @@ def generate_synthetic_pseudobulk():
                 expression[4] += 2  # Set a fixed value for gene2
 
             # Create a dictionary for this subset
-            subset_dict = {f"gene_{i+1}": expression[i] for i in range(genes)}
+            subset_dict = {f"gene_{i + 1}": expression[i] for i in range(genes)}
             subset_dict["cell_type"] = cell_type
             subset_dict["condition"] = condition
 
