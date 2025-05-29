@@ -1,4 +1,4 @@
-from typing import Optional
+
 import anndata
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ def plot_condition_factors(
     ax: Axes,
     cond: str = "Condition",
     log_transform: bool = True,
-    cond_group_labels: Optional[pd.Series] = None,
+    cond_group_labels: pd.Series | None = None,
     ThomsonNorm=False,
     color_key=None,
     group_cond=False,
