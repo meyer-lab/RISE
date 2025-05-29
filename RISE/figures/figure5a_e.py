@@ -32,7 +32,7 @@ def makeFigure():
     plot_score(X, ax[3], cellType="Cell Type2")
     ax[0].set(ylabel="Cytotoxic Score")
 
-    plot_gene_pacmap("RETN", "Pf2", X, ax[4])
+    plot_gene_pacmap("RETN", X, ax[4])
 
     celltype_count_perc_df = cell_count_perc_lupus_df(X, celltype="leiden")
     plot_correlation_cmp_cell_count_perc(
