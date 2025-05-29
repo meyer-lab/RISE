@@ -37,7 +37,9 @@ def makeFigure():
     plot_labels_pacmap(X, "Cell Type2", ax[0])
 
     drugNames = groupDrugs(X, "Condition")
-    plot_condition_factors(X, ax[1], cond_group_labels=drugNames, ThomsonNorm=True, group_cond=True)
+    plot_condition_factors(
+        X, ax[1], cond_group_labels=drugNames, ThomsonNorm=True, group_cond=True
+    )
     plot_gene_factors(X, ax[2])
     ax[2].yaxis.set_ticklabels([])
 

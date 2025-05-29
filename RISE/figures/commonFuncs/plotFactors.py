@@ -18,8 +18,8 @@ def plot_condition_factors(
     log_transform: bool = True,
     cond_group_labels: Optional[pd.Series] = None,
     ThomsonNorm=False,
-    color_key = None,
-    group_cond = False,
+    color_key=None,
+    group_cond=False,
 ):
     """Plots condition factors"""
     pd.set_option("display.max_rows", None)
@@ -28,7 +28,7 @@ def plot_condition_factors(
 
     if log_transform is True:
         X = np.log10(X)
-        
+
     if ThomsonNorm is True:
         controls = yt.str.contains("CTRL")
         XX = X[controls]
@@ -110,8 +110,9 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     ax.set(xlabel="Component")
 
 
-
-def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True, save_genes=False):
+def plot_gene_factors(
+    data: anndata.AnnData, ax: Axes, weight=0.08, trim=True, save_genes=False
+):
     """Plots Pf2 gene factors"""
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
@@ -140,7 +141,7 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True, s
         vmax=1,
     )
     ax.set(xlabel="Component")
-    
+
     if save_genes is True:
         geneAmount = 30
         genesTop = np.empty((geneAmount, X.shape[1]), dtype="<U10")
@@ -149,15 +150,18 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True, s
         for j in range(rank):
             rank_idx = [int(x) for x in sort_idx[:, j]]
             sortGenes = np.array(yt)[np.array(rank_idx)]
-            genesTop[:, j] = np.flip(sortGenes[-geneAmount:])  
+            genesTop[:, j] = np.flip(sortGenes[-geneAmount:])
             genesBottom[:, j] = sortGenes[:geneAmount]
 
-        dfTop = pd.DataFrame(data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
-        dfBottom = pd.DataFrame(data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)])
+        dfTop = pd.DataFrame(
+            data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+        )
+        dfBottom = pd.DataFrame(
+            data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
+        )
 
         dfTop.to_csv("pos_gene_factors.csv")
         dfBottom.to_csv("neg_gene_factors.csv")
-    
 
 
 def reorder_table(projs: np.ndarray):
