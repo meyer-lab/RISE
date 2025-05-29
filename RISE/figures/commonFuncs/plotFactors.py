@@ -36,6 +36,9 @@ def plot_condition_factors(
 
     X -= np.median(XX, axis=0)
     X /= np.std(XX, axis=0)
+    
+    if log_transform is False:
+        X -= np.min(X, axis=0)
 
     ind = reorder_table(X)
     X = X[ind]
