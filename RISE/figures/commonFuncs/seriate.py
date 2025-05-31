@@ -110,16 +110,13 @@ def _seriate(
         )
         size = int(numpy.round((1 + numpy.sqrt(1 + 8 * dists.shape[0])) / 2))
 
-    if ortools6:
-        routing = pywrapcp.RoutingModel(size + 1, 1, size)
-    elif ortools7 or ortools8 or ortools9:
-        manager = pywrapcp.RoutingIndexManager(size + 1, 1, size)
-        routing = pywrapcp.RoutingModel(manager)
+    manager = pywrapcp.RoutingIndexManager(size + 1, 1, size)
+    routing = pywrapcp.RoutingModel(manager)
 
     def dist_callback(x, y):
-        if ortools7 or ortools8 or ortools9:
-            x = manager.IndexToNode(x)
-            y = manager.IndexToNode(y)
+        x = manager.IndexToNode(x)
+        y = manager.IndexToNode(y)
+
         if x in (size, y) or y == size:
             return 0
         if squareform:
