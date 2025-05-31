@@ -6,10 +6,9 @@ authors = [{name = "Andrew Ramirez"}, {name = "Aaron Meyer", email = "git@asmlab
 license = "MIT"
 requires-python = ">= 3.12"
 
-
 dependencies = [
-    "numpy>=2.0",
-    "scipy>=1.14",
+    "numpy>=2.2",
+    "scipy>=1.15",
     "scikit-learn>=1.6",
     "seaborn>=0.13.2",
     "pandas>=2.2.1",
@@ -21,14 +20,12 @@ dependencies = [
     "gseapy>=1.1",
     "scanpy>=1.10",
     "pacmap>=0.7.1",
-    "leidenalg>=0.10.1",
     "tqdm>=4.66.1",
     "tlviz>=0.1.1",
     "doubletdetection >=4.2",
     "statsmodels>=0.14.1",
     "dask[dataframe]>=2024.3.1",
-    "scib>=1.1.5",
-    "scvi-tools>=1.2.1",
+    "ortools>=9.12.4544",
 ]
 
 readme = "README.md"
@@ -50,6 +47,8 @@ dev-dependencies = [
     "pyright>=1.1.390",
     "scanorama>=1.7.4",
     "harmonypy>=0.0.10",
+    "scib>=1.1.5",
+    "scvi-tools>=1.2.1",
 ]
 
 

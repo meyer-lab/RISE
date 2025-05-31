@@ -1,11 +1,13 @@
 import anndata
 import numpy as np
 import pandas as pd
-import scipy.cluster.hierarchy as sch
 import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
+from scipy.spatial.distance import pdist
+
+from .seriate import seriate
 
 cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
@@ -36,7 +38,7 @@ def plot_condition_factors(
 
     X -= np.median(XX, axis=0)
     X /= np.std(XX, axis=0)
-    
+
     if log_transform is False:
         X -= np.min(X, axis=0)
 
@@ -112,9 +114,7 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     ax.set(xlabel="Component")
 
 
-def plot_gene_factors(
-    data: anndata.AnnData, ax: Axes, weight=0.08, trim=True, save_genes=False
-):
+def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
     """Plots Pf2 gene factors"""
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
@@ -144,30 +144,7 @@ def plot_gene_factors(
     )
     ax.set(xlabel="Component")
 
-    if save_genes is True:
-        geneAmount = 30
-        genesTop = np.empty((geneAmount, X.shape[1]), dtype="<U10")
-        genesBottom = np.empty((geneAmount, X.shape[1]), dtype="<U10")
-        sort_idx = np.argsort(X, axis=0)
-        for j in range(rank):
-            rank_idx = [int(x) for x in sort_idx[:, j]]
-            sortGenes = np.array(yt)[np.array(rank_idx)]
-            genesTop[:, j] = np.flip(sortGenes[-geneAmount:])
-            genesBottom[:, j] = sortGenes[:geneAmount]
-
-        dfTop = pd.DataFrame(
-            data=genesTop, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-        )
-        dfBottom = pd.DataFrame(
-            data=genesBottom, columns=[f"Cmp. {i}" for i in np.arange(1, rank + 1)]
-        )
-
-        dfTop.to_csv("pos_gene_factors.csv")
-        dfBottom.to_csv("neg_gene_factors.csv")
-
 
 def reorder_table(projs: np.ndarray):
     """Reorder a table's rows using heirarchical clustering"""
-    assert projs.ndim == 2
-    Z = sch.linkage(projs, method="complete", metric="cosine", optimal_ordering=True)
-    return sch.leaves_list(Z)
+    return seriate(pdist(projs))
