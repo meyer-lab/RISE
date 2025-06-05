@@ -26,12 +26,12 @@ def makeFigure():
 
     X.uns["Pf2_A"] = correct_conditions(X)
 
-    plot_condition_factors(X, ax[0], lupusStatus)
+    plot_condition_factors(X, ax[0], cond_group_labels=lupusStatus)
     ax[0].set(yticks=[])
     plot_eigenstate_factors(X, ax[1])
     plot_gene_factors(X, ax[2])
     ax[2].yaxis.set_ticklabels([])
 
-    plot_labels_pacmap(X, "Cell Type", ax[0])
+    plot_labels_pacmap(X, "Cell Type", ax[3])
 
     return f
