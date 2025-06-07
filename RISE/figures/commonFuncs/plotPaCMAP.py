@@ -8,7 +8,6 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
-from scipy.sparse import spmatrix
 
 
 def _get_canvas(points: np.ndarray):
@@ -44,7 +43,7 @@ def ds_show(result, ax: Axes):
     ax.imshow(mpl_img)
 
 
-def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=.9995):
+def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.9995):
     """Scatterplot of PaCMAP visualization weighted by gene"""
     geneList = X[:, gene].to_df().values
 
