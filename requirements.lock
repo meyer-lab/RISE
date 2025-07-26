@@ -21,8 +21,6 @@ annoy==1.17.3
     # via pacmap
 array-api-compat==1.8
     # via anndata
-asttokens==2.4.1
-    # via stack-data
 certifi==2024.8.30
     # via requests
 charset-normalizer==3.3.2
@@ -33,8 +31,6 @@ cloudpickle==3.0.0
     # via dask
 colorcet==3.1.0
     # via datashader
-comm==0.2.2
-    # via ipywidgets
 contourpy==1.3.0
     # via matplotlib
 cupy-cuda12x==13.4.1
@@ -49,12 +45,8 @@ dask-expr==1.1.13
     # via dask
 datashader==0.16.3
     # via rise
-decorator==5.1.1
-    # via ipython
-doubletdetection==4.2
+doubletdetection==4.3.0.post1
     # via rise
-executing==2.1.0
-    # via stack-data
 fastrlock==0.8.2
     # via cupy-cuda12x
 fonttools==4.53.1
@@ -73,43 +65,29 @@ idna==3.8
     # via requests
 igraph==0.11.6
     # via leidenalg
-    # via louvain
 immutabledict==4.2.1
     # via ortools
-ipython==8.27.0
-    # via ipywidgets
-ipywidgets==8.1.5
-    # via doubletdetection
-jedi==0.19.1
-    # via ipython
 joblib==1.4.2
     # via pynndescent
     # via scanpy
     # via scikit-learn
-jupyterlab-widgets==3.0.13
-    # via ipywidgets
 kiwisolver==1.4.7
     # via matplotlib
 legacy-api-wrap==1.4
     # via scanpy
 leidenalg==0.10.2
-    # via doubletdetection
     # via phenograph
 llvmlite==0.44.0
     # via numba
     # via pynndescent
 locket==1.0.0
     # via partd
-louvain==0.8.2
-    # via doubletdetection
 matplotlib==3.9.2
     # via doubletdetection
     # via gseapy
     # via scanpy
     # via seaborn
     # via tlviz
-matplotlib-inline==0.1.7
-    # via ipython
 multipledispatch==1.0.0
     # via datashader
 natsort==8.4.0
@@ -169,7 +147,6 @@ pandas==2.2.2
     # via dask
     # via dask-expr
     # via datashader
-    # via doubletdetection
     # via gseapy
     # via ortools
     # via rise
@@ -183,36 +160,24 @@ parafac2 @ git+https://github.com/meyer-lab/parafac2.git@ccf708fe71c78a106151643
 param==2.1.1
     # via datashader
     # via pyct
-parso==0.8.4
-    # via jedi
 partd==1.4.2
     # via dask
 patsy==0.5.6
     # via scanpy
     # via statsmodels
-pexpect==4.9.0
-    # via ipython
 phenograph==1.5.7
     # via doubletdetection
 pillow==10.4.0
     # via datashader
     # via matplotlib
-prompt-toolkit==3.0.47
-    # via ipython
 protobuf==5.29.5
     # via ortools
 psutil==6.0.0
     # via phenograph
-ptyprocess==0.7.0
-    # via pexpect
-pure-eval==0.2.3
-    # via stack-data
 pyarrow==17.0.0
     # via dask-expr
 pyct==0.5.0
     # via datashader
-pygments==2.18.0
-    # via ipython
 pynndescent==0.5.13
     # via scanpy
     # via umap-learn
@@ -262,11 +227,8 @@ session-info==1.0.0
 setuptools==74.1.2
     # via phenograph
 six==1.16.0
-    # via asttokens
     # via patsy
     # via python-dateutil
-stack-data==0.6.3
-    # via ipython
 statsmodels==0.14.2
     # via rise
     # via scanpy
@@ -292,21 +254,12 @@ tqdm==4.66.5
     # via rise
     # via scanpy
     # via umap-learn
-traitlets==5.14.3
-    # via comm
-    # via ipython
-    # via ipywidgets
-    # via matplotlib-inline
 tzdata==2024.1
     # via pandas
 umap-learn==0.5.6
     # via scanpy
 urllib3==2.2.3
     # via requests
-wcwidth==0.2.13
-    # via prompt-toolkit
-widgetsnbextension==4.0.13
-    # via ipywidgets
 xarray==2024.9.0
     # via datashader
     # via tlviz
