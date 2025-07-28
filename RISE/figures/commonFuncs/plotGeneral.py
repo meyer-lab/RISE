@@ -4,13 +4,13 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from ...factorization import pf2_pca_r2x
+from ...factorization import rise_pca_r2x
 
 
 def plot_r2x(data, rank_vec, ax: Axes):
-    """Creates R2X plot for parafac2 tensor decomposition and pca"""
-    r2xError = pf2_pca_r2x(data, rank_vec)
-    labelNames = ["Fit: Pf2", "Fit: PCA"]
+    """Creates R2X plot for RISE tensor decomposition and pca"""
+    r2xError = rise_pca_r2x(data, rank_vec)
+    labelNames = ["Fit: RISE", "Fit: PCA"]
     colorDecomp = ["r", "b"]
     markerShape = ["o", "o"]
     for i in range(2):

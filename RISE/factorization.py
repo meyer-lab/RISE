@@ -53,22 +53,22 @@ def pf2(
     return X
 
 
-def pf2_pca_r2x(X: anndata.AnnData, ranks):
-    """Run Pf2/PCA on data and save R2X values"""
+def rise_pca_r2x(X: anndata.AnnData, ranks):
+    """Run RISE/PCA on data and save R2X values"""
     X = X.to_memory()
     XX = sps.csr_array(X.X)
 
-    r2x_pf2 = np.zeros(len(ranks))
+    r2x_rise = np.zeros(len(ranks))
 
-    for index, i in tqdm(enumerate(ranks), total=len(r2x_pf2)):
+    for index, i in tqdm(enumerate(ranks), total=len(r2x_rise)):
         _, R2X = parafac2_nd(X, rank=i)
-        r2x_pf2[index] = R2X
+        r2x_rise[index] = R2X
 
-    # Mean center because this is done within Pf2
+    # Mean center because this is done within RISE
     XX = scale(XX.todense(), with_mean=True, with_std=False)
 
     pca = PCA(n_components=ranks[-1])
     pca.fit(XX)
     r2x_pca = np.cumsum(pca.explained_variance_ratio_)
 
-    return r2x_pf2, r2x_pca[np.array(ranks) - 1]
+    return r2x_rise, r2x_pca[np.array(ranks) - 1]
