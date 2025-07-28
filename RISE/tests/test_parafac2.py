@@ -5,7 +5,7 @@ Test the parafac2 method.
 import numpy as np
 import pandas as pd
 
-from ..factorization import pf2, pf2_pca_r2x
+from ..factorization import pf2, rise_pca_r2x
 from ..imports import import_thomson
 
 
@@ -28,10 +28,10 @@ def test_factor_thomson_R2X():
     X = import_thomson()
     X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
 
-    r2x_pf2, r2x_pca = pf2_pca_r2x(X, np.arange(1, 4))
+    r2x_rise, r2x_pca = rise_pca_r2x(X, np.arange(1, 4))
     print(r2x_pca)
-    print(r2x_pf2)
+    print(r2x_rise)
 
     # Probably fails due to numerical accuracy issues
-    # assert (r2x_pf2 < r2x_pca).all()
-    assert np.all(r2x_pf2 > np.array([0.002, 0.005, 0.007]))
+    # assert (r2x_rise < r2x_pca).all()
+    assert np.all(r2x_rise > np.array([0.002, 0.005, 0.007]))
