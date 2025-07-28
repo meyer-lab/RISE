@@ -59,8 +59,7 @@ def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
     'SLE_status': SLE status: healthy or SLE}
 
     """
-    X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad")
-    X = anndata.AnnData(X.raw.X, X.obs, X.raw.var, X.uns, X.obsm)
+    X = anndata.read_h5ad("/opt/andrew/lupus/raw_lupus.h5ad", backed="r")
 
     protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
     protein_df = protein.to_df()

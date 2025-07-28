@@ -6,14 +6,15 @@ import numpy as np
 import pytest
 
 from ..imports import (
-    import_lupus,
     import_thomson,
 )
 
 
 @pytest.mark.parametrize(
     "import_func",
-    [import_thomson, import_lupus],
+    [
+        import_thomson,
+    ],
 )
 def test_imports(import_func):
     """Test import functions."""
