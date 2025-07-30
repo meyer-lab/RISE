@@ -83,7 +83,7 @@ def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0)
     values = X.obsm["weighted_projections"][:, cmp - 1]
     points = X.obsm["X_pf2_PaCMAP"]
 
-    cmap = sns.diverging_palette(250, 30, l=65, center="dark", as_cmap=True)
+    cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
     canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=("x", "y"))
