@@ -11,9 +11,9 @@ import cupy as cp
 import numpy as np
 import pandas as pd
 import scanorama
-import scvi
+# import scvi
 import seaborn as sns
-import torch
+# import torch
 from harmonypy import run_harmony
 
 from RISE.factorization import pf2
@@ -139,19 +139,19 @@ def benchmark_algorithm(
 
         max_gpu_memory = 0  # GPU not supported
 
-    elif algorithm == "scVI":
-        # Preprocess data for scVI
-        data.layers["counts"] = data.X.copy()
-        del data.X
+    # elif algorithm == "scVI":
+    #     # Preprocess data for scVI
+    #     data.layers["counts"] = data.X.copy()
+    #     del data.X
 
-        # Setup scVI anndata
-        start_time = time.time()
-        tracemalloc.start()
-        scvi.model.SCVI.setup_anndata(data, layer="counts", batch_key="pool")
+    #     # Setup scVI anndata
+    #     start_time = time.time()
+    #     tracemalloc.start()
+    #     scvi.model.SCVI.setup_anndata(data, layer="counts", batch_key="pool")
 
-        model = scvi.model.SCVI(data)
-        model.train()
-        max_gpu_memory = torch.cuda.max_memory_reserved()
+    #     model = scvi.model.SCVI(data)
+    #     model.train()
+    #     max_gpu_memory = torch.cuda.max_memory_reserved()
 
     elif algorithm == "Scanorama":
         # Ensure data.X is a dense array
