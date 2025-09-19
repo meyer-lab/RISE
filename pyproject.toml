@@ -26,6 +26,7 @@ dependencies = [
     "statsmodels>=0.14.1",
     "dask[dataframe]>=2024.3.1",
     "ortools>=9.12.4544",
+    "mygene>=3.2.2",
 ]
 
 readme = "README.md"

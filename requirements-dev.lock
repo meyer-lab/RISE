@@ -21,9 +21,15 @@ anndata==0.11.1
 annoy==1.17.3
     # via pacmap
     # via scanorama
+anyio==4.10.0
+    # via httpx
 array-api-compat==1.8
     # via anndata
+biothings-client==0.4.1
+    # via mygene
 certifi==2024.8.30
+    # via httpcore
+    # via httpx
     # via requests
 charset-normalizer==3.3.2
     # via requests
@@ -66,6 +72,8 @@ geosketch==1.3
     # via scanorama
 gseapy==1.1.3
     # via rise
+h11==0.16.0
+    # via httpcore
 h5netcdf==1.3.0
     # via rise
 h5py==3.11.0
@@ -74,7 +82,13 @@ h5py==3.11.0
     # via scanpy
     # via scib
 harmonypy==0.0.10
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via biothings-client
 idna==3.8
+    # via anyio
+    # via httpx
     # via requests
 igraph==0.11.6
     # via leidenalg
@@ -112,6 +126,8 @@ matplotlib==3.9.2
     # via tlviz
 multipledispatch==1.0.0
     # via datashader
+mygene==3.2.2
+    # via rise
 natsort==8.4.0
     # via anndata
     # via scanpy
@@ -284,6 +300,8 @@ setuptools==74.1.2
 six==1.16.0
     # via patsy
     # via python-dateutil
+sniffio==1.3.1
+    # via anyio
 sortedcontainers==2.4.0
     # via intervaltree
 statsmodels==0.14.2
@@ -312,6 +330,7 @@ tqdm==4.66.5
     # via scanpy
     # via umap-learn
 typing-extensions==4.12.2
+    # via anyio
     # via pyright
 tzdata==2024.1
     # via pandas
