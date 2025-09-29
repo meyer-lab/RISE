@@ -13,31 +13,35 @@ from scipy import stats
 import mygene
 from .common import getSetup, subplotLabel
 import statsmodels.api as sm
+from ..imports import import_lupus
 
 
 def makeFigure():
     ax, f = getSetup((22, 9), (4, 10))
     subplotLabel(ax)
     
-    geneAmount = 10
-    X = anndata.read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    X = import_lupus(geneThreshold=0.8)
     
-    pc1_load = load_pc_loadings(pc_component=1)
-    pc2_load = load_pc_loadings(pc_component=2)
+    # X = anndata.read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
+    # print(X)
+    # pc1_load = load_pc_loadings(pc_component=1)
+    # pc2_load = load_pc_loadings(pc_component=2)
     
-    # Get the final dataframe with mean gene expression for each sample 
-    # for top/bottom weighted overlapping genes in nCM and CM populations only
-    df_final, selected_genes = get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount)
+    # # Get the final dataframe with mean gene expression for each sample 
+    # # for top/bottom weighted overlapping genes in nCM and CM populations only
+    # df_final, selected_genes = get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount)
+    # print(df_final)
+    # print(selected_genes)
 
-    df_final.to_csv("lupus_mean_expression.csv", index=False)
+    # df_final.to_csv("lupus_mean_expression.csv", index=False)
 
-    print(df_final)
-    print(f"Final dataframe shape: {df_final.shape}")
-    print(f"Number of selected genes: {len(selected_genes)}")
-    print(f"Selected genes: {selected_genes}")
-    print("\nFinal dataframe with mean gene expression per sample:")
-    print(df_final.head(10))
-    print(f"\nColumns in final dataframe: {list(df_final.columns)}")
+    # print(df_final)
+    # print(f"Final dataframe shape: {df_final.shape}")
+    # print(f"Number of selected genes: {len(selected_genes)}")
+    # print(f"Selected genes: {selected_genes}")
+    # print("\nFinal dataframe with mean gene expression per sample:")
+    # print(df_final.head(10))
+    # print(f"\nColumns in final dataframe: {list(df_final.columns)}")
     
     return f
 
