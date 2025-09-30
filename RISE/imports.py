@@ -60,7 +60,7 @@ def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
     'SLE_status': SLE status: healthy or SLE}
 
     """
-    X = anndata.read_h5ad("/opt/andrew/lupus/raw_lupus.h5ad")
+    X = anndata.read_h5ad("/opt/andrew/lupus/raw_lupus.h5ad", backed="r")
 
     protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
     protein_df = protein.to_df()
@@ -83,6 +83,7 @@ def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
     X.obs = X.obs.merge(protein_df, how="left", left_index=True, right_index=True)
 
     # Get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (Only 3 cells)
-    X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
+    X = X[~X.obs["Condition"].str.match("IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831")]
+    X = X.to_memory()
     
     return prepare_dataset(X, "Condition", geneThreshold=geneThreshold)
