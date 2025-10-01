@@ -1,6 +1,7 @@
 """
-Figure 5a_e Generation Script
-
+Figure 5a_e Generation Scri    # Get the final dataframe with mean gene expression for each sample 
+    # for top/bottom weighted overlapping genes in CM population only
+    geneAmount = 500
 This module generates a comprehensive figure comparing PCA and PF2 component analyses 
 for gene loadings and factors.
 """
@@ -20,18 +21,21 @@ def makeFigure():
     ax, f = getSetup((22, 9), (4, 10))
     subplotLabel(ax)
     
-    X = import_lupus(geneThreshold=0.8)
+    X = import_lupus(geneThreshold=0)
+    print("Using import_lupus data:")
+    print(X)
+    print("Available cell types in dataset:")
+    print(X.obs["Cell Type"].value_counts())
     
-    # X = anndata.read_h5ad("/opt/andrew/lupus/lupus_fitted_ann.h5ad")
-    # print(X)
-    # pc1_load = load_pc_loadings(pc_component=1)
-    # pc2_load = load_pc_loadings(pc_component=2)
+    pc1_load = load_pc_loadings(pc_component=1)
+    pc2_load = load_pc_loadings(pc_component=2)
     
-    # # Get the final dataframe with mean gene expression for each sample 
-    # # for top/bottom weighted overlapping genes in nCM and CM populations only
-    # df_final, selected_genes = get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount)
-    # print(df_final)
-    # print(selected_genes)
+    # Get the final dataframe with mean gene expression for each sample 
+    # for top/bottom weighted overlapping genes in nCM and CM populations only
+    geneAmount = 500
+    df_final, selected_genes = get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount)
+    print(df_final)
+    print(selected_genes)
 
     # df_final.to_csv("lupus_mean_expression.csv", index=False)
 
@@ -65,24 +69,6 @@ def load_pc_loadings(pc_component: int) -> pd.DataFrame:
     df[f"PC{pc_component}"] = stats.zscore(df[f"PC{pc_component}"].astype(float))
 
     return df
-
-def load_pf2_loadings(X) -> pd.DataFrame:
-    """
-    Load and preprocess PC loadings for a specific component.
-
-    Args:
-        pc_component (int): Principal Component number (1 or 2)
-        geneAmount (int): Number of genes to consider
-
-    Returns:
-        pd.DataFrame: Processed PC loadings DataFrame
-    """
-
-    df = pd.DataFrame(data=X.varm['Pf2_C'], columns=[f"Pf2_{i}" for i in range(1, X.varm['Pf2_C'].shape[1]+1)])
-    df =  df.set_index(X.var_names).reset_index().rename(columns={"index": "Gene"})
-
-    return df
-    
 
 
 def convert_gene_symbols(genes):
@@ -121,7 +107,7 @@ def convert_gene_symbols(genes):
 def get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount=10):
     """
     Get final dataframe with mean gene expression for each sample for top/bottom weighted overlapping genes
-    in nCM and CM populations only.
+    in CM population only.
     
     Args:
         X: AnnData object with lupus data
@@ -175,8 +161,20 @@ def get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount=10):
     df["Condition"] = X.obs["Condition"].values
     df["Cell Type"] = X.obs["Cell Type"].values
     
-    # Filter to only nCM and CM populations
-    df = df[df["Cell Type"].isin(["nCM", "CM"])]
+    # Debug: Check what cell types are available
+    print("Available cell types:")
+    print(df["Cell Type"].value_counts())
+    
+    # Filter to only CM cells
+    df_filtered = df[df["Cell Type"] == "cM"]
+    print(f"After filtering for CM cells only: {len(df_filtered)} rows")
+    
+    if len(df_filtered) == 0:
+        print("No CM cells found! Available cell types:")
+        print(df["Cell Type"].unique())
+        return pd.DataFrame(), selected_genes
+    
+    df = df_filtered
     
     # Group by sample (Condition) and cell type to get mean expression per sample for each gene
     groupby_cols = ["Status", "Cell Type", "Condition"]
@@ -185,9 +183,8 @@ def get_mean_expression_overlapping_genes(X, pc1_load, pc2_load, geneAmount=10):
     df_final = df_final.dropna().sort_values(["Cell Type", "Condition"])
     
     # Add cell count information
-    df_count = df.groupby(["Cell Type", "Condition"], observed=False).size().reset_index(
+    df_count = df_filtered.groupby(["Cell Type", "Condition"], observed=False).size().reset_index(
         name="Cell Count").sort_values(["Cell Type", "Condition"])
-    df_count = df_count[df_count["Cell Type"].isin(["nCM", "CM"])]
 
     # Merge cell count with mean expression data
     df_final = df_final.merge(df_count, on=["Cell Type", "Condition"], how="left")

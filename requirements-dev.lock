@@ -282,7 +282,7 @@ scikit-learn==1.6.0
     # via umap-learn
 scikit-misc==0.5.1
     # via scib
-scipy==1.15.3
+scipy==1.16.2
     # via anndata
     # via datashader
     # via doubletdetection
@@ -315,7 +315,7 @@ sniffio==1.3.1
     # via anyio
 sortedcontainers==2.4.0
     # via intervaltree
-statsmodels==0.14.2
+statsmodels==0.14.5
     # via rise
     # via scanpy
     # via tlviz
