@@ -48,6 +48,8 @@ dev-dependencies = [
     "scanorama>=1.7.4",
     "harmonypy>=0.0.10",
     "scib>=1.1.5",
+    "sphinx>=7.0,<9.0",
+    "sphinx-rtd-theme>=3.0.0",
 ]
 
 

@@ -12,6 +12,8 @@
 -e file:.
 absl-py==2.1.0
     # via ortools
+alabaster==1.0.0
+    # via sphinx
 anndata==0.11.1
     # via doubletdetection
     # via parafac2
@@ -23,6 +25,8 @@ annoy==1.17.3
     # via scanorama
 array-api-compat==1.8
     # via anndata
+babel==2.17.0
+    # via sphinx
 certifi==2024.8.30
     # via requests
 charset-normalizer==3.3.2
@@ -51,6 +55,9 @@ datashader==0.16.3
     # via rise
 deprecated==1.2.14
     # via scib
+docutils==0.21.2
+    # via sphinx
+    # via sphinx-rtd-theme
 doubletdetection==4.3.0.post1
     # via rise
 fastrlock==0.8.2
@@ -79,12 +86,16 @@ idna==3.8
 igraph==0.11.6
     # via leidenalg
     # via scib
+imagesize==1.4.1
+    # via sphinx
 immutabledict==4.2.1
     # via ortools
 iniconfig==2.0.0
     # via pytest
 intervaltree==3.1.0
     # via scanorama
+jinja2==3.1.6
+    # via sphinx
 joblib==1.4.2
     # via pynndescent
     # via scanpy
@@ -102,6 +113,8 @@ llvmlite==0.44.0
     # via scib
 locket==1.0.0
     # via partd
+markupsafe==3.0.3
+    # via jinja2
 matplotlib==3.9.2
     # via doubletdetection
     # via gseapy
@@ -169,6 +182,7 @@ packaging==24.1
     # via matplotlib
     # via pytest
     # via scanpy
+    # via sphinx
     # via statsmodels
     # via xarray
 pacmap==0.7.3
@@ -215,6 +229,8 @@ pyct==0.5.0
     # via datashader
 pydot==3.0.1
     # via scib
+pygments==2.19.2
+    # via sphinx
 pynndescent==0.5.13
     # via scanpy
     # via umap-learn
@@ -235,7 +251,10 @@ pyyaml==6.0.2
 requests==2.32.3
     # via datashader
     # via gseapy
+    # via sphinx
     # via tlviz
+roman-numerals-py==3.1.0
+    # via sphinx
 scanorama==1.7.4
 scanpy==1.10.4
     # via doubletdetection
@@ -284,8 +303,28 @@ setuptools==74.1.2
 six==1.16.0
     # via patsy
     # via python-dateutil
+snowballstemmer==3.0.1
+    # via sphinx
 sortedcontainers==2.4.0
     # via intervaltree
+sphinx==8.2.3
+    # via sphinx-rtd-theme
+    # via sphinxcontrib-jquery
+sphinx-rtd-theme==3.0.2
+sphinxcontrib-applehelp==2.0.0
+    # via sphinx
+sphinxcontrib-devhelp==2.0.0
+    # via sphinx
+sphinxcontrib-htmlhelp==2.1.0
+    # via sphinx
+sphinxcontrib-jquery==4.1
+    # via sphinx-rtd-theme
+sphinxcontrib-jsmath==1.0.1
+    # via sphinx
+sphinxcontrib-qthelp==2.0.0
+    # via sphinx
+sphinxcontrib-serializinghtml==2.0.0
+    # via sphinx
 statsmodels==0.14.2
     # via rise
     # via scanpy
