@@ -10,11 +10,11 @@
 #   universal: false
 
 -e file:.
-absl-py==2.1.0
+absl-py==2.3.1
     # via ortools
 alabaster==1.0.0
     # via sphinx
-anndata==0.11.1
+anndata==0.12.6
     # via doubletdetection
     # via parafac2
     # via rise
@@ -23,91 +23,92 @@ anndata==0.11.1
 annoy==1.17.3
     # via pacmap
     # via scanorama
-array-api-compat==1.8
+array-api-compat==1.12.0
     # via anndata
 babel==2.17.0
     # via sphinx
-certifi==2024.8.30
+certifi==2025.11.12
     # via requests
-charset-normalizer==3.3.2
+charset-normalizer==3.4.4
     # via requests
-click==8.1.7
+click==8.3.1
     # via dask
-cloudpickle==3.0.0
+cloudpickle==3.1.2
     # via dask
 colorcet==3.1.0
     # via datashader
-contourpy==1.3.0
+contourpy==1.3.3
     # via matplotlib
-coverage==7.6.1
+coverage==7.12.0
     # via pytest-cov
-cupy-cuda12x==13.4.1
+cupy-cuda12x==13.6.0
     # via parafac2
 cycler==0.12.1
     # via matplotlib
-dask==2024.8.2
-    # via dask-expr
-    # via datashader
+dask==2025.11.0
     # via rise
-dask-expr==1.1.13
-    # via dask
-datashader==0.16.3
+datashader==0.18.2
     # via rise
-deprecated==1.2.14
+deprecated==1.3.1
     # via scib
 docutils==0.21.2
     # via sphinx
     # via sphinx-rtd-theme
+donfig==0.8.1.post1
+    # via zarr
 doubletdetection==4.3.0.post1
     # via rise
-fastrlock==0.8.2
+fastrlock==0.8.3
     # via cupy-cuda12x
 fbpca==1.0
     # via geosketch
     # via scanorama
-fonttools==4.53.1
+fonttools==4.61.0
     # via matplotlib
-fsspec==2024.9.0
+fsspec==2025.10.0
     # via dask
 geosketch==1.3
     # via scanorama
-gseapy==1.1.3
+google-crc32c==1.7.1
+    # via zarr
+gseapy==1.1.11
     # via rise
-h5netcdf==1.3.0
+h5netcdf==1.7.3
     # via rise
-h5py==3.11.0
+h5py==3.15.1
     # via anndata
     # via h5netcdf
     # via scanpy
     # via scib
 harmonypy==0.0.10
-idna==3.8
+idna==3.11
     # via requests
-igraph==0.11.6
+igraph==1.0.0
     # via leidenalg
     # via scib
 imagesize==1.4.1
     # via sphinx
-immutabledict==4.2.1
+immutabledict==4.2.2
     # via ortools
-iniconfig==2.0.0
+iniconfig==2.3.0
     # via pytest
 intervaltree==3.1.0
     # via scanorama
 jinja2==3.1.6
     # via sphinx
-joblib==1.4.2
+joblib==1.5.2
     # via pynndescent
     # via scanpy
     # via scikit-learn
-kiwisolver==1.4.7
+kiwisolver==1.4.9
     # via matplotlib
-legacy-api-wrap==1.4
+legacy-api-wrap==1.5
+    # via anndata
     # via scanpy
-leidenalg==0.10.2
+leidenalg==0.11.0
     # via phenograph
     # via scib
-llvmlite==0.44.0
+llvmlite==0.45.1
     # via numba
     # via pynndescent
     # via scib
@@ -115,7 +116,7 @@ locket==1.0.0
     # via partd
 markupsafe==3.0.3
     # via jinja2
-matplotlib==3.9.2
+matplotlib==3.10.7
     # via doubletdetection
     # via gseapy
     # via scanorama
@@ -128,18 +129,20 @@ multipledispatch==1.0.0
 natsort==8.4.0
     # via anndata
     # via scanpy
-networkx==3.3
+networkx==3.6
     # via scanpy
 nodeenv==1.9.1
     # via pyright
-numba==0.61.2
+numba==0.62.1
     # via datashader
     # via pacmap
     # via pynndescent
     # via scanpy
     # via scib
     # via umap-learn
-numpy==2.2.6
+numcodecs==0.16.5
+    # via zarr
+numpy==2.3.5
     # via anndata
     # via contourpy
     # via cupy-cuda12x
@@ -152,13 +155,13 @@ numpy==2.2.6
     # via harmonypy
     # via matplotlib
     # via numba
+    # via numcodecs
     # via ortools
     # via pacmap
     # via pandas
     # via parafac2
     # via patsy
     # via phenograph
-    # via pyarrow
     # via rise
     # via scanorama
     # via scanpy
@@ -172,9 +175,10 @@ numpy==2.2.6
     # via tlviz
     # via umap-learn
     # via xarray
-ortools==9.12.4544
+    # via zarr
+ortools==9.14.6206
     # via rise
-packaging==24.1
+packaging==25.0
     # via anndata
     # via dask
     # via datashader
@@ -185,12 +189,12 @@ packaging==24.1
     # via sphinx
     # via statsmodels
     # via xarray
-pacmap==0.7.3
+    # via zarr
+pacmap==0.8.0
     # via rise
-pandas==2.2.2
+pandas==2.3.3
     # via anndata
     # via dask
-    # via dask-expr
     # via datashader
     # via gseapy
     # via harmonypy
@@ -204,51 +208,53 @@ pandas==2.2.2
     # via xarray
 parafac2 @ git+https://github.com/meyer-lab/parafac2.git@ccf708fe71c78a106151643e893ea006bba865d9
     # via rise
-param==2.1.1
+param==2.3.1
     # via datashader
     # via pyct
 partd==1.4.2
     # via dask
-patsy==0.5.6
+patsy==1.0.2
     # via scanpy
     # via statsmodels
 phenograph==1.5.7
     # via doubletdetection
-pillow==10.4.0
-    # via datashader
+pillow==12.0.0
     # via matplotlib
-pluggy==1.5.0
+pluggy==1.6.0
     # via pytest
-protobuf==5.29.5
+    # via pytest-cov
+protobuf==6.31.1
     # via ortools
-psutil==6.0.0
+psutil==7.1.3
     # via phenograph
-pyarrow==17.0.0
-    # via dask-expr
-pyct==0.5.0
+pyarrow==22.0.0
+    # via dask
+pyct==0.6.0
     # via datashader
-pydot==3.0.1
+pydot==4.0.1
     # via scib
 pygments==2.19.2
+    # via pytest
     # via sphinx
 pynndescent==0.5.13
     # via scanpy
     # via umap-learn
-pyparsing==3.1.4
+pyparsing==3.2.5
     # via matplotlib
     # via pydot
-pyright==1.1.391
-pytest==8.3.3
+pyright==1.1.407
+pytest==9.0.1
     # via pytest-cov
-pytest-cov==6.0.0
+pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
     # via matplotlib
     # via pandas
-pytz==2024.2
+pytz==2025.2
     # via pandas
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via dask
-requests==2.32.3
+    # via donfig
+requests==2.32.5
     # via datashader
     # via gseapy
     # via sphinx
@@ -256,12 +262,12 @@ requests==2.32.3
 roman-numerals-py==3.1.0
     # via sphinx
 scanorama==1.7.4
-scanpy==1.10.4
+scanpy==1.11.5
     # via doubletdetection
     # via rise
     # via scib
-scib==1.1.5
-scikit-learn==1.6.0
+scib==1.1.7
+scikit-learn==1.7.2
     # via geosketch
     # via harmonypy
     # via pacmap
@@ -272,9 +278,9 @@ scikit-learn==1.6.0
     # via scanpy
     # via scib
     # via umap-learn
-scikit-misc==0.5.1
+scikit-misc==0.5.2
     # via scib
-scipy==1.15.3
+scipy==1.16.3
     # via anndata
     # via datashader
     # via doubletdetection
@@ -296,12 +302,11 @@ seaborn==0.13.2
     # via rise
     # via scanpy
     # via scib
-session-info==1.0.0
+session-info2==0.2.3
     # via scanpy
-setuptools==74.1.2
+setuptools==80.9.0
     # via phenograph
-six==1.16.0
-    # via patsy
+six==1.17.0
     # via python-dateutil
 snowballstemmer==3.0.1
     # via sphinx
@@ -325,42 +330,46 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-statsmodels==0.14.2
+statsmodels==0.14.5
     # via rise
     # via scanpy
     # via tlviz
-stdlib-list==0.10.0
-    # via session-info
-tensorly==0.8.1
+tensorly==0.9.0
     # via parafac2
     # via rise
 texttable==1.7.0
     # via igraph
-threadpoolctl==3.5.0
+threadpoolctl==3.6.0
     # via scikit-learn
 tlviz==0.1.1
     # via rise
-toolz==0.12.1
+toolz==1.1.0
     # via dask
     # via datashader
     # via partd
-tqdm==4.66.5
+tqdm==4.67.1
     # via doubletdetection
     # via parafac2
     # via rise
     # via scanpy
     # via umap-learn
-typing-extensions==4.12.2
+typing-extensions==4.15.0
+    # via numcodecs
+    # via ortools
     # via pyright
-tzdata==2024.1
+    # via scanpy
+    # via zarr
+tzdata==2025.2
     # via pandas
-umap-learn==0.5.6
+umap-learn==0.5.9.post2
     # via scanpy
     # via scib
-urllib3==2.2.3
+urllib3==2.5.0
     # via requests
-wrapt==1.16.0
+wrapt==2.0.1
     # via deprecated
-xarray==2024.9.0
+xarray==2025.11.0
     # via datashader
     # via tlviz
+zarr==3.1.5
+    # via anndata
