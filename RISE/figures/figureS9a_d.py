@@ -17,6 +17,7 @@ import seaborn as sns
 
 # import torch
 from harmonypy import run_harmony
+from scipy.sparse import csr_array
 
 from RISE.factorization import pf2
 from RISE.figures.common import getSetup, subplotLabel
@@ -125,14 +126,14 @@ def benchmark_algorithm(
 
     elif algorithm == "Harmony":
         # Ensure data.X is a dense array
-        X = data.X.toarray()
+        X = csr_array(data.X).toarray()
 
         # Prepare metadata
         if "pool" not in data.obs:
             raise ValueError(
                 "Data must have 'batch' column in .obs for Harmony integration."
             )
-        meta_data = data.obs[["pool"]]
+        meta_data = pd.DataFrame(data.obs[["pool"]])
 
         start_time = time.time()
         tracemalloc.start()
