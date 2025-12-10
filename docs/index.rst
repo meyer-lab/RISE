@@ -6,6 +6,7 @@ Welcome to RISE's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :titlesonly:
 
    tutorial
    api

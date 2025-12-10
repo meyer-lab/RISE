@@ -75,7 +75,11 @@ Determine the optimal component/rank by plotting the variance explained (R²X) a
     plt.tight_layout()
     plt.show()
 
-This produces a plot showing the variance explained (R²X) for both RISE (PARAFAC2) and PCA across different ranks. The plot helps you choose an appropriate rank where RISE captures more variance than PCA, indicating that tensor decomposition better models the multi-condition structure of your data.
+.. figure:: _static/tutorial_images/step2_r2x.png
+   :align: center
+   :width: 500px
+   
+   **Variance Explained (R²X) Plot.** This plot shows the variance explained for both RISE (PARAFAC2) and PCA across different ranks. Choose a rank where RISE captures more variance than PCA, indicating that tensor decomposition better models the multi-condition structure.
 
 .. note::
    To see the actual output plots with figures, view the **Interactive Tutorial** section below which includes the Jupyter notebook with all executed cells and their visual outputs.
@@ -95,7 +99,11 @@ Measure the reproducibility of the RISE factorization across different ranks. An
     plt.tight_layout()
     plt.show()
 
-The Factor Match Score plot shows the stability of components across different ranks. Higher scores (above ~0.6) indicate that the factorization is reproducible and the components are reliable.
+.. figure:: _static/tutorial_images/step3_fms.png
+   :align: center
+   :width: 500px
+   
+   **Factor Match Score (FMS) Plot.** The FMS measures stability of components across different ranks. Higher scores (above ~0.6) indicate reproducible factorization.
 
 **Step 4: Perform RISE Factorization**
 
@@ -125,7 +133,11 @@ Examine how each experimental condition contributes to the identified patterns. 
     plt.tight_layout()
     plt.show()
 
-This heatmap displays how each experimental condition (rows) contributes to each component (columns). Positive values (red) indicate conditions where a pattern is upregulated, while negative values (blue) indicate downregulation.
+.. figure:: _static/tutorial_images/step5_condition_factors.png
+   :align: center
+   :width: 700px
+   
+   **Condition Factors Heatmap.** This heatmap shows how each experimental condition (rows) contributes to each component (columns). Positive values (red) indicate upregulation, negative values (blue) indicate downregulation.
 
 **Step 6: Visualize Cell Embedding**
 
@@ -141,7 +153,11 @@ Explore the latent space of cells using nonlinear dimensionality reduction metho
     plt.tight_layout()
     plt.show()
 
-The PaCMAP embedding shows cells in 2D space where similar cells cluster together. Coloring by cell type reveals how different cell populations are distributed in the latent space. You can also color by ``"Condition"`` to see how experimental conditions are distributed.
+.. figure:: _static/tutorial_images/step6_cell_embedding.png
+   :align: center
+   :width: 700px
+   
+   **PaCMAP Cell Embedding.** The embedding shows cells in 2D space where similar cells cluster together. Cells are colored by cell type, revealing how different populations are distributed in the latent space.
 
 **Step 7: Visualize Eigen-State Factor**
 
@@ -158,7 +174,11 @@ Analyze how each cell state contributes to the identified patterns. Each eigen-s
     plt.tight_layout()
     plt.show()
 
-This heatmap shows how each eigen-state (representing groups of similar cells) loads onto each component. High values indicate that a particular cell state is strongly associated with a component.
+.. figure:: _static/tutorial_images/step7_eigenstate_factors.png
+   :align: center
+   :width: 400px
+   
+   **Eigen-state Factors Heatmap.** This heatmap shows how each eigen-state (representing groups of similar cells) loads onto each component. High values indicate strong association with a component.
 
 **Step 8: Visualize Gene Factor**
 
@@ -174,7 +194,11 @@ Identify which genes are highly weighted in each component, revealing coordinate
     plt.tight_layout()
     plt.show()
 
-The gene factor heatmap shows which genes (rows) are associated with each component (columns). The ``weight`` parameter filters out genes with low contributions, and ``trim=True`` removes genes that don't contribute significantly to any component, making the plot easier to interpret.
+.. figure:: _static/tutorial_images/step8_gene_factors.png
+   :align: center
+   :width: 650px
+   
+   **Gene Factors Heatmap.** This heatmap shows which genes (rows) are associated with each component (columns). The weight parameter filters out genes with low contributions for easier interpretation.
 
 **Step 9: Investigate Gene Associations for a Component**
 
@@ -191,7 +215,11 @@ Overlay specific gene expression on the cell embedding to see which cells expres
     plt.tight_layout()
     plt.show()
 
-This visualization overlays the expression of a specific gene (e.g., MS4A1, a B cell marker) onto the PaCMAP embedding. Cells are colored by expression level, revealing which cell populations express the gene and how they relate to the RISE components.
+.. figure:: _static/tutorial_images/step9_gene_expression.png
+   :align: center
+   :width: 700px
+   
+   **Gene Expression on PaCMAP.** This visualization overlays MS4A1 gene expression (a B cell marker) onto the PaCMAP embedding. Cells are colored by expression level, revealing which populations express the gene.
 
 **Step 10: Investigate Cell Associations for a Component**
 
@@ -207,19 +235,8 @@ Visualize how cells contribute to specific components using weighted projections
     plt.tight_layout()
     plt.show()
 
-The weighted projection plot shows which cells contribute most strongly to a specific component (e.g., component 10). Cells with high weighted projections (bright colors) are most representative of that component's pattern. The ``cbarMax`` parameter can be adjusted to better visualize the most relevant cells.
-
-Interactive Tutorial
---------------------
-
-The following interactive Jupyter notebook provides a hands-on demonstration of the complete RISE workflow with code examples and visualizations:
-
-.. toctree::
-   :maxdepth: 1
-
-   ../tutorial.ipynb
-
-Additional Resources
---------------------
-
-You can find example scripts that load single-cell scRNA-seq data across conditions, implement PARAFAC2, and demonstrate various ways to interpret and plot results in the `scCP repository <https://github.com/meyer-lab/scCP>`_ on GitHub. Basic familiarity with Python is recommended to navigate the repository.
+.. figure:: _static/tutorial_images/step10_weighted_projections.png
+   :align: center
+   :width: 700px
+   
+   **Weighted Projections for Component 10.** This plot shows which cells contribute most strongly to component 10. Cells with high weighted projections (bright colors) are most representative of that component's pattern.
