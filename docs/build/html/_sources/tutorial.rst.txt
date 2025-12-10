@@ -1,9 +1,0 @@
-Tutorial
-========
-
-This tutorial demonstrates how to use PARAFAC2-RISE to analyze single-cell RNA sequencing data across multiple experimental conditions.
-
-.. toctree::
-   :maxdepth: 1
-
-   ../tutorial.ipynb
