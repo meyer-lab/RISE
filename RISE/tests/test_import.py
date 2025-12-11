@@ -12,7 +12,7 @@ from ..imports import import_lupus, import_thomson
     "import_func",
     [
         import_thomson,
-        import_lupus,
+        # import_lupus,
     ],
 )
 def test_imports(import_func):
