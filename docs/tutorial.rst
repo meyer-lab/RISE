@@ -4,18 +4,18 @@ Tutorial for PARAFAC2-RISE on scRNA-seq Data
 Overview
 --------
 
-Effective exploration and analysis tools are vital for the extraction of insights from single-cell data. However, current techniques for modeling single-cell studies performed across experimental conditions (e.g., samples) require restrictive assumptions or do not adequately deconvolute condition-to-condition variation from cell-to-cell variation. 
+RISE (Reduction and Insight in Single-cell Exploration) is an unsupervised, tensor-based computational method designed for the integrative analysis of single-cell RNA sequencing (scRNA-seq) data across multiple experimental conditions, such as drug treatments, patient cohorts, or time points. Built upon the PARAFAC2 tensor decomposition framework, 
+RISE preserves the inherent three-dimensional structure of multi-condition single-cell data—conditions x cells x genes—instead of flattening it into a conventional two-dimensional matrix. This allows RISE to decompose variation into distinct, interpretable patterns associated with experimental conditions, individual cells, and genes, providing a 
+more nuanced and biologically meaningful analysis. RISE does not require prior cell-type labels or clustering, reducing bias and enabling discovery of novel cell states, while also separating technical, biological, and condition-driven variation without  batch correction that may erase meaningful signals. 
+Its high resolution enables the identification of cell populations and condition-specific subpopulations missed by pseudobulk or clustering-based approaches, and each resulting component is directly linked to specific conditions, genes, and cells, making the results biologically tractable.
 
-**RISE** (Reduction and Insight in Single-cell Exploration) is an adaptation of the tensor decomposition method PARAFAC2 that enables the dimensionality reduction and analysis of single-cell data across conditions. RISE enables associations of gene variation patterns with patients or perturbations while connecting each coordinated change to single cells without requiring cell-type annotations.
-
-We demonstrate the benefits of RISE across distinct examples of single-cell RNA-sequencing experiments of peripheral immune cells: pharmacologic drug perturbations and systemic lupus erythematosus patient samples. The theoretical grounding of RISE suggests a unified framework for many single-cell data modeling tasks while providing an intuitive dimensionality reduction approach for multi-sample single-cell studies across biological contexts.
 
 Installation
 ------------
 
 To add RISE to your Python package, add the following line to your ``requirements.txt`` and remake your virtual environment::
 
-    git+https://github.com/meyer-lab/parafac2.git@main
+    git+https://github.com/meyer-lab/RISE.git@main
 
 Input Requirements
 ------------------
@@ -24,31 +24,22 @@ Your AnnData object must meet the following requirements:
 
 1. **Condition Index**: Include an observations column ``condition_unique_idxs`` that is a 0-indexed array indicating which condition each cell is derived from, along with the cell barcode. Condition 1 cells are indexed as 0, Condition 2 as 1, and so on.
 
-2. **Preprocessing**: Your AnnData object must be preprocessed (doublets removed, genes filtered, normalized, and log-transformed) before running the algorithm. The ``prepare_dataset`` function from ``parafac2.normalize`` can assist with preprocessing including assigning ``condition_unique_idx`` and gene filtering, and ``doubletdetection`` can help remove doublets.
+2. **Preprocessing**: Your AnnData object must be preprocessed (doublets removed, genes filtered, normalized, and log-transformed) before running the algorithm. The ``prepare_dataset`` function can assist with preprocessing for gene filtering, normalization, and assigning ``condition_unique_idxs``. Parameters:
 
-The PARAFAC2 Algorithm
-----------------------
+   - ``X``: AnnData object containing raw count data in sparse matrix format
+   - ``condition_name``: Name of the column in ``X.obs`` that specifies experimental conditions for each cell
+   - ``geneThreshold``: Minimum mean expression threshold for gene filtering (genes with mean expression below this value are removed)
+   - ``deviance``: If True, applies deviance transformation instead of log normalization (default: False)
 
-The function ``parafac2_nd`` is the PARAFAC2 algorithm with various parameters that can be altered, such as:
-
-- ``rank``: Number of components
-- ``tolerance``: Convergence threshold
-- ``max_iter``: Maximum number of iterations
-- ``random_state``: Random seed for reproducibility
-
-Outputs
--------
-
-The output of ``parafac2_nd`` includes the original AnnData object with added results and the reconstruction error (R²X). The following are added to the AnnData object:
-
-- **Weights**: ``X.uns["Pf2_weights"]`` - The weights for each component
-- **Condition Factors**: ``X.uns["Pf2_A"]`` - Factors with respect to conditions
-- **Eigen-state Factors**: ``X.uns["Pf2_B"]`` - Eigen-state factors
-- **Gene Factors**: ``X.varm["Pf2_C"]`` - Gene factors (matrix width equals the rank)
-- **Projections**: ``X.obsm["projections"]`` - Cell projections for each component (matrix width equals the rank)
-- **Weighted Projections**: ``X.obsm["weighted_projections"]`` - Weighted projections for each cell across all components, determining how each cell relates to each component pattern
-
-We recommend implementing an embedding algorithm such as PaCMAP or UMAP on ``X.obsm["projections"]`` to visualize cell-to-cell heterogeneity, creating a new column such as ``X.obsm["embedding"]``.
+   The function performs the following steps:
+   
+   - Filters cells with fewer than 10 total counts
+   - Filters genes based on the ``geneThreshold`` parameter
+   - Normalizes total counts per cell to the median
+   - Scales gene expression values
+   - Applies log₁₀((1000 × normalized_value) + 1) transformation (or deviance transformation if specified)
+   - Creates ``condition_unique_idxs`` column in ``X.obs`` with 0-indexed condition assignments
+   - Pre-calculates gene means and stores in ``X.var["means"]``
 
 Tutorial Workflow
 -----------------
@@ -79,11 +70,6 @@ Determine the optimal component/rank by plotting the variance explained (R²X) a
    :align: center
    :width: 500px
    
-   **Variance Explained (R²X) Plot.** This plot shows the variance explained for both RISE (PARAFAC2) and PCA across different ranks. Choose a rank where RISE captures more variance than PCA, indicating that tensor decomposition better models the multi-condition structure.
-
-.. note::
-   To see the actual output plots with figures, view the **Interactive Tutorial** section below which includes the Jupyter notebook with all executed cells and their visual outputs.
-
 **Step 3: Evaluate Factor Stability with Factor Match Score (FMS)**
 
 Measure the reproducibility of the RISE factorization across different ranks. An FMS above ~0.6 indicates stable components.
@@ -102,12 +88,10 @@ Measure the reproducibility of the RISE factorization across different ranks. An
 .. figure:: _static/tutorial_images/step3_fms.png
    :align: center
    :width: 500px
-   
-   **Factor Match Score (FMS) Plot.** The FMS measures stability of components across different ranks. Higher scores (above ~0.6) indicate reproducible factorization.
 
 **Step 4: Perform RISE Factorization**
 
-Based on the variance explained and FMS, select a rank and perform the RISE factorization. This decomposes the data into condition, eigenstate (cell), and gene factors.
+Based on the variance explained and FMS, select a rank and perform the RISE factorization. This decomposes the data into condition, eigen-state, and gene factors.
 
 .. code-block:: python
 
@@ -117,11 +101,28 @@ Based on the variance explained and FMS, select a rank and perform the RISE fact
     X = pf2(X=X, rank=rank, doEmbedding=True, tolerance=1e-9, 
             max_iter=500, random_state=42)
 
-Setting ``doEmbedding=True`` automatically computes PaCMAP embeddings of the cell projections, which will be stored in ``X.obsm["embedding"]`` for visualization.
+The function ``pf2`` performs PARAFAC2 tensor decomposition on the AnnData object. Parameters:
+
+- ``X``: AnnData object with preprocessed scRNA-seq data
+- ``rank``: Number of components to extract
+- ``random_state``: Random seed for reproducibility (default: 1)
+- ``doEmbedding``: If True, automatically computes PaCMAP embeddings of cell projections and stores in ``X.obsm["embedding"]`` (default: True)
+- ``tolerance``: Convergence threshold for the optimization algorithm (default: 1e-9)
+- ``max_iter``: Maximum number of iterations (default: 500)
+
+The output of ``pf2`` includes the original AnnData object with added results and the reconstruction error (R²X). The following are added to the AnnData object:
+
+- **Weights**: ``X.uns["Pf2_weights"]`` - The weights for each component
+- **Condition Factors**: ``X.uns["Pf2_A"]`` - Factors with respect to conditions
+- **Eigen-state Factors**: ``X.uns["Pf2_B"]`` - Eigen-state factors
+- **Gene Factors**: ``X.varm["Pf2_C"]`` - Gene factors (matrix width equals the rank)
+- **Projections**: ``X.obsm["projections"]`` - Cell projections for each component (matrix width equals the rank)
+- **Weighted Projections**: ``X.obsm["weighted_projections"]`` - Weighted projections for each cell across all components, determining how each cell relates to each component pattern
 
 **Step 5: Visualize Condition Factor**
 
 Examine how each experimental condition contributes to the identified patterns. Log-transforming these factors allows for easier interpretation of condition-specific effects.
+Several plotting functions are available in the ``RISE.figures.commonFuncs.plotFactors``  and ``RISE.figures.commonFuncs.plotPaCMAP`` modules.
 
 .. code-block:: python
 
@@ -137,7 +138,7 @@ Examine how each experimental condition contributes to the identified patterns. 
    :align: center
    :width: 700px
    
-   **Condition Factors Heatmap.** This heatmap shows how each experimental condition (rows) contributes to each component (columns). Positive values (red) indicate upregulation, negative values (blue) indicate downregulation.
+   **Condition Factors Heatmap.** This heatmap shows how each experimental condition (rows) contributes to each component (columns). 
 
 **Step 6: Visualize Cell Embedding**
 
@@ -156,8 +157,6 @@ Explore the latent space of cells using nonlinear dimensionality reduction metho
 .. figure:: _static/tutorial_images/step6_cell_embedding.png
    :align: center
    :width: 700px
-   
-   **PaCMAP Cell Embedding.** The embedding shows cells in 2D space where similar cells cluster together. Cells are colored by cell type, revealing how different populations are distributed in the latent space.
 
 **Step 7: Visualize Eigen-State Factor**
 
@@ -178,7 +177,7 @@ Analyze how each cell state contributes to the identified patterns. Each eigen-s
    :align: center
    :width: 400px
    
-   **Eigen-state Factors Heatmap.** This heatmap shows how each eigen-state (representing groups of similar cells) loads onto each component. High values indicate strong association with a component.
+   **Eigen-state Factors Heatmap.** This heatmap shows how each eigen-state (representing groups of similar cells) is related to each component. High values indicate strong association with a component.
 
 **Step 8: Visualize Gene Factor**
 
