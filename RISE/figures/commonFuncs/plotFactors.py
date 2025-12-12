@@ -23,12 +23,12 @@ def plot_condition_factors(
     group_cond=False,
 ):
     """Plot condition factors as a heatmap showing how conditions contribute to components.
-    
+
     This visualization shows how each experimental condition (rows) contributes to
     each RISE component (columns). High values indicate strong association between
     a condition and a component's pattern. Log transformation and normalization
     help reveal relative differences across conditions.
-    
+
     Parameters
     ----------
     data : anndata.AnnData
@@ -124,12 +124,12 @@ def plot_condition_factors(
 
 def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     """Plot eigen-state factors as a heatmap showing cell state patterns.
-    
+
     Eigen-state factors represent the underlying cell state patterns across components.
     Each row represents an eigen-state (a summary of similar cells), and each column
     represents a component. High values indicate strong association between a cell
     state pattern and a component.
-    
+
     Parameters
     ----------
     data : anndata.AnnData
@@ -159,11 +159,11 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
 
 def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
     """Plot gene factors as a heatmap showing which genes contribute to each component.
-    
+
     This visualization reveals coordinated gene modules by showing which genes (rows)
     are highly weighted in each component (columns). The weight parameter filters out
     genes with low contributions, focusing on the most important genes for interpretation.
-    
+
     Parameters
     ----------
     data : anndata.AnnData
