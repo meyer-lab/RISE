@@ -12,14 +12,6 @@ Factorization
    :undoc-members:
    :show-inheritance:
 
-Data Import
-~~~~~~~~~~~
-
-.. automodule:: RISE.imports
-   :members: import_thomson, import_lupus
-   :undoc-members:
-   :show-inheritance:
-
 Preprocessing
 ~~~~~~~~~~~~~
 
@@ -60,22 +52,4 @@ Factor Stability
    :undoc-members:
    :show-inheritance:
 
-Additional Modules
-------------------
-
-Logistic Regression
-~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: RISE.logisticReg
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Cell Gating
-~~~~~~~~~~~
-
-.. automodule:: RISE.gating
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
