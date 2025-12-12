@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
     docs:
-        runs-on: self-hosted
+        runs-on: ubuntu-latest
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}
@@ -29,7 +29,7 @@ jobs:
               uses: astral-sh/setup-uv@v6
             - name: Sphinx build
               run: |
-                  uv run sphinx-build docs docs/_build
+                  uv run --group dev sphinx-build docs docs/_build
             - name: Setup Pages
               uses: actions/configure-pages@v5
             - name: Upload artifact
