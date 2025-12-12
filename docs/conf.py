@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 # Disable cupy in anndata to avoid import errors during doc build
-os.environ['ANNDATA_CUPY'] = '0'
+os.environ["ANNDATA_CUPY"] = "0"
 
 # Add the parent directory to the path so we can import RISE
 # This allows Sphinx to find the RISE package

@@ -12,19 +12,19 @@ from tqdm import tqdm
 
 def correct_conditions(X: anndata.AnnData):
     """Correct the condition factors by normalizing for overall read depth.
-    
+
     This function adjusts condition factors (stored in X.uns["Pf2_A"]) to account for
     differences in sequencing depth across conditions. It uses linear regression to
     model the relationship between total read counts and condition factor magnitudes,
     then applies a correction.
-    
+
     Parameters
     ----------
     X : anndata.AnnData
         AnnData object containing RISE decomposition results. Must have:
         - X.obs["condition_unique_idxs"]: 0-indexed condition assignments
         - X.uns["Pf2_A"]: Condition factors from PARAFAC2 decomposition
-    
+
     Returns
     -------
     numpy.ndarray
@@ -58,11 +58,11 @@ def pf2(
     max_iter: int = 500,
 ):
     """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
-    
+
     This is the main function for running RISE analysis. It decomposes the
     multi-condition single-cell data into condition factors, eigen-state factors,
     and gene factors, revealing patterns across experimental conditions.
-    
+
     Parameters
     ----------
     X : anndata.AnnData
@@ -84,12 +84,12 @@ def pf2(
         increase precision but may require more iterations.
     max_iter : int, optional (default: 500)
         Maximum number of iterations for the optimization algorithm.
-    
+
     Returns
     -------
     anndata.AnnData
         The input AnnData object with added RISE decomposition results:
-        
+
         - X.uns["Pf2_weights"]: Component weights (shape: rank,)
         - X.uns["Pf2_A"]: Condition factors (shape: n_conditions, rank)
         - X.uns["Pf2_B"]: Eigen-state factors (shape: rank, rank)
@@ -113,11 +113,11 @@ def pf2(
 
 def rise_pca_r2x(X: anndata.AnnData, ranks):
     """Compute variance explained (R²X) for RISE and PCA across different ranks.
-    
+
     This function evaluates how much variance in the data is explained by
     RISE (PARAFAC2) and PCA decompositions at different component ranks.
     Used to determine the optimal number of components for RISE analysis.
-    
+
     Parameters
     ----------
     X : anndata.AnnData
@@ -126,12 +126,12 @@ def rise_pca_r2x(X: anndata.AnnData, ranks):
     ranks : array-like of int
         Array of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
         Each rank represents a different number of components.
-    
+
     Returns
     -------
     tuple of numpy.ndarray
         (rise_r2x, pca_r2x) where:
-        
+
         - rise_r2x: Variance explained by RISE for each rank (shape: len(ranks),)
         - pca_r2x: Variance explained by PCA for each rank (shape: len(ranks),)
     """

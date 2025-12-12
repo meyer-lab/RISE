@@ -22,7 +22,10 @@ def test_factor_thomson_reprod():
     XX = import_thomson()
     XX.obs["condition_unique_idxs"] = pd.Categorical(XX.obs["condition_unique_idxs"])
     XX = pf2(XX, 10, doEmbedding=False, tolerance=1e-6)
-    np.testing.assert_allclose(np.array(XX.varm["Pf2_C"]), C_first, atol=1e-5, rtol=1e-5)
+    np.testing.assert_allclose(
+        np.array(XX.varm["Pf2_C"]), C_first, atol=1e-5, rtol=1e-5
+    )
+
 
 def test_factor_thomson_R2X():
     """Import and factor Thomson.
