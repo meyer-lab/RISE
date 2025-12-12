@@ -17,9 +17,9 @@ jobs:
             - name: Test with pytest
               run: make coverage.xml
             - name: Check formatting
-              run: rye fmt --check RISE
+              run: uv run ruff format --check RISE
             - name: Check linting
-              run: rye lint RISE
+              run: uv run ruff check RISE
             - name: Upload coverage to Codecov
               uses: codecov/codecov-action@v4
               with:
