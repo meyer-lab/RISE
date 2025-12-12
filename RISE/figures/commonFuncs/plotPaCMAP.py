@@ -64,21 +64,6 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
     clip_outliers : float, optional (default: 0.9995)
         Quantile threshold for clipping extreme expression values.
         Values above this quantile are clipped to improve visualization contrast.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotPaCMAP import plot_gene_pacmap
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(8, 8))
-    >>> gene = "MS4A1"  # B cell marker
-    >>> plot_gene_pacmap(gene, adata, ax=ax, clip_outliers=0.9995)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    plot_labels_pacmap : Color cells by condition or cell type
-    plot_wp_pacmap : Color cells by component associations
     """
     geneList = X[:, gene].to_df().values
 
@@ -134,20 +119,6 @@ def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0)
     cbarMax : float, optional (default: 1.0)
         Maximum value for the color scale. Values are normalized to [-cbarMax, cbarMax].
         Lower values increase contrast for components with weaker associations.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(8, 8))
-    >>> plot_wp_pacmap(adata, cmp=10, ax=ax, cbarMax=0.9)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    plot_labels_pacmap : Color cells by condition or cell type
-    plot_gene_pacmap : Color cells by gene expression
     """
     values = X.obsm["weighted_projections"][:, cmp - 1]
     points = X.obsm["X_pf2_PaCMAP"]
@@ -209,21 +180,6 @@ def plot_labels_pacmap(
         Matplotlib colormap name for coloring categories.
     color_key : list, optional (default: None)
         Custom list of colors for categories. If None, uses cmap.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
-    >>> import matplotlib.pyplot as plt
-    >>> # Color by cell type
-    >>> fig, ax = plt.subplots(figsize=(8, 8))
-    >>> plot_labels_pacmap(adata, labelType="Cell Type", ax=ax)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    plot_gene_pacmap : Color cells by gene expression
-    plot_wp_pacmap : Color cells by component associations
     """
     labels = X.obs[labelType]
 

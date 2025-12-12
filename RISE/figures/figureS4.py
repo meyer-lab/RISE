@@ -136,28 +136,12 @@ def plot_fms_diff_ranks(
         Higher values give more reliable FMS estimates but take longer.
         Typical values: 3-5 runs.
     
-    Examples
-    --------
-    >>> from RISE.figures.figureS4 import plot_fms_diff_ranks
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(5, 5))
-    >>> rank_list = [1, 5, 10, 15, 20, 25, 30]
-    >>> plot_fms_diff_ranks(adata, ax, ranksList=rank_list, runs=3)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
     Notes
     -----
     FMS values interpretation:
     - FMS > 0.9: Highly stable decomposition
     - FMS > 0.6: Acceptably stable decomposition
     - FMS < 0.6: Unstable, consider lower rank or more data
-    
-    See Also
-    --------
-    plot_r2x : Evaluate variance explained across ranks
-    pf2 : Perform PARAFAC2 decomposition at chosen rank
-    calculateFMS : Compute FMS between two decompositions
     \"\"\"
     fmsLists = []
     fmsLists = []

@@ -51,20 +51,6 @@ def plot_condition_factors(
         Custom colors for condition group labels. If None, uses default palette.
     group_cond : bool, optional (default: False)
         If True and cond_group_labels provided, sorts conditions by group.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotFactors import plot_condition_factors
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(8, 8))
-    >>> plot_condition_factors(adata, ax=ax, cond="Condition", log_transform=True)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    plot_eigenstate_factors : Visualize eigen-state factors
-    plot_gene_factors : Visualize gene factors
     """
     pd.set_option("display.max_rows", None)
     yt = pd.Series(np.unique(data.obs[cond]))
@@ -151,21 +137,6 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
         - data.uns["Pf2_B"]: Eigen-state factors (rank, rank)
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotFactors import plot_eigenstate_factors
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(4, 4))
-    >>> plot_eigenstate_factors(adata, ax=ax)
-    >>> ax.set_ylabel("Eigen-state")
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    plot_condition_factors : Visualize condition factors
-    plot_gene_factors : Visualize gene factors
     """
     rank = data.uns["Pf2_B"].shape[1]
     xticks = np.arange(1, rank + 1)
@@ -206,20 +177,6 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
         Higher values show fewer, more important genes.
     trim : bool, optional (default: True)
         If True, filters genes based on the weight parameter. If False, shows all genes.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotFactors import plot_gene_factors
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(7, 8))
-    >>> plot_gene_factors(adata, ax=ax, weight=0.2, trim=True)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    plot_condition_factors : Visualize condition factors
-    plot_gene_pacmap : Overlay gene expression on PaCMAP
     """
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
