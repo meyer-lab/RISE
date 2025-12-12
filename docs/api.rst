@@ -7,10 +7,11 @@ Core Functions
 Factorization
 ~~~~~~~~~~~~~
 
-.. automodule:: RISE.factorization
-   :members: pf2, rise_pca_r2x, correct_conditions
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: RISE.factorization.pf2
+
+.. autofunction:: RISE.factorization.rise_pca_r2x
+
+.. autofunction:: RISE.factorization.correct_conditions
 
 Preprocessing
 ~~~~~~~~~~~~~
@@ -23,33 +24,31 @@ Visualization Functions
 General Plotting
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: RISE.figures.commonFuncs.plotGeneral
-   :members: plot_r2x
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: RISE.figures.commonFuncs.plotGeneral.plot_r2x
 
 Factor Plotting
 ~~~~~~~~~~~~~~~
 
-.. automodule:: RISE.figures.commonFuncs.plotFactors
-   :members: plot_condition_factors, plot_eigenstate_factors, plot_gene_factors
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: RISE.figures.commonFuncs.plotFactors.plot_condition_factors
+
+.. autofunction:: RISE.figures.commonFuncs.plotFactors.plot_eigenstate_factors
+
+.. autofunction:: RISE.figures.commonFuncs.plotFactors.plot_gene_factors
 
 PaCMAP Visualization
 ~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: RISE.figures.commonFuncs.plotPaCMAP
-   :members: plot_labels_pacmap, plot_gene_pacmap, plot_wp_pacmap
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: RISE.figures.commonFuncs.plotPaCMAP.plot_labels_pacmap
+
+.. autofunction:: RISE.figures.commonFuncs.plotPaCMAP.plot_gene_pacmap
+
+.. autofunction:: RISE.figures.commonFuncs.plotPaCMAP.plot_wp_pacmap
 
 Factor Stability
 ~~~~~~~~~~~~~~~~
 
-.. automodule:: RISE.figures.figureS4
-   :members: plot_fms_diff_ranks, calculateFMS
-   :undoc-members:
-   :show-inheritance:
+.. autofunction:: RISE.figures.figureS4.plot_fms_diff_ranks
+
+.. autofunction:: RISE.figures.figureS4.calculateFMS
 
 
