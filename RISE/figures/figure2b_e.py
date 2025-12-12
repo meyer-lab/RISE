@@ -33,5 +33,4 @@ def makeFigure():
 
     plot_labels_pacmap(X, "Cell Type", ax[3])
 
-
     return f

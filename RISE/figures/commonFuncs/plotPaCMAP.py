@@ -45,11 +45,11 @@ def ds_show(result, ax: Axes):
 
 def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.9995):
     """Plot PaCMAP embedding colored by gene expression levels.
-    
+
     This visualization overlays gene expression onto the PaCMAP embedding of cells,
     revealing which cell populations express specific genes. Useful for validating
     component interpretations by checking if marker genes align with component patterns.
-    
+
     Parameters
     ----------
     gene : str
@@ -99,12 +99,12 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
 
 def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
     """Plot PaCMAP embedding colored by weighted projections for a component.
-    
+
     This visualization shows which cells contribute most strongly to a specific
     component by coloring them according to their weighted projections. Cells with
     high weighted projections (bright colors) are most representative of that
     component's expression pattern.
-    
+
     Parameters
     ----------
     X : anndata.AnnData
@@ -157,11 +157,11 @@ def plot_labels_pacmap(
     color_key=None,
 ):
     """Plot PaCMAP embedding colored by categorical labels (cell type or condition).
-    
+
     This visualization shows the overall structure of the cell embedding, revealing
     how cells cluster by cell type, experimental condition, or other categorical
     metadata. Useful for understanding the biological organization captured by RISE.
-    
+
     Parameters
     ----------
     X : anndata.AnnData

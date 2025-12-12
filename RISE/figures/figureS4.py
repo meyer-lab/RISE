@@ -33,12 +33,12 @@ def makeFigure():
 
 def calculateFMS(A: anndata.AnnData, B: anndata.AnnData):
     """Calculate Factor Match Score (FMS) between two RISE decompositions.
-    
+
     Factor Match Score measures the similarity between two tensor decompositions
     by comparing their factor matrices. Values range from 0 (no similarity) to 1
     (identical factors). Used to assess decomposition stability across different
     initializations or data subsamples.
-    
+
     Parameters
     ----------
     A : anndata.AnnData
@@ -50,14 +50,14 @@ def calculateFMS(A: anndata.AnnData, B: anndata.AnnData):
     B : anndata.AnnData
         Second AnnData object with RISE decomposition results. Must have the
         same rank as A and contain the same decomposition attributes.
-    
+
     Returns
     -------
     float
         Factor Match Score between 0 and 1. Higher values indicate more similar
         decompositions. Typically: >0.9 = highly stable, >0.6 = acceptable,
         <0.6 = unstable decomposition.
-    
+
     Notes
     -----
     This function uses tlviz.factor_tools.factor_match_score with weights
@@ -146,12 +146,12 @@ def plot_fms_diff_ranks(
     runs: int,
 ):
     """Plot Factor Match Score (FMS) across different ranks to assess stability.
-    
+
     FMS measures the reproducibility of PARAFAC2 decomposition results across
     multiple runs. Values above ~0.6 indicate stable, reproducible components.
     This helps determine which ranks produce reliable decompositions that are
     not overly sensitive to initialization or noise.
-    
+
     Parameters
     ----------
     X : anndata.AnnData
@@ -166,7 +166,7 @@ def plot_fms_diff_ranks(
         Number of independent runs per rank to use for FMS calculation.
         Higher values give more reliable FMS estimates but take longer.
         Typical values: 3-5 runs.
-    
+
     Notes
     -----
     FMS values interpretation:

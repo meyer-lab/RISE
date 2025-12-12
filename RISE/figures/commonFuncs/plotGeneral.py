@@ -9,11 +9,11 @@ from ...factorization import rise_pca_r2x
 
 def plot_r2x(data, rank_vec, ax: Axes):
     """Plot variance explained (R²X) for RISE and PCA across different ranks.
-    
+
     This visualization helps determine the optimal number of components by showing
     how variance explained increases with rank. The elbow point where the curve
     flattens indicates a good balance between model complexity and explanatory power.
-    
+
     Parameters
     ----------
     data : anndata.AnnData
