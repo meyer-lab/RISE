@@ -52,6 +52,13 @@ autodoc_default_options = {
     "inherited-members": False,
 }
 
+# Mock imports for packages that might fail during doc build
+autodoc_mock_imports = [
+    "cupy",
+    "torch",
+    "scvi",
+]
+
 # Intersphinx mapping for external documentation
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),

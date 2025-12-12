@@ -32,7 +32,38 @@ def makeFigure():
 
 
 def calculateFMS(A: anndata.AnnData, B: anndata.AnnData):
-    """Calculates FMS between 2 factors"""
+    """Calculate Factor Match Score (FMS) between two RISE decompositions.
+    
+    Factor Match Score measures the similarity between two tensor decompositions
+    by comparing their factor matrices. Values range from 0 (no similarity) to 1
+    (identical factors). Used to assess decomposition stability across different
+    initializations or data subsamples.
+    
+    Parameters
+    ----------
+    A : anndata.AnnData
+        First AnnData object with RISE decomposition results. Must contain:
+        - A.uns["Pf2_weights"]: Component weights
+        - A.uns["Pf2_A"]: Condition factors
+        - A.uns["Pf2_B"]: Eigen-state factors
+        - A.varm["Pf2_C"]: Gene factors
+    B : anndata.AnnData
+        Second AnnData object with RISE decomposition results. Must have the
+        same rank as A and contain the same decomposition attributes.
+    
+    Returns
+    -------
+    float
+        Factor Match Score between 0 and 1. Higher values indicate more similar
+        decompositions. Typically: >0.9 = highly stable, >0.6 = acceptable,
+        <0.6 = unstable decomposition.
+    
+    Notes
+    -----
+    This function uses tlviz.factor_tools.factor_match_score with weights
+    consideration disabled (consider_weights=False) and skipping the condition
+    mode (skip_mode=1) for stability assessment across replicate decompositions.
+    """
     factors = [A.uns["Pf2_A"], A.uns["Pf2_B"], A.varm["Pf2_C"]]
     A_CP = CPTensor(
         (
