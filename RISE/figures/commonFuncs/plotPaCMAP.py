@@ -44,7 +44,42 @@ def ds_show(result, ax: Axes):
 
 
 def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.9995):
-    """Scatterplot of PaCMAP visualization weighted by gene"""
+    """Plot PaCMAP embedding colored by gene expression levels.
+    
+    This visualization overlays gene expression onto the PaCMAP embedding of cells,
+    revealing which cell populations express specific genes. Useful for validating
+    component interpretations by checking if marker genes align with component patterns.
+    
+    Parameters
+    ----------
+    gene : str
+        Name of gene to visualize. Must be present in X.var_names.
+    X : anndata.AnnData
+        AnnData object with RISE decomposition results. Must contain:
+        - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding coordinates (n_cells, 2)
+        - X[:, gene]: Gene expression values
+        - X.var["means"]: Pre-computed gene means for centering
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    clip_outliers : float, optional (default: 0.9995)
+        Quantile threshold for clipping extreme expression values.
+        Values above this quantile are clipped to improve visualization contrast.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotPaCMAP import plot_gene_pacmap
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(8, 8))
+    >>> gene = "MS4A1"  # B cell marker
+    >>> plot_gene_pacmap(gene, adata, ax=ax, clip_outliers=0.9995)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    plot_labels_pacmap : Color cells by condition or cell type
+    plot_wp_pacmap : Color cells by component associations
+    """
     geneList = X[:, gene].to_df().values
 
     geneList = np.clip(geneList, None, np.quantile(geneList, clip_outliers))
@@ -78,8 +113,42 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
 
 
 def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
-    """Scatterplot of UMAP visualization weighted by
-    projections for a component and eigenstate"""
+    """Plot PaCMAP embedding colored by weighted projections for a component.
+    
+    This visualization shows which cells contribute most strongly to a specific
+    component by coloring them according to their weighted projections. Cells with
+    high weighted projections (bright colors) are most representative of that
+    component's expression pattern.
+    
+    Parameters
+    ----------
+    X : anndata.AnnData
+        AnnData object with RISE decomposition results. Must contain:
+        - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding coordinates (n_cells, 2)
+        - X.obsm["weighted_projections"]: Weighted cell projections (n_cells, rank)
+    cmp : int
+        Component number to visualize (1-indexed). For example, cmp=10 shows
+        the cell associations for component 10.
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    cbarMax : float, optional (default: 1.0)
+        Maximum value for the color scale. Values are normalized to [-cbarMax, cbarMax].
+        Lower values increase contrast for components with weaker associations.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(8, 8))
+    >>> plot_wp_pacmap(adata, cmp=10, ax=ax, cbarMax=0.9)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    plot_labels_pacmap : Color cells by condition or cell type
+    plot_gene_pacmap : Color cells by gene expression
+    """
     values = X.obsm["weighted_projections"][:, cmp - 1]
     points = X.obsm["X_pf2_PaCMAP"]
 
@@ -116,7 +185,46 @@ def plot_labels_pacmap(
     cmap: str = "tab20",
     color_key=None,
 ):
-    """Scatterplot of UMAP visualization weighted by condition or cell type"""
+    """Plot PaCMAP embedding colored by categorical labels (cell type or condition).
+    
+    This visualization shows the overall structure of the cell embedding, revealing
+    how cells cluster by cell type, experimental condition, or other categorical
+    metadata. Useful for understanding the biological organization captured by RISE.
+    
+    Parameters
+    ----------
+    X : anndata.AnnData
+        AnnData object with RISE decomposition results. Must contain:
+        - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding coordinates (n_cells, 2)
+        - X.obs[labelType]: Categorical labels for coloring cells
+    labelType : str
+        Name of column in X.obs containing categorical labels to color by.
+        Common values: "Cell Type", "Condition", "Sample", etc.
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    condition : list of str, optional (default: None)
+        If provided, only highlights cells from these specific conditions/labels.
+        All other cells are labeled as "Other".
+    cmap : str, optional (default: "tab20")
+        Matplotlib colormap name for coloring categories.
+    color_key : list, optional (default: None)
+        Custom list of colors for categories. If None, uses cmap.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
+    >>> import matplotlib.pyplot as plt
+    >>> # Color by cell type
+    >>> fig, ax = plt.subplots(figsize=(8, 8))
+    >>> plot_labels_pacmap(adata, labelType="Cell Type", ax=ax)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    plot_gene_pacmap : Color cells by gene expression
+    plot_wp_pacmap : Color cells by component associations
+    """
     labels = X.obs[labelType]
 
     if condition is not None:

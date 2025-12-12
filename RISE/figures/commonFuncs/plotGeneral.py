@@ -8,7 +8,38 @@ from ...factorization import rise_pca_r2x
 
 
 def plot_r2x(data, rank_vec, ax: Axes):
-    """Creates R2X plot for RISE tensor decomposition and pca"""
+    \"\"\"Plot variance explained (R²X) for RISE and PCA across different ranks.
+    
+    This visualization helps determine the optimal number of components by showing
+    how variance explained increases with rank. The elbow point where the curve
+    flattens indicates a good balance between model complexity and explanatory power.
+    
+    Parameters
+    ----------
+    data : anndata.AnnData
+        Preprocessed AnnData object containing single-cell RNA-seq data.
+        Must have X.obs[\"condition_unique_idxs\"] for RISE decomposition.
+    rank_vec : array-like of int
+        Array of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
+        Each rank represents a different number of components.
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotGeneral import plot_r2x
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(5, 5))
+    >>> ranks = [1, 5, 10, 15, 20, 25, 30]
+    >>> plot_r2x(adata, ranks, ax)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    rise_pca_r2x : Underlying function that computes variance explained
+    plot_fms_diff_ranks : Evaluate factor stability across ranks
+    \"\"\"
     r2xError = rise_pca_r2x(data, rank_vec)
     labelNames = ["Fit: RISE", "Fit: PCA"]
     colorDecomp = ["r", "b"]

@@ -11,7 +11,31 @@ from tqdm import tqdm
 
 
 def correct_conditions(X: anndata.AnnData):
-    """Correct the conditions factors by overall read depth."""
+    """Correct the condition factors by normalizing for overall read depth.
+    
+    This function adjusts condition factors (stored in X.uns["Pf2_A"]) to account for
+    differences in sequencing depth across conditions. It uses linear regression to
+    model the relationship between total read counts and condition factor magnitudes,
+    then applies a correction.
+    
+    Parameters
+    ----------
+    X : anndata.AnnData
+        AnnData object containing RISE decomposition results. Must have:
+        - X.obs["condition_unique_idxs"]: 0-indexed condition assignments
+        - X.uns["Pf2_A"]: Condition factors from PARAFAC2 decomposition
+    
+    Returns
+    -------
+    numpy.ndarray
+        Corrected condition factors normalized by sequencing depth
+    
+    Examples
+    --------
+    >>> from RISE.factorization import pf2, correct_conditions
+    >>> X = pf2(adata, rank=20)
+    >>> corrected_factors = correct_conditions(X)
+    """
     sgIndex = X.obs["condition_unique_idxs"]
 
     counts = np.zeros((np.amax(sgIndex.to_numpy()) + 1, 1))
@@ -39,7 +63,61 @@ def pf2(
     tolerance=1e-9,
     max_iter: int = 500,
 ):
-    """Run Pf2 model and store results in anndata file"""
+    """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
+    
+    This is the main function for running RISE analysis. It decomposes the
+    multi-condition single-cell data into condition factors, eigen-state factors,
+    and gene factors, revealing patterns across experimental conditions.
+    
+    Parameters
+    ----------
+    X : anndata.AnnData
+        Preprocessed AnnData object containing single-cell RNA-seq data.
+        Must have X.obs["condition_unique_idxs"] indicating which condition
+        each cell belongs to (0-indexed).
+    rank : int
+        Number of components to extract. Determines the complexity of the
+        decomposition. Typically chosen based on variance explained and
+        Factor Match Score analysis (see plot_r2x and plot_fms_diff_ranks).
+    random_state : int, optional (default: 1)
+        Random seed for reproducibility of the decomposition.
+    doEmbedding : bool, optional (default: True)
+        If True, automatically computes PaCMAP embedding of cell projections
+        and stores in X.obsm["X_pf2_PaCMAP"]. This enables visualization
+        functions like plot_labels_pacmap.
+    tolerance : float, optional (default: 1e-9)
+        Convergence threshold for the optimization algorithm. Lower values
+        increase precision but may require more iterations.
+    max_iter : int, optional (default: 500)
+        Maximum number of iterations for the optimization algorithm.
+    
+    Returns
+    -------
+    anndata.AnnData
+        The input AnnData object with added RISE decomposition results:
+        
+        - X.uns["Pf2_weights"]: Component weights (shape: rank,)
+        - X.uns["Pf2_A"]: Condition factors (shape: n_conditions, rank)
+        - X.uns["Pf2_B"]: Eigen-state factors (shape: rank, rank)
+        - X.varm["Pf2_C"]: Gene factors (shape: n_genes, rank)
+        - X.obsm["projections"]: Cell projections (shape: n_cells, rank)
+        - X.obsm["weighted_projections"]: Weighted cell projections (shape: n_cells, rank)
+        - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding (shape: n_cells, 2) if doEmbedding=True
+    
+    Examples
+    --------
+    >>> from RISE.factorization import pf2
+    >>> # Perform decomposition with 20 components
+    >>> X = pf2(adata, rank=20, random_state=42)
+    >>> # Access results
+    >>> condition_factors = X.uns["Pf2_A"]
+    >>> gene_factors = X.varm["Pf2_C"]
+    
+    See Also
+    --------
+    rise_pca_r2x : Compute variance explained for different ranks
+    plot_fms_diff_ranks : Evaluate factor stability across ranks
+    """
     pf_out, _ = parafac2_nd(
         X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=max_iter
     )
@@ -54,7 +132,44 @@ def pf2(
 
 
 def rise_pca_r2x(X: anndata.AnnData, ranks):
-    """Run RISE/PCA on data and save R2X values"""
+    """Compute variance explained (R²X) for RISE and PCA across different ranks.
+    
+    This function evaluates how much variance in the data is explained by
+    RISE (PARAFAC2) and PCA decompositions at different component ranks.
+    Used to determine the optimal number of components for RISE analysis.
+    
+    Parameters
+    ----------
+    X : anndata.AnnData
+        Preprocessed AnnData object containing single-cell RNA-seq data.
+        Must have X.obs["condition_unique_idxs"] for RISE decomposition.
+    ranks : array-like of int
+        Array of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
+        Each rank represents a different number of components.
+    
+    Returns
+    -------
+    tuple of numpy.ndarray
+        (rise_r2x, pca_r2x) where:
+        
+        - rise_r2x: Variance explained by RISE for each rank (shape: len(ranks),)
+        - pca_r2x: Variance explained by PCA for each rank (shape: len(ranks),)
+    
+    Examples
+    --------
+    >>> from RISE.factorization import rise_pca_r2x
+    >>> ranks = [1, 5, 10, 15, 20]
+    >>> rise_r2x, pca_r2x = rise_pca_r2x(adata, ranks)
+    >>> # Plot results
+    >>> import matplotlib.pyplot as plt
+    >>> plt.plot(ranks, rise_r2x, label='RISE')
+    >>> plt.plot(ranks, pca_r2x, label='PCA')
+    
+    See Also
+    --------
+    plot_r2x : Convenience function to plot variance explained
+    pf2 : Perform PARAFAC2 decomposition at chosen rank
+    """
     X = X.to_memory()
     XX = sps.csr_array(X.X)
 

@@ -22,7 +22,50 @@ def plot_condition_factors(
     color_key=None,
     group_cond=False,
 ):
-    """Plots condition factors"""
+    """Plot condition factors as a heatmap showing how conditions contribute to components.
+    
+    This visualization shows how each experimental condition (rows) contributes to
+    each RISE component (columns). High values indicate strong association between
+    a condition and a component's pattern. Log transformation and normalization
+    help reveal relative differences across conditions.
+    
+    Parameters
+    ----------
+    data : anndata.AnnData
+        AnnData object with RISE decomposition results. Must contain:
+        - data.uns["Pf2_A"]: Condition factors (n_conditions, rank)
+        - data.obs[cond]: Condition labels for each cell
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    cond : str, optional (default: "Condition")
+        Name of column in data.obs containing condition labels.
+    log_transform : bool, optional (default: True)
+        If True, applies log10 transformation to condition factors before plotting.
+        This helps visualize differences when values span orders of magnitude.
+    cond_group_labels : pandas.Series, optional (default: None)
+        Series mapping conditions to group labels for colored row annotations.
+        Useful for grouping related conditions (e.g., drug classes, patient cohorts).
+    ThomsonNorm : bool, optional (default: False)
+        If True, normalizes factors using only control conditions (those containing 'CTRL').
+    color_key : list, optional (default: None)
+        Custom colors for condition group labels. If None, uses default palette.
+    group_cond : bool, optional (default: False)
+        If True and cond_group_labels provided, sorts conditions by group.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotFactors import plot_condition_factors
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(8, 8))
+    >>> plot_condition_factors(adata, ax=ax, cond="Condition", log_transform=True)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    plot_eigenstate_factors : Visualize eigen-state factors
+    plot_gene_factors : Visualize gene factors
+    """
     pd.set_option("display.max_rows", None)
     yt = pd.Series(np.unique(data.obs[cond]))
     X = np.array(data.uns["Pf2_A"])
@@ -94,7 +137,36 @@ def plot_condition_factors(
 
 
 def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
-    """Plots Pf2 eigenstate factors"""
+    """Plot eigen-state factors as a heatmap showing cell state patterns.
+    
+    Eigen-state factors represent the underlying cell state patterns across components.
+    Each row represents an eigen-state (a summary of similar cells), and each column
+    represents a component. High values indicate strong association between a cell
+    state pattern and a component.
+    
+    Parameters
+    ----------
+    data : anndata.AnnData
+        AnnData object with RISE decomposition results. Must contain:
+        - data.uns["Pf2_B"]: Eigen-state factors (rank, rank)
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotFactors import plot_eigenstate_factors
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(4, 4))
+    >>> plot_eigenstate_factors(adata, ax=ax)
+    >>> ax.set_ylabel("Eigen-state")
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    plot_condition_factors : Visualize condition factors
+    plot_gene_factors : Visualize gene factors
+    """
     rank = data.uns["Pf2_B"].shape[1]
     xticks = np.arange(1, rank + 1)
     X = data.uns["Pf2_B"]
@@ -115,7 +187,40 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
 
 
 def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
-    """Plots Pf2 gene factors"""
+    """Plot gene factors as a heatmap showing which genes contribute to each component.
+    
+    This visualization reveals coordinated gene modules by showing which genes (rows)
+    are highly weighted in each component (columns). The weight parameter filters out
+    genes with low contributions, focusing on the most important genes for interpretation.
+    
+    Parameters
+    ----------
+    data : anndata.AnnData
+        AnnData object with RISE decomposition results. Must contain:
+        - data.varm["Pf2_C"]: Gene factors (n_genes, rank)
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    weight : float, optional (default: 0.08)
+        Minimum absolute weight threshold for including genes. Genes with maximum
+        absolute weight below this value across all components are filtered out.
+        Higher values show fewer, more important genes.
+    trim : bool, optional (default: True)
+        If True, filters genes based on the weight parameter. If False, shows all genes.
+    
+    Examples
+    --------
+    >>> from RISE.figures.commonFuncs.plotFactors import plot_gene_factors
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(7, 8))
+    >>> plot_gene_factors(adata, ax=ax, weight=0.2, trim=True)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    See Also
+    --------
+    plot_condition_factors : Visualize condition factors
+    plot_gene_pacmap : Overlay gene expression on PaCMAP
+    """
     rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
     yt = data.var.index.values
