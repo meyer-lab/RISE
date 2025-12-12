@@ -114,7 +114,52 @@ def plot_fms_diff_ranks(
     ranksList: list[int],
     runs: int,
 ):
-    """Plots FMS when using different Pf2 components"""
+    \"\"\"Plot Factor Match Score (FMS) across different ranks to assess stability.
+    
+    FMS measures the reproducibility of PARAFAC2 decomposition results across
+    multiple runs. Values above ~0.6 indicate stable, reproducible components.
+    This helps determine which ranks produce reliable decompositions that are
+    not overly sensitive to initialization or noise.
+    
+    Parameters
+    ----------
+    X : anndata.AnnData
+        Preprocessed AnnData object containing single-cell RNA-seq data.
+        Must have X.obs[\"condition_unique_idxs\"] for RISE decomposition.
+    ax : matplotlib.axes.Axes
+        Matplotlib axes object to plot on.
+    ranksList : list of int
+        List of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
+        Each rank will be run multiple times to compute FMS.
+    runs : int
+        Number of independent runs per rank to use for FMS calculation.
+        Higher values give more reliable FMS estimates but take longer.
+        Typical values: 3-5 runs.
+    
+    Examples
+    --------
+    >>> from RISE.figures.figureS4 import plot_fms_diff_ranks
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(figsize=(5, 5))
+    >>> rank_list = [1, 5, 10, 15, 20, 25, 30]
+    >>> plot_fms_diff_ranks(adata, ax, ranksList=rank_list, runs=3)
+    >>> plt.tight_layout()
+    >>> plt.show()
+    
+    Notes
+    -----
+    FMS values interpretation:
+    - FMS > 0.9: Highly stable decomposition
+    - FMS > 0.6: Acceptably stable decomposition
+    - FMS < 0.6: Unstable, consider lower rank or more data
+    
+    See Also
+    --------
+    plot_r2x : Evaluate variance explained across ranks
+    pf2 : Perform PARAFAC2 decomposition at chosen rank
+    calculateFMS : Compute FMS between two decompositions
+    \"\"\"
+    fmsLists = []
     fmsLists = []
 
     for j in range(0, runs, 1):
