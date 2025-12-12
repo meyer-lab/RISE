@@ -8,7 +8,7 @@ from ...factorization import rise_pca_r2x
 
 
 def plot_r2x(data, rank_vec, ax: Axes):
-    \"\"\"Plot variance explained (R²X) for RISE and PCA across different ranks.
+    """Plot variance explained (R²X) for RISE and PCA across different ranks.
     
     This visualization helps determine the optimal number of components by showing
     how variance explained increases with rank. The elbow point where the curve
@@ -18,14 +18,13 @@ def plot_r2x(data, rank_vec, ax: Axes):
     ----------
     data : anndata.AnnData
         Preprocessed AnnData object containing single-cell RNA-seq data.
-        Must have X.obs[\"condition_unique_idxs\"] for RISE decomposition.
+        Must have X.obs["condition_unique_idxs"] for RISE decomposition.
     rank_vec : array-like of int
         Array of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
         Each rank represents a different number of components.
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
-
-    \"\"\"
+    """
     r2xError = rise_pca_r2x(data, rank_vec)
     labelNames = ["Fit: RISE", "Fit: PCA"]
     colorDecomp = ["r", "b"]
