@@ -64,14 +64,13 @@ autodoc_mock_imports = [
     "datashader",
     "colorcet",
     "holoviews",
-    "pacmap",
-    "parafac2",
-    "tensorly",
-    "tlviz",
 ]
 
 # Suppress warnings during autodoc
 suppress_warnings = ["app.add_directive"]
+
+# Import error handling - continue on import errors
+autodoc_import_error_continue = True
 
 # Intersphinx mapping for external documentation
 intersphinx_mapping = {
