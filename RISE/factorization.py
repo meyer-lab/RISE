@@ -29,12 +29,6 @@ def correct_conditions(X: anndata.AnnData):
     -------
     numpy.ndarray
         Corrected condition factors normalized by sequencing depth
-    
-    Examples
-    --------
-    >>> from RISE.factorization import pf2, correct_conditions
-    >>> X = pf2(adata, rank=20)
-    >>> corrected_factors = correct_conditions(X)
     """
     sgIndex = X.obs["condition_unique_idxs"]
 
@@ -103,20 +97,6 @@ def pf2(
         - X.obsm["projections"]: Cell projections (shape: n_cells, rank)
         - X.obsm["weighted_projections"]: Weighted cell projections (shape: n_cells, rank)
         - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding (shape: n_cells, 2) if doEmbedding=True
-    
-    Examples
-    --------
-    >>> from RISE.factorization import pf2
-    >>> # Perform decomposition with 20 components
-    >>> X = pf2(adata, rank=20, random_state=42)
-    >>> # Access results
-    >>> condition_factors = X.uns["Pf2_A"]
-    >>> gene_factors = X.varm["Pf2_C"]
-    
-    See Also
-    --------
-    rise_pca_r2x : Compute variance explained for different ranks
-    plot_fms_diff_ranks : Evaluate factor stability across ranks
     """
     pf_out, _ = parafac2_nd(
         X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=max_iter
@@ -154,21 +134,6 @@ def rise_pca_r2x(X: anndata.AnnData, ranks):
         
         - rise_r2x: Variance explained by RISE for each rank (shape: len(ranks),)
         - pca_r2x: Variance explained by PCA for each rank (shape: len(ranks),)
-    
-    Examples
-    --------
-    >>> from RISE.factorization import rise_pca_r2x
-    >>> ranks = [1, 5, 10, 15, 20]
-    >>> rise_r2x, pca_r2x = rise_pca_r2x(adata, ranks)
-    >>> # Plot results
-    >>> import matplotlib.pyplot as plt
-    >>> plt.plot(ranks, rise_r2x, label='RISE')
-    >>> plt.plot(ranks, pca_r2x, label='PCA')
-    
-    See Also
-    --------
-    plot_r2x : Convenience function to plot variance explained
-    pf2 : Perform PARAFAC2 decomposition at chosen rank
     """
     X = X.to_memory()
     XX = sps.csr_array(X.X)

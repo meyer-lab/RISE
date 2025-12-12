@@ -24,21 +24,7 @@ def plot_r2x(data, rank_vec, ax: Axes):
         Each rank represents a different number of components.
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
-    
-    Examples
-    --------
-    >>> from RISE.figures.commonFuncs.plotGeneral import plot_r2x
-    >>> import matplotlib.pyplot as plt
-    >>> fig, ax = plt.subplots(figsize=(5, 5))
-    >>> ranks = [1, 5, 10, 15, 20, 25, 30]
-    >>> plot_r2x(adata, ranks, ax)
-    >>> plt.tight_layout()
-    >>> plt.show()
-    
-    See Also
-    --------
-    rise_pca_r2x : Underlying function that computes variance explained
-    plot_fms_diff_ranks : Evaluate factor stability across ranks
+
     \"\"\"
     r2xError = rise_pca_r2x(data, rank_vec)
     labelNames = ["Fit: RISE", "Fit: PCA"]
