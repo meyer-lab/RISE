@@ -114,7 +114,7 @@ def plot_fms_diff_ranks(
     ranksList: list[int],
     runs: int,
 ):
-    \"\"\"Plot Factor Match Score (FMS) across different ranks to assess stability.
+    """Plot Factor Match Score (FMS) across different ranks to assess stability.
     
     FMS measures the reproducibility of PARAFAC2 decomposition results across
     multiple runs. Values above ~0.6 indicate stable, reproducible components.
@@ -125,7 +125,7 @@ def plot_fms_diff_ranks(
     ----------
     X : anndata.AnnData
         Preprocessed AnnData object containing single-cell RNA-seq data.
-        Must have X.obs[\"condition_unique_idxs\"] for RISE decomposition.
+        Must have X.obs["condition_unique_idxs"] for RISE decomposition.
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
     ranksList : list of int
@@ -142,8 +142,7 @@ def plot_fms_diff_ranks(
     - FMS > 0.9: Highly stable decomposition
     - FMS > 0.6: Acceptably stable decomposition
     - FMS < 0.6: Unstable, consider lower rank or more data
-    \"\"\"
-    fmsLists = []
+    """
     fmsLists = []
 
     for j in range(0, runs, 1):
