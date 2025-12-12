@@ -15,12 +15,14 @@ def test_factor_thomson_reprod():
     X = import_thomson()
     X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
 
-    X = pf2(X, 10, doEmbedding=False)
+    X = pf2(X, 10, doEmbedding=False, tolerance=1e-6)
     C_first = np.array(X.varm["Pf2_C"], copy=True)
 
-    X = pf2(X, 10, doEmbedding=False)
-    np.testing.assert_allclose(np.array(X.varm["Pf2_C"]), C_first, atol=1e-5, rtol=1e-5)
-
+    # Reload data to ensure clean state for second factorization
+    XX = import_thomson()
+    XX.obs["condition_unique_idxs"] = pd.Categorical(XX.obs["condition_unique_idxs"])
+    XX = pf2(XX, 10, doEmbedding=False, tolerance=1e-6)
+    np.testing.assert_allclose(np.array(XX.varm["Pf2_C"]), C_first, atol=1e-5, rtol=1e-5)
 
 def test_factor_thomson_R2X():
     """Import and factor Thomson.
