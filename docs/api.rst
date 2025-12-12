@@ -31,36 +31,6 @@ Factorization
    :returns: The input AnnData object with added RISE decomposition results in X.uns["Pf2_weights"], X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"], X.obsm["projections"], X.obsm["weighted_projections"], and X.obsm["X_pf2_PaCMAP"]
    :rtype: anndata.AnnData
 
-.. py:function:: rise_pca_r2x(X: anndata.AnnData, ranks)
-   :module: RISE.factorization
-
-   Compute variance explained (R²X) for RISE and PCA across different ranks.
-   
-   This function calculates how much variance is explained by RISE decomposition
-   and PCA at different numbers of components. Used to determine the optimal rank
-   by comparing model complexity versus explanatory power.
-   
-   :param X: Preprocessed AnnData object containing single-cell RNA-seq data. Must have X.obs["condition_unique_idxs"] for RISE decomposition.
-   :type X: anndata.AnnData
-   :param ranks: Array of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
-   :type ranks: array-like of int
-   :returns: Tuple of (rise_r2x, pca_r2x) where each is an array of variance explained values
-   :rtype: tuple of numpy.ndarray
-
-.. py:function:: correct_conditions(X: anndata.AnnData)
-   :module: RISE.factorization
-
-   Correct the condition factors by normalizing for overall read depth.
-   
-   This function adjusts condition factors (stored in X.uns["Pf2_A"]) to account for
-   differences in sequencing depth across conditions. It uses linear regression to
-   model the relationship between total read counts and condition factor magnitudes.
-   
-   :param X: AnnData object containing RISE decomposition results. Must have X.obs["condition_unique_idxs"] and X.uns["Pf2_A"].
-   :type X: anndata.AnnData
-   :returns: Corrected condition factors normalized by sequencing depth
-   :rtype: numpy.ndarray
-
 Preprocessing
 ~~~~~~~~~~~~~
 
@@ -233,29 +203,5 @@ Factor Stability
    :type ranksList: list of int
    :param runs: Number of independent runs per rank to use for FMS calculation.
    :type runs: int
-
-   .. note::
-      FMS > 0.9: Highly stable decomposition
-      
-      FMS > 0.6: Acceptably stable decomposition
-      
-      FMS < 0.6: Unstable, consider lower rank or more data
-
-.. py:function:: calculateFMS(A: anndata.AnnData, B: anndata.AnnData)
-   :module: RISE.figures.figureS4
-
-   Calculate Factor Match Score (FMS) between two RISE decompositions.
-   
-   Factor Match Score measures the similarity between two tensor decompositions by comparing their factor matrices. Values range from 0 (no similarity) to 1 (identical factors).
-   
-   :param A: First AnnData object with RISE decomposition results.
-   :type A: anndata.AnnData
-   :param B: Second AnnData object with RISE decomposition results.
-   :type B: anndata.AnnData
-   :returns: Factor Match Score between 0 and 1. Higher values indicate more similar decompositions.
-   :rtype: float
-
-   .. note::
-      This function uses tlviz.factor_tools.factor_match_score with weights consideration disabled and skipping the condition mode for stability assessment.
 
 
