@@ -1,14 +1,7 @@
 Tutorial for PARAFAC2-RISE on scRNA-seq Data
 =============================================
 
-Overview
---------
-
-RISE (Reduction and Insight in Single-cell Exploration) is an unsupervised, tensor-based computational method designed for the integrative analysis of single-cell RNA sequencing (scRNA-seq) data across multiple experimental conditions, such as drug treatments, patient cohorts, or time points. Built upon the PARAFAC2 tensor decomposition framework, 
-RISE preserves the inherent three-dimensional structure of multi-condition single-cell data—conditions x cells x genes—instead of flattening it into a conventional two-dimensional matrix. This allows RISE to decompose variation into distinct, interpretable patterns associated with experimental conditions, individual cells, and genes, providing a 
-more nuanced and biologically meaningful analysis. RISE does not require prior cell-type labels or clustering, reducing bias and enabling discovery of novel cell states, while also separating technical, biological, and condition-driven variation without  batch correction that may erase meaningful signals. 
-Its high resolution enables the identification of cell populations and condition-specific subpopulations missed by pseudobulk or clustering-based approaches, and each resulting component is directly linked to specific conditions, genes, and cells, making the results biologically tractable.
-
+This tutorial demonstrates the complete RISE workflow for analyzing single-cell RNA-seq data across experimental conditions.
 
 Installation
 ------------
@@ -17,40 +10,44 @@ To add RISE to your Python package, add the following line to your ``requirement
 
     git+https://github.com/meyer-lab/RISE.git@main
 
-Input Requirements
-------------------
+Preprocessing the Dataset
+--------------------------
+
+**Input Requirements**
 
 Your AnnData object must meet the following requirements:
 
 1. **Condition Index**: Include an observations column ``condition_unique_idxs`` that is a 0-indexed array indicating which condition each cell is derived from, along with the cell barcode. Condition 1 cells are indexed as 0, Condition 2 as 1, and so on.
 
-2. **Preprocessing**: Your AnnData object must be preprocessed (doublets removed, genes filtered, normalized, and log-transformed) before running the algorithm. The ``prepare_dataset`` function can assist with preprocessing for gene filtering, normalization, and assigning ``condition_unique_idxs``. Parameters:
+2. **Preprocessing**: Your AnnData object must be preprocessed (doublets removed, genes filtered, normalized, and log-transformed) before running the algorithm. The ``prepare_dataset`` function can assist with preprocessing for gene filtering, normalization, and assigning ``condition_unique_idxs``.
 
-   - ``X``: AnnData object containing raw count data in sparse matrix format
-   - ``condition_name``: Name of the column in ``X.obs`` that specifies experimental conditions for each cell
-   - ``geneThreshold``: Minimum mean expression threshold for gene filtering (genes with mean expression below this value are removed)
-   - ``deviance``: If True, applies deviance transformation instead of log normalization (default: False)
+**Using prepare_dataset**
 
-   The function performs the following steps:
-   
-   - Filters cells with fewer than 10 total counts
-   - Filters genes based on the ``geneThreshold`` parameter
-   - Normalizes total counts per cell to the median
-   - Scales gene expression values
-   - Applies log₁₀((1000 × normalized_value) + 1) transformation (or deviance transformation if specified)
-   - Creates ``condition_unique_idxs`` column in ``X.obs`` with 0-indexed condition assignments
-   - Pre-calculates gene means and stores in ``X.var["means"]``
+The ``prepare_dataset`` function assists with preprocessing your data. Parameters:
 
-Tutorial Workflow
------------------
+- ``X``: AnnData object containing raw count data in sparse matrix format
+- ``condition_name``: Name of the column in ``X.obs`` that specifies experimental conditions for each cell
+- ``geneThreshold``: Minimum mean expression threshold for gene filtering (genes with mean expression below this value are removed)
+- ``deviance``: If True, applies deviance transformation instead of log normalization (default: False)
 
-This tutorial demonstrates the complete RISE workflow:
+The function performs the following steps:
 
-**Step 1: Import and Prepare the Dataset**
+- Filters cells with fewer than 10 total counts
+- Filters genes based on the ``geneThreshold`` parameter
+- Normalizes total counts per cell to the median
+- Scales gene expression values
+- Applies log₁₀((1000 × normalized_value) + 1) transformation (or deviance transformation if specified)
+- Creates ``condition_unique_idxs`` column in ``X.obs`` with 0-indexed condition assignments
+- Pre-calculates gene means and stores in ``X.var["means"]``
+
+**Import and Prepare the Dataset**
 
 Import your dataset as an AnnData object with preprocessed data.
 
-**Step 2: Assess Variance Explained by RISE and PCA**
+Choosing the Rank
+-----------------
+
+**Assess Variance Explained by RISE and PCA**
 
 Determine the optimal component/rank by plotting the variance explained (R²X) across different ranks for both RISE and PCA. This helps balance model complexity with explanatory power.
 
@@ -70,7 +67,7 @@ Determine the optimal component/rank by plotting the variance explained (R²X) a
    :align: center
    :width: 500px
    
-**Step 3: Evaluate Factor Stability with Factor Match Score (FMS)**
+**Evaluate Factor Stability with Factor Match Score (FMS)**
 
 Measure the reproducibility of the RISE factorization across different ranks. An FMS above ~0.6 indicates stable components.
 
@@ -89,7 +86,10 @@ Measure the reproducibility of the RISE factorization across different ranks. An
    :align: center
    :width: 500px
 
-**Step 4: Perform RISE Factorization**
+Running the Factorization
+--------------------------
+
+**Perform RISE Factorization**
 
 Based on the variance explained and FMS, select a rank and perform the RISE factorization. This decomposes the data into condition, eigen-state, and gene factors.
 
@@ -119,7 +119,10 @@ The output of ``pf2`` includes the original AnnData object with added results an
 - **Projections**: ``X.obsm["projections"]`` - Cell projections for each component (matrix width equals the rank)
 - **Weighted Projections**: ``X.obsm["weighted_projections"]`` - Weighted projections for each cell across all components, determining how each cell relates to each component pattern
 
-**Step 5: Visualize Condition Factor**
+Visualizing the Factors
+------------------------
+
+**Visualize Condition Factors**
 
 Examine how each experimental condition contributes to the identified patterns. Log-transforming these factors allows for easier interpretation of condition-specific effects.
 Several plotting functions are available in the ``RISE.figures.commonFuncs.plotFactors``  and ``RISE.figures.commonFuncs.plotPaCMAP`` modules.
@@ -140,7 +143,7 @@ Several plotting functions are available in the ``RISE.figures.commonFuncs.plotF
    
    **Condition Factors Heatmap.** This heatmap shows how each experimental condition (rows) contributes to each component (columns). 
 
-**Step 6: Visualize Cell Embedding**
+**Visualize Cell Embedding**
 
 Explore the latent space of cells using nonlinear dimensionality reduction methods such as PaCMAP. Label cells by cell type or experimental condition to understand clustering patterns.
 
@@ -158,7 +161,7 @@ Explore the latent space of cells using nonlinear dimensionality reduction metho
    :align: center
    :width: 700px
 
-**Step 7: Visualize Eigen-State Factor**
+**Visualize Eigen-State Factors**
 
 Analyze how each cell state contributes to the identified patterns. Each eigen-state represents a summary of similar cells with a distinct expression profile.
 
@@ -179,7 +182,7 @@ Analyze how each cell state contributes to the identified patterns. Each eigen-s
    
    **Eigen-state Factors Heatmap.** This heatmap shows how each eigen-state (representing groups of similar cells) is related to each component. High values indicate strong association with a component.
 
-**Step 8: Visualize Gene Factor**
+**Visualize Gene Factors**
 
 Identify which genes are highly weighted in each component, revealing coordinated gene modules. Adjust weight values to focus on genes that contribute significantly to the patterns.
 
@@ -199,7 +202,10 @@ Identify which genes are highly weighted in each component, revealing coordinate
    
    **Gene Factors Heatmap.** This heatmap shows which genes (rows) are associated with each component (columns). The weight parameter filters out genes with low contributions for easier interpretation.
 
-**Step 9: Investigate Gene Associations for a Component**
+Interpreting a Component
+-------------------------
+
+**Investigate Gene Associations for a Component**
 
 Overlay specific gene expression on the cell embedding to see which cells express genes of interest for a particular component.
 
@@ -220,7 +226,7 @@ Overlay specific gene expression on the cell embedding to see which cells expres
    
    **Gene Expression on PaCMAP.** This visualization overlays MS4A1 gene expression (a B cell marker) onto the PaCMAP embedding. Cells are colored by expression level, revealing which populations express the gene.
 
-**Step 10: Investigate Cell Associations for a Component**
+**Investigate Cell Associations for a Component**
 
 Visualize how cells contribute to specific components using weighted projections, revealing subpopulations with distinct expression patterns.
 
