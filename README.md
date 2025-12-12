@@ -4,9 +4,7 @@ RISE (Reduction and Insight in Single-cell Exploration) is an unsupervised, tens
 
 RISE does not require prior cell-type labels or clustering, reducing bias and enabling discovery of novel cell states, while also separating technical, biological, and condition-driven variation without batch correction that may erase meaningful signals. Its high resolution enables the identification of cell populations and condition-specific subpopulations missed by pseudobulk or clustering-based approaches, and each resulting component is directly linked to specific conditions, genes, and cells, making the results biologically tractable.
 
-- **Discuss development** on [GitHub](https://github.com/meyer-lab/RISE).
 - **Read the documentation** at [RISE Documentation](https://meyer-lab.github.io/RISE/).
-- **Install** via `pip install git+https://github.com/meyer-lab/RISE.git@main`.
 - RISE uses the [AnnData](https://anndata.readthedocs.io/) format for handling single-cell data matrices.
 
 ## Installation
