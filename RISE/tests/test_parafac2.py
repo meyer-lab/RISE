@@ -5,8 +5,9 @@ Test the parafac2 method.
 import numpy as np
 import pandas as pd
 
+from analysis.imports import import_thomson
+
 from ..factorization import pf2, rise_pca_r2x
-from ..imports import import_thomson
 
 
 def test_factor_thomson_reprod():

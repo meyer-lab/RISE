@@ -19,9 +19,9 @@ import seaborn as sns
 from harmonypy import run_harmony
 from scipy.sparse import csr_array
 
+from analysis.imports import import_lupus
 from RISE.factorization import pf2
 from RISE.figures.common import getSetup, subplotLabel
-from RISE.imports import import_lupus
 
 # Simplified to single-line comments for configuration flags
 RECOMPUTE = False

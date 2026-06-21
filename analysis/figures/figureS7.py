@@ -9,8 +9,9 @@ from anndata import AnnData
 from matplotlib.axes import Axes
 from scipy.stats import linregress
 
-from ..factorization import pf2
-from ..imports import import_thomson
+from analysis.imports import import_thomson
+from RISE.factorization import pf2
+
 from .common import getSetup, subplotLabel
 
 

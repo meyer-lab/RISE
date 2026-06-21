@@ -9,14 +9,15 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from scipy.stats import pearsonr
 
-from .common import getSetup, subplotLabel
-from .commonFuncs.plotFactors import plot_gene_factors
-from .commonFuncs.plotGeneral import (
+from RISE.figures.commonFuncs.plotFactors import plot_gene_factors
+from RISE.figures.commonFuncs.plotGeneral import (
     avegene_per_status,
     cell_count_perc_lupus_df,
     rotate_xaxis,
 )
-from .commonFuncs.plotPaCMAP import plot_wp_pacmap
+from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
+
+from .common import getSetup, subplotLabel
 
 
 def makeFigure():
@@ -155,7 +156,7 @@ def plot_ave2genes_per_status(df_total, gene1, gene2, ax):
 
 def plot_toppfun(ax):
     """Plot GSEA results"""
-    df = pd.read_csv("RISE/data/lupus/ToppFun_Cmp14.csv", dtype=str)
+    df = pd.read_csv("analysis/data/lupus/ToppFun_Cmp14.csv", dtype=str)
     df = df.drop(columns=["ID", "Verbose ID"])
     category = df["Category"].to_numpy().astype(str)
 

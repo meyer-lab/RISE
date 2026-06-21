@@ -12,10 +12,11 @@ from matplotlib.axes import Axes
 from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 
-from ..factorization import correct_conditions
+from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
+from RISE.factorization import correct_conditions
+from RISE.figures.commonFuncs.plotGeneral import rotate_xaxis, rotate_yaxis
+
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotGeneral import rotate_xaxis, rotate_yaxis
-from .commonFuncs.plotLupus import samples_only_lupus
 
 
 def makeFigure():

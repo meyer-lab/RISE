@@ -6,12 +6,13 @@ import anndata
 import numpy as np
 import pandas as pd
 
-from .common import getSetup, subplotLabel
-from .commonFuncs.plotFactors import (
+from RISE.figures.commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
 )
+
+from .common import getSetup, subplotLabel
 
 
 def makeFigure():

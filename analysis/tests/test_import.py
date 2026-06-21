@@ -5,7 +5,7 @@ Test the cross validation accuracy.
 import numpy as np
 import pytest
 
-from ..imports import import_lupus, import_thomson
+from analysis.imports import import_thomson
 
 
 @pytest.mark.parametrize(

@@ -5,12 +5,12 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.metrics import RocCurveDisplay
 
-from ...logisticReg import (
+from analysis.logisticReg import (
     predaccuracy_lupus,
     predaccuracy_ranks_lupus,
     roc_lupus_fourtbatch,
 )
-from ..commonFuncs.plotGeneral import cell_count_perc_lupus_df
+from RISE.figures.commonFuncs.plotGeneral import cell_count_perc_lupus_df
 
 
 def samples_only_lupus(X: anndata.AnnData):

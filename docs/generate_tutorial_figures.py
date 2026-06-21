@@ -3,28 +3,29 @@
 import matplotlib
 
 matplotlib.use("Agg")  # Non-interactive backend
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 # Create output directory
 output_dir = Path(__file__).parent / "_static" / "tutorial_images"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Import RISE modules
-from RISE.imports import import_thomson
-from RISE.figures.commonFuncs.plotGeneral import plot_r2x
-from RISE.figures.figureS4 import plot_fms_diff_ranks
+from analysis.imports import import_thomson
 from RISE.factorization import pf2
 from RISE.figures.commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
 )
+from RISE.figures.commonFuncs.plotGeneral import plot_r2x
 from RISE.figures.commonFuncs.plotPaCMAP import (
-    plot_labels_pacmap,
     plot_gene_pacmap,
+    plot_labels_pacmap,
     plot_wp_pacmap,
 )
+from RISE.figures.figureS4 import plot_fms_diff_ranks
 
 print("Loading dataset...")
 X = import_thomson()

@@ -4,8 +4,9 @@ Figure S9
 
 import anndata
 
+from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
+
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotPaCMAP import plot_wp_pacmap
 
 
 def makeFigure():

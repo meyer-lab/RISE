@@ -4,8 +4,9 @@ Figure 8e_f
 
 import anndata
 
+from analysis.figures.commonFuncs.plotLupus import plot_roc_fourthbatch
+
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotLupus import plot_roc_fourthbatch
 
 
 def makeFigure():

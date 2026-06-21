@@ -4,15 +4,16 @@ Figure 8g_h
 
 import anndata
 
-from ..factorization import correct_conditions
-from .common import getSetup, subplotLabel
-from .commonFuncs.plotFactors import (
+from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
+from RISE.factorization import correct_conditions
+from RISE.figures.commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
 )
-from .commonFuncs.plotLupus import samples_only_lupus
-from .commonFuncs.plotPaCMAP import plot_labels_pacmap
+from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
+
+from .common import getSetup, subplotLabel
 
 
 def makeFigure():

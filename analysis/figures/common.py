@@ -2,6 +2,8 @@
 This file contains functions that are used in multiple figures.
 """
 
+import sys
+import time
 from string import ascii_letters
 
 import matplotlib
@@ -59,3 +61,19 @@ def subplotLabel(axs: list[plt.Axes]):
             fontweight="bold",
             va="top",
         )
+
+
+def genFigure():
+    """Main figure generation function."""
+    start = time.time()
+    nameOut = "figure" + sys.argv[1]
+
+    exec(f"from analysis.figures.{nameOut} import makeFigure", globals())
+    ff = makeFigure()  # type: ignore # noqa: F821
+
+    if ff is not None:
+        ff.savefig(
+            f"./output/{nameOut}.svg", dpi=300, bbox_inches="tight", pad_inches=0
+        )
+
+    print(f"Figure {sys.argv[1]} is done after {time.time() - start} seconds.\n")

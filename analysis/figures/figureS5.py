@@ -5,8 +5,9 @@ Figure S5
 import anndata
 import seaborn as sns
 
+from RISE.figures.commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
 
 
 def makeFigure():

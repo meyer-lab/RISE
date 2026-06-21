@@ -8,22 +8,23 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from .common import (
-    getSetup,
-    subplotLabel,
-)
-from .commonFuncs.plotFactors import (
+from RISE.figures.commonFuncs.plotFactors import (
     plot_condition_factors,
     plot_gene_factors,
 )
-from .commonFuncs.plotGeneral import (
+from RISE.figures.commonFuncs.plotGeneral import (
     cell_count_perc_df,
     gene_plot_cells,
     plot_avegene_per_category,
     plot_avegene_per_celltype,
     plot_cell_gene_corr,
 )
-from .commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
+from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
+
+from .common import (
+    getSetup,
+    subplotLabel,
+)
 from .figure2f_h import groupDrugs
 
 

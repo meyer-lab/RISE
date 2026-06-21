@@ -7,8 +7,9 @@ import numpy as np
 import pacmap
 from sklearn.decomposition import PCA
 
+from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
+
 from .common import getSetup, subplotLabel
-from .commonFuncs.plotPaCMAP import plot_labels_pacmap
 
 
 def makeFigure():

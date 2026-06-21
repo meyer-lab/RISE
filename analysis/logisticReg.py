@@ -5,7 +5,7 @@ from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import roc_auc_score
 from sklearn.utils import resample
 
-from .factorization import correct_conditions, pf2
+from RISE.factorization import correct_conditions, pf2
 
 
 def predaccuracy_ranks_lupus(
