@@ -6,7 +6,7 @@ import anndata
 import numpy as np
 import pandas as pd
 
-from RISE.figures.commonFuncs.plotFactors import (
+from RISE.plotting import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,

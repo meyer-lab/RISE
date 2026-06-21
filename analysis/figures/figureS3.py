@@ -6,7 +6,7 @@ import anndata
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from RISE.figures.commonFuncs.plotGeneral import cell_count_perc_df, rotate_xaxis
+from RISE.plotting import cell_count_perc_df, rotate_xaxis
 
 from .common import getSetup, subplotLabel
 

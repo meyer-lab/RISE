@@ -9,9 +9,13 @@ import scanpy as sc
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from RISE.figures.commonFuncs.plotFactors import plot_gene_factors
-from RISE.figures.commonFuncs.plotGeneral import cell_count_perc_lupus_df, rotate_xaxis
-from RISE.figures.commonFuncs.plotPaCMAP import plot_gene_pacmap, plot_wp_pacmap
+from RISE.plotting import (
+    cell_count_perc_lupus_df,
+    plot_gene_factors,
+    plot_gene_pacmap,
+    plot_wp_pacmap,
+    rotate_xaxis,
+)
 
 from .common import getSetup, subplotLabel
 from .figure4e_k import plot_correlation_cmp_cell_count_perc

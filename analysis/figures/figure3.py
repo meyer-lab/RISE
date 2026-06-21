@@ -8,18 +8,17 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from RISE.figures.commonFuncs.plotFactors import (
-    plot_condition_factors,
-    plot_gene_factors,
-)
-from RISE.figures.commonFuncs.plotGeneral import (
+from RISE.plotting import (
     cell_count_perc_df,
     gene_plot_cells,
     plot_avegene_per_category,
     plot_avegene_per_celltype,
     plot_cell_gene_corr,
+    plot_condition_factors,
+    plot_gene_factors,
+    plot_labels_pacmap,
+    plot_wp_pacmap,
 )
-from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap, plot_wp_pacmap
 
 from .common import (
     getSetup,

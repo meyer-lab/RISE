@@ -75,7 +75,7 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
     points = np.array(X.obsm["X_pf2_PaCMAP"])
 
     canvas = _get_canvas(points)
-    data = pd.DataFrame(points, columns=("x", "y"))
+    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
 
     values -= np.min(values)
     values /= np.max(values)
@@ -126,7 +126,7 @@ def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0)
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
     canvas = _get_canvas(points)
-    data = pd.DataFrame(points, columns=("x", "y"))
+    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
 
     values /= np.max(np.abs(values))
 
@@ -195,7 +195,7 @@ def plot_labels_pacmap(
     labels = labels.iloc[indices]
 
     canvas = _get_canvas(points)
-    data = pd.DataFrame(points, columns=("x", "y"))
+    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
 
     data["label"] = pd.Categorical(labels)
     aggregation = canvas.points(data, "x", "y", agg=ds.count_cat("label"))

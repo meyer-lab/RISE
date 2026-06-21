@@ -14,18 +14,16 @@ output_dir.mkdir(parents=True, exist_ok=True)
 # Import RISE modules
 from analysis.imports import import_thomson
 from RISE.factorization import pf2
-from RISE.figures.commonFuncs.plotFactors import (
+from RISE.plotting import (
     plot_condition_factors,
     plot_eigenstate_factors,
+    plot_fms_diff_ranks,
     plot_gene_factors,
-)
-from RISE.figures.commonFuncs.plotGeneral import plot_r2x
-from RISE.figures.commonFuncs.plotPaCMAP import (
     plot_gene_pacmap,
     plot_labels_pacmap,
+    plot_r2x,
     plot_wp_pacmap,
 )
-from RISE.figures.figureS4 import plot_fms_diff_ranks
 
 print("Loading dataset...")
 X = import_thomson()

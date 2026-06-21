@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from ...factorization import rise_pca_r2x
+from ..factorization import rise_pca_r2x
 
 
 def plot_r2x(data, rank_vec, ax: Axes):

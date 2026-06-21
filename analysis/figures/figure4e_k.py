@@ -9,13 +9,13 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from scipy.stats import pearsonr
 
-from RISE.figures.commonFuncs.plotFactors import plot_gene_factors
-from RISE.figures.commonFuncs.plotGeneral import (
+from RISE.plotting import (
     avegene_per_status,
     cell_count_perc_lupus_df,
+    plot_gene_factors,
+    plot_wp_pacmap,
     rotate_xaxis,
 )
-from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
 
 from .common import getSetup, subplotLabel
 

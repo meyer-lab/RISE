@@ -18,7 +18,9 @@ test: .venv
 coverage.xml: .venv
 	uv run pytest --junitxml=junit.xml --cov=RISE --cov-report xml:coverage.xml
 
-ty: .venv
+lint: .venv
+	uv run ruff format .
+	uv run ruff check . --fix
 	uv run ty check RISE analysis
 
 clean:

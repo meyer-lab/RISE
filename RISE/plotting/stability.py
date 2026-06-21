@@ -1,5 +1,5 @@
 """
-Figure S4
+Decomposition stability analysis and plotting functions.
 """
 
 import anndata
@@ -12,26 +12,9 @@ from tensorly.cp_tensor import CPTensor
 from tlviz.factor_tools import factor_match_score as fms
 
 from ..factorization import pf2
-from .common import getSetup, subplotLabel
-
-# from ..imports import import_thomson
 
 
-def makeFigure():
-    ax, f = getSetup((6, 3), (1, 2))
-    subplotLabel(ax)
-
-    # X = import_thomson()
-    # percentList = np.arange(0.0, 8.0, 5.0)
-    # plot_fms_percent_drop(X, ax[0], percentList=percentList, runs=3)
-
-    # ranks = list(range(1, 3))
-    # plot_fms_diff_ranks(X, ax[1], ranksList=ranks, runs=3)
-
-    return f
-
-
-def calculateFMS(A: anndata.AnnData, B: anndata.AnnData):
+def calculateFMS(A: anndata.AnnData, B: anndata.AnnData) -> float:
     """Calculate Factor Match Score (FMS) between two RISE decompositions.
 
     Factor Match Score measures the similarity between two tensor decompositions
@@ -80,7 +63,7 @@ def calculateFMS(A: anndata.AnnData, B: anndata.AnnData):
         )
     )
 
-    return fms(A_CP, B_CP, consider_weights=False, skip_mode=1)  # type: ignore
+    return fms(A_CP, B_CP, consider_weights=False, skip_mode=1)
 
 
 def plot_fms_percent_drop(

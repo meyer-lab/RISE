@@ -4,7 +4,7 @@ Figure S9
 
 import anndata
 
-from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
+from RISE.plotting import plot_wp_pacmap
 
 from .common import getSetup, subplotLabel
 

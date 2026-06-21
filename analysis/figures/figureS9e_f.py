@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
 from analysis.logisticReg import logistic_regression
 from RISE.factorization import correct_conditions
-from RISE.figures.commonFuncs.plotGeneral import cell_count_perc_lupus_df, rotate_xaxis
+from RISE.plotting import cell_count_perc_lupus_df, rotate_xaxis
 
 from .common import getSetup, subplotLabel
 

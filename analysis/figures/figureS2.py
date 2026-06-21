@@ -10,8 +10,8 @@ import scanpy as sc
 import scib
 from sklearn.decomposition import PCA
 
-# from .commonFuncs.plotGeneral import plot_r2x
-from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
+# from RISE.plotting import plot_r2x
+from RISE.plotting import plot_labels_pacmap
 
 from .common import getSetup, subplotLabel
 

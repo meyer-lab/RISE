@@ -6,12 +6,12 @@ import anndata
 
 from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
 from RISE.factorization import correct_conditions
-from RISE.figures.commonFuncs.plotFactors import (
+from RISE.plotting import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,
+    plot_labels_pacmap,
 )
-from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
 
 from .common import getSetup, subplotLabel
 

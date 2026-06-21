@@ -14,7 +14,7 @@ from sklearn.linear_model import LogisticRegression
 
 from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
 from RISE.factorization import correct_conditions
-from RISE.figures.commonFuncs.plotGeneral import rotate_xaxis, rotate_yaxis
+from RISE.plotting import rotate_xaxis, rotate_yaxis
 
 from .common import getSetup, subplotLabel
 

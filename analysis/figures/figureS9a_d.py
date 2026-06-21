@@ -21,7 +21,8 @@ from scipy.sparse import csr_array
 
 from analysis.imports import import_lupus
 from RISE.factorization import pf2
-from RISE.figures.common import getSetup, subplotLabel
+
+from .common import getSetup, subplotLabel
 
 # Simplified to single-line comments for configuration flags
 RECOMPUTE = False
