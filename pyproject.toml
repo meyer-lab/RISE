@@ -49,7 +49,7 @@ docs = [
     { include-group = "analysis" },
     "sphinx>=9.0",
     "sphinx-rtd-theme>=3.0.0",
-    "nbsphinx>=0.9.0",
+    "nbsphinx>=0.9",
 ]
 dev = [
     { include-group = "analysis" },
