@@ -6,7 +6,6 @@ from parafac2.parafac2 import parafac2_nd, store_pf2
 from scipy.stats import gmean
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import scale
 from tqdm import tqdm
 
 
@@ -147,7 +146,8 @@ def rise_pca_r2x(X: anndata.AnnData, ranks):
         r2x_rise[index] = R2X
 
     # Mean center because this is done within RISE
-    XX = scale(XX.todense(), with_mean=True, with_std=False)
+    XX = XX.toarray()
+    XX = XX - np.mean(XX, axis=0)
 
     pca = PCA(n_components=ranks[-1])
     pca.fit(XX)

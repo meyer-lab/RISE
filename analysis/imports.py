@@ -21,23 +21,23 @@ def import_thomson() -> anndata.AnnData:
 
     X.obs = pd.DataFrame(
         {
-            "cell_barcode": metafile["cell_barcode"],
             "Condition": pd.Categorical(metafile["sample_id"]),
-        }
+        },
+        index=metafile["cell_barcode"]
     )
+    X.obs.index.name = "cell_barcode"
 
     doubletDF = pd.read_csv("analysis/data/Thomson/ThomsonDoublets.csv", index_col=0)
     doubletDF.index.name = "cell_barcode"
-    X.obs = X.obs.join(doubletDF, on="cell_barcode", how="inner")
+    X.obs = X.obs.join(doubletDF, how="inner")
 
     singlet_indices = X.obs.loc[X.obs["doublet"] == 0].index.values
-    X.obs = X.obs.reset_index(drop=True)
     X = X[singlet_indices, :]
 
-    X.obs = X.obs.set_index("cell_barcode")
     gateThomsonCells(X)
 
     return prepare_dataset(X, "Condition", geneThreshold=0.01)
+
 
 
 def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
