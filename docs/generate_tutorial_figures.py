@@ -7,12 +7,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-# Create output directory
-output_dir = Path(__file__).parent / "_static" / "tutorial_images"
-output_dir.mkdir(parents=True, exist_ok=True)
+from analysis.imports import import_thomson
 
 # Import RISE modules
-from analysis.imports import import_thomson
 from RISE.factorization import pf2
 from RISE.plotting import (
     plot_condition_factors,
@@ -24,6 +21,10 @@ from RISE.plotting import (
     plot_r2x,
     plot_wp_pacmap,
 )
+
+# Create output directory
+output_dir = Path(__file__).parent / "_static" / "tutorial_images"
+output_dir.mkdir(parents=True, exist_ok=True)
 
 print("Loading dataset...")
 X = import_thomson()

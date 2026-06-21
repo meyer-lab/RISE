@@ -41,20 +41,22 @@ def seriate(
     dists: numpy.ndarray, approximation_multiplier: int = 1000, timeout: float = 2.0
 ) -> list[int]:
     """
-    Order the elements of a set so that the sum of sequential pairwise distances is minimal.
+    Order the elements of a set so that the sum of sequential pairwise
+    distances is minimal.
 
     We solve the Travelling Salesman Problem (TSP) under the hood.
     Reference: http://nicolas.kruchten.com/content/2018/02/seriation/
 
-    :param dists: Either a condensed pdist-like or a symmetric square distance matrix.
-    :param approximation_multiplier: Multiply by this number before converting distances \
-                                     to integers.
-    :param timeout: Maximum amount of time allowed to spend for solving the TSP, in seconds. \
-                    This value cannot be less than 0. If timeout is 0 it will try to solve \
-                    the problem with timeout = 1, and double the timeout every time it fails \
-                    until a valid solution is found.
-    :return: list with ordered element indexes, the same length as the number of elements \
-             involved in calculating `dists`.
+    :param dists: Either a condensed pdist-like or a symmetric square distance
+                  matrix.
+    :param approximation_multiplier: Multiply by this number before converting
+                                     distances to integers.
+    :param timeout: Maximum amount of time allowed to spend for solving the TSP,
+                    in seconds. This value cannot be less than 0. If timeout is 0
+                    it will try to solve the problem with timeout = 1, and double
+                    the timeout every time it fails until a valid solution is found.
+    :return: list with ordered element indexes, the same length as the number of
+             elements involved in calculating `dists`.
     """
     _validate_data(dists)
     if timeout > 0:
@@ -83,17 +85,20 @@ def _seriate(
     dists: numpy.ndarray, approximation_multiplier=1000, timeout=2.0
 ) -> list[int]:
     """
-    Order the elements of a set so that the sum of sequential pairwise distances is minimal.
+    Order the elements of a set so that the sum of sequential pairwise
+    distances is minimal.
 
     We solve the Travelling Salesman Problem (TSP) under the hood.
     Reference: http://nicolas.kruchten.com/content/2018/02/seriation/
 
-    :param dists: Either a condensed pdist-like or a symmetric square distance matrix.
-    :param approximation_multiplier: Multiply by this number before converting distances \
-                                     to integers.
-    :param timeout: Maximum amount of time allowed to spend for solving the TSP, in seconds.
-    :return: list with ordered element indexes, the same length as the number of elements \
-             involved in calculating `dists`.
+    :param dists: Either a condensed pdist-like or a symmetric square distance
+                  matrix.
+    :param approximation_multiplier: Multiply by this number before converting
+                                     distances to integers.
+    :param timeout: Maximum amount of time allowed to spend for solving the TSP,
+                    in seconds.
+    :return: list with ordered element indexes, the same length as the number of
+             elements involved in calculating `dists`.
     """
     assert dists[dists < 0].size == 0, "distances must be non-negative"
     assert timeout > 0

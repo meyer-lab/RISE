@@ -95,8 +95,10 @@ def pf2(
         - X.uns["Pf2_B"]: Eigen-state factors (shape: rank, rank)
         - X.varm["Pf2_C"]: Gene factors (shape: n_genes, rank)
         - X.obsm["projections"]: Cell projections (shape: n_cells, rank)
-        - X.obsm["weighted_projections"]: Weighted cell projections (shape: n_cells, rank)
-        - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding (shape: n_cells, 2) if doEmbedding=True
+        - X.obsm["weighted_projections"]: Weighted cell projections
+          (shape: n_cells, rank)
+        - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding (shape: n_cells, 2)
+          if doEmbedding=True
     """
     pf_out, _ = parafac2_nd(
         X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=max_iter

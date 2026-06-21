@@ -22,7 +22,8 @@ def plot_condition_factors(
     color_key=None,
     group_cond=False,
 ):
-    """Plot condition factors as a heatmap showing how conditions contribute to components.
+    """Plot condition factors as a heatmap showing how conditions contribute to
+    components.
 
     This visualization shows how each experimental condition (rows) contributes to
     each RISE component (columns). High values indicate strong association between
@@ -46,7 +47,8 @@ def plot_condition_factors(
         Series mapping conditions to group labels for colored row annotations.
         Useful for grouping related conditions (e.g., drug classes, patient cohorts).
     ThomsonNorm : bool, optional (default: False)
-        If True, normalizes factors using only control conditions (those containing 'CTRL').
+        If True, normalizes factors using only control conditions (those
+        containing 'CTRL').
     color_key : list, optional (default: None)
         Custom colors for condition group labels. If None, uses default palette.
     group_cond : bool, optional (default: False)
@@ -162,7 +164,8 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
 
     This visualization reveals coordinated gene modules by showing which genes (rows)
     are highly weighted in each component (columns). The weight parameter filters out
-    genes with low contributions, focusing on the most important genes for interpretation.
+    genes with low contributions, focusing on the most important genes for
+    interpretation.
 
     Parameters
     ----------

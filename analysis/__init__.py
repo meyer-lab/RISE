@@ -1,1 +1,3 @@
-"""Analysis package containing paper-specific datasets, gating, regression, and figure-generation scripts."""
+"""Analysis package containing paper-specific datasets, gating, regression,
+and figure-generation scripts.
+"""
