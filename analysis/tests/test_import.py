@@ -5,14 +5,14 @@ Test the cross validation accuracy.
 import numpy as np
 import pytest
 
-from analysis.imports import import_thomson
+from analysis.imports import import_thomson, import_lupus
 
 
 @pytest.mark.parametrize(
     "import_func",
     [
         import_thomson,
-        # import_lupus,
+        import_lupus,
     ],
 )
 def test_imports(import_func):

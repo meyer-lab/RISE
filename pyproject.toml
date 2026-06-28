@@ -16,6 +16,7 @@ dependencies = [
     "anndata>=0.10.3",
     "pacmap>=0.7.1",
     "tqdm>=4.66.1",
+    "hdf5plugin>=6.0.0",
 ]
 
 readme = "README.md"

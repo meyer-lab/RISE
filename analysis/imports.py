@@ -3,6 +3,8 @@ import pandas as pd
 import scanpy as sc
 from parafac2.normalize import prepare_dataset
 
+import hdf5plugin
+
 from .gating import gateThomsonCells
 
 
@@ -23,7 +25,7 @@ def import_thomson() -> anndata.AnnData:
         {
             "Condition": pd.Categorical(metafile["sample_id"]),
         },
-        index=metafile["cell_barcode"]
+        index=metafile["cell_barcode"],
     )
     X.obs.index.name = "cell_barcode"
 
@@ -37,7 +39,6 @@ def import_thomson() -> anndata.AnnData:
     gateThomsonCells(X)
 
     return prepare_dataset(X, "Condition", geneThreshold=0.01)
-
 
 
 def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
@@ -59,7 +60,14 @@ def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
     'SLE_status': SLE status: healthy or SLE}
 
     """
-    X = anndata.read_h5ad("/opt/andrew/lupus/raw_lupus.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad", backed="r")
+
+    # Replace X with raw.X in memory using the raw backing
+    X = anndata.AnnData(
+        X=X.raw.X,
+        obs=X.obs,
+        var=X.raw.var,
+    )
 
     protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
     protein_df = protein.to_df()
