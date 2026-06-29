@@ -1,15 +1,17 @@
+import h5py
 import anndata
 import pandas as pd
 import scanpy as sc
+from anndata.io import read_elem
 from parafac2.normalize import prepare_dataset
 
 import hdf5plugin
 
-from .gating import gateThomsonCells
-
 
 def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
+    from .gating import gateThomsonCells
+
     # Cell barcodes, sample id of treatment and sample number
     metafile = pd.read_csv("analysis/data/Thomson/meta.csv", usecols=[0, 1])
     X = sc.read_10x_mtx(
@@ -60,14 +62,15 @@ def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
     'SLE_status': SLE status: healthy or SLE}
 
     """
-    X = anndata.read_h5ad("/opt/andrew/lupus/lupus.h5ad", backed="r")
+    # Read only obs, raw/X, and raw/var — the dense processed X slot (9.6 GB float32)
+    # causes hdf5plugin to allocate ~180 GB of decompression buffers when the file is
+    # opened, even in backed mode. h5py lets us skip it entirely.
+    with h5py.File("/opt/andrew/lupus/lupus.h5ad", "r") as f:
+        obs = read_elem(f["obs"])
+        raw_var = read_elem(f["raw/var"])
+        raw_X = read_elem(f["raw/X"])
 
-    # Replace X with raw.X in memory using the raw backing
-    X = anndata.AnnData(
-        X=X.raw.X,
-        obs=X.obs,
-        var=X.raw.var,
-    )
+    X = anndata.AnnData(X=raw_X, obs=obs, var=raw_var)
 
     protein = anndata.read_h5ad("/opt/andrew/lupus/Lupus_study_protein_adjusted.h5ad")
     protein_df = protein.to_df()
@@ -90,6 +93,9 @@ def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
     X.obs = X.obs.merge(protein_df, how="left", left_index=True, right_index=True)
 
     # Get rid of IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831 (Only 3 cells)
-    X = X[X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"]
-
-    return prepare_dataset(X, "Condition", geneThreshold=geneThreshold)
+    # .copy() materialises the boolean-mask view before prepare_dataset; without it,
+    # prepare_dataset's `X.X = csr_array(X.X)` triggers a sparse setitem on the parent
+    # matrix (parent._X[bool_array, :] = value) which forces scipy to convert the
+    # 1.26M×32738 CSR to LIL/dense → OOM.
+    mask = X.obs["Condition"] != "IGTB1906_IGTB1906:dmx_count_AHCM2CDMXX_YE_0831"
+    return prepare_dataset(X[mask].copy(), "Condition", geneThreshold=geneThreshold)
