@@ -43,7 +43,7 @@ analysis = [
     "ortools>=9.12.4544",
     "fmt>=0.3.1",
     "scanorama>=1.7.4",
-    "harmonypy>=0.0.10",
+    "harmonypy>=0.0.10,<0.1",
     "scib>=1.1.5",
 ]
 docs = [
