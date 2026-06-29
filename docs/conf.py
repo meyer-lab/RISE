@@ -69,9 +69,6 @@ autodoc_mock_imports = [
 # Suppress warnings during autodoc
 suppress_warnings = ["app.add_directive"]
 
-# Import error handling - continue on import errors
-autodoc_import_error_continue = True
-
 # Intersphinx mapping for external documentation
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -80,7 +77,7 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
     "sklearn": ("https://scikit-learn.org/stable/", None),
-    "tensorly": ("http://tensorly.org/stable/", None),
+    "tensorly": ("https://tensorly.org/stable/", None),
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
 }
 

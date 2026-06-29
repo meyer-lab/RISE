@@ -1,20 +1,16 @@
-.PHONY: clean test pyright
+.PHONY: clean test ty
 
-flist = $(wildcard RISE/figures/figure*.py)
-allOutput = $(patsubst RISE/figures/figure%.py, output/figure%.svg, $(flist))
+flist = $(wildcard analysis/figures/figure*.py)
+allOutput = $(patsubst analysis/figures/figure%.py, output/figure%.svg, $(flist))
 
 all: $(allOutput)
 
-allThomson: $(filter output/figureThomson%, $(allOutput))
-
-allLupus: $(filter output/figureLupus%, $(allOutput))
-
-output/figure%.svg: RISE/figures/figure%.py
+output/figure%.svg: analysis/figures/figure%.py
 	@ mkdir -p ./output
 	uv run fbuild $*
 
 test: .venv
-	uv run pytest -s -v -x
+	uv run pytest -s -v
 
 .venv: pyproject.toml
 	uv sync
@@ -22,9 +18,10 @@ test: .venv
 coverage.xml: .venv
 	uv run pytest --junitxml=junit.xml --cov=RISE --cov-report xml:coverage.xml
 
-pyright: .venv
-	uv run pyright RISE
+lint: .venv
+	uv run ruff format .
+	uv run ruff check . --fix
+	uv run ty check RISE analysis
 
 clean:
-	rm -rf output profile profile.svg
-	rm -rf factor_cache
+	rm -rf output profile profile.svg factor_cache
