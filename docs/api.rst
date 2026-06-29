@@ -60,7 +60,7 @@ General Plotting
 ~~~~~~~~~~~~~~~~
 
 .. py:function:: plot_r2x(data: anndata.AnnData, rank_vec, ax: matplotlib.axes.Axes)
-   :module: RISE.figures.commonFuncs.plotGeneral
+   :module: RISE.plotting
 
    Plot variance explained (R²X) for RISE and PCA across different ranks.
    
@@ -79,7 +79,7 @@ Factor Plotting
 ~~~~~~~~~~~~~~~
 
 .. py:function:: plot_condition_factors(data: anndata.AnnData, ax: matplotlib.axes.Axes, cond: str = 'Condition', log_transform: bool = True, cond_group_labels: pandas.Series = None, ThomsonNorm=False, color_key=None, group_cond=False)
-   :module: RISE.figures.commonFuncs.plotFactors
+   :module: RISE.plotting
 
    Plot condition factors as a heatmap showing how conditions contribute to components.
    
@@ -103,7 +103,7 @@ Factor Plotting
    :type group_cond: bool, optional
 
 .. py:function:: plot_eigenstate_factors(data: anndata.AnnData, ax: matplotlib.axes.Axes)
-   :module: RISE.figures.commonFuncs.plotFactors
+   :module: RISE.plotting
 
    Plot eigen-state factors as a heatmap showing cell state patterns.
    
@@ -115,7 +115,7 @@ Factor Plotting
    :type ax: matplotlib.axes.Axes
 
 .. py:function:: plot_gene_factors(data: anndata.AnnData, ax: matplotlib.axes.Axes, weight=0.08, trim=True)
-   :module: RISE.figures.commonFuncs.plotFactors
+   :module: RISE.plotting
 
    Plot gene factors as a heatmap showing which genes contribute to each component.
    
@@ -134,7 +134,7 @@ PaCMAP Visualization
 ~~~~~~~~~~~~~~~~~~~~
 
 .. py:function:: plot_labels_pacmap(X: anndata.AnnData, labelType: str, ax: matplotlib.axes.Axes, condition=None, cmap: str = 'tab20', color_key=None)
-   :module: RISE.figures.commonFuncs.plotPaCMAP
+   :module: RISE.plotting
 
    Plot PaCMAP embedding colored by categorical labels (cell type or condition).
    
@@ -154,7 +154,7 @@ PaCMAP Visualization
    :type color_key: list, optional
 
 .. py:function:: plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: matplotlib.axes.Axes, clip_outliers=0.9995)
-   :module: RISE.figures.commonFuncs.plotPaCMAP
+   :module: RISE.plotting
 
    Plot PaCMAP embedding colored by gene expression levels.
    
@@ -170,7 +170,7 @@ PaCMAP Visualization
    :type clip_outliers: float, optional
 
 .. py:function:: plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: matplotlib.axes.Axes, cbarMax: float = 1.0)
-   :module: RISE.figures.commonFuncs.plotPaCMAP
+   :module: RISE.plotting
 
    Plot PaCMAP embedding colored by weighted projections for a component.
    
@@ -189,7 +189,7 @@ Factor Stability
 ~~~~~~~~~~~~~~~~
 
 .. py:function:: plot_fms_diff_ranks(X: anndata.AnnData, ax: matplotlib.axes.Axes, ranksList: list[int], runs: int)
-   :module: RISE.figures.figureS4
+   :module: RISE.plotting
 
    Plot Factor Match Score (FMS) across different ranks to assess stability.
    

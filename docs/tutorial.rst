@@ -53,7 +53,7 @@ Determine the optimal component/rank by plotting the variance explained (R²X) a
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotGeneral import plot_r2x
+    from RISE.plotting import plot_r2x
     import matplotlib.pyplot as plt
 
     ranks = [1, 5, 10, 15, 20, 25, 30]
@@ -73,7 +73,7 @@ Measure the reproducibility of the RISE factorization across different ranks. An
 
 .. code-block:: python
 
-    from RISE.figures.figureS4 import plot_fms_diff_ranks
+    from RISE.plotting import plot_fms_diff_ranks
 
     fig, ax = plt.subplots(figsize=(5, 5))
     rank_list = list(ranks)
@@ -125,11 +125,11 @@ Visualizing the Factors
 **Visualize Condition Factors**
 
 Examine how each experimental condition contributes to the identified patterns. Log-transforming these factors allows for easier interpretation of condition-specific effects.
-Several plotting functions are available in the ``RISE.figures.commonFuncs.plotFactors``  and ``RISE.figures.commonFuncs.plotPaCMAP`` modules.
+Several plotting functions are available in the ``RISE.plotting`` package.
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotFactors import plot_condition_factors
+    from RISE.plotting import plot_condition_factors
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -149,7 +149,7 @@ Explore the latent space of cells using nonlinear dimensionality reduction metho
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotPaCMAP import plot_labels_pacmap
+    from RISE.plotting import plot_labels_pacmap
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -167,7 +167,7 @@ Analyze how each cell state contributes to the identified patterns. Each eigen-s
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotFactors import plot_eigenstate_factors
+    from RISE.plotting import plot_eigenstate_factors
 
     fig, ax = plt.subplots(figsize=(4, 4))
 
@@ -188,7 +188,7 @@ Identify which genes are highly weighted in each component, revealing coordinate
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotFactors import plot_gene_factors
+    from RISE.plotting import plot_gene_factors
 
     fig, ax = plt.subplots(figsize=(7, 8))
 
@@ -211,7 +211,7 @@ Overlay specific gene expression on the cell embedding to see which cells expres
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotPaCMAP import plot_gene_pacmap
+    from RISE.plotting import plot_gene_pacmap
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -232,7 +232,7 @@ Visualize how cells contribute to specific components using weighted projections
 
 .. code-block:: python
 
-    from RISE.figures.commonFuncs.plotPaCMAP import plot_wp_pacmap
+    from RISE.plotting import plot_wp_pacmap
 
     fig, ax = plt.subplots(figsize=(8, 8))
 

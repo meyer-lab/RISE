@@ -1,55 +1,62 @@
 [project]
 name = "RISE"
-version = "0.1.0"
+version = "1.1.0"
 description = "Single cell analysis across conditions using PARAFAC2."
 authors = [{name = "Andrew Ramirez"}, {name = "Aaron Meyer", email = "git@asmlab.org" }]
 license = "MIT"
-requires-python = ">= 3.12"
+requires-python = ">= 3.13"
 
 dependencies = [
     "numpy>=2.2",
     "scipy>=1.16",
     "scikit-learn>=1.6",
-    "seaborn>=0.13.2",
     "pandas>=2.2.1",
     "tensorly>=0.8.1",
-    "parafac2 @ git+https://github.com/meyer-lab/parafac2.git@ccf708fe71c78a106151643e893ea006bba865d9",
-    "h5netcdf>=1.3",
+    "parafac2 @ git+https://github.com/meyer-lab/parafac2.git@v1.2.2",
     "anndata>=0.10.3",
-    "datashader>=0.16",
-    "gseapy>=1.1",
-    "scanpy>=1.11",
     "pacmap>=0.7.1",
     "tqdm>=4.66.1",
-    "tlviz>=0.1.1",
-    "doubletdetection>=4.3",
-    "statsmodels>=0.14.1",
-    "dask[dataframe]>=2024.3.1",
-    "ortools>=9.12.4544",
-    "fmt>=0.3.1",
+    "hdf5plugin>=6.0.0",
 ]
 
 readme = "README.md"
 
 [project.scripts]
-fbuild = "RISE.figures.common:genFigure"
-factor = "RISE.imports:factorSave"
+fbuild = "analysis.figures.common:genFigure"
+factor = "analysis.imports:factorSave"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.0",
-    "pytest-cov>=7.0",
-    "pyright>=1.1.407",
+analysis = [
+    "seaborn>=0.13.2",
+    "h5netcdf>=1.3",
+    "datashader>=0.16",
+    "gseapy>=1.1",
+    "scanpy>=1.11",
+    "tlviz>=0.1.1",
+    "doubletdetection>=4.3",
+    "statsmodels>=0.14.1",
+    "dask[dataframe]>=2024.3.1",
+    "ortools>=9.12.4544",
+    "fmt>=0.3.1",
     "scanorama>=1.7.4",
     "harmonypy>=0.0.10",
     "scib>=1.1.5",
-    "sphinx>=7.0,<9.0",
+]
+docs = [
+    { include-group = "analysis" },
+    "sphinx>=9.0",
     "sphinx-rtd-theme>=3.0.0",
-    "nbsphinx>=0.9.0",
+    "nbsphinx>=0.9",
+]
+dev = [
+    { include-group = "analysis" },
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "ty",
     "ruff>=0.14.7",
 ]
 
@@ -57,7 +64,7 @@ dev = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["RISE"]
+packages = ["RISE", "analysis"]
 
 [tool.ruff.lint]
 select = [
