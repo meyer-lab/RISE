@@ -13,8 +13,8 @@ dependencies = [
     "pandas>=2.2.1",
     "tensorly>=0.8.1",
     "parafac2 @ git+https://github.com/meyer-lab/parafac2.git@v1.2.2",
-    "anndata>=0.10.3",
-    "pacmap>=0.7.1",
+    "anndata>=0.12",
+    "pacmap>=0.9",
     "tqdm>=4.66.1",
     "hdf5plugin>=6.0.0",
 ]
@@ -40,8 +40,10 @@ analysis = [
     "doubletdetection>=4.3",
     "statsmodels>=0.14.1",
     "dask[dataframe]>=2024.3.1",
-    "ortools>=9.12.4544",
+    "ortools>=9.15",
     "fmt>=0.3.1",
+]
+benchmarking = [
     "scanorama>=1.7.4",
     "harmonypy>=0.0.10",
     "scib>=1.1.5",
