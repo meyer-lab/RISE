@@ -35,7 +35,7 @@ def makeFigure():
 
 def pair_logistic_regression(X: anndata.AnnData, status_df: pd.DataFrame, ax: Axes):
     """Plot factor weights for donor SLE prediction"""
-    lrmodel = LogisticRegression(penalty=None)
+    lrmodel = LogisticRegression(C=np.inf)
     y = preprocessing.label_binarize(
         status_df.SLE_status, classes=["Healthy", "SLE"]
     ).flatten()

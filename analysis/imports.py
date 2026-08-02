@@ -12,24 +12,8 @@ def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
     from .gating import gateThomsonCells
 
-    # Cell barcodes, sample id of treatment and sample number
-    metafile = pd.read_csv("analysis/data/Thomson/meta.csv", usecols=[0, 1])
-    X = sc.read_10x_mtx(
-        "/opt/andrew/Thomson/", var_names="gene_symbols", make_unique=True
-    )
-    obs = X.obs.reset_index(names="cell_barcode")
+    X = anndata.read_h5ad("/opt/andrew/thomson_raw.h5ad")
 
-    metafile = pd.merge(
-        obs, metafile, on="cell_barcode", how="left", validate="one_to_one"
-    )
-
-    X.obs = pd.DataFrame(
-        {
-            "Condition": pd.Categorical(metafile["sample_id"]),
-        },
-        index=metafile["cell_barcode"],
-    )
-    X.obs.index.name = "cell_barcode"
 
     doubletDF = pd.read_csv("analysis/data/Thomson/ThomsonDoublets.csv", index_col=0)
     doubletDF.index.name = "cell_barcode"

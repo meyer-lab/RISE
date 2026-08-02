@@ -32,7 +32,7 @@ def makeFigure():
     ax, f = getSetup((30, 30), (5, 5))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
     cellDF = cell_count_perc_df(X, "Cell Type2")
     plot_labels_pacmap(X, "Cell Type2", ax[0])
 

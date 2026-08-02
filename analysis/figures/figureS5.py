@@ -15,7 +15,7 @@ def makeFigure():
     ax, f = getSetup((5, 5), (1, 1))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad", backed="r")
 
     df = cell_count_perc_df(X, celltype="Cell Type2")
     sns.swarmplot(

@@ -67,3 +67,11 @@ dev = [
     "ty",
     "ruff>=0.16",
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::anndata.OldFormatWarning",
+    "ignore::FutureWarning",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]

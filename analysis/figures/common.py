@@ -2,9 +2,25 @@
 This file contains functions that are used in multiple figures.
 """
 
+import warnings
+import os
 import sys
 import time
 from string import ascii_letters
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message=".*OldFormatWarning.*")
+
+os.environ["PARAFAC2_BACKEND"] = "cupy"
+try:
+    import cupy.cuda.compiler
+    import cupy
+except ImportError:
+    pass
+
+import hdf5plugin
 
 import matplotlib
 import seaborn as sns
