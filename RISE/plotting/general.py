@@ -242,7 +242,7 @@ def cell_count_perc_df(X, celltype="Cell Type"):
         / dfCellType.groupby("Condition")["Cell Count"].transform("sum")
     )
 
-    dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
+    dfCellType = dfCellType.rename(columns={celltype: "Cell Type"})
     return dfCellType
 
 

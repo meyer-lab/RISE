@@ -1918,7 +1918,7 @@ requires-dist = [
     { name = "hdf5plugin", specifier = ">=6.0.0" },
     { name = "numpy", specifier = ">=2.2" },
     { name = "pacmap", specifier = ">=0.9" },
-    { name = "pandas", specifier = ">=2.2.1" },
+    { name = "pandas", specifier = ">=3.0.0" },
     { name = "parafac2", git = "https://github.com/meyer-lab/parafac2.git?rev=v1.4.0" },
     { name = "parafac2", extras = ["gpu"], marker = "extra == 'gpu'", git = "https://github.com/meyer-lab/parafac2.git?rev=v1.4.0" },
     { name = "scikit-learn", specifier = ">=1.6" },
