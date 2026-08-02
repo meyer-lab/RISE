@@ -10,6 +10,11 @@ To add RISE to your Python package, add the following line to your ``requirement
 
     git+https://github.com/meyer-lab/RISE.git@main
 
+For GPU acceleration support (which propagates to ``parafac2[gpu]``)::
+
+    RISE[gpu] @ git+https://github.com/meyer-lab/RISE.git@main
+
+
 Preprocessing the Dataset
 --------------------------
 

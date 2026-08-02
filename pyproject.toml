@@ -21,6 +21,12 @@ dependencies = [
 
 readme = "README.md"
 
+[project.optional-dependencies]
+gpu = [
+    "parafac2[gpu] @ git+https://github.com/meyer-lab/parafac2.git@v1.3.0",
+]
+
+
 [project.scripts]
 fbuild = "analysis.figures.common:genFigure"
 factor = "analysis.imports:factorSave"
