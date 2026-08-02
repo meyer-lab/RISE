@@ -5,9 +5,6 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
-from scipy.spatial.distance import pdist
-
-from .seriate import seriate
 
 cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
@@ -54,7 +51,6 @@ def plot_condition_factors(
     group_cond : bool, optional (default: False)
         If True and cond_group_labels provided, sorts conditions by group.
     """
-    pd.set_option("display.max_rows", None)
     yt = pd.Series(np.unique(data.obs[cond]))
     X = np.array(data.uns["Pf2_A"])
 
@@ -194,7 +190,7 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
     ind = reorder_table(X)
     X = X[ind]
     X = X / np.max(np.abs(X))
-    yt = [yt[ii] for ii in ind]
+    yt = yt[ind]
     xticks = np.arange(1, rank + 1)
 
     sns.heatmap(
@@ -210,6 +206,8 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
     ax.set(xlabel="Component")
 
 
-def reorder_table(projs: np.ndarray):
-    """Reorder a table's rows using heirarchical clustering"""
-    return seriate(pdist(projs))
+def reorder_table(projs: np.ndarray) -> np.ndarray:
+    """Reorder a table's rows using dominant component block ordering."""
+    max_comp = np.argmax(np.abs(projs), axis=1)
+    comp_vals = projs[np.arange(projs.shape[0]), max_comp]
+    return np.lexsort((-comp_vals, max_comp))

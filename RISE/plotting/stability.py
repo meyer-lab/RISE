@@ -77,10 +77,8 @@ def plot_fms_percent_drop(
     dataX = pf2(X, rank, doEmbedding=False)
 
     fmsLists = []
-
-    for j in range(0, runs, 1):
+    for j in range(runs):
         scores = [1.0]
-
         for i in percentList[1:]:
             sampled_data: anndata.AnnData = sc.pp.subsample(
                 X, fraction=1 - (i / 100), random_state=j, copy=True
@@ -89,27 +87,12 @@ def plot_fms_percent_drop(
 
             fmsScore = calculateFMS(dataX, sampledX)
             scores.append(fmsScore)
-
         fmsLists.append(scores)
 
-    runsList_df = []
-    for i in range(runs):
-        for _j in range(len(percentList)):
-            runsList_df.append(i)
-    percentList_df = []
-    for _i in range(runs):
-        for j in range(len(percentList)):
-            percentList_df.append(percentList[j])
-    fmsList_df = []
-    for sublist in fmsLists:
-        fmsList_df += sublist
-    df = pd.DataFrame(
-        {
-            "Run": runsList_df,
-            "Percentage of Data Dropped": percentList_df,
-            "FMS": fmsList_df,
-        }
+    df = pd.DataFrame(fmsLists, columns=percentList).melt(
+        var_name="Percentage of Data Dropped", value_name="FMS"
     )
+    df["Run"] = np.repeat(np.arange(runs), len(percentList))
 
     sns.lineplot(data=df, x="Percentage of Data Dropped", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
@@ -118,8 +101,7 @@ def plot_fms_percent_drop(
 def resample(data: anndata.AnnData) -> anndata.AnnData:
     """Bootstrapping dataset"""
     indices = np.random.randint(0, data.shape[0], size=(data.shape[0],))
-    data = data[indices].copy()
-    return data
+    return data[indices].copy()
 
 
 def plot_fms_diff_ranks(
@@ -158,32 +140,20 @@ def plot_fms_diff_ranks(
     - FMS < 0.6: Unstable, consider lower rank or more data
     """
     fmsLists = []
-
-    for j in range(0, runs, 1):
+    for j in range(runs):
         scores = []
         for i in ranksList:
             dataX = pf2(X, rank=i, random_state=j, doEmbedding=False)
-
             sampledX = pf2(resample(X), rank=i, random_state=j, doEmbedding=False)
 
             fmsScore = calculateFMS(dataX, sampledX)
             scores.append(fmsScore)
         fmsLists.append(scores)
 
-    runsList_df = []
-    for i in range(runs):
-        for _j in range(len(ranksList)):
-            runsList_df.append(i)
-    ranksList_df = []
-    for _i in range(runs):
-        for j in range(len(ranksList)):
-            ranksList_df.append(ranksList[j])
-    fmsList_df = []
-    for sublist in fmsLists:
-        fmsList_df += sublist
-    df = pd.DataFrame(
-        {"Run": runsList_df, "Component": ranksList_df, "FMS": fmsList_df}
+    df = pd.DataFrame(fmsLists, columns=ranksList).melt(
+        var_name="Component", value_name="FMS"
     )
+    df["Run"] = np.repeat(np.arange(runs), len(ranksList))
 
     sns.lineplot(data=df, x="Component", y="FMS", ax=ax)
     ax.set_ylim(0, 1)
