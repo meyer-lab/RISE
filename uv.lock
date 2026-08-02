@@ -601,49 +601,6 @@ wheels = [
 ]
 
 [[package]]
-name = "gseapy"
-version = "1.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "requests" },
-    { name = "scipy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/54/279224f1ceae22733754313460aa86f6075d82bbc6beea9a74a1f407bb72/gseapy-1.3.1.tar.gz", hash = "sha256:b4ac3958db15db5c9d1eaec95f4e96c709921d2415d2f3e678d2fa02469762c7", size = 172792, upload-time = "2026-07-26T00:35:11.683Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/b6/942234d9c9fc1ab87458f3f58d275876748504c12bcc451f84a71391fee3/gseapy-1.3.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:cd60f82f5a4cb12e20d6c55a7674598145e8b49f6b3073dc7fb19cd1befc0046", size = 612677, upload-time = "2026-07-26T00:34:36.876Z" },
-    { url = "https://files.pythonhosted.org/packages/5f/7c/d4ed1567931292b426fd562e1f9d56ec489a4ddba9a921bbbfaf31cd58a2/gseapy-1.3.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:0c6238279284e5669ff7196fc29db204bd6e864ca2a8bf74b52ee67e6a2fba9a", size = 667861, upload-time = "2026-07-26T00:34:38.536Z" },
-    { url = "https://files.pythonhosted.org/packages/9c/be/8cea6d09910d955518eb1fdf45451ddb62af4fd33d03690219d650ef9858/gseapy-1.3.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:da7f4906e7002eb1e08c7a67b21aa31cfb32c575af2db2d9bdddce59e961a27c", size = 689749, upload-time = "2026-07-26T00:34:40.314Z" },
-    { url = "https://files.pythonhosted.org/packages/22/3b/95943184de02bffa050ea7486be4b42daabff5dbac16887d1d400167e757/gseapy-1.3.1-cp313-cp313-win32.whl", hash = "sha256:b87bf022fa62d6987de7608c9e985468c6cdd8d786cdd6dba6ae2862210b6fa5", size = 483350, upload-time = "2026-07-26T00:34:42.086Z" },
-    { url = "https://files.pythonhosted.org/packages/1c/9a/2ca8f6ac8f8210c9d8ee43c53b49adf7df017a2e9681db98fa9b4c26a801/gseapy-1.3.1-cp313-cp313-win_amd64.whl", hash = "sha256:a4d2a6cb94acd34458e195ea9e3ad07ac4a83722cf2b4a4d6d0905d587786d0e", size = 504948, upload-time = "2026-07-26T00:34:43.85Z" },
-    { url = "https://files.pythonhosted.org/packages/b0/57/33ee1d19d25327673e82931752152fa765a2425937bed1e0795d5dc85567/gseapy-1.3.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:376c798ba7c7ecb4cf839f7d9497382137651cd70bf803675b7ff5921460399d", size = 613660, upload-time = "2026-07-26T00:34:45.593Z" },
-    { url = "https://files.pythonhosted.org/packages/32/df/1aae9fd1ec2cd1b591eb48a7029363af287dc1db1a2595c69aac7426c3a1/gseapy-1.3.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:9280ecf47eabfa52bbc889cff515673d58ca819cd9cb7291c50a05ec90fd4fb9", size = 669300, upload-time = "2026-07-26T00:34:47.281Z" },
-    { url = "https://files.pythonhosted.org/packages/09/9c/b2db3808526dac9dd3011835dd36a84b11cccb505fdd853a6ec96352d0dd/gseapy-1.3.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e1490e652822114c3443fdab2f94fadbb2b924f68272fb5859aa433a5d48bffb", size = 690447, upload-time = "2026-07-26T00:34:49.035Z" },
-    { url = "https://files.pythonhosted.org/packages/0c/80/d405119e9d00311a8f21b12263e986f7336ceef19df85bfcd75a882e2217/gseapy-1.3.1-cp314-cp314-win32.whl", hash = "sha256:27409f2bf7ee167d8806b759aa94386434e3f7aa7f2a503b9a21c125ca45cb13", size = 495330, upload-time = "2026-07-26T00:34:50.568Z" },
-    { url = "https://files.pythonhosted.org/packages/25/21/1de390baced094d6f1959c28e5aec7c67aea28fd42f1a149d9bd000267b2/gseapy-1.3.1-cp314-cp314-win_amd64.whl", hash = "sha256:0c2a906cf6aa9e02c6cb6ae9a012fa39a0505c8fb29ace881b5b8115e74597aa", size = 523331, upload-time = "2026-07-26T00:34:52.137Z" },
-    { url = "https://files.pythonhosted.org/packages/9b/33/a00f5e4170ca45382d6b29fd8855b03ad4e1677981c6f2d597c84b14668c/gseapy-1.3.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:cfb770bedcfa0279abcc355ba4fe2c5f7e11f5a7f8298f92e41ec8f651c93097", size = 613368, upload-time = "2026-07-26T00:34:53.802Z" },
-    { url = "https://files.pythonhosted.org/packages/aa/e0/f7b36978be1ab983b11db9baab0c164b7cc5caa611e82c9f4bbb1541d875/gseapy-1.3.1-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:316663fc836093b14a6ba8dc3cc4d4acd70c5b6acf1b5c5cabe0ad5f69de9b20", size = 668018, upload-time = "2026-07-26T00:34:55.683Z" },
-    { url = "https://files.pythonhosted.org/packages/a5/a4/83e8290fee6dbac62aafc28e7d13c4756f63fd47bea08cba4345c5c2be79/gseapy-1.3.1-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:a3df931b2bf0c4e6f15f9486dfb49dfc0f2068b98dda907c35b6460a97cfa24a", size = 691080, upload-time = "2026-07-26T00:34:57.599Z" },
-    { url = "https://files.pythonhosted.org/packages/1c/19/f2330897c02016c2029c4e5a6bcbe98ebee4ca0ea227c6cce036f5efa0e8/gseapy-1.3.1-cp314-cp314t-win32.whl", hash = "sha256:9b79184f9ed142aa2203da49bfcd8b4a625443a6be962d3553e70ce5844cae0b", size = 494920, upload-time = "2026-07-26T00:34:59.264Z" },
-    { url = "https://files.pythonhosted.org/packages/70/a1/0c59c9acf48242e1b579e7e47ebb15bc0f29472b3e3a121204afdf4b1cec/gseapy-1.3.1-cp314-cp314t-win_amd64.whl", hash = "sha256:02eec5a89bf4871d2d72b6d17200aa57659b513b08192529b42d3bb7c5d64ec8", size = 522107, upload-time = "2026-07-26T00:35:01.028Z" },
-]
-
-[[package]]
-name = "h5netcdf"
-version = "1.8.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/03/92d6cc02c0055158167255980461155d6e17f1c4143c03f8bcc18d3e3f3a/h5netcdf-1.8.1.tar.gz", hash = "sha256:9b396a4cc346050fc1a4df8523bc1853681ec3544e0449027ae397cb953c7a16", size = 78679, upload-time = "2026-01-23T07:35:31.233Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b1/8b/88f16936a8e8070a83d36239555227ecd91728f9ef222c5382cda07e0fd6/h5netcdf-1.8.1-py3-none-any.whl", hash = "sha256:a76ed7cfc9b8a8908ea7057c4e57e27307acff1049b7f5ed52db6c2247636879", size = 62915, upload-time = "2026-01-23T07:35:30.195Z" },
-]
-
-[[package]]
 name = "h5py"
 version = "3.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1852,7 +1809,6 @@ version = "1.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "anndata" },
-    { name = "hdf5plugin" },
     { name = "numpy" },
     { name = "pacmap" },
     { name = "pandas" },
@@ -1872,8 +1828,7 @@ gpu = [
 analysis = [
     { name = "datashader" },
     { name = "doubletdetection" },
-    { name = "gseapy" },
-    { name = "h5netcdf" },
+    { name = "hdf5plugin" },
     { name = "scanpy" },
     { name = "seaborn" },
     { name = "statsmodels" },
@@ -1887,8 +1842,7 @@ benchmarking = [
 dev = [
     { name = "datashader" },
     { name = "doubletdetection" },
-    { name = "gseapy" },
-    { name = "h5netcdf" },
+    { name = "hdf5plugin" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -1901,8 +1855,7 @@ dev = [
 docs = [
     { name = "datashader" },
     { name = "doubletdetection" },
-    { name = "gseapy" },
-    { name = "h5netcdf" },
+    { name = "hdf5plugin" },
     { name = "nbsphinx" },
     { name = "scanpy" },
     { name = "seaborn" },
@@ -1914,8 +1867,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anndata", specifier = ">=0.12" },
-    { name = "hdf5plugin", specifier = ">=6.0.0" },
+    { name = "anndata", specifier = ">=0.13" },
     { name = "numpy", specifier = ">=2.2" },
     { name = "pacmap", specifier = ">=0.9" },
     { name = "pandas", specifier = ">=3.0.0" },
@@ -1923,18 +1875,17 @@ requires-dist = [
     { name = "parafac2", extras = ["gpu"], marker = "extra == 'gpu'", git = "https://github.com/meyer-lab/parafac2.git?rev=v1.4.0" },
     { name = "scikit-learn", specifier = ">=1.6" },
     { name = "scipy", specifier = ">=1.16" },
-    { name = "tensorly", specifier = ">=0.8.1" },
+    { name = "tensorly", specifier = ">=0.9.0" },
     { name = "tqdm", specifier = ">=4.66.1" },
 ]
 provides-extras = ["gpu"]
 
 [package.metadata.requires-dev]
 analysis = [
-    { name = "datashader", specifier = ">=0.16" },
+    { name = "datashader", specifier = ">=0.19" },
     { name = "doubletdetection", specifier = ">=4.3" },
-    { name = "gseapy", specifier = ">=1.1" },
-    { name = "h5netcdf", specifier = ">=1.3" },
-    { name = "scanpy", specifier = ">=1.11" },
+    { name = "hdf5plugin", specifier = ">=7.0.0" },
+    { name = "scanpy", specifier = ">=1.12" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "statsmodels", specifier = ">=0.14.1" },
     { name = "tlviz", specifier = ">=0.1.1" },
@@ -1945,26 +1896,24 @@ benchmarking = [
     { name = "scib", specifier = ">=1.1.5" },
 ]
 dev = [
-    { name = "datashader", specifier = ">=0.16" },
+    { name = "datashader", specifier = ">=0.19" },
     { name = "doubletdetection", specifier = ">=4.3" },
-    { name = "gseapy", specifier = ">=1.1" },
-    { name = "h5netcdf", specifier = ">=1.3" },
+    { name = "hdf5plugin", specifier = ">=7.0.0" },
     { name = "pytest", specifier = ">=9.0" },
     { name = "pytest-cov", specifier = ">=7.0" },
     { name = "ruff", specifier = ">=0.16" },
-    { name = "scanpy", specifier = ">=1.11" },
+    { name = "scanpy", specifier = ">=1.12" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "statsmodels", specifier = ">=0.14.1" },
     { name = "tlviz", specifier = ">=0.1.1" },
     { name = "ty" },
 ]
 docs = [
-    { name = "datashader", specifier = ">=0.16" },
+    { name = "datashader", specifier = ">=0.19" },
     { name = "doubletdetection", specifier = ">=4.3" },
-    { name = "gseapy", specifier = ">=1.1" },
-    { name = "h5netcdf", specifier = ">=1.3" },
+    { name = "hdf5plugin", specifier = ">=7.0.0" },
     { name = "nbsphinx", specifier = ">=0.9" },
-    { name = "scanpy", specifier = ">=1.11" },
+    { name = "scanpy", specifier = ">=1.12" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "sphinx", specifier = ">=9.0" },
     { name = "sphinx-rtd-theme", specifier = ">=3.0.0" },
