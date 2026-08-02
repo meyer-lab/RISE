@@ -93,12 +93,12 @@ def plot_fms_percent_drop(
         fmsLists.append(scores)
 
     runsList_df = []
-    for i in range(0, runs):
-        for _j in range(0, len(percentList)):
+    for i in range(runs):
+        for _j in range(len(percentList)):
             runsList_df.append(i)
     percentList_df = []
-    for _i in range(0, runs):
-        for j in range(0, len(percentList)):
+    for _i in range(runs):
+        for j in range(len(percentList)):
             percentList_df.append(percentList[j])
     fmsList_df = []
     for sublist in fmsLists:
@@ -171,12 +171,12 @@ def plot_fms_diff_ranks(
         fmsLists.append(scores)
 
     runsList_df = []
-    for i in range(0, runs):
-        for _j in range(0, len(ranksList)):
+    for i in range(runs):
+        for _j in range(len(ranksList)):
             runsList_df.append(i)
     ranksList_df = []
-    for _i in range(0, runs):
-        for j in range(0, len(ranksList)):
+    for _i in range(runs):
+        for j in range(len(ranksList)):
             ranksList_df.append(ranksList[j])
     fmsList_df = []
     for sublist in fmsLists:

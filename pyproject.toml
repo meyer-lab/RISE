@@ -12,7 +12,7 @@ dependencies = [
     "scikit-learn>=1.6",
     "pandas>=2.2.1",
     "tensorly>=0.8.1",
-    "parafac2 @ git+https://github.com/meyer-lab/parafac2.git@v1.3.0",
+    "parafac2 @ git+https://github.com/meyer-lab/parafac2.git@v1.4.0",
     "anndata>=0.12",
     "pacmap>=0.9",
     "tqdm>=4.66.1",
@@ -23,7 +23,7 @@ readme = "README.md"
 
 [project.optional-dependencies]
 gpu = [
-    "parafac2[gpu] @ git+https://github.com/meyer-lab/parafac2.git@v1.3.0",
+    "parafac2[gpu] @ git+https://github.com/meyer-lab/parafac2.git@v1.4.0",
 ]
 
 
@@ -35,6 +35,9 @@ factor = "analysis.imports:factorSave"
 requires = ["uv_build>=0.12.0,<0.13"]
 build-backend = "uv_build"
 
+[tool.uv.build-backend]
+module-name = ["RISE", "analysis"]
+module-root = ""
 
 
 [dependency-groups]
@@ -67,34 +70,5 @@ dev = [
     "pytest>=9.0",
     "pytest-cov>=7.0",
     "ty",
-    "ruff>=0.14.7",
+    "ruff>=0.16",
 ]
-
-[tool.uv.build-backend]
-module-name = ["RISE", "analysis"]
-module-root = ""
-
-[tool.ruff.lint]
-select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # Unused arguments
-    "ARG",
-]
-
-
-
-
-
-
-

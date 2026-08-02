@@ -171,14 +171,14 @@ def benchmark_algorithm(
         start_time = time.time()
         tracemalloc.start()
         # Run Scanorama integration
-        integrated, genes = scanorama.integrate(X_list, genes_list)
+        _integrated, _genes = scanorama.integrate(X_list, genes_list)
 
         max_gpu_memory = 0  # GPU not supported
     else:
         raise ValueError("Invalid algorithm")
 
     # Measure CPU memory usage
-    current, peak_cpu = tracemalloc.get_traced_memory()
+    _current, peak_cpu = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     end_time = time.time()
 

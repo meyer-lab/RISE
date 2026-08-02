@@ -17,7 +17,6 @@ if not ortools8_10:
 class IncompleteSolutionError(Exception):
     """Indicate that a solution for the TSP problem was not found."""
 
-    pass
 
 
 class InvalidDistanceValues(ValueError):
