@@ -15,11 +15,24 @@ To add RISE to your Python environment, you can install it directly from GitHub:
 pip install git+https://github.com/meyer-lab/RISE.git@main
 ```
 
+For GPU acceleration support (propagated to `parafac2[gpu]`):
+
+```bash
+pip install "RISE[gpu] @ git+https://github.com/meyer-lab/RISE.git@main"
+```
+
 Or add the following line to your `requirements.txt`:
 
 ```
 git+https://github.com/meyer-lab/RISE.git@main
 ```
+
+or with GPU support:
+
+```
+RISE[gpu] @ git+https://github.com/meyer-lab/RISE.git@main
+```
+
 
 ## Quick Start
 

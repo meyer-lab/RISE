@@ -43,6 +43,33 @@ def ds_show(result, ax: Axes):
     ax.imshow(mpl_img)
 
 
+def _render_pacmap(
+    points: np.ndarray,
+    data: pd.DataFrame,
+    agg_expr,
+    ax: Axes,
+    cmap=None,
+    color_key=None,
+    span=None,
+    how="linear",
+):
+    """Shared helper to render Datashader points onto Matplotlib axes"""
+    canvas = _get_canvas(points)
+    aggregation = canvas.points(data, "x", "y", agg=agg_expr)
+
+    shade_kwargs = {"how": how, "min_alpha": 255}
+    if color_key is not None:
+        shade_kwargs["color_key"] = color_key
+    if cmap is not None:
+        shade_kwargs["cmap"] = cmap
+    if span is not None:
+        shade_kwargs["span"] = span
+
+    result = tf.shade(aggregation, **shade_kwargs)
+    ds_show(result, ax)
+    return assign_labels(ax)
+
+
 def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.9995):
     """Plot PaCMAP embedding colored by gene expression levels.
 
@@ -66,34 +93,27 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
         Values above this quantile are clipped to improve visualization contrast.
     """
     geneList = X[:, gene].to_df().values
-
     geneList = np.clip(geneList, None, np.quantile(geneList, clip_outliers))
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 
-    values = geneList
+    values = geneList - np.min(geneList)
+    values /= np.max(values)
 
     points = np.array(X.obsm["X_pf2_PaCMAP"])
-
-    canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
-
-    values -= np.min(values)
-    values /= np.max(values)
     data["val_cat"] = values
-    result = tf.shade(
-        agg=canvas.points(data, "x", "y", agg=ds.mean("val_cat")),
+
+    _render_pacmap(
+        points=points,
+        data=data,
+        agg_expr=ds.mean("val_cat"),
+        ax=ax,
         cmap=cmap,
         span=(0, 1),
-        how="linear",
-        min_alpha=255,
     )
-
-    ds_show(result, ax)
 
     psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
     plt.colorbar(psm, ax=ax)
-
-    ax = assign_labels(ax)
     ax.set(title=f"{gene}")
 
 
@@ -122,30 +142,24 @@ def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0)
     """
     values = X.obsm["weighted_projections"][:, cmp - 1]
     points = X.obsm["X_pf2_PaCMAP"]
-
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
-    canvas = _get_canvas(points)
-    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
-
     values /= np.max(np.abs(values))
-
+    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
     data["val_cat"] = values
-    result = tf.shade(
-        agg=canvas.points(data, "x", "y", agg=ds.mean("val_cat")),
+
+    _render_pacmap(
+        points=points,
+        data=data,
+        agg_expr=ds.mean("val_cat"),
+        ax=ax,
         cmap=cmap,
         span=(-cbarMax, cbarMax),
-        how="linear",
-        alpha=255,
-        min_alpha=255,
     )
-
-    ds_show(result, ax)
 
     psm = plt.pcolormesh([[-cbarMax, cbarMax], [-cbarMax, cbarMax]], cmap=cmap)
     plt.colorbar(psm, ax=ax)
-    ax.set(title="Cmp. " + str(cmp))
-    ax = assign_labels(ax)
+    ax.set(title=f"Cmp. {cmp}")
 
 
 def plot_labels_pacmap(
@@ -194,11 +208,8 @@ def plot_labels_pacmap(
     points = X.obsm["X_pf2_PaCMAP"][indices, :]
     labels = labels.iloc[indices]
 
-    canvas = _get_canvas(points)
     data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
-
     data["label"] = pd.Categorical(labels)
-    aggregation = canvas.points(data, "x", "y", agg=ds.count_cat("label"))
 
     unique_labels = np.unique(labels)
     num_labels = unique_labels.shape[0]
@@ -207,16 +218,16 @@ def plot_labels_pacmap(
     legend_elements = [
         Patch(facecolor=color_key[i], label=k) for i, k in enumerate(unique_labels)
     ]
-    result = tf.shade(
-        aggregation,
+
+    _render_pacmap(
+        points=points,
+        data=data,
+        agg_expr=ds.count_cat("label"),
+        ax=ax,
         color_key=color_key,
         how="eq_hist",
-        min_alpha=255,
     )
-
-    ds_show(result, ax)
     ax.legend(handles=legend_elements)
-    ax = assign_labels(ax)
 
 
 def assign_labels(ax):

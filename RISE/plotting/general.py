@@ -191,31 +191,26 @@ def plot_cell_gene_corr(
     dataDF = dataDF.subtract(X.var["means"].values)
     dataDF[hue] = X.obs[hue].values
     dataDF["Cell Type"] = X.obs[cellType].values
-    alpha = 0.3
 
-    dataDF = dataDF.groupby([hue, "Cell Type"], observed=True).mean().reset_index()
-    alpha = 1
+    meanDF = dataDF.groupby([hue, "Cell Type"], observed=True).mean().reset_index()
+    pivoted = meanDF.pivot(index=hue, columns="Cell Type", values=genes)
 
-    corrDF = pd.DataFrame()
-    for cond in dataDF[hue].unique():
-        cell_gene1 = dataDF.loc[
-            (dataDF[hue] == cond) & (dataDF["Cell Type"] == cells[0])
-        ][genes[0]].values
-        cell_gene2 = dataDF.loc[
-            (dataDF[hue] == cond) & (dataDF["Cell Type"] == cells[1])
-        ][genes[1]].values
-        corrDF = pd.concat(
-            [
-                corrDF,
-                pd.DataFrame(
-                    {
-                        hue: cond,
-                        cells[0] + " " + genes[0]: cell_gene1,
-                        cells[1] + " " + genes[1]: cell_gene2,
-                    }
-                ),
-            ]
-        )
+    col1 = (genes[0], cells[0])
+    col2 = (genes[1], cells[1])
+
+    x_name = f"{cells[0]} {genes[0]}"
+    y_name = f"{cells[1]} {genes[1]}"
+
+    if col1 in pivoted.columns and col2 in pivoted.columns:
+        corrDF = pd.DataFrame(
+            {
+                hue: pivoted.index,
+                x_name: pivoted[col1].values,
+                y_name: pivoted[col2].values,
+            }
+        ).dropna()
+    else:
+        corrDF = pd.DataFrame(columns=[hue, x_name, y_name])
 
     if unique is not None:
         corrDF[hue] = corrDF[hue].astype(str)
@@ -223,54 +218,38 @@ def plot_cell_gene_corr(
 
     sns.scatterplot(
         data=corrDF,
-        x=cells[0] + " " + genes[0],
-        y=cells[1] + " " + genes[1],
+        x=x_name,
+        y=y_name,
         hue=hue,
         ax=ax,
-        alpha=alpha,
+        alpha=1.0,
     )
 
 
 def cell_count_perc_df(X, celltype="Cell Type"):
     """Returns DF with cell counts and percentages for experiment"""
-
     grouping = [celltype, "Condition"]
-
     df = X.obs[grouping].reset_index(drop=True)
 
-    dfCond = (
-        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
-    )
     dfCellType = (
         df.groupby(grouping, observed=True).size().reset_index(name="Cell Count")
     )
     dfCellType["Cell Count"] = dfCellType["Cell Count"].astype("float")
 
-    dfCellType["Cell Type Percentage"] = 0.0
-    for cond in np.unique(df["Condition"]):
-        dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
-            100
-            * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
-            / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
-        )
+    dfCellType["Cell Type Percentage"] = (
+        100
+        * dfCellType["Cell Count"]
+        / dfCellType.groupby("Condition")["Cell Count"].transform("sum")
+    )
 
-    dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
-
+    dfCellType = dfCellType.rename(columns={celltype: "Cell Type"})
     return dfCellType
 
 
 def cell_count_perc_lupus_df(X, celltype="Cell Type"):
-    """Returns DF with cell counts and percentages for experiment"""
-    grouping_all = [
-        celltype,
-        "Condition",
-        "SLE_status",
-        "Processing_Cohort",
-        "condition_unique_idxs",
-    ]
-    grouping = [celltype, "Condition"]
+    """Returns DF with cell counts and percentages for experiment with Lupus metadata"""
+    dfCellType = cell_count_perc_df(X, celltype=celltype)
 
-    df = X.obs[grouping_all].reset_index(drop=True)
     status_mapping = X.obs.groupby("Condition", observed=False)["SLE_status"].first()
     cohort_mapping = X.obs.groupby("Condition", observed=False)[
         "Processing_Cohort"
@@ -279,37 +258,18 @@ def cell_count_perc_lupus_df(X, celltype="Cell Type"):
         "condition_unique_idxs"
     ].first()
 
-    dfCond = (
-        df.groupby(["Condition"], observed=True).size().reset_index(name="Cell Count")
-    )
-    dfCellType = (
-        df.groupby(grouping, observed=True).size().reset_index(name="Cell Count")
-    )
-    dfCellType["Cell Count"] = dfCellType["Cell Count"].astype("float")
-
-    dfCellType["Cell Type Percentage"] = 0.0
-    for cond in np.unique(df["Condition"]):
-        dfCellType.loc[dfCellType["Condition"] == cond, "Cell Type Percentage"] = (
-            100
-            * dfCellType.loc[dfCellType["Condition"] == cond, "Cell Count"].to_numpy()
-            / dfCond.loc[dfCond["Condition"] == cond]["Cell Count"].to_numpy()
-        )
-
     dfCellType["SLE_status"] = dfCellType["Condition"].map(status_mapping)
     dfCellType["Processing_Cohort"] = dfCellType["Condition"].map(cohort_mapping)
     dfCellType["condition_unique_idxs"] = dfCellType["Condition"].map(idx_mapping)
-    dfCellType.rename(columns={celltype: "Cell Type"}, inplace=True)
 
     return dfCellType
 
 
 def rotate_xaxis(ax, rotation=90):
-    """Rotates text by 90 degrees for x-axis"""
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(labels=ax.get_xticklabels(), rotation=rotation)
+    """Rotates text for x-axis"""
+    ax.tick_params(axis="x", rotation=rotation)
 
 
 def rotate_yaxis(ax, rotation=90):
-    """Rotates text by 90 degrees for y-axis"""
-    ax.set_yticks(ax.get_yticks())
-    ax.set_yticklabels(labels=ax.get_yticklabels(), rotation=rotation)
+    """Rotates text for y-axis"""
+    ax.tick_params(axis="y", rotation=rotation)
