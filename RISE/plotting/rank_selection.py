@@ -43,12 +43,15 @@ def plot_bicv_r2x(results: pd.DataFrame, ax: Axes) -> None:
 
 
 def plot_rank_optimization(result: BiCVOptimizationResult, ax: Axes) -> None:
-    """Plot the Bayesian optimization trace used to select a rank.
+    """Plot the quadratic-guided search trace used to select a rank.
 
-    Shows the Gaussian process surrogate's posterior mean and 95%
-    confidence interval over the searched rank range, the individual ranks
-    that were actually evaluated (mean BiCV R2X across repeats), and the
-    best rank found.
+    Shows the least-squares quadratic fit of BiCV R2X vs. rank (used to
+    guide which ranks were evaluated), the individual ranks that were
+    actually evaluated (mean +/- std BiCV R2X across repeats), and the best
+    rank found. The quadratic fit's R² is noted in its legend label; a low
+    value indicates the curve is not well described by a quadratic over the
+    searched range, and ``result.best_rank`` (rather than the fit's vertex)
+    should be trusted.
 
     Parameters
     ----------
@@ -59,16 +62,13 @@ def plot_rank_optimization(result: BiCVOptimizationResult, ax: Axes) -> None:
     """
     lo, hi = result.rank_bounds
     grid = np.arange(lo, hi + 1)
-    mu, sigma = result.gp.predict(grid.reshape(-1, 1).astype(float), return_std=True)
+    fitted = result.quadratic_fit(grid)
 
-    ax.plot(grid, mu, color="black", label="GP mean")
-    ax.fill_between(
+    ax.plot(
         grid,
-        mu - 1.96 * sigma,
-        mu + 1.96 * sigma,
+        fitted,
         color="black",
-        alpha=0.15,
-        label="95% CI",
+        label=f"Quadratic fit (R²={result.quadratic_r2:.2f})",
     )
     ax.errorbar(
         result.history["Rank"],

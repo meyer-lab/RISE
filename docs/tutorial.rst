@@ -107,9 +107,11 @@ Two functions are available in ``RISE.rank_selection``:
   several repeated random train/test splits, and returns both the fit R2X
   and the BiCV R2X for every rank so you can inspect the full curve.
 - ``optimize_rank``: for a large search range, sequentially evaluates a
-  small number of ranks and uses a Gaussian process (Bayesian optimization)
-  to pick each subsequent candidate rank via expected improvement,
-  converging on a good rank without testing every value.
+  small number of ranks, exploiting the fact that BiCV R2X vs. rank is
+  expected to be an approximately quadratic, concave curve: each
+  subsequent candidate rank is chosen near the vertex of a least-squares
+  quadratic fit through the ranks evaluated so far, and the search stops
+  early once that vertex estimate stabilizes.
 
 .. code-block:: python
 
@@ -148,9 +150,14 @@ To search a wide rank range without evaluating every candidate rank, use
     plt.show()
 
 ``result.history`` contains every rank actually evaluated (with mean and
-standard deviation of BiCV R2X across repeats), and ``plot_rank_optimization``
-visualizes the Gaussian process surrogate's fit across the search range
-alongside the best rank found.
+standard deviation of BiCV R2X across repeats) — typically well under
+``n_calls``, since the search stops once it converges — and
+``plot_rank_optimization`` visualizes the quadratic fit across the search
+range alongside the best rank found. If ``result.quadratic_r2`` is low
+(well under 0.5), the curve was not well described by a quadratic over the
+searched range; treat ``result.best_rank`` as the answer in that case
+rather than the fit's vertex, and consider running ``bicv`` over the full
+range to inspect the curve directly.
 
 Running the Factorization
 --------------------------

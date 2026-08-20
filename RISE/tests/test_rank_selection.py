@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from .. import rank_selection
 from ..rank_selection import BiCVOptimizationResult, bicv, optimize_rank
 
 
@@ -78,9 +79,32 @@ def test_bicv_invalid_arguments():
         bicv(X, [1000])
 
 
+def test_bicv_warns_when_best_rank_is_at_boundary():
+    """bicv() should warn if the best tested rank sits at the edge of the
+    searched range. With a single rank tested, that rank is trivially both
+    ends of the range, so the warning must always fire."""
+    X = _make_test_data()
+
+    with pytest.warns(UserWarning, match="edge of the tested ranks"):
+        bicv(X, [8], n_repeats=1, random_state=0, max_iter=50)
+
+
+def _fake_bicv_trial(peak_rank: float, width: float = 8.0, noise: float = 0.002):
+    """A cheap, deterministic stand-in for _bicv_trial with a known
+    quadratic (concave) peak, for testing the search logic in isolation
+    from real PARAFAC2 fits and real BiCV noise."""
+
+    def trial(
+        X, rank, held_out_cell_frac, held_out_gene_frac, rng, tolerance, max_iter
+    ):
+        return 0.5 - ((rank - peak_rank) / width) ** 2 + float(rng.normal(scale=noise))
+
+    return trial
+
+
 def test_optimize_rank_finds_reasonable_result():
     """optimize_rank() returns a best rank within bounds and a usable
-    history/GP for plotting."""
+    quadratic fit/history for plotting."""
     X = _make_test_data()
 
     result = optimize_rank(
@@ -96,14 +120,58 @@ def test_optimize_rank_finds_reasonable_result():
     assert isinstance(result, BiCVOptimizationResult)
     assert 2 <= result.best_rank <= 10
     assert np.isfinite(result.best_r2x)
-    assert len(result.history) == 6
+    assert len(result.history) <= 6
     assert set(result.history.columns) == {"Rank", "R2X", "R2X_std"}
 
-    # The GP surrogate should be usable for prediction over the search range.
-    grid = np.arange(2, 11).reshape(-1, 1).astype(float)
-    mu, sigma = result.gp.predict(grid, return_std=True)
-    assert mu.shape == (9,)
-    assert np.all(sigma >= 0)
+    # The quadratic fit should be usable for prediction over the search range.
+    assert isinstance(result.quadratic_fit, np.poly1d)
+    assert 0.0 <= result.quadratic_r2 <= 1.0 + 1e-9
+    grid = np.arange(2, 11)
+    fitted = result.quadratic_fit(grid)
+    assert fitted.shape == (9,)
+    assert np.all(np.isfinite(fitted))
+
+
+def test_optimize_rank_stops_early(monkeypatch):
+    """optimize_rank() should stop once the estimated peak stabilizes,
+    without spending the full n_calls budget, given a search range wide
+    enough for the quadratic fit to converge well before exhausting it.
+    Uses a deterministic fake BiCV trial (known peak at rank 9) so the
+    search's convergence behavior is tested directly, independent of real
+    BiCV noise."""
+    monkeypatch.setattr(rank_selection, "_bicv_trial", _fake_bicv_trial(peak_rank=9))
+    X = _make_test_data()
+
+    result = optimize_rank(
+        X,
+        rank_bounds=(2, 30),
+        n_repeats=2,
+        n_calls=20,
+        n_initial_points=3,
+        random_state=0,
+    )
+
+    assert len(result.history) < 20
+    assert abs(result.best_rank - 9) <= 1
+
+
+def test_optimize_rank_warns_when_best_rank_is_at_boundary(monkeypatch):
+    """optimize_rank() should warn if the best rank found sits at the edge
+    of rank_bounds. Uses a deterministic fake BiCV trial whose peak sits
+    well outside the searched range, so the best rank found is guaranteed
+    to land on the range's edge."""
+    monkeypatch.setattr(rank_selection, "_bicv_trial", _fake_bicv_trial(peak_rank=50))
+    X = _make_test_data()
+
+    with pytest.warns(UserWarning, match="edge of rank_bounds"):
+        optimize_rank(
+            X,
+            rank_bounds=(2, 10),
+            n_repeats=2,
+            n_calls=8,
+            n_initial_points=3,
+            random_state=0,
+        )
 
 
 def test_optimize_rank_invalid_arguments():
@@ -114,3 +182,11 @@ def test_optimize_rank_invalid_arguments():
 
     with pytest.raises(ValueError):
         optimize_rank(X, rank_bounds=(2, 10), n_calls=2, n_initial_points=5)
+
+    with pytest.raises(ValueError):
+        # rank_bounds must span at least 3 ranks.
+        optimize_rank(X, rank_bounds=(2, 3))
+
+    with pytest.raises(ValueError):
+        # n_initial_points must be >= 3 for a quadratic fit.
+        optimize_rank(X, rank_bounds=(2, 10), n_initial_points=2)
