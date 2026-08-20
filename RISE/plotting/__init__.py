@@ -24,6 +24,10 @@ from .pacmap import (
     plot_labels_pacmap,
     plot_wp_pacmap,
 )
+from .rank_selection import (
+    plot_bicv_r2x,
+    plot_rank_optimization,
+)
 from .stability import (
     calculateFMS,
     plot_fms_diff_ranks,
@@ -38,6 +42,7 @@ __all__ = [
     "gene_plot_cells",
     "plot_avegene_per_category",
     "plot_avegene_per_celltype",
+    "plot_bicv_r2x",
     "plot_cell_gene_corr",
     "plot_condition_factors",
     "plot_eigenstate_factors",
@@ -47,6 +52,7 @@ __all__ = [
     "plot_gene_pacmap",
     "plot_labels_pacmap",
     "plot_r2x",
+    "plot_rank_optimization",
     "plot_wp_pacmap",
     "rotate_xaxis",
     "rotate_yaxis",

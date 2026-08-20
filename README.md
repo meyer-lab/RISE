@@ -62,6 +62,7 @@ See the [tutorial](https://meyer-lab.github.io/RISE/tutorial.html) for a complet
 - **High resolution**: Identifies cell populations and condition-specific subpopulations
 - **Interpretable results**: Components directly linked to conditions, cells, and genes
 - **Integrated workflow**: Built-in preprocessing, visualization, and interpretation tools
+- **Principled rank selection**: Bi-cross-validation (`RISE.rank_selection`) for choosing the number of components, either by evaluating a set of candidate ranks or automatically via Bayesian optimization
 
 ## Citation
 

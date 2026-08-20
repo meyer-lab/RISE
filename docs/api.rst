@@ -31,6 +31,65 @@ Factorization
    :returns: The input AnnData object with added RISE decomposition results in X.uns["Pf2_weights"], X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"], X.obsm["projections"], X.obsm["weighted_projections"], and X.obsm["X_pf2_PaCMAP"]
    :rtype: anndata.AnnData
 
+Rank Selection
+~~~~~~~~~~~~~~
+
+.. py:function:: bicv(X: anndata.AnnData, ranks, n_repeats: int = 3, held_out_cell_frac: float = 0.2, held_out_gene_frac: float = 0.2, random_state=None, tolerance: float = 1e-6, max_iter: int = 200)
+   :module: RISE.rank_selection
+
+   Evaluate rank via bi-cross-validation (BiCV) and in-sample fit R2X.
+
+   For each candidate rank, holds out a random subset of cells (stratified by condition) and a random subset of genes, fits PARAFAC2 on the remaining block, and predicts the held-out block to compute a BiCV R2X. Also computes the ordinary in-sample fit R2X on the full dataset. The fit R2X increases monotonically with rank; the BiCV R2X penalizes overfitting and typically peaks near the rank that best generalizes to unseen data.
+
+   :param X: Preprocessed AnnData object. Must have X.obs["condition_unique_idxs"] and X.var["means"].
+   :type X: anndata.AnnData
+   :param ranks: Candidate rank values to evaluate.
+   :type ranks: sequence of int
+   :param n_repeats: Number of independent random cell/gene splits per rank.
+   :type n_repeats: int, optional
+   :param held_out_cell_frac: Fraction of cells held out per condition in each BiCV trial.
+   :type held_out_cell_frac: float, optional
+   :param held_out_gene_frac: Fraction of genes held out in each BiCV trial.
+   :type held_out_gene_frac: float, optional
+   :param random_state: Random seed for reproducibility.
+   :type random_state: int, optional
+   :param tolerance: Convergence threshold passed to the PARAFAC2 fit.
+   :type tolerance: float, optional
+   :param max_iter: Maximum number of iterations passed to the PARAFAC2 fit.
+   :type max_iter: int, optional
+   :returns: Long-form DataFrame with columns "Rank", "Repeat", "Metric" ("Fit R2X" or "BiCV R2X"), and "R2X".
+   :rtype: pandas.DataFrame
+
+.. py:function:: optimize_rank(X: anndata.AnnData, rank_bounds, n_repeats: int = 3, held_out_cell_frac: float = 0.2, held_out_gene_frac: float = 0.2, n_calls: int = 15, n_initial_points: int = 5, random_state=None, tolerance: float = 1e-6, max_iter: int = 200)
+   :module: RISE.rank_selection
+
+   Find the rank that maximizes BiCV R2X via Bayesian optimization.
+
+   Sequentially evaluates a small number of ranks (n_calls total) rather than exhaustively testing every rank in rank_bounds. After an initial exploration phase, subsequent ranks are chosen by fitting a Gaussian process surrogate (scikit-learn's GaussianProcessRegressor, already a RISE dependency) to the observed (rank, BiCV R2X) pairs and maximizing expected improvement. Well suited to BiCV R2X curves, which are smooth in rank.
+
+   :param X: Preprocessed AnnData object. Must have X.obs["condition_unique_idxs"] and X.var["means"].
+   :type X: anndata.AnnData
+   :param rank_bounds: (low, high) inclusive bounds on the rank to search.
+   :type rank_bounds: tuple of int
+   :param n_repeats: Number of independent random cell/gene splits averaged per rank evaluation.
+   :type n_repeats: int, optional
+   :param held_out_cell_frac: Fraction of cells held out per condition in each BiCV trial.
+   :type held_out_cell_frac: float, optional
+   :param held_out_gene_frac: Fraction of genes held out in each BiCV trial.
+   :type held_out_gene_frac: float, optional
+   :param n_calls: Total number of ranks to evaluate.
+   :type n_calls: int, optional
+   :param n_initial_points: Number of ranks evaluated up front before switching to the Gaussian-process-guided search. Must be <= n_calls.
+   :type n_initial_points: int, optional
+   :param random_state: Random seed for reproducibility.
+   :type random_state: int, optional
+   :param tolerance: Convergence threshold passed to the PARAFAC2 fit.
+   :type tolerance: float, optional
+   :param max_iter: Maximum number of iterations passed to the PARAFAC2 fit.
+   :type max_iter: int, optional
+   :returns: The best rank found, its BiCV R2X, the full evaluation history, and the fitted Gaussian process.
+   :rtype: RISE.rank_selection.BiCVOptimizationResult
+
 Preprocessing
 ~~~~~~~~~~~~~
 
@@ -184,6 +243,29 @@ PaCMAP Visualization
    :type ax: matplotlib.axes.Axes
    :param cbarMax: Maximum value for the color scale.
    :type cbarMax: float, optional
+
+Rank Selection Plotting
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:function:: plot_bicv_r2x(results: pandas.DataFrame, ax: matplotlib.axes.Axes)
+   :module: RISE.plotting
+
+   Plot BiCV R2X and in-sample fit R2X across ranks.
+
+   :param results: Output of RISE.rank_selection.bicv.
+   :type results: pandas.DataFrame
+   :param ax: Matplotlib axes object to plot on.
+   :type ax: matplotlib.axes.Axes
+
+.. py:function:: plot_rank_optimization(result, ax: matplotlib.axes.Axes)
+   :module: RISE.plotting
+
+   Plot the Bayesian optimization trace used to select a rank: the Gaussian process posterior mean and 95% confidence interval, the individually evaluated ranks, and the best rank found.
+
+   :param result: Output of RISE.rank_selection.optimize_rank.
+   :type result: RISE.rank_selection.BiCVOptimizationResult
+   :param ax: Matplotlib axes object to plot on.
+   :type ax: matplotlib.axes.Axes
 
 Factor Stability
 ~~~~~~~~~~~~~~~~
