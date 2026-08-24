@@ -14,7 +14,7 @@ def makeFigure():
     ax, f = getSetup((12, 12), (6, 4))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
 
     plot_labels_pacmap(X, "Cell Type", ax[0])
     plot_labels_pacmap(X, "Cell Type2", ax[1])

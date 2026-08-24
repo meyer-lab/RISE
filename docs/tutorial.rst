@@ -171,8 +171,8 @@ Based on the variance explained and FMS, select a rank and perform the RISE fact
     from RISE.factorization import pf2
 
     rank = 20
-    X = pf2(X=X, rank=rank, doEmbedding=True, tolerance=1e-9, 
-            max_iter=500, random_state=42)
+    X = pf2(X=X, rank=rank, doEmbedding=True, tolerance=1e-6, 
+            max_iter=100, random_state=42)
 
 The function ``pf2`` performs PARAFAC2 tensor decomposition on the AnnData object. Parameters:
 
@@ -180,8 +180,8 @@ The function ``pf2`` performs PARAFAC2 tensor decomposition on the AnnData objec
 - ``rank``: Number of components to extract
 - ``random_state``: Random seed for reproducibility (default: 1)
 - ``doEmbedding``: If True, automatically computes PaCMAP embeddings of cell projections and stores in ``X.obsm["embedding"]`` (default: True)
-- ``tolerance``: Convergence threshold for the optimization algorithm (default: 1e-9)
-- ``max_iter``: Maximum number of iterations (default: 500)
+- ``tolerance``: Convergence threshold for the optimization algorithm (default: 1e-6)
+- ``max_iter``: Maximum number of iterations (default: 100)
 
 The output of ``pf2`` includes the original AnnData object with added results and the reconstruction error (R²X). The following are added to the AnnData object:
 

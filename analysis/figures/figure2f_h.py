@@ -20,7 +20,7 @@ def makeFigure():
     ax, f = getSetup((10, 12), (2, 2))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
 
     drugNames = groupDrugs(X, "Condition")
 
