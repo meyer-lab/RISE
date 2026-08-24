@@ -17,8 +17,7 @@ def gateThomsonCellsLeiden(X) -> npt.ArrayLike:
 
 def gateThomsonCells(X) -> npt.ArrayLike:
     """Manually gates cell types for Thomson PaCMAP"""
-    cellTypeDF = pd.read_csv("analysis/data/Thomson/ThomsonCellTypes.csv", index_col=0)
-    cellTypeDF.index.name = "cell_barcode"
+    cellTypeDF = pd.read_parquet("analysis/data/Thomson/ThomsonCellTypes.parquet")
     X.obs = X.obs.join(cellTypeDF, how="inner")
 
     X.obs["Cell Type"] = X.obs["Cell Type"].values.astype(str)
