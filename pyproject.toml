@@ -13,17 +13,18 @@ dependencies = [
     "pandas>=3.0.0",
     "pyarrow>=19.0",
     "tensorly>=0.9.0",
-    "parafac2 @ git+https://github.com/meyer-lab/parafac2.git@v1.4.0",
+    "parafac2",
     "anndata>=0.13",
     "pacmap>=0.9",
     "tqdm>=4.66.1",
+    "vcsc",
 ]
 
 readme = "README.md"
 
 [project.optional-dependencies]
 gpu = [
-    "parafac2[gpu] @ git+https://github.com/meyer-lab/parafac2.git@v1.4.0",
+    "parafac2[gpu]",
 ]
 
 
@@ -38,6 +39,10 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = ["RISE", "analysis"]
 module-root = ""
+
+[tool.uv.sources]
+vcsc = { git = "https://github.com/meyer-lab/anndata-VCSC.git" }
+parafac2 = { git = "https://github.com/meyer-lab/parafac2.git" }
 
 
 [dependency-groups]

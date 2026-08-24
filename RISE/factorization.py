@@ -55,6 +55,7 @@ def pf2(
     doEmbedding: bool = True,
     tolerance=1e-6,
     max_iter: int = 100,
+    normalize_slices: bool = False,
 ):
     """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
 
@@ -83,6 +84,9 @@ def pf2(
         increase precision but may require more iterations.
     max_iter : int, optional (default: 100)
         Maximum number of iterations for the optimization algorithm.
+    normalize_slices : bool, optional (default: False)
+        If True, normalizes per-condition slices by their Frobenius norm during
+        factor updates to prevent conditions with large cell counts from dominating.
 
     Returns
     -------
@@ -100,7 +104,12 @@ def pf2(
           if doEmbedding=True
     """
     pf_out, _ = parafac2_nd(
-        X, rank=rank, random_state=random_state, tol=tolerance, n_iter_max=max_iter
+        X,
+        rank=rank,
+        random_state=random_state,
+        tol=tolerance,
+        n_iter_max=max_iter,
+        normalize_slices=normalize_slices,
     )
 
     X = store_pf2(X, pf_out)
