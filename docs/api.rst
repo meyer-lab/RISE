@@ -7,7 +7,7 @@ Core Functions
 Factorization
 ~~~~~~~~~~~~~
 
-.. py:function:: pf2(X: anndata.AnnData, rank: int, random_state=1, doEmbedding: bool = True, tolerance=1e-9, max_iter: int = 500)
+.. py:function:: pf2(X: anndata.AnnData, rank: int, random_state=1, doEmbedding: bool = True, tolerance=1e-6, max_iter: int = 100)
    :module: RISE.factorization
 
    Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.

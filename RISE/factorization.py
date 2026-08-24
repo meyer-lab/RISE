@@ -53,8 +53,8 @@ def pf2(
     rank: int,
     random_state=1,
     doEmbedding: bool = True,
-    tolerance=1e-9,
-    max_iter: int = 500,
+    tolerance=1e-6,
+    max_iter: int = 100,
     normalize_slices: bool = False,
 ):
     """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
@@ -79,10 +79,10 @@ def pf2(
         If True, automatically computes PaCMAP embedding of cell projections
         and stores in X.obsm["X_pf2_PaCMAP"]. This enables visualization
         functions like plot_labels_pacmap.
-    tolerance : float, optional (default: 1e-9)
+    tolerance : float, optional (default: 1e-6)
         Convergence threshold for the optimization algorithm. Lower values
         increase precision but may require more iterations.
-    max_iter : int, optional (default: 500)
+    max_iter : int, optional (default: 100)
         Maximum number of iterations for the optimization algorithm.
     normalize_slices : bool, optional (default: False)
         If True, normalizes per-condition slices by their Frobenius norm during

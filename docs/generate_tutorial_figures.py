@@ -49,7 +49,7 @@ plt.close()
 # Perform RISE factorization
 print("Running RISE factorization...")
 rank = 20
-X = pf2(X=X, rank=rank, doEmbedding=True, tolerance=1e-9, max_iter=500, random_state=42)
+X = pf2(X=X, rank=rank, doEmbedding=True, tolerance=1e-6, max_iter=100, random_state=42)
 
 # Figure 3: Condition Factors
 print("Generating Figure 3: Condition factors...")

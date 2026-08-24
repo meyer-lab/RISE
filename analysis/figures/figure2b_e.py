@@ -17,7 +17,7 @@ def makeFigure():
     ax, f = getSetup((8, 8), (2, 2))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad")
+    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
 
     drug = ["Alprostadil"]
     plot_labels_pacmap(X, "Condition", ax[0], drug, cmap="Set1")

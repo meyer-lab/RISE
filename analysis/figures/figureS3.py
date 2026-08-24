@@ -16,7 +16,7 @@ def makeFigure():
     ax, f = getSetup((11, 14), (4, 2))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/thomson_fitted.h5ad", backed="r")
+    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad", backed="r")
 
     plot_cell_count(X, ax[0])
 
