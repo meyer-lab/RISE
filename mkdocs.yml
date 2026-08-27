@@ -1,0 +1,74 @@
+site_name: RISE
+site_description: Single cell analysis across conditions using PARAFAC2.
+site_url: https://meyer-lab.github.io/RISE/
+repo_name: meyer-lab/RISE
+repo_url: https://github.com/meyer-lab/RISE
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_root_heading: true
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+
+hooks:
+  - docs/generate_tutorial_figures.py
+
+nav:
+  - Overview: index.md
+  - Tutorial: tutorial.md
+  - API Reference: api.md
+  - References: references.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

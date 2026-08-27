@@ -1,120 +1,98 @@
-"""Generate figures for the RISE tutorial documentation."""
+"""Generate figures for the RISE tutorial documentation dynamically during doc build."""
 
+import os
+from pathlib import Path
+
+import hdf5plugin  # noqa: F401
 import matplotlib
 
 matplotlib.use("Agg")  # Non-interactive backend
-import os
-import urllib.request
-from pathlib import Path
-
 import matplotlib.pyplot as plt
-import vcsc
-from parafac2.normalize import prepare_dataset
 
-# Import RISE modules
-from RISE.factorization import pf2
+from analysis.imports import import_thomson_factors
 from RISE.plotting import (
     plot_condition_factors,
     plot_eigenstate_factors,
-    plot_fms_diff_ranks,
     plot_gene_factors,
     plot_gene_pacmap,
     plot_labels_pacmap,
-    plot_r2x,
     plot_wp_pacmap,
 )
 
-# Create output directory
-output_dir = Path(__file__).parent / "_static" / "tutorial_images"
-output_dir.mkdir(parents=True, exist_ok=True)
+
+def generate_figures() -> None:
+    """Generate dynamic tutorial figures (steps 5-10)."""
+    output_dir = Path(__file__).parent / "assets" / "tutorial_images"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("Loading Thomson dataset factors for tutorial figure generation...")
+    X = import_thomson_factors(include_raw=True)
+
+    # Figure 3: Condition Factors
+    print("Generating Figure 3: Condition factors...")
+    _, ax = plt.subplots(figsize=(8, 8))
+    plot_condition_factors(X, ax=ax, cond="Condition", log_transform=True)
+    plt.tight_layout()
+    plt.savefig(
+        output_dir / "step5_condition_factors.png", dpi=150, bbox_inches="tight"
+    )
+    plt.close()
+
+    # Figure 4: Cell Embedding
+    print("Generating Figure 4: Cell embedding...")
+    _, ax = plt.subplots(figsize=(8, 8))
+    plot_labels_pacmap(X, labelType="Cell Type", ax=ax)
+    plt.tight_layout()
+    plt.savefig(output_dir / "step6_cell_embedding.png", dpi=150, bbox_inches="tight")
+    plt.close()
+
+    # Figure 5: Eigen-state Factors
+    print("Generating Figure 5: Eigen-state factors...")
+    _, ax = plt.subplots(figsize=(4, 4))
+    plot_eigenstate_factors(X, ax=ax)
+    plt.ylabel("Eigen-state")
+    plt.tight_layout()
+    plt.savefig(
+        output_dir / "step7_eigenstate_factors.png", dpi=150, bbox_inches="tight"
+    )
+    plt.close()
+
+    # Figure 6: Gene Factors
+    print("Generating Figure 6: Gene factors...")
+    _, ax = plt.subplots(figsize=(7, 8))
+    plot_gene_factors(X, ax=ax, weight=0.2, trim=True)
+    plt.tight_layout()
+    plt.savefig(output_dir / "step8_gene_factors.png", dpi=150, bbox_inches="tight")
+    plt.close()
+
+    # Figure 7: Gene Expression on PaCMAP
+    print("Generating Figure 7: Gene expression...")
+    _, ax = plt.subplots(figsize=(8, 8))
+    gene = "MS4A1"
+    plot_gene_pacmap(gene, X, ax=ax, clip_outliers=0.9995)
+    plt.tight_layout()
+    plt.savefig(output_dir / "step9_gene_expression.png", dpi=150, bbox_inches="tight")
+    plt.close()
+
+    # Figure 8: Weighted Projections
+    print("Generating Figure 8: Weighted projections...")
+    _, ax = plt.subplots(figsize=(8, 8))
+    plot_wp_pacmap(X, cmp=10, ax=ax, cbarMax=0.9)
+    plt.tight_layout()
+    plt.savefig(
+        output_dir / "step10_weighted_projections.png", dpi=150, bbox_inches="tight"
+    )
+    plt.close()
+
+    print(f"Tutorial figures successfully generated in {output_dir}")
 
 
-def _load_tutorial_data():
-    raw_path = "analysis/data/Thomson/thomson_raw.h5ad"
-    if not os.path.exists(raw_path):
-        url = "https://ucla.box.com/shared/static/jy53rcort51xn5t2dr5927wfj13g9e7j.h5"
-        os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-        urllib.request.urlretrieve(url, raw_path)
-    raw = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
-    return prepare_dataset(raw, "Condition", geneThreshold=0.1)
+def on_pre_build(config=None, **kwargs) -> None:
+    """MkDocs hook executed before building the documentation."""
+    # Ensure ANNDATA_CUPY is set to 0 for doc build
+    os.environ["ANNDATA_CUPY"] = "0"
+    generate_figures()
 
 
-print("Loading dataset...")
-X = _load_tutorial_data()
-
-# Figure 1: Variance Explained (R2X)
-print("Generating Figure 1: R2X plot...")
-ranks = [1, 5, 10, 15, 20, 25, 30]
-fig, ax = plt.subplots(figsize=(5, 5))
-plot_r2x(X, ranks, ax)
-plt.tight_layout()
-plt.savefig(output_dir / "step2_r2x.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Figure 2: Factor Match Score
-print("Generating Figure 2: FMS plot...")
-fig, ax = plt.subplots(figsize=(5, 5))
-plot_fms_diff_ranks(X, ax, ranksList=list(ranks), runs=3)
-plt.tight_layout()
-plt.savefig(output_dir / "step3_fms.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Perform RISE factorization
-print("Running RISE factorization...")
-rank = 20
-X = pf2(X=X, rank=rank, doEmbedding=True, tolerance=1e-6, max_iter=100, random_state=42)
-
-# Figure 3: Condition Factors
-print("Generating Figure 3: Condition factors...")
-fig, ax = plt.subplots(figsize=(8, 8))
-plot_condition_factors(X, ax=ax, cond="Condition", log_transform=True)
-plt.tight_layout()
-plt.savefig(output_dir / "step5_condition_factors.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Figure 4: Cell Embedding
-print("Generating Figure 4: Cell embedding...")
-fig, ax = plt.subplots(figsize=(8, 8))
-plot_labels_pacmap(X, labelType="Cell Type", ax=ax)
-plt.tight_layout()
-plt.savefig(output_dir / "step6_cell_embedding.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Figure 5: Eigen-state Factors
-print("Generating Figure 5: Eigen-state factors...")
-fig, ax = plt.subplots(figsize=(4, 4))
-plot_eigenstate_factors(X, ax=ax)
-plt.ylabel("Eigen-state")
-plt.tight_layout()
-plt.savefig(output_dir / "step7_eigenstate_factors.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Figure 6: Gene Factors
-print("Generating Figure 6: Gene factors...")
-fig, ax = plt.subplots(figsize=(7, 8))
-plot_gene_factors(X, ax=ax, weight=0.2, trim=True)
-plt.tight_layout()
-plt.savefig(output_dir / "step8_gene_factors.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Figure 7: Gene Expression on PaCMAP
-print("Generating Figure 7: Gene expression...")
-fig, ax = plt.subplots(figsize=(8, 8))
-gene = "MS4A1"
-plot_gene_pacmap(gene, X, ax=ax, clip_outliers=0.9995)
-plt.tight_layout()
-plt.savefig(output_dir / "step9_gene_expression.png", dpi=150, bbox_inches="tight")
-plt.close()
-
-# Figure 8: Weighted Projections
-print("Generating Figure 8: Weighted projections...")
-fig, ax = plt.subplots(figsize=(8, 8))
-plot_wp_pacmap(X, cmp=10, ax=ax, cbarMax=0.9)
-plt.tight_layout()
-plt.savefig(
-    output_dir / "step10_weighted_projections.png", dpi=150, bbox_inches="tight"
-)
-plt.close()
-
-print(f"\nAll figures saved to {output_dir}")
-print("Done!")
+if __name__ == "__main__":
+    generate_figures()
