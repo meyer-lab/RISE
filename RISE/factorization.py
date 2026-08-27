@@ -1,8 +1,10 @@
 import os
 
 import anndata
+import h5py
 import hdf5plugin  # noqa: F401
 import numpy as np
+import pandas as pd
 import scipy.sparse as sps
 from pacmap import PaCMAP
 from parafac2.parafac2 import parafac2_nd, store_pf2
@@ -260,8 +262,20 @@ def export_factors(
     elif "embedding" in X.obsm:
         obsm_dict["embedding"] = np.asarray(X.obsm["embedding"], dtype=np.float32)
 
+    obs = X.obs.copy()
+    # Option B: Compress string barcode index into 2D uint8 ASCII character byte matrix
+    orig_index = obs.index.to_numpy(dtype=str)
+    max_len = max((len(s) for s in orig_index), default=0)
+    if max_len > 0:
+        s_arr = orig_index.astype(f"|S{max_len}")
+        byte_matrix = np.frombuffer(s_arr.tobytes(), dtype=np.uint8).reshape(
+            (len(orig_index), max_len)
+        )
+        uns_dict["_obs_names_bytes"] = byte_matrix
+        obs.index = pd.RangeIndex(len(obs))
+
     factors_adata = anndata.AnnData(
-        obs=X.obs.copy(),
+        obs=obs,
         var=X.var.copy(),
         uns=uns_dict,
         varm=varm_dict,
@@ -272,6 +286,20 @@ def export_factors(
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
     factors_adata.write_h5ad(filename)
+
+    # Apply chunked gzip compression to _obs_names_bytes if present
+    if "_obs_names_bytes" in uns_dict and len(orig_index) > 1000:
+        with h5py.File(filename, "r+") as f:
+            if "uns/_obs_names_bytes" in f:
+                d = f["uns/_obs_names_bytes"][()]
+                del f["uns/_obs_names_bytes"]
+                f.create_dataset(
+                    "uns/_obs_names_bytes",
+                    data=d,
+                    chunks=(min(16384, len(d)), d.shape[1]),
+                    compression="gzip",
+                    compression_opts=6,
+                )
     return factors_adata
 
 
@@ -297,6 +325,16 @@ def load_factors(
         factors, and optionally the raw expression matrix X.
     """
     adata = anndata.read_h5ad(filename)
+
+    # Restore string barcode index if compressed with Option B
+    if "_obs_names_bytes" in adata.uns:
+        byte_matrix = np.asarray(adata.uns["_obs_names_bytes"])
+        max_len = byte_matrix.shape[1]
+        recon_barcodes = np.frombuffer(
+            byte_matrix.tobytes(), dtype=f"|S{max_len}"
+        ).astype(str)
+        adata.obs.index = pd.Index(recon_barcodes)
+        del adata.uns["_obs_names_bytes"]
 
     # Decompress OPQ projections if present
     if "projections_opq_codes" in adata.obsm and "opq_rotation" in adata.uns:
