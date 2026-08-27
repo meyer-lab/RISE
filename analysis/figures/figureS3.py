@@ -8,6 +8,7 @@ from matplotlib.axes import Axes
 
 from RISE.plotting import cell_count_perc_df, rotate_xaxis
 
+from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel
 
 
@@ -16,7 +17,7 @@ def makeFigure():
     ax, f = getSetup((11, 14), (4, 2))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad", backed="r")
+    X = import_thomson_factors()
 
     plot_cell_count(X, ax[0])
 

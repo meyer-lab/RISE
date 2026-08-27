@@ -2,13 +2,13 @@
 Figure 2b_e
 """
 
-import anndata
 import numpy as np
 import pacmap
 from sklearn.decomposition import PCA
 
 from RISE.plotting import plot_labels_pacmap
 
+from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel
 
 
@@ -17,7 +17,7 @@ def makeFigure():
     ax, f = getSetup((8, 8), (2, 2))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
+    X = import_thomson_factors(include_raw=True)
 
     drug = ["Alprostadil"]
     plot_labels_pacmap(X, "Condition", ax[0], drug, cmap="Set1")

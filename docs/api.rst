@@ -31,6 +31,34 @@ Factorization
    :returns: The input AnnData object with added RISE decomposition results in X.uns["Pf2_weights"], X.uns["Pf2_A"], X.uns["Pf2_B"], X.varm["Pf2_C"], X.obsm["projections"], X.obsm["weighted_projections"], and X.obsm["X_pf2_PaCMAP"]
    :rtype: anndata.AnnData
 
+.. py:function:: export_factors(X: anndata.AnnData, filename: str, fidelity_threshold: float = 0.99, random_state: int = 42)
+   :module: RISE.factorization
+
+   Export RISE decomposition factors to a compact, compressed h5ad file using Optimized Product Quantization (OPQ).
+
+   :param X: AnnData object containing RISE factor results (Pf2_A, Pf2_B, Pf2_weights in uns, Pf2_C in varm, projections in obsm).
+   :type X: anndata.AnnData
+   :param filename: Output file path (.h5ad).
+   :type filename: str
+   :param fidelity_threshold: Target projection reconstruction R^2 fidelity threshold (default: 0.99).
+   :type fidelity_threshold: float, optional
+   :param random_state: Random seed for OPQ codebook optimization.
+   :type random_state: int, optional
+   :returns: The exported factor AnnData object.
+   :rtype: anndata.AnnData
+
+.. py:function:: load_factors(filename: str, raw_path: str = None)
+   :module: RISE.factorization
+
+   Load RISE decomposition factors from an h5ad file, decompressing OPQ projections and optionally rebuilding the full dataset from raw expression data.
+
+   :param filename: Path to factors .h5ad file.
+   :type filename: str
+   :param raw_path: Optional path to raw AnnData or IVCSR .h5ad / .h5 file to attach raw counts.
+   :type raw_path: str, optional
+   :returns: AnnData object with reconstructed projections, weighted_projections, factors, and optionally the raw expression matrix X.
+   :rtype: anndata.AnnData
+
 Rank Selection
 ~~~~~~~~~~~~~~
 

@@ -30,14 +30,13 @@ gpu = [
 
 [project.scripts]
 fbuild = "analysis.figures.common:genFigure"
-factor = "analysis.imports:factorSave"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = ["RISE", "analysis"]
+module-name = ["RISE"]
 module-root = ""
 
 [tool.uv.sources]

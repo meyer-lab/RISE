@@ -1,19 +1,34 @@
+import os
+import urllib.request
+
 import anndata
 import h5py
 import pandas as pd
-import scanpy as sc
+import vcsc
 from anndata.io import read_elem
 from parafac2.normalize import prepare_dataset
 
-import hdf5plugin
+THOMSON_RAW_URL = (
+    "https://ucla.box.com/shared/static/jy53rcort51xn5t2dr5927wfj13g9e7j.h5"
+)
+
+
+def download_thomson_raw(
+    dest_path: str = "analysis/data/Thomson/thomson_raw.h5ad",
+) -> str:
+    """Download the raw Thomson IVCSR dataset if not present locally."""
+    if not os.path.exists(dest_path):
+        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+        urllib.request.urlretrieve(THOMSON_RAW_URL, dest_path)
+    return dest_path
 
 
 def import_thomson() -> anndata.AnnData:
     """Import Thompson lab PBMC dataset."""
     from .gating import gateThomsonCells
 
-    X = anndata.read_h5ad("/opt/andrew/thomson_raw.h5ad")
-
+    raw_path = download_thomson_raw()
+    X = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
 
     doubletDF = pd.read_csv("analysis/data/Thomson/ThomsonDoublets.csv", index_col=0)
     doubletDF.index.name = "cell_barcode"
@@ -25,6 +40,18 @@ def import_thomson() -> anndata.AnnData:
     gateThomsonCells(X)
 
     return prepare_dataset(X, "Condition", geneThreshold=0.01)
+
+
+def import_thomson_factors(include_raw: bool = False) -> anndata.AnnData:
+    """Import Thomson dataset with cached PARAFAC2 factors and projections."""
+    from RISE import load_factors
+
+    if include_raw:
+        raw_path = download_thomson_raw()
+        return load_factors(
+            "analysis/data/Thomson_cached_factors.h5ad", raw_path=raw_path
+        )
+    return load_factors("analysis/data/Thomson_cached_factors.h5ad")
 
 
 def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:

@@ -191,6 +191,80 @@ The output of ``pf2`` includes the original AnnData object with added results an
 - **Gene Factors**: ``X.varm["Pf2_C"]`` - Gene factors (matrix width equals the rank)
 - **Projections**: ``X.obsm["projections"]`` - Cell projections for each component (matrix width equals the rank)
 - **Weighted Projections**: ``X.obsm["weighted_projections"]`` - Weighted projections for each cell across all components, determining how each cell relates to each component pattern
+- **PaCMAP Embedding**: ``X.obsm["X_pf2_PaCMAP"]`` - 2D visualization embedding of cell projections (if ``doEmbedding=True``)
+
+Saving and Loading Factorization Results
+-----------------------------------------
+
+Single-cell datasets often contain tens of thousands of cells and genes, resulting in multi-gigabyte files when saving raw expression matrices alongside decomposition results. To enable lightweight sharing and fast downstream analysis, RISE includes built-in functions for exporting and loading factorizations:
+
+* **Optimized Product Quantization (OPQ)**: Compresses the continuous per-cell projection matrix (``X.obsm["projections"]``) to compact 8-bit quantization codes while guaranteeing high reconstruction fidelity (:math:`R^2 \ge 0.99`).
+* **Deterministic Reconstruction**: Factor matrices (``Pf2_A``, ``Pf2_B``, ``Pf2_weights``, ``Pf2_C``) are stored in single precision (``float32``), and weighted projections are deterministically reconstructed on load via :math:`\text{projections} \times \text{Pf2\_B}`, eliminating redundant data on disk.
+* **Barcode Index Compression**: String cell barcodes are compressed into chunked gzip byte matrices to minimize HDF5 overhead.
+
+**1. Exporting Factors to Disk**
+
+Use ``export_factors`` to save decomposition factors and cell projections to an ``.h5ad`` file:
+
+.. code-block:: python
+
+    from RISE import export_factors
+
+    # Export factors and compressed projections
+    export_factors(
+        X,
+        filename="thomson_factors.h5ad",
+        fidelity_threshold=0.99,  # Target R^2 reconstruction fidelity (default: 0.99)
+        random_state=42,
+    )
+
+This produces a compact file (~4-5 MB for ~30,000 cells) containing all factor matrices, cell metadata, and PaCMAP coordinates, without bundling the uncompressed raw count matrix.
+
+**2. Loading Factors for Fast Downstream Analysis**
+
+Use ``load_factors`` to load the saved decomposition. Projections are decoded from OPQ codebooks and weighted projections are automatically recalculated:
+
+.. code-block:: python
+
+    from RISE import load_factors
+    from RISE.plotting import plot_condition_factors, plot_labels_pacmap
+
+    # Load factor results into an AnnData object
+    factors = load_factors("thomson_factors.h5ad")
+
+    # Access reconstructed factor matrices and projections
+    print("Condition factors shape:", factors.uns["Pf2_A"].shape)
+    print("Gene factors shape:", factors.varm["Pf2_C"].shape)
+    print("Cell projections shape:", factors.obsm["projections"].shape)
+    print("Weighted projections shape:", factors.obsm["weighted_projections"].shape)
+    print("OPQ reconstruction fidelity R^2:", factors.uns["opq_fidelity"])
+
+    # Generate factor and embedding plots directly
+    fig, ax = plt.subplots(figsize=(8, 8))
+    plot_condition_factors(factors, ax=ax, cond="Condition", log_transform=True)
+    plt.show()
+
+**3. On-Demand Attachment of Raw Expression Data**
+
+When you need to visualize individual gene expression on top of embeddings (e.g., using ``plot_gene_pacmap``) or perform differential expression, supply ``raw_path`` to ``load_factors``:
+
+.. code-block:: python
+
+    # Load factors and automatically match & attach raw expression matrix
+    X_full = load_factors(
+        "thomson_factors.h5ad",
+        raw_path="path/to/raw_dataset.h5ad",  # Supports AnnData and IVCSR / VCSC files
+    )
+
+    # Cell barcodes and gene IDs are matched automatically
+    print("Expression matrix shape:", X_full.X.shape)
+
+    # Now gene expression plotting functions work seamlessly
+    from RISE.plotting import plot_gene_pacmap
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    plot_gene_pacmap("MS4A1", X_full, ax=ax)
+    plt.show()
 
 Visualizing the Factors
 ------------------------

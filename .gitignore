@@ -97,3 +97,8 @@ factor_cache
 nohup.out
 
 .DS_Store
+thomson_raw.h5ad
+lupus_fitted_ann.h5ad
+*.h5ad
+!analysis/data/Thomson_cached_factors.h5ad
+

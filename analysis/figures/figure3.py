@@ -20,6 +20,7 @@ from RISE.plotting import (
     plot_wp_pacmap,
 )
 
+from ..imports import import_thomson_factors
 from .common import (
     getSetup,
     subplotLabel,
@@ -32,7 +33,7 @@ def makeFigure():
     ax, f = getSetup((30, 30), (5, 5))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
+    X = import_thomson_factors(include_raw=True)
     cellDF = cell_count_perc_df(X, "Cell Type2")
     plot_labels_pacmap(X, "Cell Type2", ax[0])
 

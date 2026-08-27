@@ -47,7 +47,7 @@ X = pf2(X=adata, rank=20, doEmbedding=True, random_state=42)
 # Results are stored in the AnnData object:
 # - X.uns["Pf2_weights"]: Component weights
 # - X.uns["Pf2_A"]: Condition factors
-# - X.uns["Pf2_B"]: Eigen-state factors  
+# - X.uns["Pf2_B"]: Eigen-state factors
 # - X.varm["Pf2_C"]: Gene factors
 # - X.obsm["projections"]: Cell projections
 # - X.obsm["weighted_projections"]: Weighted cell projections

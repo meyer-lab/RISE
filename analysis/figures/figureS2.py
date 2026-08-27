@@ -13,6 +13,7 @@ from sklearn.decomposition import PCA
 # from RISE.plotting import plot_r2x
 from RISE.plotting import plot_labels_pacmap
 
+from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel
 
 # import seaborn as sns
@@ -23,7 +24,7 @@ def makeFigure():
     ax, f = getSetup((8, 8), (3, 3))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
+    X = import_thomson_factors(include_raw=True)
     X.obs["condition_unique_idxs"] = pd.Categorical(X.obs["condition_unique_idxs"])
 
     # ranks = [

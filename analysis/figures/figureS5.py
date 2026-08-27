@@ -2,11 +2,11 @@
 Figure S5
 """
 
-import anndata
 import seaborn as sns
 
 from RISE.plotting import cell_count_perc_df, rotate_xaxis
 
+from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel
 
 
@@ -15,7 +15,7 @@ def makeFigure():
     ax, f = getSetup((5, 5), (1, 1))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad", backed="r")
+    X = import_thomson_factors()
 
     df = cell_count_perc_df(X, celltype="Cell Type2")
     sns.swarmplot(

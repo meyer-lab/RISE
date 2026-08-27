@@ -2,10 +2,9 @@
 Figure S6
 """
 
-import anndata
-
 from RISE.plotting import plot_labels_pacmap, plot_wp_pacmap
 
+from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel
 
 
@@ -14,7 +13,7 @@ def makeFigure():
     ax, f = getSetup((12, 12), (6, 4))
     subplotLabel(ax)
 
-    X = anndata.read_h5ad("/opt/pf2/Thomson/Thomson_pf2_20_preAnn.h5ad")
+    X = import_thomson_factors()
 
     plot_labels_pacmap(X, "Cell Type", ax[0])
     plot_labels_pacmap(X, "Cell Type2", ax[1])
