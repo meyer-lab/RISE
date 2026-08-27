@@ -2,6 +2,8 @@
 Test the cross validation accuracy.
 """
 
+import os
+
 import numpy as np
 import pytest
 
@@ -17,6 +19,10 @@ from analysis.imports import import_lupus, import_thomson, import_thomson_factor
 )
 def test_imports(import_func):
     """Test import functions."""
+    if import_func == import_lupus and not os.path.exists(
+        "/opt/andrew/lupus/lupus.h5ad"
+    ):
+        pytest.skip("Lupus raw dataset /opt/andrew/lupus/lupus.h5ad not available.")
     X = import_func()
     print(f"Data shape: {X.shape}")
     assert X.X.dtype == np.float32
@@ -35,4 +41,3 @@ def test_import_thomson_factors():
     assert factors_raw.X is not None
     assert factors_raw.X.dtype == np.float32
     assert factors_raw.shape == (29433, 12164)
-

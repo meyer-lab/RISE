@@ -2,8 +2,6 @@
 Figure S6
 """
 
-import anndata
-
 from RISE.plotting import plot_labels_pacmap, plot_wp_pacmap
 
 from ..imports import import_thomson_factors

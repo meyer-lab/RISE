@@ -2,7 +2,6 @@
 Figure 2b_e
 """
 
-import anndata
 import numpy as np
 import pacmap
 from sklearn.decomposition import PCA

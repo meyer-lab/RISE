@@ -1,4 +1,3 @@
-import anndata as an
 import doubletdetection
 import numpy.typing as npt
 import pandas as pd
@@ -30,6 +29,7 @@ def Thomson_Doublet():
     """Detects doublets in scRNA-seq"""
     import hdf5plugin  # noqa: F401
     import vcsc
+
     from .imports import download_thomson_raw
 
     raw_path = download_thomson_raw()

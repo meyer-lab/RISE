@@ -1,20 +1,21 @@
 import os
 import urllib.request
+
 import anndata
 import h5py
-import numpy as np
 import pandas as pd
-import scanpy as sc
+import vcsc
 from anndata.io import read_elem
 from parafac2.normalize import prepare_dataset
 
-import hdf5plugin
-import vcsc
+THOMSON_RAW_URL = (
+    "https://ucla.box.com/shared/static/jy53rcort51xn5t2dr5927wfj13g9e7j.h5"
+)
 
-THOMSON_RAW_URL = "https://ucla.box.com/shared/static/jy53rcort51xn5t2dr5927wfj13g9e7j.h5"
 
-
-def download_thomson_raw(dest_path: str = "analysis/data/Thomson/thomson_raw.h5ad") -> str:
+def download_thomson_raw(
+    dest_path: str = "analysis/data/Thomson/thomson_raw.h5ad",
+) -> str:
     """Download the raw Thomson IVCSR dataset if not present locally."""
     if not os.path.exists(dest_path):
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
@@ -43,32 +44,14 @@ def import_thomson() -> anndata.AnnData:
 
 def import_thomson_factors(include_raw: bool = False) -> anndata.AnnData:
     """Import Thomson dataset with cached PARAFAC2 factors and projections."""
-    factors = anndata.read_h5ad("analysis/data/Thomson/Thomson_cached_factors.h5ad")
-
-    if "weighted_projections" not in factors.obsm and "projections" in factors.obsm and "Pf2_B" in factors.uns:
-        factors.obsm["weighted_projections"] = (
-            factors.obsm["projections"].astype(np.float32) @ factors.uns["Pf2_B"].astype(np.float32)
-        )
-    if "X_pf2_PaCMAP" not in factors.obsm and "embedding" in factors.obsm:
-        factors.obsm["X_pf2_PaCMAP"] = factors.obsm["embedding"]
+    from RISE import load_factors
 
     if include_raw:
-        from .gating import gateThomsonCells
-
         raw_path = download_thomson_raw()
-        raw = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
-        doubletDF = pd.read_csv("analysis/data/Thomson/ThomsonDoublets.csv", index_col=0)
-        doubletDF.index.name = "cell_barcode"
-        raw.obs = raw.obs.join(doubletDF, how="inner")
-        singlet_indices = raw.obs.loc[raw.obs["doublet"] == 0].index.values
-        raw = raw[singlet_indices, :]
-        gateThomsonCells(raw)
-
-        raw_subset = raw[:, factors.var_names].copy()
-        raw_prep = prepare_dataset(raw_subset, "Condition", geneThreshold=0.0)
-        factors.X = raw_prep.X
-
-    return factors
+        return load_factors(
+            "analysis/data/Thomson/Thomson_cached_factors.h5ad", raw_path=raw_path
+        )
+    return load_factors("analysis/data/Thomson/Thomson_cached_factors.h5ad")
 
 
 def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:

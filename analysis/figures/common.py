@@ -2,10 +2,10 @@
 This file contains functions that are used in multiple figures.
 """
 
-import warnings
 import os
 import sys
 import time
+import warnings
 from string import ascii_letters
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -15,13 +15,12 @@ warnings.filterwarnings("ignore", message=".*OldFormatWarning.*")
 
 os.environ["PARAFAC2_BACKEND"] = "cupy"
 try:
-    import cupy.cuda.compiler
     import cupy
+    import cupy.cuda.compiler
 except ImportError:
     pass
 
-import hdf5plugin
-
+import hdf5plugin  # noqa: F401
 import matplotlib
 import seaborn as sns
 from matplotlib import gridspec

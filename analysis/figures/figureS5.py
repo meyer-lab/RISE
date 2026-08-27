@@ -2,7 +2,6 @@
 Figure S5
 """
 
-import anndata
 import seaborn as sns
 
 from RISE.plotting import cell_count_perc_df, rotate_xaxis
