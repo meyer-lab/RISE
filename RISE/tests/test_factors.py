@@ -114,7 +114,7 @@ def test_export_factors_missing_keys():
 
 def test_load_thomson_cached_factors():
     """Test loading the converted Thomson OPQ factors."""
-    factors = load_factors("analysis/data/Thomson/Thomson_cached_factors.h5ad")
+    factors = load_factors("analysis/data/Thomson_cached_factors.h5ad")
     assert factors.shape == (29433, 12164)
     assert factors.X is None
     assert "projections" in factors.obsm

@@ -3,11 +3,13 @@
 import matplotlib
 
 matplotlib.use("Agg")  # Non-interactive backend
+import os
+import urllib.request
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-
-from analysis.imports import import_thomson
+import vcsc
+from parafac2.normalize import prepare_dataset
 
 # Import RISE modules
 from RISE.factorization import pf2
@@ -26,8 +28,19 @@ from RISE.plotting import (
 output_dir = Path(__file__).parent / "_static" / "tutorial_images"
 output_dir.mkdir(parents=True, exist_ok=True)
 
+
+def _load_tutorial_data():
+    raw_path = "analysis/data/Thomson/thomson_raw.h5ad"
+    if not os.path.exists(raw_path):
+        url = "https://ucla.box.com/shared/static/jy53rcort51xn5t2dr5927wfj13g9e7j.h5"
+        os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+        urllib.request.urlretrieve(url, raw_path)
+    raw = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
+    return prepare_dataset(raw, "Condition", geneThreshold=0.1)
+
+
 print("Loading dataset...")
-X = import_thomson()
+X = _load_tutorial_data()
 
 # Figure 1: Variance Explained (R2X)
 print("Generating Figure 1: R2X plot...")

@@ -49,9 +49,9 @@ def import_thomson_factors(include_raw: bool = False) -> anndata.AnnData:
     if include_raw:
         raw_path = download_thomson_raw()
         return load_factors(
-            "analysis/data/Thomson/Thomson_cached_factors.h5ad", raw_path=raw_path
+            "analysis/data/Thomson_cached_factors.h5ad", raw_path=raw_path
         )
-    return load_factors("analysis/data/Thomson/Thomson_cached_factors.h5ad")
+    return load_factors("analysis/data/Thomson_cached_factors.h5ad")
 
 
 def import_lupus(geneThreshold: float = 0.1) -> anndata.AnnData:
