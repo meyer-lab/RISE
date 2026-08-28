@@ -2,6 +2,7 @@
 Plotting and visualization functions for RISE.
 """
 
+from .annotation_alignment import plot_cell_type_alignment
 from .factors import (
     plot_condition_factors,
     plot_eigenstate_factors,
@@ -44,6 +45,7 @@ __all__ = [
     "plot_avegene_per_celltype",
     "plot_bicv_r2x",
     "plot_cell_gene_corr",
+    "plot_cell_type_alignment",
     "plot_condition_factors",
     "plot_eigenstate_factors",
     "plot_fms_diff_ranks",
