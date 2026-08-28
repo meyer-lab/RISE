@@ -9,5 +9,6 @@ RISE does not require prior cell-type labels or clustering, reducing bias and en
 ## Documentation Contents
 
 - [Tutorial](tutorial.md): Step-by-step walkthrough covering data preprocessing, rank selection, tensor decomposition, compression/export, and factor visualization.
+- [Unequal Cell Counts](unequal_cell_counts.md): Why disparate cell counts across conditions can bias RISE decompositions, and how to correct for it.
 - [API Reference](api.md): Detailed specifications for factorization routines, rank selection, preprocessing, and plotting utilities.
 - [References](references.md): Key citations and methodology papers.

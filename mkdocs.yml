@@ -53,6 +53,7 @@ hooks:
 nav:
   - Overview: index.md
   - Tutorial: tutorial.md
+  - Unequal Cell Counts: unequal_cell_counts.md
   - API Reference: api.md
   - References: references.md
 
