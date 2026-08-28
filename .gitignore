@@ -30,8 +30,13 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Sphinx documentation
+# Documentation
+/site/
+site/
 docs/_build/
+docs/assets/tutorial_images/*.png
+!docs/assets/tutorial_images/step2_r2x.png
+!docs/assets/tutorial_images/step3_fms.png
 
 # PyBuilder
 target/
@@ -79,8 +84,6 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
-/site
 
 # mypy
 .mypy_cache/

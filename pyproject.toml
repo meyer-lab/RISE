@@ -61,9 +61,9 @@ benchmarking = [
 ]
 docs = [
     { include-group = "analysis" },
-    "sphinx>=9.0",
-    "sphinx-rtd-theme>=3.0.0",
-    "nbsphinx>=0.9",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.28",
 ]
 dev = [
     { include-group = "analysis" },
