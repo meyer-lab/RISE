@@ -73,6 +73,10 @@ dev = [
     "ruff>=0.16",
 ]
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::anndata.OldFormatWarning",
