@@ -1,4 +1,6 @@
 import os
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
 
 import anndata
 import h5py
@@ -42,7 +44,12 @@ def correct_conditions(X: anndata.AnnData):
 
     cond_mean = gmean(X.uns["Pf2_A"], axis=1)
 
-    x_count = X.X.sum(axis=1)
+    if X.X is None:
+        raise TypeError("X.X must not be None.")
+    # X.X's declared type is a large union of array-like/backed-storage types
+    # from the AnnData stub; at runtime this is always a dense or sparse
+    # in-memory array supporting `.sum`.
+    x_count = np.asarray(cast(Any, X.X).sum(axis=1))
 
     for ii in range(counts.size):
         counts[ii] = np.sum(x_count[X.obs["condition_unique_idxs"] == ii])
@@ -123,7 +130,7 @@ def pf2(
 
     if doEmbedding:
         pcm = PaCMAP(random_state=random_state)
-        X.obsm["X_pf2_PaCMAP"] = pcm.fit_transform(X.obsm["projections"])  # type: ignore
+        X.obsm["X_pf2_PaCMAP"] = pcm.fit_transform(X.obsm["projections"])
 
     return X
 
@@ -246,6 +253,9 @@ def export_factors(
         random_state=random_state,
     )
 
+    assert quantizer.R is not None
+    assert quantizer.centroids_cat is not None
+    assert quantizer.sub_dims is not None
     uns_dict["opq_rotation"] = quantizer.R.astype(np.float32)
     uns_dict["opq_centroids"] = quantizer.centroids_cat.astype(np.float32)
     uns_dict["opq_subdims"] = quantizer.sub_dims.astype(np.int32)
@@ -262,7 +272,13 @@ def export_factors(
     elif "embedding" in X.obsm:
         obsm_dict["embedding"] = np.asarray(X.obsm["embedding"], dtype=np.float32)
 
-    obs = X.obs.copy()
+    obs_df, var_df = X.obs, X.var
+    if not isinstance(obs_df, pd.DataFrame) or not isinstance(var_df, pd.DataFrame):
+        raise TypeError(
+            "X.obs and X.var must be in-memory pandas DataFrames "
+            "(backed Dataset2D is not supported)."
+        )
+    obs = obs_df.copy()
     # Option B: Compress string barcode index into 2D uint8 ASCII character byte matrix
     orig_index = obs.index.to_numpy(dtype=str)
     max_len = max((len(s) for s in orig_index), default=0)
@@ -276,10 +292,10 @@ def export_factors(
 
     factors_adata = anndata.AnnData(
         obs=obs,
-        var=X.var.copy(),
+        var=var_df.copy(),
         uns=uns_dict,
-        varm=varm_dict,
-        obsm=obsm_dict,
+        varm=cast(Mapping[str, Sequence[Any]], varm_dict),
+        obsm=cast(Mapping[str, Sequence[Any]], obsm_dict),
     )
 
     out_dir = os.path.dirname(os.path.abspath(filename))
@@ -344,7 +360,7 @@ def load_factors(
             sub_dims=adata.uns["opq_subdims"],
         )
         adata.obsm["projections"] = quantizer.decode(
-            adata.obsm["projections_opq_codes"]
+            np.asarray(adata.obsm["projections_opq_codes"])
         )
     elif "projections" in adata.obsm:
         adata.obsm["projections"] = np.asarray(
@@ -371,12 +387,15 @@ def load_factors(
         except (ImportError, AttributeError, KeyError, ValueError, OSError):
             raw = anndata.read_h5ad(raw_path)
 
+        if not isinstance(raw.obs, pd.DataFrame):
+            raise TypeError("raw.obs must be an in-memory pandas DataFrame.")
+
         # Match cells by index or cell_barcode column
         if (
             not np.all(adata.obs_names.isin(raw.obs_names))
             and "cell_barcode" in raw.obs
         ):
-            raw.obs.index = raw.obs["cell_barcode"].astype(str)
+            raw.obs.index = pd.Index(raw.obs["cell_barcode"].astype(str))
 
         # Subset cells present in factors
         common_cells = adata.obs_names[adata.obs_names.isin(raw.obs_names)]
@@ -386,13 +405,16 @@ def load_factors(
             )
         raw_sub = raw[adata.obs_names, :].copy()
 
+        if not isinstance(raw_sub.var, pd.DataFrame):
+            raise TypeError("raw_sub.var must be an in-memory pandas DataFrame.")
+
         # Match genes
         if (
             not np.all(adata.var_names.isin(raw_sub.var_names))
             and "gene_ids" in raw_sub.var
             and "gene_ids" in adata.var
         ):
-            raw_sub.var.index = raw_sub.var["gene_ids"].astype(str)
+            raw_sub.var.index = pd.Index(raw_sub.var["gene_ids"].astype(str))
 
         common_genes = adata.var_names[adata.var_names.isin(raw_sub.var_names)]
         if len(common_genes) == 0:

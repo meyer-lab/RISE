@@ -230,5 +230,8 @@ def find_optimal_opq(
         if r2 >= fidelity_threshold:
             return quantizer, codes, r2
 
-    # Fallback to highest fidelity achieved
+    # Fallback to highest fidelity achieved: the loop always runs at least
+    # once (candidate_Ms is never empty), so both are guaranteed to be set.
+    assert best_quantizer is not None
+    assert best_codes is not None
     return best_quantizer, best_codes, best_r2
