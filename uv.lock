@@ -1353,7 +1353,7 @@ wheels = [
 [[package]]
 name = "parafac2"
 version = "1.5.0"
-source = { git = "https://github.com/meyer-lab/parafac2.git#7cbbc20b60f35dd7779ff5df8c316ce0213ee013" }
+source = { git = "https://github.com/meyer-lab/parafac2.git#0e7337b26d15ebf922cdbc95d0e03c21e03249c9" }
 dependencies = [
     { name = "anndata" },
     { name = "numpy" },
