@@ -100,7 +100,7 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
     values /= np.max(values)
 
     points = np.array(X.obsm["X_pf2_PaCMAP"])
-    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
+    data = pd.DataFrame(points, columns=["x", "y"])
     data["val_cat"] = values
 
     _render_pacmap(
@@ -141,11 +141,11 @@ def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0)
         Lower values increase contrast for components with weaker associations.
     """
     values = X.obsm["weighted_projections"][:, cmp - 1]
-    points = X.obsm["X_pf2_PaCMAP"]
+    points = np.asarray(X.obsm["X_pf2_PaCMAP"])
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
     values /= np.max(np.abs(values))
-    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
+    data = pd.DataFrame(points, columns=["x", "y"])
     data["val_cat"] = values
 
     _render_pacmap(
@@ -208,7 +208,7 @@ def plot_labels_pacmap(
     points = X.obsm["X_pf2_PaCMAP"][indices, :]
     labels = labels.iloc[indices]
 
-    data = pd.DataFrame(points, columns=["x", "y"])  # type: ignore
+    data = pd.DataFrame(points, columns=["x", "y"])
     data["label"] = pd.Categorical(labels)
 
     unique_labels = np.unique(labels)

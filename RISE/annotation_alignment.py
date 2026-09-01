@@ -509,7 +509,7 @@ def score_cell_type_alignment(
                 "celltype",
             ]:
                 if candidate in data.obs:
-                    cell_type_series = data.obs[candidate]
+                    cell_type_series = pd.Series(data.obs[candidate])
                     break
             else:
                 raise KeyError(
@@ -518,7 +518,7 @@ def score_cell_type_alignment(
         elif isinstance(cell_types, str):
             if cell_types not in data.obs:
                 raise KeyError(f"Column '{cell_types}' not found in data.obs.")
-            cell_type_series = data.obs[cell_types]
+            cell_type_series = pd.Series(data.obs[cell_types])
         else:
             cell_type_series = pd.Series(cell_types)
     elif isinstance(data, pd.DataFrame):

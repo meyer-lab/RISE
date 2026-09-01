@@ -3,6 +3,8 @@ Test OPQ compression, export_factors, and load_factors.
 """
 
 import tempfile
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
 
 import anndata
 import numpy as np
@@ -28,6 +30,9 @@ def test_opq_quantizer_synthetic():
     assert r2 > 0.98
 
     # Test from_saved
+    assert quantizer.R is not None
+    assert quantizer.centroids_cat is not None
+    assert quantizer.sub_dims is not None
     loaded_quantizer = OPQQuantizer.from_saved(
         R=quantizer.R,
         centroids_cat=quantizer.centroids_cat,
@@ -72,8 +77,11 @@ def test_export_and_load_factors_roundtrip():
         obs=obs,
         var=var,
         uns={"Pf2_A": A, "Pf2_B": B, "Pf2_weights": weights},
-        varm={"Pf2_C": C},
-        obsm={"projections": P, "X_pf2_PaCMAP": embedding},
+        varm=cast(Mapping[str, Sequence[Any]], {"Pf2_C": C}),
+        obsm=cast(
+            Mapping[str, Sequence[Any]],
+            {"projections": P, "X_pf2_PaCMAP": embedding},
+        ),
     )
 
     with tempfile.NamedTemporaryFile(suffix=".h5ad") as tmp:
@@ -99,8 +107,8 @@ def test_export_and_load_factors_roundtrip():
         assert loaded.obsm["weighted_projections"].dtype == np.float32
         assert loaded.obsm["X_pf2_PaCMAP"].shape == (n_cells, 2)
         np.testing.assert_allclose(
-            loaded.obsm["weighted_projections"],
-            loaded.obsm["projections"] @ loaded.uns["Pf2_B"],
+            np.asarray(loaded.obsm["weighted_projections"]),
+            np.asarray(loaded.obsm["projections"]) @ np.asarray(loaded.uns["Pf2_B"]),
             atol=1e-5,
         )
 

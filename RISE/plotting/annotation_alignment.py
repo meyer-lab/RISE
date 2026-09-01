@@ -5,6 +5,7 @@ Plotting functions for cell-type alignment scoring.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import cast
 
 import anndata
 import matplotlib.pyplot as plt
@@ -147,6 +148,9 @@ def plot_cell_type_alignment(
     # Set up axes
     heatmap_cmap = cmap if cmap is not None else cmap_enrichment
 
+    ax_main: Axes
+    ax_metrics: Axes | None
+
     if ax is None:
         if show_metrics:
             _, axes = plt.subplots(
@@ -173,10 +177,11 @@ def plot_cell_type_alignment(
             ax_metrics = None
 
     elif isinstance(ax, (list, tuple, np.ndarray)) and len(ax) >= 2:
-        ax_main = ax[0]
-        ax_metrics = ax[1]
+        ax_seq = cast(Sequence[Axes], ax)
+        ax_main = ax_seq[0]
+        ax_metrics = ax_seq[1]
     else:
-        ax_main = ax  # type: ignore
+        ax_main = cast(Axes, ax)
         ax_metrics = None
 
     # Main AUROC heatmap
