@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sps
 from parafac2.parafac2 import parafac2_nd
-from parafac2.utils import calc_norm_sq, project_data
+from parafac2.utils import calc_W, condition_slices, project_data
 from tqdm import tqdm
 
 
@@ -134,16 +134,9 @@ def _bicv_trial(
     means_train_genes = means[train_gene_mask]
     cond_test = cond_idx[test_cell_mask]
     X_test_train_genes = _dense(X[test_cell_mask][:, train_gene_mask].X)
-    norm_tensor = float(calc_norm_sq(X_test_train_genes, means_train_genes))
-    P_test = project_data(
-        X_test_train_genes,
-        cond_test,
-        means_train_genes,
-        [A, B, C],
-        norm_tensor,
-        mode=0,
-        return_projections=True,
-    )
+    W_test = calc_W(X_test_train_genes, means_train_genes, C)
+    cond_slices_test = condition_slices(cond_test, n_cond)
+    P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
     # Reconstruct and score the held-out test-cell x test-gene block.
     X_test_test_genes = (
