@@ -55,6 +55,157 @@ def correct_conditions(X: anndata.AnnData):
     return X.uns["Pf2_A"] / counts_correct
 
 
+def canonical_component_signs(C: np.ndarray) -> np.ndarray:
+    """Compute a canonical sign for each component of a gene factor matrix.
+
+    PARAFAC2 components are only identified up to a sign flip that is shared
+    between two of the three factor matrices (Harshman's Uniqueness Theorem
+    fixes the decomposition up to permutation and sign/scale). This makes any
+    comparison across fits (different ranks, different random seeds, etc.)
+    ambiguous unless a canonical sign is first imposed. We adopt the
+    convention that the largest-magnitude entry of each gene-factor (``C``)
+    column should be positive.
+
+    Parameters
+    ----------
+    C : numpy.ndarray
+        Gene factor matrix, shape (n_genes, rank).
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of +1/-1 signs, shape (rank,), one per component.
+    """
+    rank = C.shape[1]
+    max_idx = np.argmax(np.abs(C), axis=0)
+    signs = np.ones(rank)
+    signs[C[max_idx, np.arange(rank)] < 0] = -1.0
+    return signs
+
+
+def order_components_by_energy(X: anndata.AnnData) -> anndata.AnnData:
+    """Reorder PARAFAC2 components by intrinsic energy.
+
+    RISE previously inherited an ordering of components based on the Gini
+    coefficient (variance-to-mean ratio) of the condition factor. That
+    ordering is a heuristic: it is not particularly stable, and it does not
+    guarantee that, when moving from rank N to rank N+1, the first N
+    components of the new fit correspond to the N components of the old fit.
+
+    This function instead orders components by their intrinsic energy,
+    ``||A[:, r]|| * ||C[:, r]||`` (the product of the condition-factor and
+    gene-factor column norms), which is directly determined by the fit and
+    is not subject to the arbitrary rescaling that can occur between A and C.
+    Components are ordered from highest to lowest energy, so that low-energy
+    components -- which tend to be the ones added when the rank is
+    increased -- land at the high end of the ordering. This is consistent
+    with the expectation, motivated by Harshman's Uniqueness Theorem for
+    PARAFAC2 (which fixes the decomposition up to permutation and
+    sign/scale given >= 3 conditions and full-column-rank factors), that a
+    rank-(N+1) fit should mostly agree with a rank-N fit on its first N
+    components.
+
+    Before computing the ordering, a canonical sign is imposed on each
+    component (see :func:`canonical_component_signs`) so that the ordering,
+    and any downstream comparison across fits, is well defined.
+
+    Parameters
+    ----------
+    X : anndata.AnnData
+        AnnData object containing RISE decomposition results (as produced by
+        :func:`pf2`). Must contain X.uns["Pf2_A"], X.uns["Pf2_B"],
+        X.uns["Pf2_weights"], and X.varm["Pf2_C"].
+
+    Returns
+    -------
+    anndata.AnnData
+        The same AnnData object, with Pf2_A, Pf2_B, Pf2_C, Pf2_weights
+        (and, if present, obsm["weighted_projections"]) reordered/updated
+        in place.
+    """
+    A = np.array(X.uns["Pf2_A"])
+    B = np.array(X.uns["Pf2_B"])
+    C = np.array(X.varm["Pf2_C"])
+    weights = np.array(X.uns["Pf2_weights"])
+
+    # Canonical sign convention, shared between the condition factor (A) and
+    # the gene factor (C); the eigen-state factor (B) is left as the
+    # unflipped reference so that the product A x B x C is unchanged.
+    signs = canonical_component_signs(C)
+    A = A * signs
+    C = C * signs
+
+    energy = np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+    order = np.argsort(energy)[::-1]
+
+    X.uns["Pf2_A"] = A[:, order]
+    X.varm["Pf2_C"] = C[:, order]
+    X.uns["Pf2_B"] = B[:, order]
+    X.uns["Pf2_weights"] = weights[order]
+
+    if "projections" in X.obsm:
+        X.obsm["weighted_projections"] = (
+            X.obsm["projections"] @ X.uns["Pf2_B"]
+        ).astype(np.float32, copy=False)
+
+    return X
+
+
+def match_components_across_ranks(
+    C_low: np.ndarray, C_high: np.ndarray, threshold: float = 0.6
+) -> tuple[np.ndarray, np.ndarray]:
+    """Match components between two PARAFAC2 fits of adjacent rank by cosine
+    similarity of their gene factors.
+
+    This provides the "does component X at rank N correspond to component Y
+    at rank N-1" matching primitive described in issue #520. It is a small,
+    self-contained addition, not a full cross-rank benchmarking pipeline:
+    given the gene factors of a rank-N fit and a rank-(N+1) fit (each
+    already sign-canonicalized, e.g. via :func:`canonical_component_signs`),
+    it performs Hungarian maximum-weight matching on cosine similarity and
+    reports which components matched, and which rank-(N+1) component(s) had
+    no good match (i.e. are candidates for the newly added component).
+
+    Parameters
+    ----------
+    C_low : numpy.ndarray
+        Gene factor matrix of the lower-rank fit, shape (n_genes, rank_low).
+    C_high : numpy.ndarray
+        Gene factor matrix of the higher-rank fit, shape (n_genes,
+        rank_high), with rank_high >= rank_low.
+    threshold : float, optional (default: 0.6)
+        Minimum cosine similarity for two components to be considered a
+        match.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        matched_pairs : numpy.ndarray of shape (n_matches, 2)
+            Each row is (index in C_low, index in C_high) for a matched
+            pair of components.
+        unmatched_high : numpy.ndarray
+            Indices into C_high of components with no match above
+            ``threshold`` -- candidates for the newly added component(s).
+    """
+    from scipy.optimize import linear_sum_assignment
+
+    C_low_n = C_low / np.linalg.norm(C_low, axis=0, keepdims=True)
+    C_high_n = C_high / np.linalg.norm(C_high, axis=0, keepdims=True)
+
+    cos_sim = C_low_n.T @ C_high_n  # (rank_low, rank_high)
+
+    row_ind, col_ind = linear_sum_assignment(-cos_sim)
+
+    matched_mask = cos_sim[row_ind, col_ind] >= threshold
+    matched_pairs = np.stack([row_ind[matched_mask], col_ind[matched_mask]], axis=1)
+
+    unmatched_high = np.setdiff1d(
+        np.arange(C_high.shape[1]), matched_pairs[:, 1] if matched_pairs.size else []
+    )
+
+    return matched_pairs, unmatched_high
+
+
 def pf2(
     X: anndata.AnnData,
     rank: int,
@@ -109,6 +260,11 @@ def pf2(
           (shape: n_cells, rank)
         - X.obsm["X_pf2_PaCMAP"]: PaCMAP embedding (shape: n_cells, 2)
           if doEmbedding=True
+
+        Components are ordered from highest to lowest intrinsic energy
+        (see :func:`order_components_by_energy`), so that low-energy
+        components -- typically the ones added when the rank is increased
+        -- land at the high end of the ordering.
     """
     pf_out, _ = parafac2_nd(
         X,
@@ -120,6 +276,7 @@ def pf2(
     )
 
     X = store_pf2(X, pf_out)
+    X = order_components_by_energy(X)
 
     if doEmbedding:
         pcm = PaCMAP(random_state=random_state)
