@@ -6,15 +6,23 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
       - name: Install dependencies
+        if: runner.os != 'macOS'
         run: uv sync
+      - name: Install dependencies (with GPU/MLX support)
+        if: runner.os == 'macOS'
+        run: uv sync --extra gpu
       - name: Lint with ruff
         run: uv run ruff check scrise
       - name: Check formatting with ruff
