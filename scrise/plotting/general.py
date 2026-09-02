@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 from ..factorization import rise_pca_r2x
 
 
-def plot_r2x(data, rank_vec, ax: Axes):
+def plot_r2x(data, rank_vec, ax: Axes, compress="auto"):
     """Plot variance explained (R²X) for RISE and PCA across different ranks.
 
     This visualization helps determine the optimal number of components by showing
@@ -24,8 +24,12 @@ def plot_r2x(data, rank_vec, ax: Axes):
         Each rank represents a different number of components.
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
+    compress : int | tuple[int, int | None] | str | bool | None, optional
+        CANDELINC compression mode passed to ``rise_pca_r2x`` for each rank's
+        fit. Defaults to ``"auto"``. Pass None/False to fall back to exact
+        ALS.
     """
-    r2xError = rise_pca_r2x(data, rank_vec)
+    r2xError = rise_pca_r2x(data, rank_vec, compress=compress)
     labelNames = ["Fit: RISE", "Fit: PCA"]
     colorDecomp = ["r", "b"]
     markerShape = ["o", "o"]

@@ -71,6 +71,7 @@ def pf2(
     max_iter: int = 100,
     normalize_slices: bool = False,
     backend: str | None = None,
+    compress: int | tuple[int, int | None] | str | bool | None = None,
 ):
     """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
 
@@ -106,6 +107,11 @@ def pf2(
         Compute backend to run matrix products on: one of ``'mlx'``, ``'cupy'``,
         or ``'cpu'``. If None, the first available accelerator is auto-detected
         (see :func:`~parafac2.backend.get_backend`).
+    compress : int | tuple[int, int | None] | str | bool | None, optional (default: None)
+        CANDELINC compression mode passed to ``parafac2_nd``. If None/False
+        (default), exact ALS is used. If ``"auto"`` or True, compression
+        dimensions are set automatically from ``rank``. See
+        :func:`parafac2.parafac2.parafac2_nd` for details.
 
     Returns
     -------
@@ -130,6 +136,7 @@ def pf2(
         n_iter_max=max_iter,
         normalize_slices=normalize_slices,
         backend=backend,
+        compress=compress,
     )
 
     X = store_pf2(X, pf_out)
@@ -141,7 +148,11 @@ def pf2(
     return X
 
 
-def rise_pca_r2x(X: anndata.AnnData, ranks):
+def rise_pca_r2x(
+    X: anndata.AnnData,
+    ranks,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
+):
     """Compute variance explained (R²X) for RISE and PCA across different ranks.
 
     This function evaluates how much variance in the data is explained by
@@ -156,6 +167,11 @@ def rise_pca_r2x(X: anndata.AnnData, ranks):
     ranks : array-like of int
         Array of rank values to test (e.g., [1, 5, 10, 15, 20, 25, 30]).
         Each rank represents a different number of components.
+    compress : int | tuple[int, int | None] | str | bool | None, optional
+        CANDELINC compression mode passed to ``parafac2_nd`` for each rank's
+        fit. Defaults to ``"auto"`` (compression dimensions set from each
+        rank), which sharply cuts the cost of sweeping many ranks over raw
+        data. Pass None/False to fall back to exact ALS.
 
     Returns
     -------
@@ -171,7 +187,7 @@ def rise_pca_r2x(X: anndata.AnnData, ranks):
     r2x_rise = np.zeros(len(ranks))
 
     for index, i in tqdm(enumerate(ranks), total=len(r2x_rise)):
-        _, R2X = parafac2_nd(X, rank=i)
+        _, R2X = parafac2_nd(X, rank=i, compress=compress)
         r2x_rise[index] = R2X
 
     # Mean center because this is done within RISE

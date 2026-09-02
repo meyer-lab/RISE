@@ -12,7 +12,6 @@ penalizes overfitting and typically peaks near the "true" rank of the data.
 
 import warnings
 from collections.abc import Sequence
-from dataclasses import dataclass
 
 import anndata
 import numpy as np
@@ -83,6 +82,7 @@ def _bicv_trial(
     rng: np.random.Generator,
     tolerance: float,
     max_iter: int,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
 ) -> float:
     """Run a single bi-cross-validation trial and return the held-out R2X.
 
@@ -115,6 +115,7 @@ def _bicv_trial(
         random_state=int(rng.integers(np.iinfo(np.int32).max)),
         tol=tolerance,
         n_iter_max=max_iter,
+        compress=compress,
     )
     A = A * weights
 
@@ -164,6 +165,7 @@ def bicv(
     random_state: int | None = None,
     tolerance: float = 1e-6,
     max_iter: int = 200,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
 ) -> pd.DataFrame:
     """Evaluate rank via bi-cross-validation (BiCV) and in-sample fit R2X.
 
@@ -196,6 +198,11 @@ def bicv(
         Convergence threshold passed to the PARAFAC2 fit.
     max_iter : int, optional (default: 200)
         Maximum number of iterations passed to the PARAFAC2 fit.
+    compress : int | tuple[int, int | None] | str | bool | None, optional
+        CANDELINC compression mode passed to each PARAFAC2 fit. Defaults to
+        ``"auto"`` (compression dimensions set per rank), which sharply cuts
+        the cost of sweeping many ranks and repeats over raw data. Pass
+        None/False to fall back to exact ALS.
 
     Returns
     -------
@@ -232,6 +239,7 @@ def bicv(
             random_state=int(rng.integers(np.iinfo(np.int32).max)),
             tol=tolerance,
             n_iter_max=max_iter,
+            compress=compress,
         )
         rows.append({"Rank": rank, "Repeat": 0, "Metric": "Fit R2X", "R2X": fit_r2x})
 
@@ -244,6 +252,7 @@ def bicv(
                 rng,
                 tolerance,
                 max_iter,
+                compress,
             )
             rows.append(
                 {"Rank": rank, "Repeat": repeat, "Metric": "BiCV R2X", "R2X": bicv_r2x}
@@ -263,268 +272,3 @@ def bicv(
         )
 
     return results
-
-
-@dataclass
-class BiCVOptimizationResult:
-    """Result of :func:`optimize_rank`.
-
-    Attributes
-    ----------
-    best_rank : int
-        The rank with the highest observed mean BiCV R2X.
-    best_r2x : float
-        The mean BiCV R2X at ``best_rank``.
-    history : pandas.DataFrame
-        Every rank evaluated during the search, with columns "Rank" (int),
-        "R2X" (mean BiCV R2X across repeats), and "R2X_std" (its standard
-        deviation across repeats).
-    quadratic_fit : numpy.poly1d
-        A quadratic (least-squares) fit of BiCV R2X as a function of rank
-        over all evaluated points, used to guide the search and available
-        for plotting via :func:`RISE.plotting.plot_rank_optimization`.
-    quadratic_r2 : float
-        The R² of ``quadratic_fit`` against the evaluated points. Low
-        values (e.g., well under 0.5) indicate the BiCV R2X curve is not
-        well described by a quadratic over the searched range, and
-        ``best_rank`` should be trusted over the fit's vertex.
-    rank_bounds : tuple of int
-        The (low, high) rank bounds searched.
-    """
-
-    best_rank: int
-    best_r2x: float
-    history: pd.DataFrame
-    quadratic_fit: np.poly1d
-    quadratic_r2: float
-    rank_bounds: tuple[int, int]
-
-
-def _fit_quadratic(
-    ranks_seen: np.ndarray, means: np.ndarray
-) -> tuple[np.poly1d, float]:
-    """Fit BiCV R2X as a quadratic function of rank by ordinary least
-    squares, returning the fit and its R² against the observed points."""
-    coeffs = np.polyfit(ranks_seen, means, deg=2)
-    poly = np.poly1d(coeffs)
-    ss_res = float(np.sum((means - poly(ranks_seen)) ** 2))
-    ss_tot = float(np.sum((means - means.mean()) ** 2))
-    r2 = 1.0 - ss_res / ss_tot if ss_tot > 1e-12 else 1.0
-    return poly, r2
-
-
-def _quadratic_vertex(poly: np.poly1d) -> float | None:
-    """The rank (argmax) of a concave-down quadratic fit, or None if the
-    fit is not concave down (i.e., does not describe a single interior
-    peak)."""
-    a, b, _ = poly.coefficients
-    if a >= 0:
-        return None
-    return -b / (2 * a)
-
-
-def _propose_next_rank(
-    evaluated: dict[int, list[float]], candidates: np.ndarray, lo: int, hi: int
-) -> int:
-    """Propose the next rank to evaluate, exploiting the expected
-    (approximately quadratic, concave) shape of the BiCV R2X curve.
-
-    With at least three ranks evaluated, fits a quadratic to their mean
-    BiCV R2X. If that fit is concave down and reasonably explains the
-    observations (R² > 0.5) with its vertex inside the search bounds, the
-    unevaluated candidate closest to the vertex is proposed -- directly
-    homing in on the expected peak. Otherwise (too few points yet, a
-    convex/flat fit, or a vertex outside the bounds -- e.g., the curve is
-    still monotonic over the searched range) falls back to evaluating the
-    midpoint of the widest unsampled gap, to gather the information needed
-    for a trustworthy quadratic fit.
-    """
-    remaining = np.array([r for r in candidates if r not in evaluated])
-    if remaining.size == 0:
-        return -1
-
-    ranks_seen = np.array(sorted(evaluated))
-    if ranks_seen.size >= 3:
-        means = np.array([np.mean(evaluated[r]) for r in ranks_seen])
-        poly, r2 = _fit_quadratic(ranks_seen, means)
-        vertex = _quadratic_vertex(poly)
-        if vertex is not None and r2 > 0.5 and lo <= vertex <= hi:
-            return int(remaining[np.argmin(np.abs(remaining - vertex))])
-
-    gaps = np.diff(ranks_seen)
-    midpoint = (
-        (ranks_seen[np.argmax(gaps)] + ranks_seen[np.argmax(gaps) + 1]) / 2
-        if gaps.size > 0
-        else (lo + hi) / 2
-    )
-    return int(remaining[np.argmin(np.abs(remaining - midpoint))])
-
-
-def optimize_rank(
-    X: anndata.AnnData,
-    rank_bounds: tuple[int, int],
-    n_repeats: int = 3,
-    held_out_cell_frac: float = 0.2,
-    held_out_gene_frac: float = 0.2,
-    n_calls: int = 15,
-    n_initial_points: int = 5,
-    random_state: int | None = None,
-    tolerance: float = 1e-6,
-    max_iter: int = 200,
-) -> BiCVOptimizationResult:
-    """Find the rank that maximizes BiCV R2X without evaluating every rank.
-
-    Rather than exhaustively evaluating every rank in ``rank_bounds`` (as
-    :func:`bicv` does), this sequentially evaluates a small number of ranks
-    (at most ``n_calls``), exploiting the fact that BiCV R2X is expected to
-    be an approximately quadratic, concave function of rank: after an
-    initial exploration phase, each subsequent rank is chosen to be the
-    unevaluated candidate closest to the vertex of a least-squares
-    quadratic fit through the ranks evaluated so far. The search stops
-    early, before using the full ``n_calls`` budget, once that vertex
-    estimate has stabilized for two consecutive rounds. No external
-    optimization library or surrogate model (e.g., a Gaussian process) is
-    needed for this -- a plain ``numpy.polyfit`` is enough to exploit the
-    curve's expected shape.
-
-    Parameters
-    ----------
-    X : anndata.AnnData
-        Preprocessed AnnData object containing single-cell RNA-seq data.
-        Must have X.obs["condition_unique_idxs"] and X.var["means"].
-    rank_bounds : tuple of int
-        (low, high) inclusive bounds on the rank to search. The range must
-        span at least 3 ranks.
-    n_repeats : int, optional (default: 3)
-        Number of independent random cell/gene splits averaged per rank
-        evaluation.
-    held_out_cell_frac : float, optional (default: 0.2)
-        Fraction of cells held out per condition in each BiCV trial.
-    held_out_gene_frac : float, optional (default: 0.2)
-        Fraction of genes held out in each BiCV trial.
-    n_calls : int, optional (default: 15)
-        Maximum total number of ranks to evaluate. The search may stop
-        earlier once the estimated peak has stabilized.
-    n_initial_points : int, optional (default: 5)
-        Number of ranks evaluated up front (spread evenly across
-        ``rank_bounds``) before switching to the quadratic-guided search.
-        Must be >= 3 (the minimum needed for a quadratic fit) and
-        <= n_calls.
-    random_state : int, optional
-        Random seed for reproducibility.
-    tolerance : float, optional (default: 1e-6)
-        Convergence threshold passed to the PARAFAC2 fit.
-    max_iter : int, optional (default: 200)
-        Maximum number of iterations passed to the PARAFAC2 fit.
-
-    Returns
-    -------
-    BiCVOptimizationResult
-        The best rank found, its BiCV R2X, the full evaluation history, and
-        the quadratic fit used to guide the search (for plotting with
-        :func:`RISE.plotting.plot_rank_optimization`).
-    """
-    lo, hi = int(rank_bounds[0]), int(rank_bounds[1])
-    if lo < 1 or hi <= lo:
-        raise ValueError(
-            "rank_bounds must be an increasing (low, high) pair with low >= 1."
-        )
-    if hi - lo + 1 < 3:
-        raise ValueError("rank_bounds must span at least 3 ranks.")
-    if n_initial_points < 3:
-        raise ValueError("n_initial_points must be >= 3 (needed for a quadratic fit).")
-    if n_calls < n_initial_points:
-        raise ValueError("n_calls must be >= n_initial_points.")
-    if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
-        raise ValueError(
-            "held_out_cell_frac and held_out_gene_frac must both be between 0 and 1."
-        )
-
-    X = X.to_memory() if hasattr(X, "to_memory") else X
-    max_rank = _max_feasible_rank(X, held_out_cell_frac, held_out_gene_frac)
-    if hi > max_rank:
-        raise ValueError(
-            f"rank_bounds upper limit {hi} exceeds the maximum feasible rank "
-            f"({max_rank}) given held_out_cell_frac={held_out_cell_frac} and "
-            f"held_out_gene_frac={held_out_gene_frac}."
-        )
-
-    rng = np.random.default_rng(random_state)
-    candidates = np.arange(lo, hi + 1)
-
-    def evaluate(rank: int) -> list[float]:
-        return [
-            _bicv_trial(
-                X,
-                rank,
-                held_out_cell_frac,
-                held_out_gene_frac,
-                rng,
-                tolerance,
-                max_iter,
-            )
-            for _ in range(n_repeats)
-        ]
-
-    evaluated: dict[int, list[float]] = {}
-    initial_ranks = np.unique(
-        np.round(np.linspace(lo, hi, n_initial_points)).astype(int)
-    )
-    for rank in tqdm(initial_ranks, desc="BiCV initial exploration"):
-        evaluated[int(rank)] = evaluate(int(rank))
-
-    prev_vertex_rank: int | None = None
-    stable_rounds = 0
-    n_remaining = max(n_calls - len(evaluated), 0)
-    for _ in tqdm(range(n_remaining), desc="BiCV quadratic-guided search"):
-        next_rank = _propose_next_rank(evaluated, candidates, lo, hi)
-        if next_rank < 0:
-            break
-        evaluated[next_rank] = evaluate(next_rank)
-
-        ranks_seen = np.array(sorted(evaluated))
-        means = np.array([np.mean(evaluated[r]) for r in ranks_seen])
-        poly, r2 = _fit_quadratic(ranks_seen, means)
-        vertex = _quadratic_vertex(poly)
-        if vertex is None or r2 <= 0.5:
-            stable_rounds = 0
-            prev_vertex_rank = None
-            continue
-
-        vertex_rank = int(np.clip(round(vertex), lo, hi))
-        stable_rounds = stable_rounds + 1 if vertex_rank == prev_vertex_rank else 0
-        prev_vertex_rank = vertex_rank
-        if stable_rounds >= 2 and len(evaluated) >= n_initial_points + 3:
-            break
-
-    ranks_seen = np.array(sorted(evaluated))
-    means = np.array([np.mean(evaluated[r]) for r in ranks_seen])
-    stds = np.array([np.std(evaluated[r]) for r in ranks_seen])
-    poly, r2 = _fit_quadratic(ranks_seen, means)
-
-    best_idx = int(np.argmax(means))
-    best_rank = int(ranks_seen[best_idx])
-    best_r2x = float(means[best_idx])
-
-    if best_rank in (lo, hi):
-        warnings.warn(
-            f"optimize_rank: the best rank found ({best_rank}) is at the edge "
-            f"of rank_bounds={rank_bounds}. The true optimum may lie outside "
-            "the searched range -- consider expanding rank_bounds.",
-            stacklevel=2,
-        )
-
-    history = (
-        pd.DataFrame({"Rank": ranks_seen, "R2X": means, "R2X_std": stds})
-        .sort_values("Rank")
-        .reset_index(drop=True)
-    )
-
-    return BiCVOptimizationResult(
-        best_rank=best_rank,
-        best_r2x=best_r2x,
-        history=history,
-        quadratic_fit=poly,
-        quadratic_r2=r2,
-        rank_bounds=(lo, hi),
-    )

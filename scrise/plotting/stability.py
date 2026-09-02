@@ -109,6 +109,7 @@ def plot_fms_diff_ranks(
     ax: Axes,
     ranksList: list[int],
     runs: int,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
 ):
     """Plot Factor Match Score (FMS) across different ranks to assess stability.
 
@@ -131,6 +132,11 @@ def plot_fms_diff_ranks(
         Number of independent runs per rank to use for FMS calculation.
         Higher values give more reliable FMS estimates but take longer.
         Typical values: 3-5 runs.
+    compress : int | tuple[int, int | None] | str | bool | None, optional
+        CANDELINC compression mode passed to ``pf2`` for each rank's fit.
+        Defaults to ``"auto"``, which sharply cuts the cost of sweeping many
+        ranks and runs over raw data. Pass None/False to fall back to exact
+        ALS.
 
     Notes
     -----
@@ -143,8 +149,14 @@ def plot_fms_diff_ranks(
     for j in range(runs):
         scores = []
         for i in ranksList:
-            dataX = pf2(X, rank=i, random_state=j, doEmbedding=False)
-            sampledX = pf2(resample(X), rank=i, random_state=j, doEmbedding=False)
+            dataX = pf2(X, rank=i, random_state=j, doEmbedding=False, compress=compress)
+            sampledX = pf2(
+                resample(X),
+                rank=i,
+                random_state=j,
+                doEmbedding=False,
+                compress=compress,
+            )
 
             fmsScore = calculateFMS(dataX, sampledX)
             scores.append(fmsScore)
