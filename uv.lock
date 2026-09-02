@@ -1352,14 +1352,18 @@ wheels = [
 
 [[package]]
 name = "parafac2"
-version = "1.5.0"
-source = { git = "https://github.com/meyer-lab/parafac2.git#0e7337b26d15ebf922cdbc95d0e03c21e03249c9" }
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anndata" },
     { name = "numpy" },
     { name = "scipy" },
     { name = "tensorly" },
     { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5b/11/f69fc560bf17fbdcf269fdb63d9106724ded27dee395e74afb40e061e93f/parafac2-1.6.0.tar.gz", hash = "sha256:b7e7817a28fc59ba1f1d80469c65d74d4a6044bf9f383364eb07cef1f4d3516e", size = 28064, upload-time = "2026-09-02T01:02:14.823Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/58/654144ff025927b36895e515b7b01083959afa7ada96909acf49d364a08f/parafac2-1.6.0-py3-none-any.whl", hash = "sha256:dd5b1575bc7c1a779f794ec1c0d2e9c5dc0c32feb8ad6e46e60b0c592b57223a", size = 33469, upload-time = "2026-09-02T01:02:13.391Z" },
 ]
 
 [package.optional-dependencies]
@@ -2024,7 +2028,7 @@ wheels = [
 
 [[package]]
 name = "scrise"
-version = "1.1.0"
+version = "1.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "anndata" },
@@ -2092,8 +2096,8 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.2" },
     { name = "pacmap", specifier = ">=0.9" },
     { name = "pandas", specifier = ">=3.0.0" },
-    { name = "parafac2", git = "https://github.com/meyer-lab/parafac2.git" },
-    { name = "parafac2", extras = ["gpu"], marker = "extra == 'gpu'", git = "https://github.com/meyer-lab/parafac2.git" },
+    { name = "parafac2", specifier = ">=1.6.0" },
+    { name = "parafac2", extras = ["gpu"], marker = "extra == 'gpu'" },
     { name = "pyarrow", specifier = ">=19.0" },
     { name = "scikit-learn", specifier = ">=1.6" },
     { name = "scipy", specifier = ">=1.16" },
