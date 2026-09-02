@@ -68,6 +68,7 @@ dev = [
     { include-group = "analysis" },
     "pytest>=9.0",
     "pytest-cov>=7.0",
+    "hypothesis>=6.140",
     "ty",
     "ruff>=0.16",
 ]
@@ -84,3 +85,7 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning:seaborn",
 ]
+
+[tool.coverage.report]
+fail_under = 85
+omit = ["scrise/tests/*"]
