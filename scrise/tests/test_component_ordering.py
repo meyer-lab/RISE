@@ -72,9 +72,9 @@ def test_order_components_by_energy_descending():
     adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)
     ordered = order_components_by_energy(adata)
 
-    new_energy = np.linalg.norm(ordered.uns["Pf2_A"], axis=0) * np.linalg.norm(
-        ordered.varm["Pf2_C"], axis=0
-    )
+    new_energy = np.linalg.norm(
+        np.array(ordered.uns["Pf2_A"]), axis=0
+    ) * np.linalg.norm(np.array(ordered.varm["Pf2_C"]), axis=0)
     assert np.all(np.diff(new_energy) <= 1e-8)
 
     # Check that the columns were permuted as expected (up to sign).
@@ -105,7 +105,7 @@ def test_order_components_by_energy_preserves_reconstruction():
 
     ordered = order_components_by_energy(adata)
 
-    after_wp = ordered.obsm["weighted_projections"]
+    after_wp = np.array(ordered.obsm["weighted_projections"])
 
     # Column r of after_wp, weighted by A/C for that component, should match
     # some permuted (and consistently signed) column of before_wp.
