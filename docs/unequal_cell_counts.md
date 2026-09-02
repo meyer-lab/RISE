@@ -32,11 +32,11 @@ rather than the number of cells contributing to the ALS updates.
 ## Fix 1: Slice normalization during fitting
 
 The most direct fix is to prevent large slices from dominating the fit in the
-first place. [`RISE.pf2`][RISE.factorization.pf2] exposes a
+first place. [`scrise.pf2`][scrise.factorization.pf2] exposes a
 `normalize_slices` argument for this purpose:
 
 ```python
-from RISE import pf2
+from scrise import pf2
 
 X = pf2(X, rank=20, normalize_slices=True)
 ```
@@ -60,11 +60,11 @@ larger than the rest.
 ## Fix 2: Post-fit read-depth correction
 
 RISE also provides a post-hoc correction,
-[`correct_conditions`][RISE.factorization.correct_conditions], that can be
+[`correct_conditions`][scrise.factorization.correct_conditions], that can be
 applied after fitting:
 
 ```python
-from RISE import correct_conditions
+from scrise import correct_conditions
 
 X.uns["Pf2_A"] = correct_conditions(X)
 ```

@@ -2,25 +2,28 @@
 Unit tests for cell-type alignment scoring and visualization.
 """
 
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
+
 import anndata
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
 
-from RISE import (
+from scrise import (
     CellTypeAlignmentResults,
     ComponentAlignmentResult,
     cell_type_alignment,
     compute_tau,
     score_cell_type_alignment,
 )
-from RISE.annotation_alignment import (
+from scrise.annotation_alignment import (
     compute_auroc_per_cell_type,
     compute_eta_squared,
     compute_kruskal_epsilon_squared,
 )
-from RISE.plotting import plot_cell_type_alignment
+from scrise.plotting import plot_cell_type_alignment
 
 
 @pytest.fixture
@@ -51,7 +54,10 @@ def synthetic_alignment_data():
 
     adata = anndata.AnnData(
         obs=pd.DataFrame({"cell_type": cell_types}),
-        obsm={"weighted_projections": loadings, "projections": loadings},
+        obsm=cast(
+            Mapping[str, Sequence[Any]],
+            {"weighted_projections": loadings, "projections": loadings},
+        ),
     )
     return adata, cell_types, loadings
 
@@ -197,6 +203,7 @@ def test_plotting_functions(synthetic_alignment_data):
     out_axes = plot_cell_type_alignment(
         adata, ax=axes, n_permutations=100, random_state=42
     )
+    assert isinstance(out_axes, tuple)
     assert len(out_axes) == 2
     plt.close("all")
 

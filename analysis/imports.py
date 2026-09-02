@@ -44,7 +44,7 @@ def import_thomson() -> anndata.AnnData:
 
 def import_thomson_factors(include_raw: bool = False) -> anndata.AnnData:
     """Import Thomson dataset with cached PARAFAC2 factors and projections."""
-    from RISE import load_factors
+    from scrise import load_factors
 
     if include_raw:
         raw_path = download_thomson_raw()

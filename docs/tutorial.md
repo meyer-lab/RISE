@@ -56,7 +56,7 @@ Determine the optimal component/rank by plotting the variance explained ($R^2X$)
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_r2x
+from scrise.plotting import plot_r2x
 
 ranks = [1, 5, 10, 15, 20, 25, 30]
 fig, ax = plt.subplots(figsize=(5, 5))
@@ -76,7 +76,7 @@ Measure the reproducibility of the RISE factorization across different ranks. An
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_fms_diff_ranks
+from scrise.plotting import plot_fms_diff_ranks
 
 fig, ax = plt.subplots(figsize=(5, 5))
 rank_list = list(ranks)
@@ -94,15 +94,12 @@ plt.show()
 
 $R^2X$ (in-sample fit) always increases with rank, so it cannot by itself identify an optimal rank — it can only reveal an elbow. Bi-cross-validation (BiCV) addresses this by holding out a random subset of cells *and* genes, fitting RISE on the remaining data, and scoring how well the fit predicts the held-out block. Because it is evaluated on unseen data, BiCV $R^2X$ penalizes overfitting and typically peaks (or plateaus) near the rank that generalizes best, unlike the fit $R^2X$.
 
-Two functions are available in `RISE.rank_selection`:
-
-- `bicv`: exhaustively evaluates a list of candidate ranks, each with several repeated random train/test splits, and returns both the fit $R^2X$ and the BiCV $R^2X$ for every rank so you can inspect the full curve.
-- `optimize_rank`: for a large search range, sequentially evaluates a small number of ranks, exploiting the fact that BiCV $R^2X$ vs. rank is expected to be an approximately quadratic, concave curve: each subsequent candidate rank is chosen near the vertex of a least-squares quadratic fit through the ranks evaluated so far, and the search stops early once that vertex estimate stabilizes.
+`scrise.rank_selection.bicv` exhaustively evaluates a list of candidate ranks, each with several repeated random train/test splits, and returns both the fit $R^2X$ and the BiCV $R^2X$ for every rank so you can inspect the full curve. Since PARAFAC2 fits use CANDELINC compression by default (`compress="auto"`), sweeping every rank in this way is cheap enough that there is no need to search for the best rank without evaluating every candidate.
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_bicv_r2x
-from RISE.rank_selection import bicv
+from scrise.plotting import plot_bicv_r2x
+from scrise.rank_selection import bicv
 
 ranks = [5, 10, 15, 20, 25, 30]
 results = bicv(X, ranks, n_repeats=3, random_state=0)
@@ -115,24 +112,6 @@ plt.show()
 
 `bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes (both default to 0.2); increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
 
-To search a wide rank range without evaluating every candidate rank, use `optimize_rank` instead:
-
-```python
-import matplotlib.pyplot as plt
-from RISE.plotting import plot_rank_optimization
-from RISE.rank_selection import optimize_rank
-
-result = optimize_rank(X, rank_bounds=(5, 50), n_repeats=3, random_state=0)
-print(f"Best rank: {result.best_rank} (BiCV R2X = {result.best_r2x:.3f})")
-
-fig, ax = plt.subplots(figsize=(5, 5))
-plot_rank_optimization(result, ax)
-plt.tight_layout()
-plt.show()
-```
-
-`result.history` contains every rank actually evaluated (with mean and standard deviation of BiCV $R^2X$ across repeats) — typically well under `n_calls`, since the search stops once it converges — and `plot_rank_optimization` visualizes the quadratic fit across the search range alongside the best rank found. If `result.quadratic_r2` is low (well under 0.5), the curve was not well described by a quadratic over the searched range; treat `result.best_rank` as the answer in that case rather than the fit's vertex, and consider running `bicv` over the full range to inspect the curve directly.
-
 ## Running the Factorization
 
 ### Perform RISE Factorization
@@ -140,7 +119,7 @@ plt.show()
 Based on the variance explained and FMS, select a rank and perform the RISE factorization. This decomposes the data into condition, eigen-state, and gene factors.
 
 ```python
-from RISE.factorization import pf2
+from scrise.factorization import pf2
 
 rank = 20
 X = pf2(
@@ -185,7 +164,7 @@ Single-cell datasets often contain tens of thousands of cells and genes, resulti
 Use `export_factors` to save decomposition factors and cell projections to an `.h5ad` file:
 
 ```python
-from RISE import export_factors
+from scrise import export_factors
 
 # Export factors and compressed projections
 export_factors(
@@ -204,8 +183,8 @@ Use `load_factors` to load the saved decomposition. Projections are decoded from
 
 ```python
 import matplotlib.pyplot as plt
-from RISE import load_factors
-from RISE.plotting import plot_condition_factors, plot_labels_pacmap
+from scrise import load_factors
+from scrise.plotting import plot_condition_factors, plot_labels_pacmap
 
 # Load factor results into an AnnData object
 factors = load_factors("thomson_factors.h5ad")
@@ -229,8 +208,8 @@ When you need to visualize individual gene expression on top of embeddings (e.g.
 
 ```python
 import matplotlib.pyplot as plt
-from RISE import load_factors
-from RISE.plotting import plot_gene_pacmap
+from scrise import load_factors
+from scrise.plotting import plot_gene_pacmap
 
 # Load factors and automatically match & attach raw expression matrix
 X_full = load_factors(
@@ -251,11 +230,11 @@ plt.show()
 
 ### Visualize Condition Factors
 
-Examine how each experimental condition contributes to the identified patterns. Log-transforming these factors allows for easier interpretation of condition-specific effects. Several plotting functions are available in the `RISE.plotting` package.
+Examine how each experimental condition contributes to the identified patterns. Log-transforming these factors allows for easier interpretation of condition-specific effects. Several plotting functions are available in the `scrise.plotting` package.
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_condition_factors
+from scrise.plotting import plot_condition_factors
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -275,7 +254,7 @@ Explore the latent space of cells using nonlinear dimensionality reduction metho
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_labels_pacmap
+from scrise.plotting import plot_labels_pacmap
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -294,7 +273,7 @@ Analyze how each cell state contributes to the identified patterns. Each eigen-s
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_eigenstate_factors
+from scrise.plotting import plot_eigenstate_factors
 
 fig, ax = plt.subplots(figsize=(4, 4))
 
@@ -315,7 +294,7 @@ Identify which genes are highly weighted in each component, revealing coordinate
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_gene_factors
+from scrise.plotting import plot_gene_factors
 
 fig, ax = plt.subplots(figsize=(7, 8))
 
@@ -337,7 +316,7 @@ Overlay specific gene expression on the cell embedding to see which cells expres
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_gene_pacmap
+from scrise.plotting import plot_gene_pacmap
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -358,7 +337,7 @@ Visualize how cells contribute to specific components using weighted projections
 
 ```python
 import matplotlib.pyplot as plt
-from RISE.plotting import plot_wp_pacmap
+from scrise.plotting import plot_wp_pacmap
 
 fig, ax = plt.subplots(figsize=(8, 8))
 

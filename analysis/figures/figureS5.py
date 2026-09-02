@@ -4,7 +4,7 @@ Figure S5
 
 import seaborn as sns
 
-from RISE.plotting import cell_count_perc_df, rotate_xaxis
+from scrise.plotting import cell_count_perc_df, rotate_xaxis
 
 from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel

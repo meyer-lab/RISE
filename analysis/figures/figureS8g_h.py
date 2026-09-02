@@ -5,8 +5,8 @@ Figure 8g_h
 import anndata
 
 from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
-from RISE.factorization import correct_conditions
-from RISE.plotting import (
+from scrise.factorization import correct_conditions
+from scrise.plotting import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,

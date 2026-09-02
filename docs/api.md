@@ -2,7 +2,7 @@
 
 ## Factorization
 
-::: RISE.factorization
+::: scrise.factorization
     options:
       members:
         - pf2
@@ -15,11 +15,10 @@
 
 ## Rank Selection
 
-::: RISE.rank_selection
+::: scrise.rank_selection
     options:
       members:
         - bicv
-        - optimize_rank
 
 ## Preprocessing
 
@@ -32,14 +31,14 @@
 
 ### General Plotting
 
-::: RISE.plotting.general
+::: scrise.plotting.general
     options:
       members:
         - plot_r2x
 
 ### Factor Plotting
 
-::: RISE.plotting.factors
+::: scrise.plotting.factors
     options:
       members:
         - plot_condition_factors
@@ -48,7 +47,7 @@
 
 ### PaCMAP Visualization
 
-::: RISE.plotting.pacmap
+::: scrise.plotting.pacmap
     options:
       members:
         - plot_labels_pacmap
@@ -57,15 +56,14 @@
 
 ### Rank Selection Plotting
 
-::: RISE.plotting.rank_selection
+::: scrise.plotting.rank_selection
     options:
       members:
         - plot_bicv_r2x
-        - plot_rank_optimization
 
 ### Factor Stability
 
-::: RISE.plotting.stability
+::: scrise.plotting.stability
     options:
       members:
         - plot_fms_diff_ranks
