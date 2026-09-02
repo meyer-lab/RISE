@@ -16,7 +16,6 @@
     options:
       members:
         - bicv
-        - optimize_rank
 
 ## Preprocessing
 
@@ -58,7 +57,6 @@
     options:
       members:
         - plot_bicv_r2x
-        - plot_rank_optimization
 
 ### Factor Stability
 
