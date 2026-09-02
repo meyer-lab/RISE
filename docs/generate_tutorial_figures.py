@@ -10,7 +10,7 @@ matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 
 from analysis.imports import import_thomson_factors
-from RISE.plotting import (
+from scrise.plotting import (
     plot_condition_factors,
     plot_eigenstate_factors,
     plot_gene_factors,

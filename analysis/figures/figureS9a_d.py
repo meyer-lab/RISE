@@ -20,7 +20,7 @@ from harmonypy import run_harmony
 from scipy.sparse import csr_array
 
 from analysis.imports import import_lupus
-from RISE.factorization import pf2
+from scrise.factorization import pf2
 
 from .common import getSetup, subplotLabel
 

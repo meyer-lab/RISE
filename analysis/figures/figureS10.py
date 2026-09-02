@@ -4,7 +4,7 @@ Figure S9
 
 import anndata
 
-from RISE.plotting import plot_wp_pacmap
+from scrise.plotting import plot_wp_pacmap
 
 from .common import getSetup, subplotLabel
 

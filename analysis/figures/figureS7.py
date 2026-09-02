@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 from scipy.stats import linregress
 
 from analysis.imports import import_thomson
-from RISE.factorization import pf2
+from scrise.factorization import pf2
 
 from .common import getSetup, subplotLabel
 
