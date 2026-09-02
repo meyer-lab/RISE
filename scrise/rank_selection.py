@@ -83,6 +83,7 @@ def _bicv_trial(
     rng: np.random.Generator,
     tolerance: float,
     max_iter: int,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
 ) -> float:
     """Run a single bi-cross-validation trial and return the held-out R2X.
 
@@ -115,6 +116,7 @@ def _bicv_trial(
         random_state=int(rng.integers(np.iinfo(np.int32).max)),
         tol=tolerance,
         n_iter_max=max_iter,
+        compress=compress,
     )
     A = A * weights
 
@@ -164,6 +166,7 @@ def bicv(
     random_state: int | None = None,
     tolerance: float = 1e-6,
     max_iter: int = 200,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
 ) -> pd.DataFrame:
     """Evaluate rank via bi-cross-validation (BiCV) and in-sample fit R2X.
 
@@ -196,6 +199,11 @@ def bicv(
         Convergence threshold passed to the PARAFAC2 fit.
     max_iter : int, optional (default: 200)
         Maximum number of iterations passed to the PARAFAC2 fit.
+    compress : int | tuple[int, int | None] | str | bool | None, optional
+        CANDELINC compression mode passed to each PARAFAC2 fit. Defaults to
+        ``"auto"`` (compression dimensions set per rank), which sharply cuts
+        the cost of sweeping many ranks and repeats over raw data. Pass
+        None/False to fall back to exact ALS.
 
     Returns
     -------
@@ -232,6 +240,7 @@ def bicv(
             random_state=int(rng.integers(np.iinfo(np.int32).max)),
             tol=tolerance,
             n_iter_max=max_iter,
+            compress=compress,
         )
         rows.append({"Rank": rank, "Repeat": 0, "Metric": "Fit R2X", "R2X": fit_r2x})
 
@@ -244,6 +253,7 @@ def bicv(
                 rng,
                 tolerance,
                 max_iter,
+                compress,
             )
             rows.append(
                 {"Rank": rank, "Repeat": repeat, "Metric": "BiCV R2X", "R2X": bicv_r2x}
@@ -371,6 +381,7 @@ def optimize_rank(
     random_state: int | None = None,
     tolerance: float = 1e-6,
     max_iter: int = 200,
+    compress: int | tuple[int, int | None] | str | bool | None = "auto",
 ) -> BiCVOptimizationResult:
     """Find the rank that maximizes BiCV R2X without evaluating every rank.
 
@@ -416,6 +427,11 @@ def optimize_rank(
         Convergence threshold passed to the PARAFAC2 fit.
     max_iter : int, optional (default: 200)
         Maximum number of iterations passed to the PARAFAC2 fit.
+    compress : int | tuple[int, int | None] | str | bool | None, optional
+        CANDELINC compression mode passed to each PARAFAC2 fit. Defaults to
+        ``"auto"`` (compression dimensions set per rank), which sharply cuts
+        the cost of sweeping many ranks over raw data. Pass None/False to
+        fall back to exact ALS.
 
     Returns
     -------
@@ -462,6 +478,7 @@ def optimize_rank(
                 rng,
                 tolerance,
                 max_iter,
+                compress,
             )
             for _ in range(n_repeats)
         ]

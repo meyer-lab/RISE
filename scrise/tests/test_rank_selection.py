@@ -95,7 +95,14 @@ def _fake_bicv_trial(peak_rank: float, width: float = 8.0, noise: float = 0.002)
     from real PARAFAC2 fits and real BiCV noise."""
 
     def trial(
-        X, rank, held_out_cell_frac, held_out_gene_frac, rng, tolerance, max_iter
+        X,
+        rank,
+        held_out_cell_frac,
+        held_out_gene_frac,
+        rng,
+        tolerance,
+        max_iter,
+        compress="auto",
     ):
         return 0.5 - ((rank - peak_rank) / width) ** 2 + float(rng.normal(scale=noise))
 
