@@ -6,7 +6,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -14,7 +18,11 @@ jobs:
         with:
           enable-cache: true
       - name: Install dependencies
+        if: runner.os != 'macOS'
         run: uv sync
+      - name: Install dependencies (with GPU/MLX support)
+        if: runner.os == 'macOS'
+        run: uv sync --extra gpu
       - name: Lint with ruff
         run: uv run ruff check RISE
       - name: Check formatting with ruff

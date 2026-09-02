@@ -70,6 +70,7 @@ def pf2(
     tolerance=1e-6,
     max_iter: int = 100,
     normalize_slices: bool = False,
+    backend: str | None = None,
 ):
     """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
 
@@ -101,6 +102,10 @@ def pf2(
     normalize_slices : bool, optional (default: False)
         If True, normalizes per-condition slices by their Frobenius norm during
         factor updates to prevent conditions with large cell counts from dominating.
+    backend : str | None, optional (default: None)
+        Compute backend to run matrix products on: one of ``'mlx'``, ``'cupy'``,
+        or ``'cpu'``. If None, the first available accelerator is auto-detected
+        (see :func:`~parafac2.backend.get_backend`).
 
     Returns
     -------
@@ -124,6 +129,7 @@ def pf2(
         tol=tolerance,
         n_iter_max=max_iter,
         normalize_slices=normalize_slices,
+        backend=backend,
     )
 
     X = store_pf2(X, pf_out)
