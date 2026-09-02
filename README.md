@@ -11,28 +11,28 @@ RISE does not require prior cell-type labels or clustering, reducing bias and en
 
 > **Note:** The `RISE` package was renamed to `scrise` on PyPI (the import name changed from `RISE` to `scrise`). The GitHub repository name is unchanged. If you have `RISE` pinned in a `requirements.txt` or install script, update it to `scrise` as shown below.
 
-To add `scrise` to your Python environment, you can install it directly from GitHub:
+To add `scrise` to your Python environment, install it from PyPI:
 
 ```bash
-pip install git+https://github.com/meyer-lab/RISE.git@main
+pip install scrise
 ```
 
 For GPU acceleration support (propagated to `parafac2[gpu]`):
 
 ```bash
-pip install "scrise[gpu] @ git+https://github.com/meyer-lab/RISE.git@main"
+pip install "scrise[gpu]"
 ```
 
 Or add the following line to your `requirements.txt`:
 
 ```
-git+https://github.com/meyer-lab/RISE.git@main
+scrise
 ```
 
 or with GPU support:
 
 ```
-scrise[gpu] @ git+https://github.com/meyer-lab/RISE.git@main
+scrise[gpu]
 ```
 
 
