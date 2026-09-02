@@ -9,6 +9,9 @@
         - export_factors
         - load_factors
         - correct_conditions
+        - order_components_by_energy
+        - canonical_component_signs
+        - match_components_across_ranks
 
 ## Rank Selection
 
