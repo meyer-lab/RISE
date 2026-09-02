@@ -24,10 +24,10 @@ jobs:
         if: runner.os == 'macOS'
         run: uv sync --extra gpu
       - name: Lint with ruff
-        run: uv run ruff check RISE
+        run: uv run ruff check scrise
       - name: Check formatting with ruff
-        run: uv run ruff format --check RISE
+        run: uv run ruff format --check scrise
       - name: Type check with ty
-        run: uv run ty check RISE
+        run: uv run ty check scrise
       - name: Test with pytest
-        run: uv run pytest --cov=RISE
+        run: uv run pytest --cov=scrise

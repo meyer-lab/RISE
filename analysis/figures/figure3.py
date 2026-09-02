@@ -8,7 +8,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from RISE.plotting import (
+from scrise.plotting import (
     cell_count_perc_df,
     gene_plot_cells,
     plot_avegene_per_category,

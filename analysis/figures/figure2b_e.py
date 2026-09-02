@@ -6,7 +6,7 @@ import numpy as np
 import pacmap
 from sklearn.decomposition import PCA
 
-from RISE.plotting import plot_labels_pacmap
+from scrise.plotting import plot_labels_pacmap
 
 from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel

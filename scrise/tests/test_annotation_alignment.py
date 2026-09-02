@@ -11,19 +11,19 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from RISE import (
+from scrise import (
     CellTypeAlignmentResults,
     ComponentAlignmentResult,
     cell_type_alignment,
     compute_tau,
     score_cell_type_alignment,
 )
-from RISE.annotation_alignment import (
+from scrise.annotation_alignment import (
     compute_auroc_per_cell_type,
     compute_eta_squared,
     compute_kruskal_epsilon_squared,
 )
-from RISE.plotting import plot_cell_type_alignment
+from scrise.plotting import plot_cell_type_alignment
 
 
 @pytest.fixture

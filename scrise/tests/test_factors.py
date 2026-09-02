@@ -10,7 +10,7 @@ import anndata
 import numpy as np
 import pytest
 
-from RISE import OPQQuantizer, export_factors, find_optimal_opq, load_factors
+from scrise import OPQQuantizer, export_factors, find_optimal_opq, load_factors
 
 
 def test_opq_quantizer_synthetic():

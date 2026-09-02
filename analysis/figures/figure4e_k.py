@@ -9,7 +9,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from scipy.stats import pearsonr
 
-from RISE.plotting import (
+from scrise.plotting import (
     avegene_per_status,
     cell_count_perc_lupus_df,
     plot_gene_factors,

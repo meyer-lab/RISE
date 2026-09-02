@@ -13,8 +13,8 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 
 from analysis.figures.commonFuncs.plotLupus import samples_only_lupus
-from RISE.factorization import correct_conditions
-from RISE.plotting import rotate_xaxis, rotate_yaxis
+from scrise.factorization import correct_conditions
+from scrise.plotting import rotate_xaxis, rotate_yaxis
 
 from .common import getSetup, subplotLabel
 

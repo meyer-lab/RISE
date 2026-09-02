@@ -10,8 +10,8 @@ import scanpy as sc
 import scib
 from sklearn.decomposition import PCA
 
-# from RISE.plotting import plot_r2x
-from RISE.plotting import plot_labels_pacmap
+# from scrise.plotting import plot_r2x
+from scrise.plotting import plot_labels_pacmap
 
 from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel
