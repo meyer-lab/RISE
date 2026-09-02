@@ -8,7 +8,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from RISE.plotting import plot_wp_pacmap
+from scrise.plotting import plot_wp_pacmap
 
 from .common import getSetup, subplotLabel
 

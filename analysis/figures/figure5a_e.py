@@ -9,7 +9,7 @@ import scanpy as sc
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from RISE.plotting import (
+from scrise.plotting import (
     cell_count_perc_lupus_df,
     plot_gene_factors,
     plot_gene_pacmap,

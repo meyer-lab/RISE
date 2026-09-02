@@ -2,7 +2,7 @@
 Figure S6
 """
 
-from RISE.plotting import plot_labels_pacmap, plot_wp_pacmap
+from scrise.plotting import plot_labels_pacmap, plot_wp_pacmap
 
 from ..imports import import_thomson_factors
 from .common import getSetup, subplotLabel

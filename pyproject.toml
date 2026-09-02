@@ -1,5 +1,5 @@
 [project]
-name = "RISE"
+name = "scrise"
 version = "1.1.0"
 description = "Single cell analysis across conditions using PARAFAC2."
 authors = [{name = "Andrew Ramirez"}, {name = "Aaron Meyer", email = "git@asmlab.org" }]
@@ -36,7 +36,7 @@ requires = ["uv_build>=0.12.0,<0.13"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = ["RISE"]
+module-name = ["scrise"]
 module-root = ""
 
 [tool.uv.sources]

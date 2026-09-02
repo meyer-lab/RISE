@@ -39,7 +39,7 @@ RISE[gpu] @ git+https://github.com/meyer-lab/RISE.git@main
 RISE works with preprocessed AnnData objects containing single-cell RNA-seq data:
 
 ```python
-from RISE.factorization import pf2
+from scrise.factorization import pf2
 
 # Perform PARAFAC2 tensor decomposition
 X = pf2(X=adata, rank=20, doEmbedding=True, random_state=42)
