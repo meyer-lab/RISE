@@ -20,6 +20,14 @@
       members:
         - bicv
 
+## Annotation Alignment
+
+::: scrise.annotation_alignment
+
+## Quantization & Compression
+
+::: scrise.opq
+
 ## Preprocessing
 
 ::: parafac2.normalize
@@ -67,3 +75,7 @@
     options:
       members:
         - plot_fms_diff_ranks
+
+### Cell-Type Alignment Plotting
+
+::: scrise.plotting.annotation_alignment

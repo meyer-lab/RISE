@@ -53,8 +53,8 @@ are sorted from highest to lowest energy, so that low-energy components —
 typically the ones that appear only once the rank is increased — land at the
 high end of the ordering, while established, high-energy components stay near
 the front. This is implemented in
-[`RISE.order_components_by_energy`][RISE.factorization.order_components_by_energy]
-and is applied automatically inside [`RISE.pf2`][RISE.factorization.pf2].
+[`RISE.order_components_by_energy`][scrise.factorization.order_components_by_energy]
+and is applied automatically inside [`RISE.pf2`][scrise.factorization.pf2].
 
 ## Sign convention
 
@@ -68,12 +68,12 @@ factor ($\mathbf{A}$) column for that component is flipped correspondingly,
 so that the reconstructed decomposition is unchanged; the eigen-state
 factor ($\mathbf{B}$) is left as the unflipped reference. This is
 implemented in
-[`RISE.canonical_component_signs`][RISE.factorization.canonical_component_signs].
+[`RISE.canonical_component_signs`][scrise.factorization.canonical_component_signs].
 
 ## Matching components across ranks
 
 As a small, optional addition, RISE also provides
-[`RISE.match_components_across_ranks`][RISE.factorization.match_components_across_ranks],
+[`RISE.match_components_across_ranks`][scrise.factorization.match_components_across_ranks],
 which implements the cross-rank matching primitive described above: given
 the (sign-canonicalized) gene factors of a rank-$N$ fit and a rank-$(N+1)$
 fit, it performs Hungarian maximum-weight matching on cosine similarity and
@@ -86,7 +86,7 @@ components carry over when moving to rank $N+1$) actually holds for a given
 dataset.
 
 ```python
-from RISE import match_components_across_ranks
+from scrise import match_components_across_ranks
 
 matched_pairs, unmatched_high = match_components_across_ranks(
     C_low=X_rank_n.varm["Pf2_C"],

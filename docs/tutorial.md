@@ -4,16 +4,16 @@ This tutorial demonstrates the complete RISE workflow for analyzing single-cell 
 
 ## Installation
 
-To add RISE to your Python package, add the following line to your `requirements.txt` and remake your virtual environment:
+To add `scrise` to your Python environment, install it from PyPI:
 
-```text
-git+https://github.com/meyer-lab/RISE.git@main
+```bash
+pip install scrise
 ```
 
-For GPU acceleration support (which propagates to `parafac2[gpu]`):
+For GPU acceleration support (propagated to `parafac2[gpu]`):
 
-```text
-RISE[gpu] @ git+https://github.com/meyer-lab/RISE.git@main
+```bash
+pip install "scrise[gpu]"
 ```
 
 ## Preprocessing the Dataset
