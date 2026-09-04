@@ -170,12 +170,12 @@ def bicv(
     """Evaluate rank via bi-cross-validation (BiCV) and in-sample fit R2X.
 
     For each candidate rank, computes both the ordinary in-sample fit R2X
-    (using the full dataset, as in :func:`RISE.factorization.rise_pca_r2x`)
+    (using the full dataset, as in :func:`scrise.factorization.rise_pca_r2x`)
     and the BiCV R2X (repeated ``n_repeats`` times with independent random
     cell/gene splits). The fit R2X increases monotonically with rank; the
     BiCV R2X penalizes overfitting and typically peaks near the rank that
     best generalizes to held-out data. Plot both with
-    :func:`RISE.plotting.plot_bicv_r2x` to select a rank.
+    :func:`scrise.plotting.plot_bicv_r2x` to select a rank.
 
     Parameters
     ----------
@@ -209,7 +209,7 @@ def bicv(
     pandas.DataFrame
         Long-form DataFrame with columns "Rank", "Repeat", "Metric"
         (one of "Fit R2X" or "BiCV R2X"), and "R2X". Ready to pass to
-        :func:`RISE.plotting.plot_bicv_r2x`.
+        :func:`scrise.plotting.plot_bicv_r2x`.
     """
     if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
         raise ValueError(

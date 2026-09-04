@@ -19,7 +19,7 @@ def plot_bicv_r2x(results: pd.DataFrame, ax: Axes) -> None:
     Parameters
     ----------
     results : pandas.DataFrame
-        Output of :func:`RISE.rank_selection.bicv`, with columns "Rank",
+        Output of :func:`scrise.rank_selection.bicv`, with columns "Rank",
         "Repeat", "Metric" ("Fit R2X" or "BiCV R2X"), and "R2X".
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
