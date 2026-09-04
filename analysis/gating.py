@@ -28,12 +28,12 @@ def gateThomsonCells(X) -> npt.ArrayLike:
 def Thomson_Doublet():
     """Detects doublets in scRNA-seq"""
     import hdf5plugin  # noqa: F401
-    import vcsc
+    import vsparse
 
     from .imports import download_thomson_raw
 
     raw_path = download_thomson_raw()
-    X = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
+    X = vsparse.VCSCAnnData.read_h5ad(raw_path).to_anndata()
     sc.pp.filter_genes(X, min_cells=1)
     clf = doubletdetection.BoostClassifier(
         n_iters=10,

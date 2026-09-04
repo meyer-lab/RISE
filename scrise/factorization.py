@@ -560,9 +560,9 @@ def load_factors(
     # Optionally match and attach raw data
     if raw_path is not None:
         try:
-            import vcsc
+            import vsparse
 
-            raw = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
+            raw = vsparse.VCSCAnnData.read_h5ad(raw_path).to_anndata()
         except (ImportError, AttributeError, KeyError, ValueError, OSError):
             raw = anndata.read_h5ad(raw_path)
 

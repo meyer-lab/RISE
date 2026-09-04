@@ -4,7 +4,7 @@ import urllib.request
 import anndata
 import h5py
 import pandas as pd
-import vcsc
+import vsparse
 from anndata.io import read_elem
 from parafac2.normalize import prepare_dataset
 
@@ -28,7 +28,7 @@ def import_thomson() -> anndata.AnnData:
     from .gating import gateThomsonCells
 
     raw_path = download_thomson_raw()
-    X = vcsc.VCSCAnnData.read_h5ad(raw_path).to_anndata()
+    X = vsparse.VCSCAnnData.read_h5ad(raw_path).to_anndata()
 
     doubletDF = pd.read_csv("analysis/data/Thomson/ThomsonDoublets.csv", index_col=0)
     doubletDF.index.name = "cell_barcode"

@@ -17,7 +17,10 @@ dependencies = [
     "anndata>=0.13",
     "pacmap>=0.9",
     "tqdm>=4.66.1",
-    "vcsc",
+    "vsparse>=0.2.0",
+    "hdf5plugin>=7.0.0",
+    "matplotlib>=3.8",
+    "seaborn>=0.13.2",
 ]
 
 readme = "README.md"
@@ -38,9 +41,6 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = ["scrise"]
 module-root = ""
-
-[tool.uv.sources]
-vcsc = { git = "https://github.com/meyer-lab/anndata-VCSC.git" }
 
 
 [dependency-groups]
