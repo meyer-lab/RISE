@@ -57,10 +57,10 @@ def test_pf2_golden_values_on_fixed_synthetic_fixture():
     # Component weights, order, and which gene dominates each component are
     # a much coarser (and thus more robust-to-numerical-noise) fingerprint
     # of the fit than raw factor values.
-    np.testing.assert_allclose(weights, [22.2080, 56.6194, 24.3079], rtol=1e-2)
+    np.testing.assert_allclose(weights, [56.6194, 24.3079, 22.2080], rtol=1e-2)
 
     top_gene_per_component = np.argmax(np.abs(C), axis=0)
-    np.testing.assert_array_equal(top_gene_per_component, [12, 13, 5])
+    np.testing.assert_array_equal(top_gene_per_component, [13, 5, 12])
 
 
 if __name__ == "__main__":

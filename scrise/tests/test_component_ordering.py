@@ -66,15 +66,17 @@ def test_order_components_by_energy_descending():
     scales = np.array([0.01, 10.0, 1.0, 5.0])
     A = A * scales
     expected_energy_order = np.argsort(
-        np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+        np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     )[::-1]
 
     adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)
     ordered = order_components_by_energy(adata)
 
-    new_energy = np.linalg.norm(
-        np.array(ordered.uns["Pf2_A"]), axis=0
-    ) * np.linalg.norm(np.array(ordered.varm["Pf2_C"]), axis=0)
+    new_energy = (
+        np.abs(np.array(ordered.uns["Pf2_weights"]))
+        * np.linalg.norm(np.array(ordered.uns["Pf2_A"]), axis=0)
+        * np.linalg.norm(np.array(ordered.varm["Pf2_C"]), axis=0)
+    )
     assert np.all(np.diff(new_energy) <= 1e-8)
 
     # Check that the columns were permuted as expected (up to sign).
@@ -109,7 +111,7 @@ def test_order_components_by_energy_preserves_reconstruction():
 
     # Column r of after_wp, weighted by A/C for that component, should match
     # some permuted (and consistently signed) column of before_wp.
-    energy = np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+    energy = np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     order = np.argsort(energy)[::-1]
 
     # B itself is left as the unflipped sign reference, so weighted_projections
@@ -128,7 +130,7 @@ def test_order_components_by_energy_reorders_weights_and_B():
     weights = np.arange(rank, dtype=float)
     projections, _ = np.linalg.qr(rng.normal(size=(n_cells, rank)))
 
-    energy = np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+    energy = np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     order = np.argsort(energy)[::-1]
 
     adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)

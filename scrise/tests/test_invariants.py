@@ -121,10 +121,15 @@ def test_order_components_by_energy_is_a_permutation(
 
     new_A = np.array(ordered.uns["Pf2_A"])
     new_C = np.array(ordered.varm["Pf2_C"])
-    new_energy = np.linalg.norm(new_A, axis=0) * np.linalg.norm(new_C, axis=0)
+    new_weights = np.array(ordered.uns["Pf2_weights"])
+    new_energy = (
+        np.abs(new_weights)
+        * np.linalg.norm(new_A, axis=0)
+        * np.linalg.norm(new_C, axis=0)
+    )
     assert np.all(np.diff(new_energy) <= 1e-6)
 
-    energy = np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+    energy = np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     order = np.argsort(energy)[::-1]
     np.testing.assert_allclose(
         np.array(ordered.obsm["weighted_projections"]), before_wp[:, order], atol=1e-5
