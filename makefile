@@ -22,12 +22,12 @@ test: .venv
 	uv sync
 
 coverage.xml: .venv
-	uv run pytest --junitxml=junit.xml --cov=RISE --cov-report xml:coverage.xml
+	uv run pytest --junitxml=junit.xml --cov=scrise --cov-report xml:coverage.xml
 
 lint: .venv
 	uv run ruff format .
 	uv run ruff check . --fix
-	uv run ty check RISE analysis
+	uv run ty check scrise
 
 clean:
 	rm -rf output profile profile.svg factor_cache
