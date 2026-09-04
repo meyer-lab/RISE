@@ -11,7 +11,12 @@ import anndata
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..plotting.stability import calculateFMS, plot_fms_diff_ranks, resample
+from ..plotting.stability import (
+    calculateFMS,
+    plot_fms_diff_ranks,
+    plot_fms_percent_drop,
+    resample,
+)
 from .conftest import make_synthetic_pf2_data
 
 
@@ -95,5 +100,15 @@ def test_plot_fms_diff_ranks_smoke():
     plot_fms_diff_ranks(X, ax, ranksList=[2], runs=1, compress=None)
 
     assert ax.get_xlabel() == "Component"
+    assert ax.get_ylabel() == "FMS"
+    assert ax.get_ylim() == (0.0, 1.0)
+
+
+def test_plot_fms_percent_drop_smoke():
+    X = make_synthetic_pf2_data(
+        n_cond=3, n_genes=10, rank=2, seed=0, cells_per_cond=(20, 30)
+    )
+    fig, ax = plt.subplots()
+    plot_fms_percent_drop(X, ax, percentList=np.array([0, 10]), runs=1, rank=2)
     assert ax.get_ylabel() == "FMS"
     assert ax.get_ylim() == (0.0, 1.0)

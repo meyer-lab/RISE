@@ -157,8 +157,8 @@ def _bicv_trial(
 
 
 def bicv(
-    X: anndata.AnnData,
-    ranks: Sequence[int],
+    X: anndata.AnnData | None = None,
+    ranks: Sequence[int] | None = None,
     n_repeats: int = 3,
     held_out_cell_frac: float = 0.2,
     held_out_gene_frac: float = 0.2,
@@ -166,6 +166,8 @@ def bicv(
     tolerance: float = 1e-6,
     max_iter: int = 200,
     compress: int | tuple[int, int | None] | str | bool | None = "auto",
+    condition_key: str | None = None,
+    adata: anndata.AnnData | None = None,
 ) -> pd.DataFrame:
     """Evaluate rank via bi-cross-validation (BiCV) and in-sample fit R2X.
 
@@ -211,12 +213,27 @@ def bicv(
         (one of "Fit R2X" or "BiCV R2X"), and "R2X". Ready to pass to
         :func:`RISE.plotting.plot_bicv_r2x`.
     """
+    if X is None and adata is not None:
+        X = adata
+    if X is None:
+        raise ValueError("Either X or adata must be provided.")
+    if ranks is None:
+        raise ValueError("ranks must be provided.")
+
     if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
         raise ValueError(
             "held_out_cell_frac and held_out_gene_frac must both be between 0 and 1."
         )
     if n_repeats < 1:
         raise ValueError("n_repeats must be at least 1.")
+
+    if "condition_unique_idxs" not in X.obs:
+        if condition_key is not None and condition_key in X.obs:
+            X.obs["condition_unique_idxs"] = pd.Categorical(X.obs[condition_key]).codes
+        else:
+            raise KeyError(
+                "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
+            )
 
     X = X.to_memory() if hasattr(X, "to_memory") else X
 

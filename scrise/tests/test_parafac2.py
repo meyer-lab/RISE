@@ -37,4 +37,51 @@ def test_factor_thomson_mlx_backend():
 
     res = pf2(X, 5, doEmbedding=False, tolerance=1e-6, backend="mlx")
 
-    assert np.all(np.isfinite(res.varm["Pf2_C"]))
+    assert np.all(np.isfinite(np.asarray(res.varm["Pf2_C"])))
+
+
+def test_pf2_condition_key():
+    import anndata
+
+    from .conftest import make_synthetic_pf2_data
+
+    orig = make_synthetic_pf2_data(n_cond=3, n_genes=15, rank=2, seed=42)
+    obs = pd.DataFrame({"custom_condition": orig.obs["Condition"].to_numpy()})
+    X = anndata.AnnData(X=orig.X, obs=obs, var=pd.DataFrame(index=orig.var_names))
+
+    with pytest.raises(KeyError, match="condition_unique_idxs"):
+        pf2(X, 2, doEmbedding=False, max_iter=5, compress=None)
+
+    res = pf2(
+        X,
+        2,
+        condition_key="custom_condition",
+        doEmbedding=False,
+        max_iter=5,
+        compress=None,
+    )
+    assert "condition_unique_idxs" in res.obs
+    assert "Pf2_A" in res.uns
+
+
+def test_pf2_adata_alias():
+    from .conftest import make_synthetic_pf2_data
+
+    X = make_synthetic_pf2_data(n_cond=3, n_genes=15, rank=2, seed=42)
+    res = pf2(adata=X, rank=2, doEmbedding=False, max_iter=5, compress=None)
+    assert "Pf2_A" in res.uns
+
+
+def test_root_api_exports():
+    import scrise
+    from scrise import __version__, bicv, plotting, prepare_dataset
+
+    assert callable(bicv)
+    assert callable(prepare_dataset)
+    assert hasattr(plotting, "plot_condition_factors")
+    assert hasattr(plotting, "plot_gene_factors")
+    assert __version__ == "1.2.0"
+    assert "bicv" in scrise.__all__
+    assert "prepare_dataset" in scrise.__all__
+    assert "plotting" in scrise.__all__
+    assert "__version__" in scrise.__all__

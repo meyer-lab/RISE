@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 import anndata
 import numpy as np
 import pandas as pd
@@ -15,9 +17,11 @@ def plot_condition_factors(
     cond: str = "Condition",
     log_transform: bool = True,
     cond_group_labels: pd.Series | None = None,
-    ThomsonNorm=False,
+    ThomsonNorm: bool = False,
     color_key=None,
-    group_cond=False,
+    group_cond: bool = False,
+    control_pattern: str | None = None,
+    control_conditions: Sequence[str] | None = None,
 ):
     """Plot condition factors as a heatmap showing how conditions contribute to
     components.
@@ -57,8 +61,14 @@ def plot_condition_factors(
     if log_transform is True:
         X = np.log10(X)
 
-    if ThomsonNorm is True:
-        controls = yt.str.contains("CTRL")
+    if ThomsonNorm is True and control_pattern is None:
+        control_pattern = "CTRL"
+
+    if control_conditions is not None:
+        controls = yt.isin(control_conditions)
+        XX = X[controls]
+    elif control_pattern is not None:
+        controls = yt.str.contains(control_pattern)
         XX = X[controls]
     else:
         XX = X
@@ -184,6 +194,10 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
     if trim is True:
         max_weight = np.max(np.abs(X), axis=1)
         kept_idxs = max_weight > weight
+        if not np.any(kept_idxs):
+            raise ValueError(
+                f"No genes exceeded the weight threshold {weight}. Lower the threshold or set trim=False."
+            )
         X = X[kept_idxs]
         yt = yt[kept_idxs]
 
