@@ -100,9 +100,9 @@ def order_components_by_energy(X: anndata.AnnData) -> anndata.AnnData:
     components of the new fit correspond to the N components of the old fit.
 
     This function instead orders components by their intrinsic energy,
-    ``||A[:, r]|| * ||C[:, r]||`` (the product of the condition-factor and
-    gene-factor column norms), which is directly determined by the fit and
-    is not subject to the arbitrary rescaling that can occur between A and C.
+    ``|weights[r]| * ||A[:, r]|| * ||C[:, r]||`` (the product of component
+    weights, condition-factor, and gene-factor column norms), which is
+    directly determined by the fit and is not subject to arbitrary rescaling.
     Components are ordered from highest to lowest energy, so that low-energy
     components -- which tend to be the ones added when the rank is
     increased -- land at the high end of the ordering. This is consistent
@@ -142,7 +142,7 @@ def order_components_by_energy(X: anndata.AnnData) -> anndata.AnnData:
     A = A * signs
     C = C * signs
 
-    energy = np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+    energy = np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     order = np.argsort(energy)[::-1]
 
     X.uns["Pf2_A"] = A[:, order]

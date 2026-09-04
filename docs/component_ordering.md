@@ -39,19 +39,21 @@ footing (i.e. a fixed sign and a fixed ordering rule).
 RISE orders components by their intrinsic energy,
 
 $$
-e_r = \lVert \mathbf{A}[:, r] \rVert \cdot \lVert \mathbf{C}[:, r] \rVert,
+e_r = |w_r| \cdot \lVert \mathbf{A}[:, r] \rVert \cdot \lVert \mathbf{C}[:, r] \rVert,
 $$
 
-the product of the condition-factor and gene-factor column norms for
-component $r$. This quantity is directly determined by the fit: unlike the
-Gini coefficient, it is not distorted by the arbitrary rescaling that can
-occur between $\mathbf{A}$ and $\mathbf{C}$ during optimization (their
-product is fixed by the fit, but how that product is split between the two
-factors is not). Components are sorted from highest to lowest energy, so
-that low-energy components — typically the ones that appear only once the
-rank is increased — land at the high end of the ordering, while
-established, high-energy components stay near the front. This is
-implemented in [`RISE.order_components_by_energy`][RISE.factorization.order_components_by_energy]
+the product of the component weight, condition-factor column norm, and
+gene-factor column norm for component $r$. (Because standard PARAFAC2 factor
+normalization scales the columns of $\mathbf{A}$, $\mathbf{B}$, and
+$\mathbf{C}$ to unit length, this energy corresponds directly to $|w_r|$ while
+remaining invariant to any alternative scale distribution among the factors.)
+This quantity is directly determined by the fit: unlike the Gini coefficient,
+it is not distorted by arbitrary rescaling between factor matrices. Components
+are sorted from highest to lowest energy, so that low-energy components —
+typically the ones that appear only once the rank is increased — land at the
+high end of the ordering, while established, high-energy components stay near
+the front. This is implemented in
+[`RISE.order_components_by_energy`][RISE.factorization.order_components_by_energy]
 and is applied automatically inside [`RISE.pf2`][RISE.factorization.pf2].
 
 ## Sign convention
