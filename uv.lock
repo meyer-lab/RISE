@@ -2097,6 +2097,8 @@ version = "1.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "anndata" },
+    { name = "hdf5plugin" },
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "pacmap" },
     { name = "pandas" },
@@ -2104,9 +2106,10 @@ dependencies = [
     { name = "pyarrow" },
     { name = "scikit-learn" },
     { name = "scipy" },
+    { name = "seaborn" },
     { name = "tensorly" },
     { name = "tqdm" },
-    { name = "vcsc" },
+    { name = "vsparse" },
 ]
 
 [package.optional-dependencies]
@@ -2159,6 +2162,8 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "anndata", specifier = ">=0.13" },
+    { name = "hdf5plugin", specifier = ">=7.0.0" },
+    { name = "matplotlib", specifier = ">=3.8" },
     { name = "numpy", specifier = ">=2.2" },
     { name = "pacmap", specifier = ">=0.9" },
     { name = "pandas", specifier = ">=3.0.0" },
@@ -2167,9 +2172,10 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=19.0" },
     { name = "scikit-learn", specifier = ">=1.6" },
     { name = "scipy", specifier = ">=1.16" },
+    { name = "seaborn", specifier = ">=0.13.2" },
     { name = "tensorly", specifier = ">=0.9.0" },
     { name = "tqdm", specifier = ">=4.66.1" },
-    { name = "vcsc", git = "https://github.com/meyer-lab/anndata-VCSC.git" },
+    { name = "vsparse", specifier = ">=0.2.0" },
 ]
 provides-extras = ["gpu"]
 
@@ -2462,15 +2468,19 @@ wheels = [
 ]
 
 [[package]]
-name = "vcsc"
-version = "0.1.0"
-source = { git = "https://github.com/meyer-lab/anndata-VCSC.git#5ada8d2d5cd2deef16b66590f32ab96489e44406" }
+name = "vsparse"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anndata" },
     { name = "hdf5plugin" },
     { name = "numba" },
     { name = "numpy" },
     { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3d/a5/78db8f12cb1dfe2e0a2f7d637efef572ffb75578d01e34f2c1d2a4327747/vsparse-0.2.0.tar.gz", hash = "sha256:aba6221ec50ce3cbe6bc149d69216202c66b2361c9b7a7ba09e3f3bc21a52cff", size = 37836, upload-time = "2026-09-04T12:50:17.51Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/28/14/f2a51a5aa3a3d131429ed7d238d9a13d32dd10493b3019e69e9fd4399420/vsparse-0.2.0-py3-none-any.whl", hash = "sha256:567035afa9a51c5edfc3103a9f98f95568f4ba5e2a9477f73031b703a376d277", size = 45084, upload-time = "2026-09-04T12:50:16.137Z" },
 ]
 
 [[package]]
