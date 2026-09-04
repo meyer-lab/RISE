@@ -112,3 +112,32 @@ def test_plot_bicv_r2x_smoke_and_axis_labels():
     assert ax.get_xlabel() == "Rank"
     assert ax.get_ylabel() == "R2X"
     assert ax.get_legend() is not None
+
+
+def test_plot_condition_factors_control_pattern_and_conditions():
+    adata = make_mock_factored_adata(n_conditions=6, rank=3)
+    adata.uns["Pf2_A"] = np.abs(adata.uns["Pf2_A"]) + 0.1
+    # Assign conditions with CTRL and TRT
+    cond_codes = adata.obs["condition_unique_idxs"].cat.codes
+    cond_names = [f"CTRL_{c % 2}" if c < 2 else f"TRT_{c}" for c in cond_codes]
+    adata.obs["Condition"] = pd.Categorical(cond_names)
+
+    fig1, ax1 = plt.subplots()
+    plot_condition_factors(adata, ax1, control_pattern="CTRL")
+    assert len(ax1.get_yticklabels()) > 0
+
+    fig2, ax2 = plt.subplots()
+    plot_condition_factors(adata, ax2, control_conditions=["CTRL_0", "CTRL_1"])
+    assert len(ax2.get_yticklabels()) > 0
+
+    fig3, ax3 = plt.subplots()
+    plot_condition_factors(adata, ax3, ThomsonNorm=True)
+    assert len(ax3.get_yticklabels()) > 0
+
+
+def test_plot_gene_factors_no_genes_pass_weight_raises():
+    adata = make_mock_factored_adata(n_genes=10, rank=2)
+    adata.varm["Pf2_C"] = np.full_like(adata.varm["Pf2_C"], 0.01)
+    fig, ax = plt.subplots()
+    with pytest.raises(ValueError, match="No genes exceeded the weight threshold"):
+        plot_gene_factors(adata, ax, weight=0.5, trim=True)

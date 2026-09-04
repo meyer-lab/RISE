@@ -86,3 +86,35 @@ def test_bicv_warns_when_best_rank_is_at_boundary():
 
     with pytest.warns(UserWarning, match="edge of the tested ranks"):
         bicv(X, [8], n_repeats=1, random_state=0, max_iter=50)
+
+
+def test_bicv_condition_key():
+    orig = _make_test_data()
+    obs = pd.DataFrame(
+        {"custom_condition": orig.obs["condition_unique_idxs"].astype(str).to_numpy()}
+    )
+    X = anndata.AnnData(
+        X=orig.X,
+        obs=obs,
+        var=pd.DataFrame({"means": np.zeros(orig.n_vars)}, index=orig.var_names),
+    )
+
+    with pytest.raises(KeyError, match="condition_unique_idxs"):
+        bicv(X, [2], n_repeats=1, random_state=0, max_iter=10)
+
+    results = bicv(
+        X,
+        [2],
+        condition_key="custom_condition",
+        n_repeats=1,
+        random_state=0,
+        max_iter=10,
+    )
+    assert isinstance(results, pd.DataFrame)
+    assert "condition_unique_idxs" in X.obs
+
+
+def test_bicv_adata_alias():
+    X = _make_test_data()
+    results = bicv(adata=X, ranks=[2], n_repeats=1, random_state=0, max_iter=10)
+    assert isinstance(results, pd.DataFrame)

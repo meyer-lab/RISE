@@ -214,8 +214,8 @@ def match_components_across_ranks(
 
 
 def pf2(
-    X: anndata.AnnData,
-    rank: int,
+    X: anndata.AnnData | None = None,
+    rank: int | None = None,
     random_state=1,
     doEmbedding: bool = True,
     tolerance=1e-6,
@@ -223,7 +223,9 @@ def pf2(
     normalize_slices: bool = False,
     backend: str | None = None,
     compress: int | tuple[int, int | None] | str | bool | None = None,
-):
+    condition_key: str | None = None,
+    adata: anndata.AnnData | None = None,
+) -> anndata.AnnData:
     """Perform PARAFAC2 tensor decomposition on single-cell RNA-seq data.
 
     This is the main function for running RISE analysis. It decomposes the
@@ -284,6 +286,21 @@ def pf2(
         components -- typically the ones added when the rank is increased
         -- land at the high end of the ordering.
     """
+    if X is None and adata is not None:
+        X = adata
+    if X is None:
+        raise ValueError("Either X or adata must be provided.")
+    if rank is None:
+        raise ValueError("rank must be provided.")
+
+    if "condition_unique_idxs" not in X.obs:
+        if condition_key is not None and condition_key in X.obs:
+            X.obs["condition_unique_idxs"] = pd.Categorical(X.obs[condition_key]).codes
+        else:
+            raise KeyError(
+                "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
+            )
+
     pf_out, _ = parafac2_nd(
         X,
         rank=rank,

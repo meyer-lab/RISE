@@ -5,7 +5,6 @@ Decomposition stability analysis and plotting functions.
 import anndata
 import numpy as np
 import pandas as pd
-import scanpy as sc
 import seaborn as sns
 from matplotlib.axes import Axes
 from tensorly.cp_tensor import CPTensor
@@ -80,9 +79,10 @@ def plot_fms_percent_drop(
     for j in range(runs):
         scores = [1.0]
         for i in percentList[1:]:
-            sampled_data: anndata.AnnData = sc.pp.subsample(
-                X, fraction=1 - (i / 100), random_state=j, copy=True
-            )  # type: ignore
+            n_cells = int(X.n_obs * (1 - (i / 100)))
+            rng = np.random.default_rng(j)
+            sampled_idx = rng.choice(X.n_obs, size=n_cells, replace=False)
+            sampled_data = X[sampled_idx].copy()
             sampledX = pf2(sampled_data, rank, random_state=j + 2, doEmbedding=False)
 
             fmsScore = calculateFMS(dataX, sampledX)
