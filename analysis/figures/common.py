@@ -8,6 +8,13 @@ import time
 import warnings
 from string import ascii_letters
 
+import hdf5plugin  # noqa: F401
+import matplotlib
+import seaborn as sns
+from matplotlib import gridspec
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -15,17 +22,9 @@ warnings.filterwarnings("ignore", message=".*OldFormatWarning.*")
 
 os.environ["PARAFAC2_BACKEND"] = "cupy"
 try:
-    import cupy
-    import cupy.cuda.compiler
+    import cupy  # noqa: F401
 except ImportError:
     pass
-
-import hdf5plugin  # noqa: F401
-import matplotlib
-import seaborn as sns
-from matplotlib import gridspec
-from matplotlib import pyplot as plt
-from matplotlib.figure import Figure
 
 matplotlib.use("AGG")
 
