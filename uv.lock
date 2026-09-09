@@ -2108,6 +2108,7 @@ dependencies = [
     { name = "scipy" },
     { name = "seaborn" },
     { name = "tensorly" },
+    { name = "tlviz" },
     { name = "tqdm" },
     { name = "vsparse" },
 ]
@@ -2174,6 +2175,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.16" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "tensorly", specifier = ">=0.9.0" },
+    { name = "tlviz", specifier = ">=0.1.1" },
     { name = "tqdm", specifier = ">=4.66.1" },
     { name = "vsparse", specifier = ">=0.2.0" },
 ]
