@@ -57,6 +57,17 @@ it whenever your dataset has conditions with substantially different cell
 counts, and especially when one condition (such as a pooled control) is much
 larger than the rest.
 
+[`scrise.bicv`][scrise.rank_selection.bicv] does not expose `normalize_slices`
+directly (rank selection needs to remain consistent with whatever fitting
+options you plan to use for the final `pf2` fit), but you can forward it,
+along with any other `parafac2_nd` option, through `parafac2_kwarg`:
+
+```python
+from scrise import bicv
+
+results = bicv(X, ranks, parafac2_kwarg={"normalize_slices": True})
+```
+
 ## Fix 2: Post-fit read-depth correction
 
 RISE also provides a post-hoc correction,

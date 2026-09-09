@@ -12,14 +12,16 @@ penalizes overfitting and typically peaks near the "true" rank of the data.
 
 import warnings
 from collections.abc import Sequence
+from typing import Any
 
 import anndata
 import numpy as np
 import pandas as pd
 import scipy.sparse as sps
-from parafac2.parafac2 import parafac2_nd
 from parafac2.utils import calc_W, condition_slices, project_data
 from tqdm import tqdm
+
+from ._pf2_utils import run_parafac2
 
 
 def _dense(mat) -> np.ndarray:
@@ -83,6 +85,8 @@ def _bicv_trial(
     tolerance: float,
     max_iter: int,
     compress: int | tuple[int, int | None] | str | bool | None = "auto",
+    compression_kwarg: dict[str, Any] | None = None,
+    parafac2_kwarg: dict[str, Any] | None = None,
 ) -> float:
     """Run a single bi-cross-validation trial and return the held-out R2X.
 
@@ -109,13 +113,15 @@ def _bicv_trial(
     train_gene_mask, test_gene_mask = _split_genes(X.n_vars, held_out_gene_frac, rng)
 
     X_train = X[train_cell_mask][:, train_gene_mask].copy()
-    (weights, (A, B, C), P_train), _ = parafac2_nd(
+    (weights, (A, B, C), P_train), _ = run_parafac2(
         X_train,
         rank=rank,
         random_state=int(rng.integers(np.iinfo(np.int32).max)),
         tol=tolerance,
         n_iter_max=max_iter,
         compress=compress,
+        compression_kwarg=compression_kwarg,
+        parafac2_kwarg=parafac2_kwarg,
     )
     A = A * weights
 
@@ -166,6 +172,8 @@ def bicv(
     tolerance: float = 1e-6,
     max_iter: int = 200,
     compress: int | tuple[int, int | None] | str | bool | None = "auto",
+    compression_kwarg: dict[str, Any] | None = None,
+    parafac2_kwarg: dict[str, Any] | None = None,
     condition_key: str | None = None,
     adata: anndata.AnnData | None = None,
 ) -> pd.DataFrame:
@@ -205,6 +213,17 @@ def bicv(
         ``"auto"`` (compression dimensions set per rank), which sharply cuts
         the cost of sweeping many ranks and repeats over raw data. Pass
         None/False to fall back to exact ALS.
+    compression_kwarg : dict, optional
+        Additional keyword arguments forwarded to
+        :func:`parafac2.compress.compress_dataset` (e.g. ``n_power_iter``)
+        for every trial and in-sample fit. Requires ``compress`` to also be
+        set.
+    parafac2_kwarg : dict, optional
+        Additional keyword arguments forwarded to ``parafac2_nd`` for every
+        trial and in-sample fit (e.g. ``normalize_slices``, ``backend``,
+        ``n_inner``), for underlying PARAFAC2 options not otherwise exposed
+        here. See :func:`scrise.factorization.pf2`'s ``normalize_slices``
+        for how it can help with unequal cell counts across conditions.
 
     Returns
     -------
@@ -250,13 +269,15 @@ def bicv(
     rng = np.random.default_rng(random_state)
     rows = []
     for rank in tqdm(ranks, desc="BiCV rank selection"):
-        _, fit_r2x = parafac2_nd(
+        _, fit_r2x = run_parafac2(
             X,
             rank=rank,
             random_state=int(rng.integers(np.iinfo(np.int32).max)),
             tol=tolerance,
             n_iter_max=max_iter,
             compress=compress,
+            compression_kwarg=compression_kwarg,
+            parafac2_kwarg=parafac2_kwarg,
         )
         rows.append({"Rank": rank, "Repeat": 0, "Metric": "Fit R2X", "R2X": fit_r2x})
 
@@ -270,6 +291,8 @@ def bicv(
                 tolerance,
                 max_iter,
                 compress,
+                compression_kwarg,
+                parafac2_kwarg,
             )
             rows.append(
                 {"Rank": rank, "Repeat": repeat, "Metric": "BiCV R2X", "R2X": bicv_r2x}
