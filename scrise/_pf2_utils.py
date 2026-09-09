@@ -44,11 +44,10 @@ def run_parafac2(
     normalize_slices = parafac2_kwarg.pop("normalize_slices", normalize_slices)
     backend = parafac2_kwarg.pop("backend", backend)
 
-    if compression_kwarg and (compress is None or compress is False):
-        raise ValueError("compression_kwarg requires compress to be set.")
-
     X_in: anndata.AnnData | CompressedData = X
     if compression_kwarg:
+        if compress is None or compress is False:
+            raise ValueError("compression_kwarg requires compress to be set.")
         X_in = compress_dataset(
             X,
             L=compress,
