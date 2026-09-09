@@ -72,6 +72,58 @@ def test_pf2_adata_alias():
     assert "Pf2_A" in res.uns
 
 
+def test_pf2_parafac2_kwarg_and_compression_kwarg():
+    from .conftest import make_synthetic_pf2_data
+
+    X = make_synthetic_pf2_data(n_cond=3, n_genes=15, rank=2, seed=42)
+
+    # parafac2_kwarg forwards options (e.g. normalize_slices) not exposed
+    # as a dedicated top-level argument by rise_pca_r2x, and can also
+    # override pf2's own normalize_slices argument.
+    res = pf2(
+        X.copy(),
+        2,
+        doEmbedding=False,
+        max_iter=5,
+        compress="auto",
+        parafac2_kwarg={"normalize_slices": True},
+    )
+    assert "Pf2_A" in res.uns
+
+    # compression_kwarg forwards options to compress_dataset.
+    res = pf2(
+        X.copy(),
+        2,
+        doEmbedding=False,
+        max_iter=5,
+        compress="auto",
+        compression_kwarg={"n_power_iter": 1},
+    )
+    assert "Pf2_A" in res.uns
+
+    # compression_kwarg without compress is an error, since there is then
+    # no compression step for it to reach.
+    with pytest.raises(ValueError, match="compression_kwarg requires compress"):
+        pf2(
+            X.copy(),
+            2,
+            doEmbedding=False,
+            max_iter=5,
+            compress=None,
+            compression_kwarg={"n_power_iter": 1},
+        )
+
+
+def test_rise_pca_r2x_parafac2_kwarg():
+    from .conftest import make_synthetic_pf2_data
+
+    X = make_synthetic_pf2_data(n_cond=3, n_genes=15, rank=2, seed=42)
+    r2x_rise, _ = rise_pca_r2x(
+        X, [2], compress="auto", parafac2_kwarg={"normalize_slices": True}
+    )
+    assert np.all(np.isfinite(r2x_rise))
+
+
 def test_root_api_exports():
     import scrise
     from scrise import __version__, bicv, plotting, prepare_dataset

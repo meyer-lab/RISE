@@ -9,12 +9,13 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sps
 from pacmap import PaCMAP
-from parafac2.parafac2 import parafac2_nd, store_pf2
+from parafac2.parafac2 import store_pf2
 from scipy.stats import gmean
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from tqdm import tqdm
 
+from ._pf2_utils import run_parafac2
 from .opq import OPQQuantizer, find_optimal_opq
 
 
@@ -223,6 +224,8 @@ def pf2(
     normalize_slices: bool = False,
     backend: str | None = None,
     compress: int | tuple[int, int | None] | str | bool | None = None,
+    compression_kwarg: dict[str, Any] | None = None,
+    parafac2_kwarg: dict[str, Any] | None = None,
     condition_key: str | None = None,
     adata: anndata.AnnData | None = None,
 ) -> anndata.AnnData:
@@ -265,6 +268,13 @@ def pf2(
         (default), exact ALS is used. If ``"auto"`` or True, compression
         dimensions are set automatically from ``rank``. See
         :func:`parafac2.parafac2.parafac2_nd` for details.
+    compression_kwarg : dict, optional
+        Additional keyword arguments forwarded to
+        :func:`parafac2.compress.compress_dataset` (e.g. ``n_power_iter``).
+        Requires ``compress`` to also be set.
+    parafac2_kwarg : dict, optional
+        Additional keyword arguments forwarded to ``parafac2_nd`` (e.g.
+        ``n_inner``, ``callback``), for options not otherwise exposed here.
 
     Returns
     -------
@@ -301,7 +311,7 @@ def pf2(
                 "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
             )
 
-    pf_out, _ = parafac2_nd(
+    pf_out, _ = run_parafac2(
         X,
         rank=rank,
         random_state=random_state,
@@ -310,6 +320,8 @@ def pf2(
         normalize_slices=normalize_slices,
         backend=backend,
         compress=compress,
+        compression_kwarg=compression_kwarg,
+        parafac2_kwarg=parafac2_kwarg,
     )
 
     X = store_pf2(X, pf_out)
@@ -326,6 +338,8 @@ def rise_pca_r2x(
     X: anndata.AnnData,
     ranks,
     compress: int | tuple[int, int | None] | str | bool | None = "auto",
+    compression_kwarg: dict[str, Any] | None = None,
+    parafac2_kwarg: dict[str, Any] | None = None,
 ):
     """Compute variance explained (R²X) for RISE and PCA across different ranks.
 
@@ -346,6 +360,13 @@ def rise_pca_r2x(
         fit. Defaults to ``"auto"`` (compression dimensions set from each
         rank), which sharply cuts the cost of sweeping many ranks over raw
         data. Pass None/False to fall back to exact ALS.
+    compression_kwarg : dict, optional
+        Additional keyword arguments forwarded to
+        :func:`parafac2.compress.compress_dataset` (e.g. ``n_power_iter``).
+        Requires ``compress`` to also be set.
+    parafac2_kwarg : dict, optional
+        Additional keyword arguments forwarded to ``parafac2_nd`` for each
+        rank's fit (e.g. ``normalize_slices``, ``backend``, ``tol``).
 
     Returns
     -------
@@ -361,7 +382,16 @@ def rise_pca_r2x(
     r2x_rise = np.zeros(len(ranks))
 
     for index, i in tqdm(enumerate(ranks), total=len(r2x_rise)):
-        _, R2X = parafac2_nd(X, rank=i, compress=compress)
+        _, R2X = run_parafac2(
+            X,
+            rank=i,
+            random_state=None,
+            tol=1e-6,
+            n_iter_max=100,
+            compress=compress,
+            compression_kwarg=compression_kwarg,
+            parafac2_kwarg=parafac2_kwarg,
+        )
         r2x_rise[index] = R2X
 
     # Mean center because this is done within RISE

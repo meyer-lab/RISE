@@ -114,6 +114,38 @@ def test_bicv_condition_key():
     assert "condition_unique_idxs" in X.obs
 
 
+def test_bicv_parafac2_kwarg_and_compression_kwarg():
+    """bicv() should forward parafac2_kwarg/compression_kwarg to every
+    in-sample and BiCV-trial PARAFAC2 fit (issue #544)."""
+    X = _make_test_data()
+
+    results = bicv(
+        X.copy(),
+        [2, 4],
+        n_repeats=1,
+        random_state=0,
+        max_iter=20,
+        compress="auto",
+        parafac2_kwarg={"normalize_slices": True},
+        compression_kwarg={"n_power_iter": 1},
+    )
+    assert isinstance(results, pd.DataFrame)
+    assert np.all(np.isfinite(results["R2X"]))
+
+    # compression_kwarg without compress is an error, since there is then
+    # no compression step for it to reach.
+    with pytest.raises(ValueError, match="compression_kwarg requires compress"):
+        bicv(
+            X.copy(),
+            [2],
+            n_repeats=1,
+            random_state=0,
+            max_iter=20,
+            compress=None,
+            compression_kwarg={"n_power_iter": 1},
+        )
+
+
 def test_bicv_adata_alias():
     X = _make_test_data()
     results = bicv(adata=X, ranks=[2], n_repeats=1, random_state=0, max_iter=10)

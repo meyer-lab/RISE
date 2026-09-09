@@ -112,6 +112,17 @@ plt.show()
 
 `bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes (both default to 0.2); increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
 
+If you plan to fit the final model with non-default `parafac2_nd` options (e.g. `normalize_slices=True`, see [Handling Unequal Cell Counts](unequal_cell_counts.md)), pass the same options to `bicv` via `parafac2_kwarg` so that rank selection is evaluated under the same fitting behavior:
+
+```python
+results = bicv(
+    X, ranks, n_repeats=3, random_state=0,
+    parafac2_kwarg={"normalize_slices": True},
+)
+```
+
+`compression_kwarg` similarly forwards extra options (e.g. `n_power_iter`) to the CANDELINC compression step; it requires `compress` to also be set.
+
 ## Running the Factorization
 
 ### Perform RISE Factorization
