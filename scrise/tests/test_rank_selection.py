@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ..rank_selection import _train_cell_loadings, bicv
+from ..rank_selection import _bicv_trial, _train_cell_loadings, bicv
 
 
 def _make_test_data(
@@ -45,7 +45,7 @@ def test_bicv_shape_and_range():
     results = bicv(X, ranks, n_repeats=n_repeats, random_state=0, max_iter=50)
 
     assert isinstance(results, pd.DataFrame)
-    assert set(results.columns) == {"Rank", "Repeat", "Metric", "R2X"}
+    assert {"Rank", "Repeat", "Metric", "R2X"} <= set(results.columns)
     assert set(results["Metric"]) == {"Fit R2X", "BiCV R2X"}
     assert set(results["Rank"]) == set(ranks)
 
@@ -268,3 +268,98 @@ def test_bicv_runs_on_interleaved_conditions():
 
     result = bicv(shuffled, ranks=[2, 3], n_repeats=1, random_state=0, max_iter=50)
     assert np.isfinite(result["R2X"]).all()
+
+
+# ---------------------------------------------------------------------------
+# Per-trial diagnostics (issue #548)
+# ---------------------------------------------------------------------------
+
+_TRIAL_COLUMNS = [
+    "Train Block R2X",
+    "NTrainGenes",
+    "NTestGenes",
+    "NTrainCells",
+    "NTestCells",
+    "Seed",
+]
+
+
+def test_bicv_reports_per_trial_diagnostics():
+    X = _make_test_data()
+    results = bicv(X, [2, 3], n_repeats=2, random_state=0, max_iter=50)
+
+    assert set(_TRIAL_COLUMNS) <= set(results.columns)
+    bicv_rows = results[results["Metric"] == "BiCV R2X"]
+    assert bicv_rows[_TRIAL_COLUMNS].notna().all().all()
+
+
+def test_trial_columns_are_absent_on_the_unsplit_fit_rows():
+    """ "Fit R2X" is a different fit on the full data, so it has no split."""
+    X = _make_test_data()
+    results = bicv(X, [2], n_repeats=1, random_state=0, max_iter=50)
+    fit_rows = results[results["Metric"] == "Fit R2X"]
+    assert fit_rows[_TRIAL_COLUMNS].isna().all().all()
+
+
+def test_reported_block_sizes_match_the_requested_split():
+    X = _make_test_data()
+    results = bicv(
+        X,
+        [2],
+        n_repeats=2,
+        random_state=0,
+        max_iter=50,
+        held_out_gene_frac=0.25,
+        held_out_cell_frac=0.25,
+    )
+    rows = results[results["Metric"] == "BiCV R2X"]
+
+    assert (rows["NTrainGenes"] + rows["NTestGenes"] == X.n_vars).all()
+    assert (rows["NTrainCells"] + rows["NTestCells"] == X.n_obs).all()
+    # Genes split globally, so the count is exact rather than approximate.
+    assert (rows["NTestGenes"] == round(X.n_vars * 0.25)).all()
+    # Cells split within each condition, so allow for per-condition rounding.
+    assert np.allclose(rows["NTestCells"] / X.n_obs, 0.25, atol=0.05)
+
+
+def test_train_block_r2x_is_in_sample_and_so_climbs_with_rank():
+    """The reason this column exists.
+
+    A BiCV curve is only interpretable against the in-sample fit on the *same*
+    block: the useful signal is the held-out score turning over while this one
+    keeps climbing. The separate "Fit R2X" metric is a different fit on
+    different data and cannot play that role.
+    """
+    X = _make_test_data()
+    results = bicv(X, [1, 3, 6], n_repeats=2, random_state=0, max_iter=100)
+    rows = results[results["Metric"] == "BiCV R2X"]
+
+    by_rank = rows.groupby("Rank")["Train Block R2X"].mean().sort_index()
+    assert np.all(np.diff(by_rank.to_numpy()) >= -1e-6)
+    assert (rows["Train Block R2X"] <= 1.0 + 1e-6).all()
+
+
+def test_reported_seed_reproduces_its_own_trial():
+    """A trial can be rerun in isolation from the seed the table reports."""
+    X = _make_test_data()
+    results = bicv(X, [3], n_repeats=3, random_state=0, max_iter=60)
+    rows = results[results["Metric"] == "BiCV R2X"].reset_index(drop=True)
+
+    # Seeds differ across repeats, or "reproducible" would be vacuous.
+    assert rows["Seed"].nunique() == len(rows)
+
+    target = rows.iloc[1]
+    replayed = _bicv_trial(
+        X,
+        rank=3,
+        held_out_cell_frac=0.2,
+        held_out_gene_frac=0.2,
+        seed=int(target["Seed"]),
+        tolerance=1e-6,
+        max_iter=60,
+    )
+    assert replayed["BiCV R2X"] == pytest.approx(target["R2X"], rel=1e-9)
+    assert replayed["Train Block R2X"] == pytest.approx(
+        target["Train Block R2X"], rel=1e-9
+    )
+    assert replayed["NTestGenes"] == target["NTestGenes"]

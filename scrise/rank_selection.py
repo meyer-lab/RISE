@@ -106,14 +106,14 @@ def _bicv_trial(
     rank: int,
     held_out_cell_frac: float,
     held_out_gene_frac: float,
-    rng: np.random.Generator,
+    seed: int,
     tolerance: float,
     max_iter: int,
     compress: int | tuple[int, int | None] | str | bool | None = "auto",
     compression_kwarg: dict[str, Any] | None = None,
     parafac2_kwarg: dict[str, Any] | None = None,
-) -> float:
-    """Run a single bi-cross-validation trial and return the held-out R2X.
+) -> dict[str, float]:
+    """Run a single bi-cross-validation trial and return its scores and shape.
 
     Splits cells (stratified by condition) and genes into train/test blocks,
     fits PARAFAC2 on the train-cell x train-gene block, then predicts the
@@ -128,7 +128,18 @@ def _bicv_trial(
 
     R2X is then computed by reconstructing the held-out block from these
     estimates and comparing against the (mean-centered) observed values.
+
+    ``seed`` fully determines the trial: the gene split, the cell split and the
+    fit's initialisation all derive from it, so a single trial can be rerun or
+    re-scored in isolation from the value reported in the results table.
+
+    Returns
+    -------
+    dict[str, float]
+        ``BiCV R2X`` (the held-out block), ``Train Block R2X`` (in-sample, on
+        the block the model was fit to), the four block sizes, and ``Seed``.
     """
+    rng = np.random.default_rng(seed)
     cond_idx = X.obs["condition_unique_idxs"].to_numpy().astype(int)
     n_cond = int(cond_idx.max()) + 1
     means = X.var["means"].to_numpy() if "means" in X.var else np.zeros(X.n_vars)
@@ -138,7 +149,7 @@ def _bicv_trial(
     train_gene_mask, test_gene_mask = _split_genes(X.n_vars, held_out_gene_frac, rng)
 
     X_train = X[train_cell_mask][:, train_gene_mask].copy()
-    (weights, (A, B, C), P_train), _ = run_parafac2(
+    (weights, (A, B, C), P_train), train_block_r2x = run_parafac2(
         X_train,
         rank=rank,
         random_state=int(rng.integers(np.iinfo(np.int32).max)),
@@ -181,7 +192,15 @@ def _bicv_trial(
         ss_res += float(np.sum((actual - recon) ** 2))
         ss_tot += float(np.sum(actual**2))
 
-    return 1.0 - ss_res / ss_tot
+    return {
+        "BiCV R2X": 1.0 - ss_res / ss_tot,
+        "Train Block R2X": float(train_block_r2x),
+        "NTrainGenes": int(train_gene_mask.sum()),
+        "NTestGenes": int(test_gene_mask.sum()),
+        "NTrainCells": int(train_cell_mask.sum()),
+        "NTestCells": int(test_cell_mask.sum()),
+        "Seed": int(seed),
+    }
 
 
 def bicv(
@@ -250,9 +269,26 @@ def bicv(
     Returns
     -------
     pandas.DataFrame
-        Long-form DataFrame with columns "Rank", "Repeat", "Metric"
-        (one of "Fit R2X" or "BiCV R2X"), and "R2X". Ready to pass to
+        Long-form DataFrame with columns "Rank", "Repeat", "Metric" (one of
+        "Fit R2X" or "BiCV R2X"), and "R2X". Ready to pass to
         :func:`scrise.plotting.plot_bicv_r2x`.
+
+        BiCV rows carry per-trial diagnostics as additional columns:
+
+        ``Train Block R2X``
+            In-sample R2X on the block the model was actually fit to. The
+            useful reading of a BiCV curve is that this keeps climbing while
+            the held-out R2X turns over; the separate "Fit R2X" metric is a
+            different fit on different data and cannot play that role.
+        ``NTrainGenes``, ``NTestGenes``, ``NTrainCells``, ``NTestCells``
+            The realised block sizes, which set the scale of the spread across
+            repeats and confirm the split matches what was requested.
+        ``Seed``
+            The seed that determines the trial's splits and initialisation, so
+            a single trial can be rerun in isolation.
+
+        These columns are NaN on "Fit R2X" rows, which come from an
+        unsplit fit on the full dataset.
     """
     if X is None and adata is not None:
         X = adata
@@ -301,15 +337,18 @@ def bicv(
             compression_kwarg=compression_kwarg,
             parafac2_kwarg=parafac2_kwarg,
         )
+        # The full-data fit has no split, so the per-trial columns are absent
+        # here rather than zero; pandas fills them with NaN.
         rows.append({"Rank": rank, "Repeat": 0, "Metric": "Fit R2X", "R2X": fit_r2x})
 
         for repeat in range(n_repeats):
-            bicv_r2x = _bicv_trial(
+            trial_seed = int(rng.integers(np.iinfo(np.int32).max))
+            trial = _bicv_trial(
                 X,
                 rank,
                 held_out_cell_frac,
                 held_out_gene_frac,
-                rng,
+                trial_seed,
                 tolerance,
                 max_iter,
                 compress,
@@ -317,7 +356,13 @@ def bicv(
                 parafac2_kwarg,
             )
             rows.append(
-                {"Rank": rank, "Repeat": repeat, "Metric": "BiCV R2X", "R2X": bicv_r2x}
+                {
+                    "Rank": rank,
+                    "Repeat": repeat,
+                    "Metric": "BiCV R2X",
+                    "R2X": trial.pop("BiCV R2X"),
+                    **trial,
+                }
             )
 
     results = pd.DataFrame(rows)
