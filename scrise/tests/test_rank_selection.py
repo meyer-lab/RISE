@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ..rank_selection import bicv
+from ..rank_selection import _train_cell_loadings, bicv
 
 
 def _make_test_data(
@@ -150,3 +150,121 @@ def test_bicv_adata_alias():
     X = _make_test_data()
     results = bicv(adata=X, ranks=[2], n_repeats=1, random_state=0, max_iter=10)
     assert isinstance(results, pd.DataFrame)
+
+
+# ---------------------------------------------------------------------------
+# Alignment of the training-cell loadings (issue #546)
+# ---------------------------------------------------------------------------
+
+
+def _loading_fixture(cond_train: np.ndarray, rank: int = 3):
+    """Per-condition projections plus a B and A that make each block identifiable.
+
+    `A[i]` is `(i + 1) * ones`, so a row of the result reveals which condition
+    it was built from: any row belonging to condition `i` is exactly `(i + 1)`
+    times the corresponding row of `P_train[i] @ B`.
+    """
+    n_cond = int(cond_train.max()) + 1
+    rng = np.random.default_rng(0)
+    B = rng.normal(size=(rank, rank))
+    A = np.column_stack([np.arange(1, n_cond + 1)] * rank).astype(float)
+    P_train = [
+        rng.normal(size=(int(np.sum(cond_train == i)), rank)) for i in range(n_cond)
+    ]
+    return P_train, B, A, n_cond
+
+
+def test_train_cell_loadings_match_the_rows_they_are_regressed_against():
+    """Row k of the loadings must describe the cell at row k of the matrix.
+
+    Regression test for #546. The loadings were built by concatenating
+    per-condition blocks in condition order, while the expression they are
+    regressed against stays in the cells' natural order. Those two orderings
+    coincide only when conditions are stored contiguously, so on pooled data --
+    where conditions are interleaved -- the least-squares fit silently paired
+    each cell's loading with a different cell's expression.
+    """
+    cond_train = np.tile(np.arange(4), 25)  # fully interleaved
+    P_train, B, A, n_cond = _loading_fixture(cond_train)
+
+    Z = _train_cell_loadings(P_train, B, A, cond_train, n_cond)
+
+    assert Z.shape == (cond_train.size, B.shape[1])
+    # Each condition's rows must land where that condition's cells actually are.
+    for i in range(n_cond):
+        sel = cond_train == i
+        np.testing.assert_allclose(Z[sel], (P_train[i] @ B) * A[i])
+
+    # And the identifying scale must survive: a row's magnitude tells you its
+    # condition, which is exactly what the misalignment used to scramble.
+    for k in range(cond_train.size):
+        i = int(cond_train[k])
+        np.testing.assert_allclose(
+            Z[k], (P_train[i] @ B)[int(np.sum(cond_train[:k] == i))] * A[i]
+        )
+
+
+def test_train_cell_loadings_agree_with_concatenation_when_contiguous():
+    """The fix is a no-op on contiguously stored conditions.
+
+    That is the case every previous test used, which is why this went unnoticed:
+    concatenating in condition order and scattering by position give the same
+    array whenever conditions are already grouped.
+    """
+    cond_train = np.repeat(np.arange(4), 25)  # contiguous blocks
+    P_train, B, A, n_cond = _loading_fixture(cond_train)
+
+    scattered = _train_cell_loadings(P_train, B, A, cond_train, n_cond)
+    concatenated = np.concatenate(
+        [(P_train[i] @ B) * A[i] for i in range(n_cond)], axis=0
+    )
+    np.testing.assert_array_equal(scattered, concatenated)
+
+
+def test_train_cell_loadings_differ_from_concatenation_when_interleaved():
+    """...and is *not* a no-op otherwise, which is the whole point.
+
+    Without this, the two tests above would both pass on the unfixed code.
+    """
+    cond_train = np.tile(np.arange(4), 25)
+    P_train, B, A, n_cond = _loading_fixture(cond_train)
+
+    scattered = _train_cell_loadings(P_train, B, A, cond_train, n_cond)
+    concatenated = np.concatenate(
+        [(P_train[i] @ B) * A[i] for i in range(n_cond)], axis=0
+    )
+    assert not np.allclose(scattered, concatenated)
+
+
+def test_train_cell_loadings_handle_a_condition_with_no_training_cells():
+    """A condition may be absent from a fold; its rows simply do not exist."""
+    cond_train = np.array([0, 2, 0, 2, 2])  # condition 1 has no train cells
+    n_cond = 3
+    rng = np.random.default_rng(0)
+    rank = 2
+    B = rng.normal(size=(rank, rank))
+    A = rng.normal(size=(n_cond, rank))
+    P_train = [
+        rng.normal(size=(int(np.sum(cond_train == i)), rank)) for i in range(n_cond)
+    ]
+
+    Z = _train_cell_loadings(P_train, B, A, cond_train, n_cond)
+    assert Z.shape == (5, rank)
+    assert np.all(np.isfinite(Z))
+    np.testing.assert_allclose(Z[cond_train == 0], (P_train[0] @ B) * A[0])
+    np.testing.assert_allclose(Z[cond_train == 2], (P_train[2] @ B) * A[2])
+
+
+def test_bicv_runs_on_interleaved_conditions():
+    """End to end: `bicv` must accept data whose conditions are not grouped."""
+    adata = _make_test_data()
+    cond = adata.obs["condition_unique_idxs"].to_numpy()
+    order = np.argsort(
+        [int(np.sum(cond[:k] == cond[k])) for k in range(cond.size)], kind="stable"
+    )
+    shuffled = adata[order].copy()
+    reshuffled = shuffled.obs["condition_unique_idxs"].to_numpy()
+    assert int(np.sum(reshuffled[1:] != reshuffled[:-1])) > cond.size // 2
+
+    result = bicv(shuffled, ranks=[2, 3], n_repeats=1, random_state=0, max_iter=50)
+    assert np.isfinite(result["R2X"]).all()

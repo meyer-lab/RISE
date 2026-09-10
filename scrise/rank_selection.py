@@ -76,6 +76,31 @@ def _max_feasible_rank(
     return int(min(min_train_cells, n_train_genes))
 
 
+def _train_cell_loadings(
+    P_train: list[np.ndarray],
+    B: np.ndarray,
+    A: np.ndarray,
+    cond_train: np.ndarray,
+    n_cond: int,
+) -> np.ndarray:
+    """Per-cell loadings for the training cells, in the cells' own row order.
+
+    `P_train[i]` lists condition ``i``'s cells in their within-condition order,
+    so the blocks have to be *scattered back* to the positions those cells
+    occupy, not concatenated in condition order. The two agree only when
+    conditions happen to be stored as contiguous blocks; on pooled data, where
+    conditions are interleaved, concatenating silently misaligns this against
+    the expression matrix it is regressed on.
+    """
+    rank = B.shape[1]
+    Z = np.empty((cond_train.size, rank), dtype=np.float64)
+    for i in range(n_cond):
+        sel = cond_train == i
+        if np.any(sel):
+            Z[sel] = (P_train[i] @ B) * A[i]
+    return Z
+
+
 def _bicv_trial(
     X: anndata.AnnData,
     rank: int,
@@ -127,10 +152,7 @@ def _bicv_trial(
 
     # Estimate gene loadings for the held-out genes from the train cells.
     cond_train = cond_idx[train_cell_mask]
-    Z = np.concatenate(
-        [(P_train[i] @ B) * A[i] for i in range(n_cond) if np.any(cond_train == i)],
-        axis=0,
-    )
+    Z = _train_cell_loadings(P_train, B, A, cond_train, n_cond)
     means_test_genes = means[test_gene_mask]
     X_train_test_genes = (
         _dense(X[train_cell_mask][:, test_gene_mask].X) - means_test_genes
