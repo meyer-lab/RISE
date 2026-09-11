@@ -8,7 +8,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from scrise.plotting import plot_wp_pacmap
+from scrise.plotting import avegene_per_status, plot_wp_pacmap
 
 from .common import getSetup, subplotLabel
 
@@ -48,19 +48,7 @@ def plot_avegene_per_status_per_cluster(
     cellType: str = "Cell Type",
 ):
     """Plots average gene expression across cell types for a category of drugs"""
-    genesV = X[:, gene]
-    dataDF = genesV.to_df()
-    dataDF = dataDF.subtract(genesV.var["means"].values)
-    dataDF["Status"] = genesV.obs["SLE_status"].values
-    dataDF["Condition"] = genesV.obs["Condition"].values
-    dataDF["Cell Type"] = genesV.obs[cellType].values
-
-    df = pd.melt(
-        dataDF, id_vars=["Status", "Cell Type", "Condition"], value_vars=gene
-    ).rename(columns={"variable": "Gene", "value": "Value"})
-
-    df = df.groupby(["Status", "Cell Type", "Gene", "Condition"], observed=False).mean()
-    df = df.rename(columns={"Value": "Average Gene Expression"}).reset_index()
+    df = avegene_per_status(X, gene, cellType)
 
     if clusterName2 is None:
         dfClust = df.loc[df["Cell Type"] == clusterName1]
