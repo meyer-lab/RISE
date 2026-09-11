@@ -329,6 +329,143 @@ def _validate_and_encode_cell_types(
     return codes, categories
 
 
+_CELL_TYPE_COLUMN_CANDIDATES = (
+    "cell_type",
+    "CellType",
+    "cell_types",
+    "Cell_Type",
+    "celltype",
+)
+
+
+def _permutation_p_values(
+    y: np.ndarray,
+    codes: np.ndarray,
+    n_types: int,
+    n_cells: int,
+    aurocs: np.ndarray,
+    n_permutations: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Empirical one-sided p-values against a rank-permutation null."""
+    ranks = sp.rankdata(y, method="average")
+    counts = np.bincount(codes, minlength=n_types).astype(float)
+    null_counts = np.zeros(n_types, dtype=int)
+
+    for _ in range(n_permutations):
+        perm_ranks = rng.permutation(ranks)
+        perm_sums = np.bincount(codes, weights=perm_ranks, minlength=n_types).astype(
+            float
+        )
+        for k in range(n_types):
+            n1 = counts[k]
+            n0 = n_cells - n1
+            if n1 > 0 and n0 > 0:
+                u_null = perm_sums[k] - n1 * (n1 + 1.0) / 2.0
+                auc_null = u_null / (n1 * n0)
+                if auc_null >= aurocs[k]:
+                    null_counts[k] += 1
+
+    return (1.0 + null_counts) / (1.0 + n_permutations)
+
+
+def _asymptotic_p_values(y: np.ndarray, codes: np.ndarray, n_types: int) -> np.ndarray:
+    """One-sided Mann-Whitney U p-values, used when ``n_permutations == 0``."""
+    p_values = np.ones(n_types, dtype=float)
+    for k in range(n_types):
+        pos = y[codes == k]
+        neg = y[codes != k]
+        if pos.size > 0 and neg.size > 0:
+            res = sp.mannwhitneyu(pos, neg, alternative="greater")
+            p_values[k] = float(res.pvalue)
+    return p_values
+
+
+def _component_p_values(
+    y: np.ndarray,
+    codes: np.ndarray,
+    n_types: int,
+    n_cells: int,
+    aurocs: np.ndarray,
+    n_permutations: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Per-cell-type p-values for one component's loadings.
+
+    Shared by :func:`cell_type_alignment` and
+    :func:`score_cell_type_alignment`, which compute this identically. A
+    single cell type (or no cells) leaves every p-value at 1.0, since there
+    is nothing to be enriched against.
+    """
+    if n_types <= 1 or n_cells == 0:
+        return np.ones(n_types, dtype=float)
+    if n_permutations > 0:
+        return _permutation_p_values(
+            y, codes, n_types, n_cells, aurocs, n_permutations, rng
+        )
+    if n_permutations == 0:
+        return _asymptotic_p_values(y, codes, n_types)
+    return np.ones(n_types, dtype=float)
+
+
+def _as_generator(
+    random_state: int | np.random.Generator | None,
+) -> np.random.Generator:
+    """Accept a seed, an existing Generator, or None."""
+    if isinstance(random_state, np.random.Generator):
+        return random_state
+    return np.random.default_rng(random_state)
+
+
+def _loadings_from_anndata(data: anndata.AnnData, projection_key: str) -> np.ndarray:
+    """Pull the cell-loading matrix out of ``obsm``, falling back to projections."""
+    if projection_key in data.obsm:
+        return np.asarray(data.obsm[projection_key])
+    if projection_key == "weighted_projections" and "projections" in data.obsm:
+        return np.asarray(data.obsm["projections"])
+    raise KeyError(f"Could not find '{projection_key}' in data.obsm.")
+
+
+def _cell_types_from_anndata(
+    data: anndata.AnnData, cell_types: pd.Series | np.ndarray | str | None
+) -> pd.Series:
+    """Resolve cell-type labels for an AnnData: named column, guess, or literal."""
+    if cell_types is None:
+        for candidate in _CELL_TYPE_COLUMN_CANDIDATES:
+            if candidate in data.obs:
+                return pd.Series(data.obs[candidate])
+        raise KeyError(
+            "Cell-type column not specified and none of ['cell_type', 'CellType', 'cell_types'] found in data.obs."
+        )
+    if isinstance(cell_types, str):
+        if cell_types not in data.obs:
+            raise KeyError(f"Column '{cell_types}' not found in data.obs.")
+        return pd.Series(data.obs[cell_types])
+    return pd.Series(cell_types)
+
+
+def _resolve_loadings_and_cell_types(
+    data: anndata.AnnData | np.ndarray | pd.DataFrame,
+    cell_types: pd.Series | np.ndarray | str | None,
+    projection_key: str,
+) -> tuple[np.ndarray, pd.Series]:
+    """Normalise the three accepted input shapes to (matrix, label series)."""
+    if isinstance(data, anndata.AnnData):
+        return (
+            _loadings_from_anndata(data, projection_key),
+            _cell_types_from_anndata(data, cell_types),
+        )
+
+    loadings_matrix = (
+        data.to_numpy() if isinstance(data, pd.DataFrame) else np.asarray(data)
+    )
+    if cell_types is None or isinstance(cell_types, str):
+        raise ValueError(
+            "cell_types must be provided when data is a DataFrame or array."
+        )
+    return loadings_matrix, pd.Series(cell_types)
+
+
 def cell_type_alignment(
     loadings: np.ndarray | pd.Series,
     cell_types: pd.Series | np.ndarray,
@@ -381,41 +518,15 @@ def cell_type_alignment(
     # Compute observed AUROC per cell type
     aurocs = compute_auroc_per_cell_type(y, codes, n_types)
 
-    # Compute permutation p-values
-    p_values = np.ones(n_types, dtype=float)
-    if n_permutations > 0 and n_types > 1 and n_cells > 0:
-        rng = (
-            random_state
-            if isinstance(random_state, np.random.Generator)
-            else np.random.default_rng(random_state)
-        )
-        ranks = sp.rankdata(y, method="average")
-        counts = np.bincount(codes, minlength=n_types).astype(float)
-        null_counts = np.zeros(n_types, dtype=int)
-
-        for _ in range(n_permutations):
-            perm_ranks = rng.permutation(ranks)
-            perm_sums = np.bincount(
-                codes, weights=perm_ranks, minlength=n_types
-            ).astype(float)
-            for k in range(n_types):
-                n1 = counts[k]
-                n0 = n_cells - n1
-                if n1 > 0 and n0 > 0:
-                    u_null = perm_sums[k] - n1 * (n1 + 1.0) / 2.0
-                    auc_null = u_null / (n1 * n0)
-                    if auc_null >= aurocs[k]:
-                        null_counts[k] += 1
-
-        p_values = (1.0 + null_counts) / (1.0 + n_permutations)
-    elif n_permutations == 0 and n_types > 1 and n_cells > 0:
-        # Asymptotic one-sided Mann-Whitney test
-        for k in range(n_types):
-            pos = y[codes == k]
-            neg = y[codes != k]
-            if pos.size > 0 and neg.size > 0:
-                res = sp.mannwhitneyu(pos, neg, alternative="greater")
-                p_values[k] = float(res.pvalue)
+    p_values = _component_p_values(
+        y,
+        codes,
+        n_types,
+        n_cells,
+        aurocs,
+        n_permutations,
+        _as_generator(random_state),
+    )
 
     # BH FDR correction across cell types for this component
     if n_types > 1:
@@ -491,50 +602,9 @@ def score_cell_type_alignment(
     CellTypeAlignmentResults
         Container with full results across all components.
     """
-    # Extract loadings and cell_types
-    if isinstance(data, anndata.AnnData):
-        if projection_key in data.obsm:
-            loadings_matrix = np.asarray(data.obsm[projection_key])
-        elif projection_key == "weighted_projections" and "projections" in data.obsm:
-            loadings_matrix = np.asarray(data.obsm["projections"])
-        else:
-            raise KeyError(f"Could not find '{projection_key}' in data.obsm.")
-
-        if cell_types is None:
-            for candidate in [
-                "cell_type",
-                "CellType",
-                "cell_types",
-                "Cell_Type",
-                "celltype",
-            ]:
-                if candidate in data.obs:
-                    cell_type_series = pd.Series(data.obs[candidate])
-                    break
-            else:
-                raise KeyError(
-                    "Cell-type column not specified and none of ['cell_type', 'CellType', 'cell_types'] found in data.obs."
-                )
-        elif isinstance(cell_types, str):
-            if cell_types not in data.obs:
-                raise KeyError(f"Column '{cell_types}' not found in data.obs.")
-            cell_type_series = pd.Series(data.obs[cell_types])
-        else:
-            cell_type_series = pd.Series(cell_types)
-    elif isinstance(data, pd.DataFrame):
-        loadings_matrix = data.to_numpy()
-        if cell_types is None or isinstance(cell_types, str):
-            raise ValueError(
-                "cell_types must be provided when data is a DataFrame or array."
-            )
-        cell_type_series = pd.Series(cell_types)
-    else:
-        loadings_matrix = np.asarray(data)
-        if cell_types is None or isinstance(cell_types, str):
-            raise ValueError(
-                "cell_types must be provided when data is a DataFrame or array."
-            )
-        cell_type_series = pd.Series(cell_types)
+    loadings_matrix, cell_type_series = _resolve_loadings_and_cell_types(
+        data, cell_types, projection_key
+    )
 
     if loadings_matrix.ndim == 1:
         loadings_matrix = loadings_matrix[:, np.newaxis]
@@ -548,11 +618,7 @@ def score_cell_type_alignment(
             f"Length mismatch: data has {n_cells} cells but cell_types has {codes.size}."
         )
 
-    rng = (
-        random_state
-        if isinstance(random_state, np.random.Generator)
-        else np.random.default_rng(random_state)
-    )
+    rng = _as_generator(random_state)
 
     component_labels = [i + 1 for i in range(n_comps)]
     aurocs_mat = np.zeros((n_comps, n_types), dtype=float)
@@ -560,8 +626,6 @@ def score_cell_type_alignment(
     tau_vec = np.zeros(n_comps, dtype=float)
     eta2_vec = np.zeros(n_comps, dtype=float)
     eps2_vec = np.zeros(n_comps, dtype=float)
-
-    counts = np.bincount(codes, minlength=n_types).astype(float)
 
     for comp_idx in range(n_comps):
         y = loadings_matrix[:, comp_idx].astype(float)
@@ -574,30 +638,9 @@ def score_cell_type_alignment(
         eta2_vec[comp_idx] = compute_eta_squared(y, codes, n_types)
         eps2_vec[comp_idx] = compute_kruskal_epsilon_squared(y, codes, n_types)
 
-        if n_permutations > 0 and n_types > 1 and n_cells > 0:
-            ranks = sp.rankdata(y, method="average")
-            null_counts = np.zeros(n_types, dtype=int)
-            for _ in range(n_permutations):
-                perm_ranks = rng.permutation(ranks)
-                perm_sums = np.bincount(
-                    codes, weights=perm_ranks, minlength=n_types
-                ).astype(float)
-                for k in range(n_types):
-                    n1 = counts[k]
-                    n0 = n_cells - n1
-                    if n1 > 0 and n0 > 0:
-                        u_null = perm_sums[k] - n1 * (n1 + 1.0) / 2.0
-                        auc_null = u_null / (n1 * n0)
-                        if auc_null >= auc[k]:
-                            null_counts[k] += 1
-            p_vals_mat[comp_idx] = (1.0 + null_counts) / (1.0 + n_permutations)
-        elif n_permutations == 0 and n_types > 1 and n_cells > 0:
-            for k in range(n_types):
-                pos = y[codes == k]
-                neg = y[codes != k]
-                if pos.size > 0 and neg.size > 0:
-                    res = sp.mannwhitneyu(pos, neg, alternative="greater")
-                    p_vals_mat[comp_idx, k] = float(res.pvalue)
+        p_vals_mat[comp_idx] = _component_p_values(
+            y, codes, n_types, n_cells, auc, n_permutations, rng
+        )
 
     # Joint BH FDR correction across all (component x cell_type) tests
     if aurocs_mat.size > 1:

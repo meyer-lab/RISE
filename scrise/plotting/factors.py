@@ -11,6 +11,63 @@ from matplotlib.patches import Patch
 cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
 
+def _normalization_rows(
+    yt: pd.Series,
+    X: np.ndarray,
+    ThomsonNorm: bool,
+    control_pattern: str | None,
+    control_conditions: Sequence[str] | None,
+) -> np.ndarray:
+    """The rows whose median and spread set the normalization.
+
+    Explicit ``control_conditions`` win over a name pattern; ``ThomsonNorm``
+    is shorthand for the 'CTRL' pattern. With none of them, every condition
+    contributes.
+    """
+    if ThomsonNorm is True and control_pattern is None:
+        control_pattern = "CTRL"
+
+    if control_conditions is not None:
+        return X[yt.isin(control_conditions)]
+    if control_pattern is not None:
+        return X[yt.str.contains(control_pattern)]
+    return X
+
+
+def _draw_condition_group_labels(
+    ax: Axes, cond_group_labels: pd.Series, color_key
+) -> None:
+    """Draw the colored row rail outside the heatmap, plus its legend."""
+    ax.tick_params(axis="y", which="major", pad=20, length=0)
+    if color_key is None:
+        colors = sns.color_palette(
+            n_colors=pd.Series(cond_group_labels).nunique()
+        ).as_hex()
+    else:
+        colors = color_key
+
+    lut = {}
+    legend_elements = []
+    for index, group in enumerate(pd.unique(cond_group_labels)):
+        lut[group] = colors[index]
+        legend_elements.append(Patch(color=colors[index], label=group))
+
+    row_colors = pd.Series(cond_group_labels).map(lut)
+    for iii, color in enumerate(row_colors):
+        ax.add_patch(
+            plt.Rectangle(
+                xy=(-0.05, iii),
+                width=0.05,
+                height=1,
+                color=color,
+                lw=0,
+                transform=ax.get_yaxis_transform(),
+                clip_on=False,
+            )
+        )
+    ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
+
+
 def plot_condition_factors(
     data: anndata.AnnData,
     ax: Axes,
@@ -61,17 +118,7 @@ def plot_condition_factors(
     if log_transform is True:
         X = np.log10(X)
 
-    if ThomsonNorm is True and control_pattern is None:
-        control_pattern = "CTRL"
-
-    if control_conditions is not None:
-        controls = yt.isin(control_conditions)
-        XX = X[controls]
-    elif control_pattern is not None:
-        controls = yt.str.contains(control_pattern)
-        XX = X[controls]
-    else:
-        XX = X
+    XX = _normalization_rows(yt, X, ThomsonNorm, control_pattern, control_conditions)
 
     X -= np.median(XX, axis=0)
     X /= np.std(XX, axis=0)
@@ -90,32 +137,7 @@ def plot_condition_factors(
             cond_group_labels = cond_group_labels.iloc[ind]
             X = X[ind]
             yt = yt.iloc[ind]
-        ax.tick_params(axis="y", which="major", pad=20, length=0)
-        if color_key is None:
-            colors = sns.color_palette(
-                n_colors=pd.Series(cond_group_labels).nunique()
-            ).as_hex()
-        else:
-            colors = color_key
-        lut = {}
-        legend_elements = []
-        for index, group in enumerate(pd.unique(cond_group_labels)):
-            lut[group] = colors[index]
-            legend_elements.append(Patch(color=colors[index], label=group))
-        row_colors = pd.Series(cond_group_labels).map(lut)
-        for iii, color in enumerate(row_colors):
-            ax.add_patch(
-                plt.Rectangle(
-                    xy=(-0.05, iii),
-                    width=0.05,
-                    height=1,
-                    color=color,
-                    lw=0,
-                    transform=ax.get_yaxis_transform(),
-                    clip_on=False,
-                )
-            )
-        ax.legend(handles=legend_elements, bbox_to_anchor=(0.18, 1.07))
+        _draw_condition_group_labels(ax, cond_group_labels, color_key)
 
     xticks = np.arange(1, X.shape[1] + 1)
     sns.heatmap(

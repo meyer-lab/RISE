@@ -162,6 +162,58 @@ def _bicv_trial(
     return 1.0 - ss_res / ss_tot
 
 
+def _resolve_bicv_inputs(
+    X: anndata.AnnData | None,
+    adata: anndata.AnnData | None,
+    ranks: Sequence[int] | None,
+    n_repeats: int,
+    held_out_cell_frac: float,
+    held_out_gene_frac: float,
+    condition_key: str | None,
+) -> tuple[anndata.AnnData, list[int]]:
+    """Validate `bicv`'s arguments and return the dataset and the rank list.
+
+    Resolves the ``X``/``adata`` alias, fills in ``condition_unique_idxs`` from
+    ``condition_key`` when absent, brings a backed dataset into memory, and
+    rejects rank requests that cannot yield a well-posed trial at these
+    held-out fractions.
+    """
+    if X is None and adata is not None:
+        X = adata
+    if X is None:
+        raise ValueError("Either X or adata must be provided.")
+    if ranks is None:
+        raise ValueError("ranks must be provided.")
+
+    if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
+        raise ValueError(
+            "held_out_cell_frac and held_out_gene_frac must both be between 0 and 1."
+        )
+    if n_repeats < 1:
+        raise ValueError("n_repeats must be at least 1.")
+
+    if "condition_unique_idxs" not in X.obs:
+        if condition_key is not None and condition_key in X.obs:
+            X.obs["condition_unique_idxs"] = pd.Categorical(X.obs[condition_key]).codes
+        else:
+            raise KeyError(
+                "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
+            )
+
+    X = X.to_memory() if hasattr(X, "to_memory") else X
+
+    sorted_ranks = sorted({int(r) for r in ranks})
+    max_rank = _max_feasible_rank(X, held_out_cell_frac, held_out_gene_frac)
+    if sorted_ranks[-1] > max_rank:
+        raise ValueError(
+            f"rank {sorted_ranks[-1]} exceeds the maximum feasible rank ({max_rank}) given "
+            f"held_out_cell_frac={held_out_cell_frac} and "
+            f"held_out_gene_frac={held_out_gene_frac}. Test lower ranks, or lower "
+            "the held-out fractions."
+        )
+    return X, sorted_ranks
+
+
 def bicv(
     X: anndata.AnnData | None = None,
     ranks: Sequence[int] | None = None,
@@ -232,39 +284,15 @@ def bicv(
         (one of "Fit R2X" or "BiCV R2X"), and "R2X". Ready to pass to
         :func:`scrise.plotting.plot_bicv_r2x`.
     """
-    if X is None and adata is not None:
-        X = adata
-    if X is None:
-        raise ValueError("Either X or adata must be provided.")
-    if ranks is None:
-        raise ValueError("ranks must be provided.")
-
-    if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
-        raise ValueError(
-            "held_out_cell_frac and held_out_gene_frac must both be between 0 and 1."
-        )
-    if n_repeats < 1:
-        raise ValueError("n_repeats must be at least 1.")
-
-    if "condition_unique_idxs" not in X.obs:
-        if condition_key is not None and condition_key in X.obs:
-            X.obs["condition_unique_idxs"] = pd.Categorical(X.obs[condition_key]).codes
-        else:
-            raise KeyError(
-                "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
-            )
-
-    X = X.to_memory() if hasattr(X, "to_memory") else X
-
-    ranks = sorted({int(r) for r in ranks})
-    max_rank = _max_feasible_rank(X, held_out_cell_frac, held_out_gene_frac)
-    if ranks[-1] > max_rank:
-        raise ValueError(
-            f"rank {ranks[-1]} exceeds the maximum feasible rank ({max_rank}) given "
-            f"held_out_cell_frac={held_out_cell_frac} and "
-            f"held_out_gene_frac={held_out_gene_frac}. Test lower ranks, or lower "
-            "the held-out fractions."
-        )
+    X, ranks = _resolve_bicv_inputs(
+        X,
+        adata,
+        ranks,
+        n_repeats,
+        held_out_cell_frac,
+        held_out_gene_frac,
+        condition_key,
+    )
 
     rng = np.random.default_rng(random_state)
     rows = []
