@@ -78,15 +78,7 @@ def _cell_loadings(
     cond: np.ndarray,
     n_cond: int,
 ) -> np.ndarray:
-    """Per-cell loadings for a set of cells, in those cells' own row order.
-
-    `projections[i]` lists condition ``i``'s cells in their within-condition
-    order, so the blocks have to be *scattered back* to the positions those
-    cells occupy, not concatenated in condition order. The two agree only when
-    conditions happen to be stored as contiguous blocks; on pooled data, where
-    conditions are interleaved, concatenating silently misaligns this against
-    the expression matrix it is paired with.
-    """
+    """Per-cell loadings for a set of cells, in those cells' own row order."""
     rank = B.shape[1]
     Z = np.empty((cond.size, rank), dtype=np.float64)
     for i in range(n_cond):
@@ -96,20 +88,15 @@ def _cell_loadings(
     return Z
 
 
-#: Nonzeros per row block when streaming column moments. Bounds the per-nonzero
-#: temporaries to a few hundred MB regardless of how large the matrix is.
+# Nonzeros per row block when streaming column moments. Bounds the per-nonzero
+# temporaries to a few hundred MB regardless of how large the matrix is.
 _MOMENT_CHUNK_NNZ = 50_000_000
 
 
 def _test_block_moments(
     X_mat: Any, cell_mask: np.ndarray, gene_idx: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Column sums and sums of squares over a cell subset, for chosen genes.
-
-    Everything the held-out score needs from the raw data beyond one sparse
-    product, computed without materialising the block. Streamed in row blocks
-    because the per-nonzero column lookup is otherwise as large as the matrix.
-    """
+    """Column sums and sums of squares over a cell subset, for chosen genes."""
     n_genes = X_mat.shape[1]
     wanted = np.zeros(n_genes, dtype=bool)
     wanted[gene_idx] = True
@@ -176,10 +163,6 @@ def _bicv_trial(
     R2X is then computed by reconstructing the held-out block from these
     estimates and comparing against the (mean-centered) observed values.
 
-    ``seed`` fully determines the trial: the gene split, the cell split and the
-    fit's initialisation all derive from it, so a single trial can be rerun or
-    re-scored in isolation from the value reported in the results table.
-
     Returns
     -------
     dict[str, float]
@@ -209,11 +192,8 @@ def _bicv_trial(
     A = A * weights
 
     # Everything below reaches the raw data through products against the full
-    # matrix, with the cell or gene restriction applied by *zeroing the dense
-    # operand*. Slicing instead would copy: on a cohort-scale matrix the three
-    # blocks this used to densify are far larger than the matrix itself (a
-    # 20% cell / 80% gene block of a 1.2M x 34k dataset is ~50 GB dense), and
-    # they were rebuilt for every trial of every rank.
+    # matrix, with the cell or gene restriction applied by zeroing the dense
+    # operand.
     X_mat = X.X
     n_obs, n_genes = X.shape
     test_gene_idx = np.flatnonzero(test_gene_mask)
@@ -221,22 +201,17 @@ def _bicv_trial(
 
     # Estimate gene loadings for the held-out genes from the train cells.
     #   Z^T (X[train, test] - 1 mu^T) = (Z_full^T X)[:, test] - (Z^T 1) mu^T
-    # so one sparse product over the whole matrix replaces the dense block.
     cond_train = cond_idx[train_cell_mask]
     Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
     Z_full = np.zeros((n_obs, Z.shape[1]))
     Z_full[train_cell_mask] = Z
     ZtY = np.asarray(rmatmul(Z_full.T, X_mat), dtype=np.float64)[:, test_gene_idx]
     ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
-    # Normal equations rather than `lstsq` on the tall design, which is never
-    # formed. `lstsq` on the rank x rank system keeps the minimum-norm
+    # `lstsq` on the rank x rank system keeps the minimum-norm
     # behaviour when the fit is rank deficient.
     C_test = np.linalg.lstsq(Z.T @ Z, ZtY, rcond=None)[0].T
 
     # Estimate projections for the held-out cells from the train genes.
-    # A gene factor that is zero on the held-out genes makes `calc_W` ignore
-    # them -- including in its `means @ C` centering term -- so the train-gene
-    # restriction needs no slice of X.
     C_full = np.zeros((n_genes, C.shape[1]))
     C_full[train_gene_mask] = C
     cond_test = cond_idx[test_cell_mask]
@@ -244,11 +219,7 @@ def _bicv_trial(
     cond_slices_test = condition_slices(cond_test, n_cond)
     P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
-    # Score the held-out block. Writing the reconstruction as L @ C_test^T over
-    # all test cells lets the three sums be taken from small matrices:
-    #   ss_tot   from this block's column moments
-    #   cross    from L^T (X[test, test] - 1 mu^T), one more sparse product
-    #   ss_fit   from the rank x rank Grams, no data at all
+    # Score the held-out block.
     L = _cell_loadings(P_test, B, A, cond_test, n_cond)
     L_full = np.zeros((n_obs, L.shape[1]))
     L_full[test_cell_mask] = L
@@ -352,16 +323,12 @@ def bicv(
         BiCV rows carry per-trial diagnostics as additional columns:
 
         ``Train Block R2X``
-            In-sample R2X on the block the model was actually fit to. The
-            useful reading of a BiCV curve is that this keeps climbing while
-            the held-out R2X turns over; the separate "Fit R2X" metric is a
-            different fit on different data and cannot play that role.
+            In-sample R2X on the block the model was actually fit to.
         ``NTrainGenes``, ``NTestGenes``, ``NTrainCells``, ``NTestCells``
             The realised block sizes, which set the scale of the spread across
-            repeats and confirm the split matches what was requested.
+            repeats.
         ``Seed``
-            The seed that determines the trial's splits and initialisation, so
-            a single trial can be rerun in isolation.
+            The seed that determines the trial's splits and initialisation.
 
         These columns are NaN on "Fit R2X" rows, which come from an
         unsplit fit on the full dataset.
@@ -414,7 +381,7 @@ def bicv(
             parafac2_kwarg=parafac2_kwarg,
         )
         # The full-data fit has no split, so the per-trial columns are absent
-        # here rather than zero; pandas fills them with NaN.
+        # here rather than zero.
         rows.append({"Rank": rank, "Repeat": 0, "Metric": "Fit R2X", "R2X": fit_r2x})
 
         for repeat in range(n_repeats):

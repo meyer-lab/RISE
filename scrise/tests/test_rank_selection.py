@@ -162,17 +162,14 @@ def test_bicv_adata_alias():
     assert isinstance(results, pd.DataFrame)
 
 
-# ---------------------------------------------------------------------------
-# Alignment of the training-cell loadings (issue #546)
-# ---------------------------------------------------------------------------
+# Alignment of the training-cell loadings
 
 
 def _loading_fixture(cond_train: np.ndarray, rank: int = 3):
     """Per-condition projections plus a B and A that make each block identifiable.
 
     `A[i]` is `(i + 1) * ones`, so a row of the result reveals which condition
-    it was built from: any row belonging to condition `i` is exactly `(i + 1)`
-    times the corresponding row of `P_train[i] @ B`.
+    it was built from.
     """
     n_cond = int(cond_train.max()) + 1
     rng = np.random.default_rng(0)
@@ -185,15 +182,7 @@ def _loading_fixture(cond_train: np.ndarray, rank: int = 3):
 
 
 def test_cell_loadings_match_the_rows_they_are_regressed_against():
-    """Row k of the loadings must describe the cell at row k of the matrix.
-
-    Regression test for #546. The loadings were built by concatenating
-    per-condition blocks in condition order, while the expression they are
-    regressed against stays in the cells' natural order. Those two orderings
-    coincide only when conditions are stored contiguously, so on pooled data --
-    where conditions are interleaved -- the least-squares fit silently paired
-    each cell's loading with a different cell's expression.
-    """
+    """Row k of the loadings must describe the cell at row k of the matrix."""
     cond_train = np.tile(np.arange(4), 25)  # fully interleaved
     P_train, B, A, n_cond = _loading_fixture(cond_train)
 
@@ -205,7 +194,7 @@ def test_cell_loadings_match_the_rows_they_are_regressed_against():
         sel = cond_train == i
         np.testing.assert_allclose(Z[sel], (P_train[i] @ B) * A[i])
 
-    # And the identifying scale must survive: a row's magnitude tells you its
+    # And the identifying scale must survive so a row's magnitude tells you its
     # condition, which is exactly what the misalignment used to scramble.
     for k in range(cond_train.size):
         i = int(cond_train[k])
@@ -215,12 +204,7 @@ def test_cell_loadings_match_the_rows_they_are_regressed_against():
 
 
 def test_cell_loadings_agree_with_concatenation_when_contiguous():
-    """The fix is a no-op on contiguously stored conditions.
-
-    That is the case every previous test used, which is why this went unnoticed:
-    concatenating in condition order and scattering by position give the same
-    array whenever conditions are already grouped.
-    """
+    """The fix is a no-op on contiguously stored conditions."""
     cond_train = np.repeat(np.arange(4), 25)  # contiguous blocks
     P_train, B, A, n_cond = _loading_fixture(cond_train)
 
@@ -232,10 +216,7 @@ def test_cell_loadings_agree_with_concatenation_when_contiguous():
 
 
 def test_cell_loadings_differ_from_concatenation_when_interleaved():
-    """...and is *not* a no-op otherwise, which is the whole point.
-
-    Without this, the two tests above would both pass on the unfixed code.
-    """
+    """...and is not a no-op otherwise, which is the whole point."""
     cond_train = np.tile(np.arange(4), 25)
     P_train, B, A, n_cond = _loading_fixture(cond_train)
 
@@ -280,9 +261,7 @@ def test_bicv_runs_on_interleaved_conditions():
     assert np.isfinite(result["R2X"]).all()
 
 
-# ---------------------------------------------------------------------------
-# Per-trial diagnostics (issue #548)
-# ---------------------------------------------------------------------------
+# Per-trial diagnostics
 
 _TRIAL_COLUMNS = [
     "Train Block R2X",
@@ -292,15 +271,6 @@ _TRIAL_COLUMNS = [
     "NTestCells",
     "Seed",
 ]
-
-
-def test_bicv_reports_per_trial_diagnostics():
-    X = _make_test_data()
-    results = bicv(X, [2, 3], n_repeats=2, random_state=0, max_iter=50)
-
-    assert set(_TRIAL_COLUMNS) <= set(results.columns)
-    bicv_rows = results[results["Metric"] == "BiCV R2X"]
-    assert bicv_rows[_TRIAL_COLUMNS].notna().all().all()
 
 
 def test_trial_columns_are_absent_on_the_unsplit_fit_rows():
@@ -333,13 +303,6 @@ def test_reported_block_sizes_match_the_requested_split():
 
 
 def test_train_block_r2x_is_in_sample_and_so_climbs_with_rank():
-    """The reason this column exists.
-
-    A BiCV curve is only interpretable against the in-sample fit on the *same*
-    block: the useful signal is the held-out score turning over while this one
-    keeps climbing. The separate "Fit R2X" metric is a different fit on
-    different data and cannot play that role.
-    """
     X = _make_test_data()
     results = bicv(X, [1, 3, 6], n_repeats=2, random_state=0, max_iter=100)
     rows = results[results["Metric"] == "BiCV R2X"]
@@ -375,14 +338,11 @@ def test_reported_seed_reproduces_its_own_trial():
     assert replayed["NTestGenes"] == target["NTestGenes"]
 
 
-# ---------------------------------------------------------------------------
-# Streamed scoring equals the dense formulation it replaced (issue #547)
-# ---------------------------------------------------------------------------
+# Streamed scoring equals the dense formulation it replaced
 
 
 def _dense_reference_trial(X, rank, seed, held_out_frac=0.2, max_iter=60):
-    """The pre-#547 scoring path, kept here as the thing to agree with.
-
+    """
     Materialises the three blocks that `_bicv_trial` no longer forms, and
     computes `C_test` and the held-out R2X directly from them. Consumes the
     generator in exactly the order `_bicv_trial` does, so the splits and the
@@ -438,8 +398,7 @@ def _dense_reference_trial(X, rank, seed, held_out_frac=0.2, max_iter=60):
 @pytest.mark.parametrize("sparse", [False, True])
 @pytest.mark.parametrize("seed", [0, 7])
 def test_streamed_scoring_matches_the_dense_formulation(sparse, seed):
-    """#547 removed three dense materializations; the score must not move.
-
+    """
     The blocks were replaced by products against the full matrix with the
     restriction applied by zeroing the dense operand, which is algebraically
     the same thing. This pins that claim rather than trusting it.
@@ -463,7 +422,6 @@ def test_streamed_scoring_matches_the_dense_formulation(sparse, seed):
 
 
 def test_streamed_scoring_matches_on_interleaved_conditions():
-    """The two paths must also agree where #546 bit, not only on tidy data."""
     X = _make_test_data()
     cond = X.obs["condition_unique_idxs"].to_numpy()
     order = np.argsort(

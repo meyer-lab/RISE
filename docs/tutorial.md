@@ -110,23 +110,18 @@ plt.tight_layout()
 plt.show()
 ```
 
-Each BiCV row also carries the diagnostics needed to audit the curve rather than
-just plot it:
+Each BiCV row also carries the diagnostics needed to audit the curve rather than just plot it:
 
 | column | what it is for |
 | :----- | :------------- |
-| `Train Block R2X` | In-sample $R^2X$ on the block the model was fit to. The reading that matters is this climbing while the held-out $R^2X$ turns over — the separate `Fit R2X` metric is a different fit on different data and cannot play that role. |
-| `NTrainGenes`, `NTestGenes`, `NTrainCells`, `NTestCells` | The realised block sizes, which set the scale of the spread across repeats and confirm the split is what you asked for. |
-| `Seed` | The seed determining that trial's splits and initialisation, so a single trial can be rerun in isolation. |
+| `Train Block R2X` | In-sample $R^2X$ on the block the model was fit to. A positive interpretation is typically this metric climbing while the held-out $R^2X$ turns over. |
+| `NTrainGenes`, `NTestGenes`, `NTrainCells`, `NTestCells` | The realised block sizes which set the scale of the spread across repeats. |
 
 ```python
 # Does the held-out score turn over while the in-sample one keeps climbing?
 trials = results[results["Metric"] == "BiCV R2X"]
 print(trials.groupby("Rank")[["R2X", "Train Block R2X"]].mean())
 ```
-
-These columns are `NaN` on the `Fit R2X` rows, which come from an unsplit fit on
-the full dataset.
 
 `bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes (both default to 0.2); increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
 
