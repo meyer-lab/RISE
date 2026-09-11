@@ -18,15 +18,10 @@ import anndata
 import numpy as np
 import pandas as pd
 import scipy.sparse as sps
-from parafac2.utils import calc_W, condition_slices, project_data
+from parafac2.utils import calc_W, condition_slices, project_data, rmatmul
 from tqdm import tqdm
 
 from ._pf2_utils import run_parafac2
-
-
-def _dense(mat) -> np.ndarray:
-    """Return a dense ndarray view of a (possibly sparse) matrix."""
-    return mat.toarray() if sps.issparse(mat) else np.asarray(mat)
 
 
 def _split_cells_by_condition(
@@ -76,29 +71,81 @@ def _max_feasible_rank(
     return int(min(min_train_cells, n_train_genes))
 
 
-def _train_cell_loadings(
-    P_train: list[np.ndarray],
+def _cell_loadings(
+    projections: list[np.ndarray],
     B: np.ndarray,
     A: np.ndarray,
-    cond_train: np.ndarray,
+    cond: np.ndarray,
     n_cond: int,
 ) -> np.ndarray:
-    """Per-cell loadings for the training cells, in the cells' own row order.
+    """Per-cell loadings for a set of cells, in those cells' own row order.
 
-    `P_train[i]` lists condition ``i``'s cells in their within-condition order,
-    so the blocks have to be *scattered back* to the positions those cells
-    occupy, not concatenated in condition order. The two agree only when
+    `projections[i]` lists condition ``i``'s cells in their within-condition
+    order, so the blocks have to be *scattered back* to the positions those
+    cells occupy, not concatenated in condition order. The two agree only when
     conditions happen to be stored as contiguous blocks; on pooled data, where
     conditions are interleaved, concatenating silently misaligns this against
-    the expression matrix it is regressed on.
+    the expression matrix it is paired with.
     """
     rank = B.shape[1]
-    Z = np.empty((cond_train.size, rank), dtype=np.float64)
+    Z = np.empty((cond.size, rank), dtype=np.float64)
     for i in range(n_cond):
-        sel = cond_train == i
+        sel = cond == i
         if np.any(sel):
-            Z[sel] = (P_train[i] @ B) * A[i]
+            Z[sel] = (projections[i] @ B) * A[i]
     return Z
+
+
+#: Nonzeros per row block when streaming column moments. Bounds the per-nonzero
+#: temporaries to a few hundred MB regardless of how large the matrix is.
+_MOMENT_CHUNK_NNZ = 50_000_000
+
+
+def _test_block_moments(
+    X_mat: Any, cell_mask: np.ndarray, gene_idx: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Column sums and sums of squares over a cell subset, for chosen genes.
+
+    Everything the held-out score needs from the raw data beyond one sparse
+    product, computed without materialising the block. Streamed in row blocks
+    because the per-nonzero column lookup is otherwise as large as the matrix.
+    """
+    n_genes = X_mat.shape[1]
+    wanted = np.zeros(n_genes, dtype=bool)
+    wanted[gene_idx] = True
+    sums = np.zeros(n_genes)
+    squares = np.zeros(n_genes)
+
+    if not sps.issparse(X_mat):
+        block = np.asarray(X_mat)[cell_mask]
+        return (
+            block.sum(axis=0)[gene_idx],
+            np.sum(block.astype(np.float64) ** 2, axis=0)[gene_idx],
+        )
+
+    mat = X_mat.tocsr() if X_mat.format != "csr" else X_mat
+    n_rows = mat.shape[0]
+    start = 0
+    while start < n_rows:
+        stop = min(
+            n_rows,
+            max(
+                start + 1,
+                int(np.searchsorted(mat.indptr, mat.indptr[start] + _MOMENT_CHUNK_NNZ)),
+            ),
+        )
+        lo, hi = int(mat.indptr[start]), int(mat.indptr[stop])
+        data = mat.data[lo:hi].astype(np.float64)
+        cols = mat.indices[lo:hi]
+        keep = wanted[cols] & np.repeat(
+            cell_mask[start:stop], np.diff(mat.indptr[start : stop + 1])
+        )
+        data, cols = data[keep], cols[keep]
+        sums += np.bincount(cols, weights=data, minlength=n_genes)
+        squares += np.bincount(cols, weights=data**2, minlength=n_genes)
+        start = stop
+
+    return sums[gene_idx], squares[gene_idx]
 
 
 def _bicv_trial(
@@ -161,36 +208,65 @@ def _bicv_trial(
     )
     A = A * weights
 
-    # Estimate gene loadings for the held-out genes from the train cells.
-    cond_train = cond_idx[train_cell_mask]
-    Z = _train_cell_loadings(P_train, B, A, cond_train, n_cond)
+    # Everything below reaches the raw data through products against the full
+    # matrix, with the cell or gene restriction applied by *zeroing the dense
+    # operand*. Slicing instead would copy: on a cohort-scale matrix the three
+    # blocks this used to densify are far larger than the matrix itself (a
+    # 20% cell / 80% gene block of a 1.2M x 34k dataset is ~50 GB dense), and
+    # they were rebuilt for every trial of every rank.
+    X_mat = X.X
+    n_obs, n_genes = X.shape
+    test_gene_idx = np.flatnonzero(test_gene_mask)
     means_test_genes = means[test_gene_mask]
-    X_train_test_genes = (
-        _dense(X[train_cell_mask][:, test_gene_mask].X) - means_test_genes
-    )
-    C_test = np.linalg.lstsq(Z, X_train_test_genes, rcond=None)[0].T
+
+    # Estimate gene loadings for the held-out genes from the train cells.
+    #   Z^T (X[train, test] - 1 mu^T) = (Z_full^T X)[:, test] - (Z^T 1) mu^T
+    # so one sparse product over the whole matrix replaces the dense block.
+    cond_train = cond_idx[train_cell_mask]
+    Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
+    Z_full = np.zeros((n_obs, Z.shape[1]))
+    Z_full[train_cell_mask] = Z
+    ZtY = np.asarray(rmatmul(Z_full.T, X_mat), dtype=np.float64)[:, test_gene_idx]
+    ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
+    # Normal equations rather than `lstsq` on the tall design, which is never
+    # formed. `lstsq` on the rank x rank system keeps the minimum-norm
+    # behaviour when the fit is rank deficient.
+    C_test = np.linalg.lstsq(Z.T @ Z, ZtY, rcond=None)[0].T
 
     # Estimate projections for the held-out cells from the train genes.
-    means_train_genes = means[train_gene_mask]
+    # A gene factor that is zero on the held-out genes makes `calc_W` ignore
+    # them -- including in its `means @ C` centering term -- so the train-gene
+    # restriction needs no slice of X.
+    C_full = np.zeros((n_genes, C.shape[1]))
+    C_full[train_gene_mask] = C
     cond_test = cond_idx[test_cell_mask]
-    X_test_train_genes = _dense(X[test_cell_mask][:, train_gene_mask].X)
-    W_test = calc_W(X_test_train_genes, means_train_genes, C)
+    W_test = calc_W(X_mat, means, C_full)[test_cell_mask]
     cond_slices_test = condition_slices(cond_test, n_cond)
     P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
-    # Reconstruct and score the held-out test-cell x test-gene block.
-    X_test_test_genes = (
-        _dense(X[test_cell_mask][:, test_gene_mask].X) - means_test_genes
+    # Score the held-out block. Writing the reconstruction as L @ C_test^T over
+    # all test cells lets the three sums be taken from small matrices:
+    #   ss_tot   from this block's column moments
+    #   cross    from L^T (X[test, test] - 1 mu^T), one more sparse product
+    #   ss_fit   from the rank x rank Grams, no data at all
+    L = _cell_loadings(P_test, B, A, cond_test, n_cond)
+    L_full = np.zeros((n_obs, L.shape[1]))
+    L_full[test_cell_mask] = L
+    LtY = np.asarray(rmatmul(L_full.T, X_mat), dtype=np.float64)[:, test_gene_idx]
+    LtY -= np.outer(L.sum(axis=0), means_test_genes)
+
+    col_sums, col_squares = _test_block_moments(X_mat, test_cell_mask, test_gene_idx)
+    n_test_cells = int(test_cell_mask.sum())
+    ss_tot = float(
+        np.sum(
+            col_squares
+            - 2.0 * means_test_genes * col_sums
+            + n_test_cells * means_test_genes**2
+        )
     )
-    ss_res, ss_tot = 0.0, 0.0
-    for i in range(n_cond):
-        sel = cond_test == i
-        if not np.any(sel):
-            continue
-        actual = X_test_test_genes[sel]
-        recon = ((P_test[i] @ B) * A[i]) @ C_test.T
-        ss_res += float(np.sum((actual - recon) ** 2))
-        ss_tot += float(np.sum(actual**2))
+    cross = float(np.sum(C_test.T * LtY))
+    ss_fit = float(np.sum((L.T @ L) * (C_test.T @ C_test)))
+    ss_res = ss_tot - 2.0 * cross + ss_fit
 
     return {
         "BiCV R2X": 1.0 - ss_res / ss_tot,
