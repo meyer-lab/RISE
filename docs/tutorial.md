@@ -110,20 +110,21 @@ plt.tight_layout()
 plt.show()
 ```
 
+`bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`, plus the per-trial diagnostics below) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes (both default to 0.2); increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
+
 Each BiCV row also carries the diagnostics needed to audit the curve rather than just plot it:
 
 | column | what it is for |
 | :----- | :------------- |
 | `Train Block R2X` | In-sample $R^2X$ on the block the model was fit to. A positive interpretation is typically this metric climbing while the held-out $R^2X$ turns over. |
 | `NTrainGenes`, `NTestGenes`, `NTrainCells`, `NTestCells` | The realised block sizes which set the scale of the spread across repeats. |
+| `Seed` | The seed that determines the trial's splits and initialisation, so a single trial can be replayed on its own. |
 
 ```python
 # Does the held-out score turn over while the in-sample one keeps climbing?
 trials = results[results["Metric"] == "BiCV R2X"]
 print(trials.groupby("Rank")[["R2X", "Train Block R2X"]].mean())
 ```
-
-`bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes (both default to 0.2); increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
 
 If you plan to fit the final model with non-default `parafac2_nd` options (e.g. `normalize_slices=True`, see [Handling Unequal Cell Counts](unequal_cell_counts.md)), pass the same options to `bicv` via `parafac2_kwarg` so that rank selection is evaluated under the same fitting behavior:
 

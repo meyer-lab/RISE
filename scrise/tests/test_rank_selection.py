@@ -459,6 +459,31 @@ def test_block_moments_match_a_materialised_block(sparse):
     np.testing.assert_allclose(squares, np.sum(block**2, axis=0), rtol=1e-12)
 
 
+@pytest.mark.parametrize("sparse", [False, True])
+def test_block_moments_accumulate_in_float64_for_float32_input(sparse):
+    """A float32 block summed in its own dtype loses precision `ss_tot` needs.
+
+    The two branches must also agree with each other: they previously
+    diverged because only the sparse one widened to float64.
+    """
+    rng = np.random.default_rng(0)
+    # Values near 1.0 so the running sum dwarfs each addend -- the regime where
+    # float32 accumulation drifts.
+    dense = (rng.random((200_000, 4), dtype=np.float32) * 1e-3 + 1.0).astype(np.float32)
+    X_mat = sps.csr_array(dense) if sparse else dense
+    cell_mask = np.ones(dense.shape[0], dtype=bool)
+    gene_idx = np.arange(4)
+
+    sums, squares = _test_block_moments(X_mat, cell_mask, gene_idx)
+    exact = dense.astype(np.float64).sum(axis=0)
+
+    assert sums.dtype == np.float64
+    np.testing.assert_allclose(sums, exact, rtol=1e-12)
+    np.testing.assert_allclose(
+        squares, np.sum(dense.astype(np.float64) ** 2, axis=0), rtol=1e-12
+    )
+
+
 def test_block_moments_stream_across_more_than_one_row_block(monkeypatch):
     """Force several chunks so the accumulation path is actually exercised."""
     import scrise.rank_selection as rs

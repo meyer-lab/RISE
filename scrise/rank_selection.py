@@ -12,7 +12,7 @@ penalizes overfitting and typically peaks near the "true" rank of the data.
 
 import warnings
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 import anndata
 import numpy as np
@@ -105,8 +105,11 @@ def _test_block_moments(
 
     if not sps.issparse(X_mat):
         block = np.asarray(X_mat)[cell_mask]
+        # Both moments accumulate in float64. A float32 block summed in its own
+        # dtype carries ~1e-4 relative error over a few hundred thousand rows,
+        # which would reach the reported R2X through `ss_tot`.
         return (
-            block.sum(axis=0)[gene_idx],
+            block.sum(axis=0, dtype=np.float64)[gene_idx],
             np.sum(block.astype(np.float64) ** 2, axis=0)[gene_idx],
         )
 
@@ -191,21 +194,30 @@ def _bicv_trial(
     )
     A = A * weights
 
-    # Everything below reaches the raw data through products against the full
-    # matrix, with the cell or gene restriction applied by zeroing the dense
-    # operand.
-    X_mat = X.X
-    n_obs, n_genes = X.shape
+    # Everything below reaches the raw data through products against the raw
+    # matrix rather than materialising a block of it. Cells are restricted by
+    # slicing the rows (cheap on CSR, and keeps the product proportional to the
+    # rows actually wanted); genes are restricted by zeroing the dense operand,
+    # since a column slice of CSR is not.
+    #
+    # The dense operands below are deliberately float64, unlike `calc_W` and
+    # `parafac_update`, which cast theirs to the matrix dtype to avoid upcasting
+    # a float32 matrix. Here accuracy wins: `ss_res` is a difference of large
+    # terms and the scores are O(1e-2), whereas a float32 operand costs ~3e-2
+    # relative error on the product.
+    assert X.X is not None
+    X_mat = cast("np.ndarray | sps.csr_array", X.X)
+    n_genes = X.n_vars
     test_gene_idx = np.flatnonzero(test_gene_mask)
     means_test_genes = means[test_gene_mask]
 
     # Estimate gene loadings for the held-out genes from the train cells.
-    #   Z^T (X[train, test] - 1 mu^T) = (Z_full^T X)[:, test] - (Z^T 1) mu^T
+    #   Z^T (X[train, test] - 1 mu^T) = (Z^T X[train])[:, test] - (Z^T 1) mu^T
     cond_train = cond_idx[train_cell_mask]
     Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
-    Z_full = np.zeros((n_obs, Z.shape[1]))
-    Z_full[train_cell_mask] = Z
-    ZtY = np.asarray(rmatmul(Z_full.T, X_mat), dtype=np.float64)[:, test_gene_idx]
+    ZtY = np.asarray(
+        rmatmul(np.ascontiguousarray(Z.T), X_mat[train_cell_mask]), dtype=np.float64
+    )[:, test_gene_idx]
     ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
     # `lstsq` on the rank x rank system keeps the minimum-norm
     # behaviour when the fit is rank deficient.
@@ -215,15 +227,15 @@ def _bicv_trial(
     C_full = np.zeros((n_genes, C.shape[1]))
     C_full[train_gene_mask] = C
     cond_test = cond_idx[test_cell_mask]
-    W_test = calc_W(X_mat, means, C_full)[test_cell_mask]
+    W_test = calc_W(X_mat[test_cell_mask], means, C_full)
     cond_slices_test = condition_slices(cond_test, n_cond)
     P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
     # Score the held-out block.
     L = _cell_loadings(P_test, B, A, cond_test, n_cond)
-    L_full = np.zeros((n_obs, L.shape[1]))
-    L_full[test_cell_mask] = L
-    LtY = np.asarray(rmatmul(L_full.T, X_mat), dtype=np.float64)[:, test_gene_idx]
+    LtY = np.asarray(
+        rmatmul(np.ascontiguousarray(L.T), X_mat[test_cell_mask]), dtype=np.float64
+    )[:, test_gene_idx]
     LtY -= np.outer(L.sum(axis=0), means_test_genes)
 
     col_sums, col_squares = _test_block_moments(X_mat, test_cell_mask, test_gene_idx)
