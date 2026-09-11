@@ -8,6 +8,14 @@ column) held-out blocks. For RISE, we hold out a random subset of cells
 predicts the held-out (test-cell x test-gene) block. Unlike the ordinary
 in-sample fit R2X (which increases monotonically with rank), the BiCV R2X
 penalizes overfitting and typically peaks near the "true" rank of the data.
+
+The held-out cells are scored through their own projections, whose scale has
+to be corrected for the size of the held-out slice -- see
+:func:`_holdout_scale`. Both held-out fractions default to one half, the
+split Owen and Perry recommend for bi-cross-validation
+(https://arxiv.org/abs/0908.2062); it is also the split at which the
+uncorrected score happened to be unbiased, so it is the setting under which
+older results are comparable to current ones.
 """
 
 import warnings
@@ -86,6 +94,34 @@ def _cell_loadings(
         if np.any(sel):
             Z[sel] = (projections[i] @ B) * A[i]
     return Z
+
+
+def _holdout_scale(
+    cond_train: np.ndarray, cond_test: np.ndarray, n_cond: int
+) -> np.ndarray:
+    """Per-held-out-cell factor correcting `A` for the held-out slice's size.
+
+    PARAFAC2 writes slice ``k`` as ``P_k (B diag(a_k)) C^T`` with ``P_k``
+    orthonormal, so the reconstruction's Frobenius norm is
+    ``||(B diag(a_k)) C^T||``, independent of how many cells the slice holds:
+    all of a slice's energy sits in ``a_k``. ``a_k`` is fit against
+    ``n_train_k`` cells, and a slice's energy grows like ``sqrt(n_k)``, so
+    reusing it unchanged for ``n_test_k`` held-out cells overstates the
+    predicted block by ``sqrt(n_train_k / n_test_k)`` -- a factor of two at
+    the default split, which drove the held-out R2X negative and made the
+    curve fall as the fit improved.
+
+    Correcting it needs only the cell counts, which is exact when the two
+    halves of a condition have comparable per-cell energy -- true here,
+    since the split is random within each condition.
+    """
+    scale = np.ones(cond_test.size)
+    train_counts = np.bincount(cond_train, minlength=n_cond)
+    test_counts = np.bincount(cond_test, minlength=n_cond)
+    for i in range(n_cond):
+        if test_counts[i] and train_counts[i]:
+            scale[cond_test == i] = np.sqrt(test_counts[i] / train_counts[i])
+    return scale[:, np.newaxis]
 
 
 # Nonzeros per row block when streaming column moments. Bounds the per-nonzero
@@ -231,8 +267,10 @@ def _bicv_trial(
     cond_slices_test = condition_slices(cond_test, n_cond)
     P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
-    # Score the held-out block.
+    # Score the held-out block. `A` carries the training slice's energy, so the
+    # held-out loadings need rescaling for the held-out slice's size.
     L = _cell_loadings(P_test, B, A, cond_test, n_cond)
+    L *= _holdout_scale(cond_train, cond_test, n_cond)
     LtY = np.asarray(
         rmatmul(np.ascontiguousarray(L.T), X_mat[test_cell_mask]), dtype=np.float64
     )[:, test_gene_idx]
@@ -266,8 +304,8 @@ def bicv(
     X: anndata.AnnData | None = None,
     ranks: Sequence[int] | None = None,
     n_repeats: int = 3,
-    held_out_cell_frac: float = 0.2,
-    held_out_gene_frac: float = 0.2,
+    held_out_cell_frac: float = 0.5,
+    held_out_gene_frac: float = 0.5,
     random_state: int | None = None,
     tolerance: float = 1e-6,
     max_iter: int = 200,
@@ -298,10 +336,14 @@ def bicv(
     n_repeats : int, optional (default: 3)
         Number of independent random cell/gene splits per rank. Higher
         values give a less noisy BiCV estimate but take longer.
-    held_out_cell_frac : float, optional (default: 0.2)
+    held_out_cell_frac : float, optional (default: 0.5)
         Fraction of cells held out per condition in each BiCV trial.
-    held_out_gene_frac : float, optional (default: 0.2)
-        Fraction of genes held out in each BiCV trial.
+    held_out_gene_frac : float, optional (default: 0.5)
+        Fraction of genes held out in each BiCV trial. Both default to a
+        half-and-half split, following Owen and Perry, who report that
+        "in simulated examples we find that a method leaving out half the
+        rows and half the columns performs well"
+        (https://arxiv.org/abs/0908.2062).
     random_state : int, optional
         Random seed for reproducibility.
     tolerance : float, optional (default: 1e-6)
