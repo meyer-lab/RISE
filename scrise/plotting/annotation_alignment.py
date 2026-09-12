@@ -19,6 +19,124 @@ from ..annotation_alignment import CellTypeAlignmentResults, score_cell_type_ali
 cmap_enrichment = sns.diverging_palette(240, 10, as_cmap=True)
 
 
+def _results_from_enrichment_frame(
+    enrichment: pd.DataFrame, alpha: float
+) -> CellTypeAlignmentResults:
+    """Wrap a bare AUROC table as results, with no significance information.
+
+    A raw frame carries no p-values, so q-values are all 1.0 and eta^2 is 0 --
+    nothing will be starred. Tau is still computable from the AUROCs alone.
+    """
+    q_values = pd.DataFrame(1.0, index=enrichment.index, columns=enrichment.columns)
+    tau = pd.Series(
+        [
+            float(np.sum(1 - row / np.max(row)) / max(1, len(row) - 1))
+            for _, row in enrichment.iterrows()
+        ],
+        index=enrichment.index,
+    )
+    eta2 = pd.Series(0.0, index=enrichment.index)
+    return CellTypeAlignmentResults(
+        results=[],
+        enrichment=enrichment,
+        p_values=q_values,
+        q_values=q_values,
+        tau=tau,
+        eta_squared=eta2,
+        kruskal_epsilon_squared=eta2,
+        significant_cell_types={},
+        alpha=alpha,
+    )
+
+
+def _coerce_alignment_results(
+    data: anndata.AnnData | CellTypeAlignmentResults | pd.DataFrame,
+    cell_type_col: str,
+    projection_key: str,
+    signed: bool,
+    n_permutations: int,
+    alpha: float,
+    random_state,
+) -> CellTypeAlignmentResults:
+    """Accept already-scored results, an AnnData to score, or a raw AUROC table."""
+    if isinstance(data, CellTypeAlignmentResults):
+        return data
+    if isinstance(data, anndata.AnnData):
+        return score_cell_type_alignment(
+            data=data,
+            cell_types=cell_type_col,
+            projection_key=projection_key,
+            signed=signed,
+            n_permutations=n_permutations,
+            alpha=alpha,
+            random_state=random_state,
+        )
+    if isinstance(data, pd.DataFrame):
+        return _results_from_enrichment_frame(data, alpha)
+    raise TypeError(f"Unsupported data type: {type(data)}")
+
+
+def _order_by_dominant_cell_type(
+    enrichment_df: pd.DataFrame,
+    q_values_df: pd.DataFrame,
+    tau_series: pd.Series,
+    eta2_series: pd.Series,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """Group components by which cell type they peak on, strongest first."""
+    vals = enrichment_df.to_numpy()
+    max_idx = np.argmax(vals, axis=1)
+    max_val = vals[np.arange(vals.shape[0]), max_idx]
+    order = np.lexsort((-max_val, max_idx))
+    return (
+        enrichment_df.iloc[order],
+        q_values_df.iloc[order],
+        tau_series.iloc[order],
+        eta2_series.iloc[order],
+    )
+
+
+def _significance_annotations(
+    enrichment_df: pd.DataFrame, q_values_df: pd.DataFrame, alpha: float
+) -> pd.DataFrame:
+    """A frame of asterisks marking enriched, significant (component, cell type)."""
+    annot_mat = np.full(enrichment_df.shape, "", dtype=object)
+    for i, comp in enumerate(enrichment_df.index):
+        for j, ctype in enumerate(enrichment_df.columns):
+            if q_values_df.loc[comp, ctype] <= alpha and (
+                enrichment_df.loc[comp, ctype] > 0.5
+            ):
+                annot_mat[i, j] = "*"
+    return pd.DataFrame(
+        annot_mat, index=enrichment_df.index, columns=enrichment_df.columns
+    )
+
+
+def _resolve_alignment_axes(
+    ax: Axes | Sequence[Axes] | None, show_metrics: bool, enrichment_df: pd.DataFrame
+) -> tuple[Axes, Axes | None]:
+    """Return (main, metrics) axes, creating a sized figure when none is given."""
+    n_cols, n_rows = len(enrichment_df.columns), len(enrichment_df)
+
+    if ax is None:
+        if show_metrics:
+            _, axes = plt.subplots(
+                1,
+                2,
+                figsize=(max(6, n_cols * 0.8 + 2), max(4, n_rows * 0.4 + 1)),
+                gridspec_kw={"width_ratios": [n_cols, 2], "wspace": 0.08},
+            )
+            return axes[0], axes[1]
+        _, ax_main = plt.subplots(
+            figsize=(max(5, n_cols * 0.8), max(4, n_rows * 0.4 + 1))
+        )
+        return ax_main, None
+
+    if isinstance(ax, (list, tuple, np.ndarray)) and len(ax) >= 2:
+        ax_seq = cast(Sequence[Axes], ax)
+        return ax_seq[0], ax_seq[1]
+    return cast(Axes, ax), None
+
+
 def plot_cell_type_alignment(
     data: anndata.AnnData | CellTypeAlignmentResults | pd.DataFrame,
     ax: Axes | Sequence[Axes] | None = None,
@@ -77,112 +195,34 @@ def plot_cell_type_alignment(
     Axes | tuple[Axes, ...]
         The plotted Matplotlib Axes.
     """
-    if isinstance(data, CellTypeAlignmentResults):
-        results = data
-    elif isinstance(data, anndata.AnnData):
-        results = score_cell_type_alignment(
-            data=data,
-            cell_types=cell_type_col,
-            projection_key=projection_key,
-            signed=signed,
-            n_permutations=n_permutations,
-            alpha=alpha,
-            random_state=random_state,
-        )
-    elif isinstance(data, pd.DataFrame):
-        # Raw enrichment dataframe
-        enrichment = data
-        q_values = pd.DataFrame(1.0, index=enrichment.index, columns=enrichment.columns)
-        tau = pd.Series(
-            [
-                float(np.sum(1 - row / np.max(row)) / max(1, len(row) - 1))
-                for _, row in enrichment.iterrows()
-            ],
-            index=enrichment.index,
-        )
-        eta2 = pd.Series(0.0, index=enrichment.index)
-        results = CellTypeAlignmentResults(
-            results=[],
-            enrichment=enrichment,
-            p_values=q_values,
-            q_values=q_values,
-            tau=tau,
-            eta_squared=eta2,
-            kruskal_epsilon_squared=eta2,
-            significant_cell_types={},
-            alpha=alpha,
-        )
-    else:
-        raise TypeError(f"Unsupported data type: {type(data)}")
+    results = _coerce_alignment_results(
+        data,
+        cell_type_col,
+        projection_key,
+        signed,
+        n_permutations,
+        alpha,
+        random_state,
+    )
 
     enrichment_df = results.enrichment.copy()
     q_values_df = results.q_values.copy()
     tau_series = results.tau.copy()
     eta2_series = results.eta_squared.copy()
 
-    # Reorder components by dominant cell type if requested
     if reorder and len(enrichment_df) > 1:
-        vals = enrichment_df.to_numpy()
-        max_idx = np.argmax(vals, axis=1)
-        max_val = vals[np.arange(vals.shape[0]), max_idx]
-        order = np.lexsort((-max_val, max_idx))
-        enrichment_df = enrichment_df.iloc[order]
-        q_values_df = q_values_df.iloc[order]
-        tau_series = tau_series.iloc[order]
-        eta2_series = eta2_series.iloc[order]
-
-    # Annotations for significance
-    annot_df = None
-    if annotate_significance:
-        annot_mat = np.full(enrichment_df.shape, "", dtype=object)
-        for i, comp in enumerate(enrichment_df.index):
-            for j, ctype in enumerate(enrichment_df.columns):
-                q = q_values_df.loc[comp, ctype]
-                auc = enrichment_df.loc[comp, ctype]
-                if q <= results.alpha and auc > 0.5:
-                    annot_mat[i, j] = "*"
-        annot_df = pd.DataFrame(
-            annot_mat, index=enrichment_df.index, columns=enrichment_df.columns
+        enrichment_df, q_values_df, tau_series, eta2_series = (
+            _order_by_dominant_cell_type(
+                enrichment_df, q_values_df, tau_series, eta2_series
+            )
         )
 
-    # Set up axes
+    annot_df = None
+    if annotate_significance:
+        annot_df = _significance_annotations(enrichment_df, q_values_df, results.alpha)
+
     heatmap_cmap = cmap if cmap is not None else cmap_enrichment
-
-    ax_main: Axes
-    ax_metrics: Axes | None
-
-    if ax is None:
-        if show_metrics:
-            _, axes = plt.subplots(
-                1,
-                2,
-                figsize=(
-                    max(6, len(enrichment_df.columns) * 0.8 + 2),
-                    max(4, len(enrichment_df) * 0.4 + 1),
-                ),
-                gridspec_kw={
-                    "width_ratios": [len(enrichment_df.columns), 2],
-                    "wspace": 0.08,
-                },
-            )
-            ax_main = axes[0]
-            ax_metrics = axes[1]
-        else:
-            _, ax_main = plt.subplots(
-                figsize=(
-                    max(5, len(enrichment_df.columns) * 0.8),
-                    max(4, len(enrichment_df) * 0.4 + 1),
-                )
-            )
-            ax_metrics = None
-
-    elif isinstance(ax, (list, tuple, np.ndarray)) and len(ax) >= 2:
-        ax_seq = cast(Sequence[Axes], ax)
-        ax_main = ax_seq[0]
-        ax_metrics = ax_seq[1]
-    else:
-        ax_main = cast(Axes, ax)
-        ax_metrics = None
+    ax_main, ax_metrics = _resolve_alignment_axes(ax, show_metrics, enrichment_df)
 
     # Main AUROC heatmap
     sns.heatmap(

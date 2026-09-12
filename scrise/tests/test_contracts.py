@@ -17,9 +17,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from ..factor_io import export_factors
 from ..factorization import (
     correct_conditions,
-    export_factors,
     order_components_by_energy,
     pf2,
 )

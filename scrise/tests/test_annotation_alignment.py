@@ -18,7 +18,7 @@ from scrise import (
     compute_tau,
     score_cell_type_alignment,
 )
-from scrise.annotation_alignment import (
+from scrise.alignment_stats import (
     compute_auroc_per_cell_type,
     compute_eta_squared,
     compute_kruskal_epsilon_squared,
