@@ -92,7 +92,7 @@ plt.show()
 
 ### Select a Rank with Bi-Cross-Validation (BiCV)
 
-$R^2X$ (in-sample fit) always increases with rank, so it cannot by itself identify an optimal rank — it can only reveal an elbow. Bi-cross-validation (BiCV) addresses this by holding out a random subset of cells *and* genes, fitting RISE on the remaining data, and scoring how well the fit predicts the held-out block. Because it is evaluated on unseen data, BiCV $R^2X$ penalizes overfitting and turns over near the rank that generalizes best, unlike the fit $R^2X$. In practice the curve more often flattens into a plateau than forms a sharp peak, so read the elbow where it stops climbing rather than trusting the single highest point -- past the plateau, neighbouring ranks can differ only in the fourth decimal.
+$R^2X$ (in-sample fit) always increases with rank, so it cannot by itself identify an optimal rank. Bi-cross-validation (BiCV) addresses this by holding out a random subset of cells *and* genes, fitting RISE on the remaining data, and scoring how well the fit predicts the held-out block. Because it is evaluated on unseen data, BiCV $R^2X$ penalizes overfitting and turns over near the rank that generalizes best, unlike the fit $R^2X$. 
 
 `scrise.rank_selection.bicv` exhaustively evaluates a list of candidate ranks, each with several repeated random train/test splits, and returns both the fit $R^2X$ and the BiCV $R^2X$ for every rank so you can inspect the full curve. Since PARAFAC2 fits use CANDELINC compression by default (`compress="auto"`), sweeping every rank in this way is cheap enough that there is no need to search for the best rank without evaluating every candidate.
 
