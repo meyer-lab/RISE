@@ -2,9 +2,7 @@
 
 Factors are exported to h5ad with the projection matrix OPQ-quantized and
 the cell barcodes packed into a uint8 matrix, both of which have to be
-undone on load. Kept apart from :mod:`scrise.factorization`, which is
-concerned with computing a decomposition rather than moving one to and from
-disk.
+undone on load.
 """
 
 import os
@@ -33,12 +31,7 @@ def _floats_to_float32(mapping) -> dict:
 
 
 def _pack_obs_names(obs: pd.DataFrame) -> np.ndarray | None:
-    """Replace a string barcode index with a RangeIndex, returning the bytes.
-
-    h5ad stores an object-dtype index far less compactly than a fixed-width
-    uint8 matrix, so the barcodes travel in ``uns`` and are rebuilt by
-    :func:`_restore_obs_names` on load.
-    """
+    """Replace a string barcode index with a RangeIndex, returning the bytes."""
     orig_index = obs.index.to_numpy(dtype=str)
     max_len = max((len(s) for s in orig_index), default=0)
     if max_len == 0:

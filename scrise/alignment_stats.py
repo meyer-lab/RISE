@@ -1,11 +1,3 @@
-"""Statistics behind cell-type alignment scoring.
-
-Pure numeric routines -- AUROC enrichment, uniqueness (tau), effect sizes,
-and the two p-value nulls -- with no AnnData dependency, so they can be
-tested and reused on plain arrays. :mod:`scrise.annotation_alignment` adds
-the AnnData plumbing and assembles the results.
-"""
-
 from __future__ import annotations
 
 import numpy as np

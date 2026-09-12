@@ -6,12 +6,18 @@
     options:
       members:
         - pf2
-        - export_factors
-        - load_factors
         - correct_conditions
         - order_components_by_energy
         - canonical_component_signs
         - match_components_across_ranks
+
+## Factor Import/Export
+
+::: scrise.factor_io
+    options:
+      members:
+        - export_factors
+        - load_factors
 
 ## Rank Selection
 
@@ -23,6 +29,16 @@
 ## Annotation Alignment
 
 ::: scrise.annotation_alignment
+
+### Alignment Statistics
+
+::: scrise.alignment_stats
+    options:
+      members:
+        - compute_auroc_per_cell_type
+        - compute_tau
+        - compute_eta_squared
+        - compute_kruskal_epsilon_squared
 
 ## Quantization & Compression
 

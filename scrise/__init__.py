@@ -1,18 +1,17 @@
 from parafac2.normalize import prepare_dataset
 
 from . import plotting
+from .alignment_stats import compute_tau
 from .annotation_alignment import (
     CellTypeAlignmentResults,
     ComponentAlignmentResult,
     cell_type_alignment,
-    compute_tau,
     score_cell_type_alignment,
 )
+from .factor_io import export_factors, load_factors
 from .factorization import (
     canonical_component_signs,
     correct_conditions,
-    export_factors,
-    load_factors,
     match_components_across_ranks,
     order_components_by_energy,
     pf2,

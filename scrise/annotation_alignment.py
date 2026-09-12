@@ -431,9 +431,5 @@ __all__ = [
     "CellTypeAlignmentResults",
     "ComponentAlignmentResult",
     "cell_type_alignment",
-    "compute_auroc_per_cell_type",
-    "compute_eta_squared",
-    "compute_kruskal_epsilon_squared",
-    "compute_tau",
     "score_cell_type_alignment",
 ]

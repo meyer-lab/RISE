@@ -401,15 +401,9 @@ def rise_pca_r2x(
     return r2x_rise, r2x_pca[np.array(ranks) - 1]
 
 
-# Factor import/export lives in `factor_io`; re-exported here so the
-# long-standing `scrise.factorization.export_factors` path keeps working.
-from .factor_io import export_factors, load_factors  # noqa: E402
-
 __all__ = [
     "canonical_component_signs",
     "correct_conditions",
-    "export_factors",
-    "load_factors",
     "match_components_across_ranks",
     "order_components_by_energy",
     "pf2",
