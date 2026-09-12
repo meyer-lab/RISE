@@ -24,6 +24,7 @@ from ..factorization import (
     order_components_by_energy,
 )
 from ..opq import OPQQuantizer
+from .conftest import make_mock_adata_from_factors
 
 # Bounded, finite, non-degenerate floats: avoids the near-zero-norm columns
 # that would make sign/cosine-similarity assertions numerically meaningless.
@@ -73,21 +74,6 @@ def test_canonical_component_signs_idempotent_and_positive_max(n_rows, n_cols, d
     np.testing.assert_array_equal(signs_again, np.ones(n_cols))
 
 
-def _mock_adata(A, B, C, weights, projections):
-    n_cells = projections.shape[0]
-    n_genes = C.shape[0]
-    n_conditions = A.shape[0]
-    obs = {"Condition": [f"cond_{i % n_conditions}" for i in range(n_cells)]}
-    var = {"gene_name": [f"gene_{j}" for j in range(n_genes)]}
-    return anndata.AnnData(
-        obs=obs,
-        var=var,
-        uns={"Pf2_A": A, "Pf2_B": B, "Pf2_weights": weights},
-        varm={"Pf2_C": C},
-        obsm={"projections": projections},
-    )
-
-
 @given(
     rank=st.integers(min_value=1, max_value=5),
     n_conditions=st.integers(min_value=1, max_value=6),
@@ -115,7 +101,9 @@ def test_order_components_by_energy_is_a_permutation(
         projections = rng.normal(size=(n_cells, rank))
 
     before_wp = projections @ B
-    adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)
+    adata = make_mock_adata_from_factors(
+        A.copy(), B.copy(), C.copy(), weights.copy(), projections
+    )
 
     ordered = order_components_by_energy(adata)
 

@@ -125,6 +125,36 @@ def make_mock_factored_adata(
     return adata
 
 
+def make_mock_adata_from_factors(
+    A: np.ndarray,
+    B: np.ndarray,
+    C: np.ndarray,
+    weights: np.ndarray,
+    projections: np.ndarray,
+) -> anndata.AnnData:
+    """Wrap an explicit set of RISE factors in the AnnData layout ``pf2()``
+    produces, inferring the shapes from the factors themselves.
+
+    Unlike :func:`make_mock_factored_adata`, which invents its own random
+    factors, this takes the caller's factors verbatim -- for tests that need
+    to assert on a specific, hand-built decomposition.
+    """
+    n_cells = projections.shape[0]
+    n_genes = C.shape[0]
+    n_conditions = A.shape[0]
+
+    obs = {"Condition": [f"cond_{i % n_conditions}" for i in range(n_cells)]}
+    var = {"gene_name": [f"gene_{j}" for j in range(n_genes)]}
+
+    return anndata.AnnData(
+        obs=obs,
+        var=var,
+        uns={"Pf2_A": A, "Pf2_B": B, "Pf2_weights": weights},
+        varm=cast(Mapping[str, Sequence[Any]], {"Pf2_C": C}),
+        obsm=cast(Mapping[str, Sequence[Any]], {"projections": projections}),
+    )
+
+
 @pytest.fixture
 def synthetic_pf2_adata():
     return make_synthetic_pf2_data()

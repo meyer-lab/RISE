@@ -2,7 +2,6 @@
 Test energy-based component ordering and sign canonicalization.
 """
 
-import anndata
 import numpy as np
 
 from ..factorization import (
@@ -10,6 +9,7 @@ from ..factorization import (
     match_components_across_ranks,
     order_components_by_energy,
 )
+from .conftest import make_mock_adata_from_factors
 
 
 def test_canonical_component_signs_flips_negative_dominant_columns():
@@ -34,23 +34,6 @@ def test_canonical_component_signs_leaves_positive_dominant_columns_alone():
     assert signs[0] == 1.0
 
 
-def _mock_adata(A, B, C, weights, projections):
-    n_cells = projections.shape[0]
-    n_genes = C.shape[0]
-    n_conditions = A.shape[0]
-
-    obs = {"Condition": [f"cond_{i % n_conditions}" for i in range(n_cells)]}
-    var = {"gene_name": [f"gene_{j}" for j in range(n_genes)]}
-
-    return anndata.AnnData(
-        obs=obs,
-        var=var,
-        uns={"Pf2_A": A, "Pf2_B": B, "Pf2_weights": weights},
-        varm={"Pf2_C": C},
-        obsm={"projections": projections},
-    )
-
-
 def test_order_components_by_energy_descending():
     """Components should be reordered from highest to lowest energy."""
     rng = np.random.default_rng(0)
@@ -69,7 +52,9 @@ def test_order_components_by_energy_descending():
         np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     )[::-1]
 
-    adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)
+    adata = make_mock_adata_from_factors(
+        A.copy(), B.copy(), C.copy(), weights.copy(), projections
+    )
     ordered = order_components_by_energy(adata)
 
     new_energy = (
@@ -101,7 +86,9 @@ def test_order_components_by_energy_preserves_reconstruction():
     weights = rng.random(rank)
     projections, _ = np.linalg.qr(rng.normal(size=(n_cells, rank)))
 
-    adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)
+    adata = make_mock_adata_from_factors(
+        A.copy(), B.copy(), C.copy(), weights.copy(), projections
+    )
 
     before_wp = projections @ B
 
@@ -133,7 +120,9 @@ def test_order_components_by_energy_reorders_weights_and_B():
     energy = np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
     order = np.argsort(energy)[::-1]
 
-    adata = _mock_adata(A.copy(), B.copy(), C.copy(), weights.copy(), projections)
+    adata = make_mock_adata_from_factors(
+        A.copy(), B.copy(), C.copy(), weights.copy(), projections
+    )
     ordered = order_components_by_energy(adata)
 
     np.testing.assert_allclose(ordered.uns["Pf2_weights"], weights[order])
