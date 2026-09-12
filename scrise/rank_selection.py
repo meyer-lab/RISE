@@ -88,6 +88,19 @@ def _cell_loadings(
     return Z
 
 
+def _holdout_scale(
+    cond_train: np.ndarray, cond_test: np.ndarray, n_cond: int
+) -> np.ndarray:
+    """Per-held-out-cell factor correcting `A` for the held-out slice's size."""
+    scale = np.ones(cond_test.size)
+    train_counts = np.bincount(cond_train, minlength=n_cond)
+    test_counts = np.bincount(cond_test, minlength=n_cond)
+    for i in range(n_cond):
+        if test_counts[i] and train_counts[i]:
+            scale[cond_test == i] = np.sqrt(test_counts[i] / train_counts[i])
+    return scale[:, np.newaxis]
+
+
 # Nonzeros per row block when streaming column moments. Bounds the per-nonzero
 # temporaries to a few hundred MB regardless of how large the matrix is.
 _MOMENT_CHUNK_NNZ = 50_000_000
@@ -231,8 +244,10 @@ def _bicv_trial(
     cond_slices_test = condition_slices(cond_test, n_cond)
     P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
-    # Score the held-out block.
+    # Score the held-out block. `A` carries the training slice's energy, so the
+    # held-out loadings need rescaling for the held-out slice's size.
     L = _cell_loadings(P_test, B, A, cond_test, n_cond)
+    L *= _holdout_scale(cond_train, cond_test, n_cond)
     LtY = np.asarray(
         rmatmul(np.ascontiguousarray(L.T), X_mat[test_cell_mask]), dtype=np.float64
     )[:, test_gene_idx]
@@ -266,8 +281,8 @@ def bicv(
     X: anndata.AnnData | None = None,
     ranks: Sequence[int] | None = None,
     n_repeats: int = 3,
-    held_out_cell_frac: float = 0.2,
-    held_out_gene_frac: float = 0.2,
+    held_out_cell_frac: float = 0.5,
+    held_out_gene_frac: float = 0.5,
     random_state: int | None = None,
     tolerance: float = 1e-6,
     max_iter: int = 200,
@@ -298,9 +313,9 @@ def bicv(
     n_repeats : int, optional (default: 3)
         Number of independent random cell/gene splits per rank. Higher
         values give a less noisy BiCV estimate but take longer.
-    held_out_cell_frac : float, optional (default: 0.2)
+    held_out_cell_frac : float, optional (default: 0.5)
         Fraction of cells held out per condition in each BiCV trial.
-    held_out_gene_frac : float, optional (default: 0.2)
+    held_out_gene_frac : float, optional (default: 0.5)
         Fraction of genes held out in each BiCV trial.
     random_state : int, optional
         Random seed for reproducibility.

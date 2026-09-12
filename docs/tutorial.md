@@ -92,7 +92,7 @@ plt.show()
 
 ### Select a Rank with Bi-Cross-Validation (BiCV)
 
-$R^2X$ (in-sample fit) always increases with rank, so it cannot by itself identify an optimal rank — it can only reveal an elbow. Bi-cross-validation (BiCV) addresses this by holding out a random subset of cells *and* genes, fitting RISE on the remaining data, and scoring how well the fit predicts the held-out block. Because it is evaluated on unseen data, BiCV $R^2X$ penalizes overfitting and typically peaks (or plateaus) near the rank that generalizes best, unlike the fit $R^2X$.
+$R^2X$ (in-sample fit) always increases with rank, so it cannot by itself identify an optimal rank. Bi-cross-validation (BiCV) addresses this by holding out a random subset of cells *and* genes, fitting RISE on the remaining data, and scoring how well the fit predicts the held-out block. Because it is evaluated on unseen data, BiCV $R^2X$ penalizes overfitting and turns over near the rank that generalizes best, unlike the fit $R^2X$. 
 
 `scrise.rank_selection.bicv` exhaustively evaluates a list of candidate ranks, each with several repeated random train/test splits, and returns both the fit $R^2X$ and the BiCV $R^2X$ for every rank so you can inspect the full curve. Since PARAFAC2 fits use CANDELINC compression by default (`compress="auto"`), sweeping every rank in this way is cheap enough that there is no need to search for the best rank without evaluating every candidate.
 
@@ -110,7 +110,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-`bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`, plus the per-trial diagnostics below) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes (both default to 0.2); increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
+`bicv` returns a long-form DataFrame (columns `Rank`, `Repeat`, `Metric`, `R2X`, plus the per-trial diagnostics below) suitable for further analysis as well as plotting. Each BiCV trial holds out `held_out_cell_frac` of the cells within each condition and `held_out_gene_frac` of the genes. Both default to 0.5, the half-rows-and-half-columns split recommended by [Owen and Perry](https://arxiv.org/abs/0908.2062), who report that "in simulated examples we find that a method leaving out half the rows and half the columns performs well". Increase `n_repeats` for a smoother, less noisy BiCV curve at the cost of more compute.
 
 Each BiCV row also carries the diagnostics needed to audit the curve rather than just plot it:
 

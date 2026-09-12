@@ -13,6 +13,7 @@ from .._pf2_utils import run_parafac2
 from ..rank_selection import (
     _bicv_trial,
     _cell_loadings,
+    _holdout_scale,
     _split_cells_by_condition,
     _split_genes,
     _test_block_moments,
@@ -325,8 +326,8 @@ def test_reported_seed_reproduces_its_own_trial():
     replayed = _bicv_trial(
         X,
         rank=3,
-        held_out_cell_frac=0.2,
-        held_out_gene_frac=0.2,
+        held_out_cell_frac=0.5,
+        held_out_gene_frac=0.5,
         seed=int(target["Seed"]),
         tolerance=1e-6,
         max_iter=60,
@@ -388,8 +389,12 @@ def _dense_reference_trial(X, rank, seed, held_out_frac=0.2, max_iter=60):
         sel = cond_test == i
         if not np.any(sel):
             continue
+        n_train_i = int(np.sum(cond_train == i))
+        # `A[i]` carries the training slice's energy; rescale it for this
+        # slice's size (see `_holdout_scale`).
+        scale = np.sqrt(int(sel.sum()) / n_train_i) if n_train_i else 1.0
         actual = X_test_test[sel]
-        recon = ((P_test[i] @ B) * A[i]) @ C_test.T
+        recon = (((P_test[i] @ B) * A[i]) * scale) @ C_test.T
         ss_res += float(np.sum((actual - recon) ** 2))
         ss_tot += float(np.sum(actual**2))
     return 1.0 - ss_res / ss_tot
@@ -500,3 +505,119 @@ def test_block_moments_stream_across_more_than_one_row_block(monkeypatch):
     block = dense[cell_mask]
     np.testing.assert_allclose(sums, block.sum(axis=0), rtol=1e-12)
     np.testing.assert_allclose(squares, np.sum(block**2, axis=0), rtol=1e-12)
+
+
+# Held-out slice scaling
+
+
+def _exact_low_rank(
+    rank_true=4, noise=0.0, n_cond=6, cells=(90, 160), n_genes=90, seed=0
+):
+    """Data that IS exactly rank `rank_true`, with unequal cells per condition.
+
+    `means` is zero so the target stays exactly low rank -- mean-centering
+    would add a rank-one term and put a ceiling below 1.0 on the fit.
+    """
+    rng = np.random.default_rng(seed)
+    C = rng.normal(size=(n_genes, rank_true))
+    B = rng.normal(size=(rank_true, rank_true))
+    A = np.abs(rng.normal(size=(n_cond, rank_true))) + 1.0
+    blocks, cond = [], []
+    for k in range(n_cond):
+        n_k = int(rng.integers(*cells))
+        P, _ = np.linalg.qr(rng.normal(size=(n_k, rank_true)))
+        blocks.append(((P @ B) * A[k]) @ C.T)
+        cond.append(np.full(n_k, k))
+    mat = np.concatenate(blocks, axis=0)
+    if noise:
+        mat = mat + noise * np.std(mat) * rng.normal(size=mat.shape)
+    adata = anndata.AnnData(X=mat)
+    adata.obs["condition_unique_idxs"] = np.concatenate(cond)
+    adata.var["means"] = np.zeros(n_genes)
+    return adata
+
+
+def test_holdout_scale_is_the_square_root_of_the_cell_count_ratio():
+    cond_train = np.repeat([0, 1, 2], [80, 40, 10])
+    cond_test = np.repeat([0, 1, 2], [20, 40, 90])
+
+    scale = _holdout_scale(cond_train, cond_test, 3)
+
+    assert scale.shape == (cond_test.size, 1)
+    np.testing.assert_allclose(scale[cond_test == 0, 0], np.sqrt(20 / 80))
+    np.testing.assert_allclose(scale[cond_test == 1, 0], np.sqrt(40 / 40))
+    np.testing.assert_allclose(scale[cond_test == 2, 0], np.sqrt(90 / 10))
+
+
+def test_holdout_scale_is_one_for_an_even_split():
+    """The split the defaults use, and the only one that needed no correction."""
+    cond_train = np.repeat([0, 1], [50, 30])
+    cond_test = np.repeat([0, 1], [50, 30])
+    np.testing.assert_allclose(_holdout_scale(cond_train, cond_test, 2), 1.0)
+
+
+def test_holdout_scale_leaves_conditions_it_cannot_compare_alone():
+    """A condition absent from either side keeps a factor of one."""
+    cond_train = np.array([0, 0, 0])
+    cond_test = np.array([0, 2, 2])
+    scale = _holdout_scale(cond_train, cond_test, 3)
+    np.testing.assert_allclose(scale[cond_test == 2, 0], 1.0)
+
+
+def test_exactly_low_rank_data_scores_near_one_at_its_own_rank():
+    """The regression that matters: in-sample ~1 must not come with held-out < 0.
+
+    Before the slice-size correction this returned about -0.03 while the
+    training block scored 0.9996 -- the model recovered the structure and the
+    held-out score still said it was worse than predicting the mean.
+    """
+    adata = _exact_low_rank(rank_true=4)
+    trial = _bicv_trial(adata, 4, 0.5, 0.5, seed=0, tolerance=1e-8, max_iter=300)
+
+    assert trial["Train Block R2X"] > 0.99
+    assert trial["BiCV R2X"] > 0.95
+
+
+@pytest.mark.parametrize("frac", [0.2, 0.35, 0.5, 0.7])
+def test_score_barely_moves_with_the_held_out_fraction(frac):
+    """`held_out_cell_frac` sets how much is held out, not what the score is.
+
+    The bug made this swing from -2.85 (frac 0.1) to 0.90 (frac 0.5) on the
+    same data at the same rank, because the error was sqrt(n_train/n_test).
+    """
+    adata = _exact_low_rank(rank_true=4)
+    trial = _bicv_trial(adata, 4, frac, frac, seed=0, tolerance=1e-8, max_iter=300)
+    assert trial["BiCV R2X"] > 0.9
+
+
+def test_bicv_recovers_a_known_rank():
+    """The point of the metric: peak (or plateau onset) at the true rank."""
+    adata = _exact_low_rank(rank_true=3, noise=0.5, n_genes=60)
+    results = bicv(adata, [1, 2, 3, 5, 8], n_repeats=2, random_state=0, max_iter=150)
+    means = results[results["Metric"] == "BiCV R2X"].groupby("Rank")["R2X"].mean()
+
+    # Climbs up to the true rank, then stops climbing.
+    assert means.loc[3] > means.loc[2] > means.loc[1]
+    assert means.loc[5] <= means.loc[3] + 1e-3
+    assert means.loc[8] <= means.loc[3] + 1e-3
+
+
+def test_pure_noise_does_not_score_positive():
+    """Nothing generalises from noise; a positive score would mean leakage."""
+    rng = np.random.default_rng(0)
+    cond = np.repeat(np.arange(5), 70)
+    adata = anndata.AnnData(X=rng.normal(size=(cond.size, 60)))
+    adata.obs["condition_unique_idxs"] = cond
+    adata.var["means"] = np.zeros(60)
+
+    trial = _bicv_trial(adata, 5, 0.5, 0.5, seed=0, tolerance=1e-8, max_iter=200)
+    assert trial["BiCV R2X"] < 0.02
+
+
+def test_held_out_fractions_default_to_one_half():
+    """Owen and Perry's recommended split; see the module docstring."""
+    import inspect
+
+    params = inspect.signature(bicv).parameters
+    assert params["held_out_cell_frac"].default == 0.5
+    assert params["held_out_gene_frac"].default == 0.5
