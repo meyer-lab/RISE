@@ -2177,7 +2177,7 @@ requires-dist = [
     { name = "tensorly", specifier = ">=0.9.0" },
     { name = "tlviz", specifier = ">=0.1.1" },
     { name = "tqdm", specifier = ">=4.66.1" },
-    { name = "vsparse", git = "https://github.com/meyer-lab/vsparse?branch=select-without-recalculate" },
+    { name = "vsparse", git = "https://github.com/meyer-lab/vsparse?branch=bal-pf2-gpu-testing" },
 ]
 provides-extras = ["gpu"]
 
@@ -2472,7 +2472,7 @@ wheels = [
 [[package]]
 name = "vsparse"
 version = "0.3.0"
-source = { git = "https://github.com/meyer-lab/vsparse?branch=select-without-recalculate#87a9a13c9d0cc84f59608b5595289ba5f9147f78" }
+source = { git = "https://github.com/meyer-lab/vsparse?branch=bal-pf2-gpu-testing#0beb1af8dfd155a2a21fa61feb824b1c11be65a3" }
 dependencies = [
     { name = "anndata" },
     { name = "hdf5plugin" },
