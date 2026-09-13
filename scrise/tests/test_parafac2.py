@@ -132,7 +132,7 @@ def test_root_api_exports():
     assert callable(prepare_dataset)
     assert hasattr(plotting, "plot_condition_factors")
     assert hasattr(plotting, "plot_gene_factors")
-    assert __version__ == "1.3.0"
+    assert __version__ == "1.4.0"
     assert "bicv" in scrise.__all__
     assert "prepare_dataset" in scrise.__all__
     assert "plotting" in scrise.__all__
