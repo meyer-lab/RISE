@@ -408,14 +408,16 @@ def test_export_load_factors_preserves_invariants(
         np.testing.assert_allclose(loaded.uns["Pf2_A"], A, atol=1e-6)
         np.testing.assert_allclose(loaded.uns["Pf2_B"], B, atol=1e-6)
         np.testing.assert_allclose(loaded.uns["Pf2_weights"], weights, atol=1e-6)
-        np.testing.assert_allclose(loaded.varm["Pf2_C"], C, atol=1e-6)
+        np.testing.assert_allclose(np.asarray(loaded.varm["Pf2_C"]), C, atol=1e-6)
 
         # 3. Projections shape preserved and reconstructed
         assert loaded.obsm["projections"].shape == (n_cells, rank)
         assert loaded.obsm["projections"].dtype == np.float32
 
         # 4. Weighted projections invariant: WP == P @ B
-        expected_wp = loaded.obsm["projections"] @ loaded.uns["Pf2_B"]
+        expected_wp = np.asarray(loaded.obsm["projections"]) @ np.asarray(
+            loaded.uns["Pf2_B"]
+        )
         np.testing.assert_allclose(
-            loaded.obsm["weighted_projections"], expected_wp, atol=1e-5
+            np.asarray(loaded.obsm["weighted_projections"]), expected_wp, atol=1e-5
         )
