@@ -419,4 +419,3 @@ def test_export_load_factors_preserves_invariants(
         np.testing.assert_allclose(
             loaded.obsm["weighted_projections"], expected_wp, atol=1e-5
         )
-
