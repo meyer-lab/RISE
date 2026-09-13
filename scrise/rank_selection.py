@@ -59,13 +59,13 @@ def _max_feasible_rank(
     and enough train genes remain for a BiCV trial to be well-posed."""
     cond_idx = X.obs["condition_unique_idxs"].to_numpy().astype(int)
     n_cond = int(cond_idx.max()) + 1
+    cond_counts = np.bincount(cond_idx, minlength=n_cond)
     min_train_cells = min(
         max(
             1,
-            int(np.sum(cond_idx == c))
-            - max(1, round(np.sum(cond_idx == c) * held_out_cell_frac)),
+            int(n_c) - max(1, round(n_c * held_out_cell_frac)),
         )
-        for c in range(n_cond)
+        for n_c in cond_counts
     )
     n_train_genes = X.n_vars - max(1, round(X.n_vars * held_out_gene_frac))
     return int(min(min_train_cells, n_train_genes))

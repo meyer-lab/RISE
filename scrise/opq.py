@@ -209,10 +209,9 @@ def find_optimal_opq(
     _, D = P_arr.shape
 
     # Candidate M values to evaluate (increasing order for compression)
-    candidate_Ms = sorted({1, 2, 4, 5, 8, 10, 12, 15, 20, 25, 30, D})
-    candidate_Ms = [m for m in candidate_Ms if m <= D]
-    if D not in candidate_Ms:
-        candidate_Ms.append(D)
+    candidate_Ms = sorted(
+        {m for m in (1, 2, 4, 5, 8, 10, 12, 15, 20, 25, 30, D) if m <= D}
+    )
 
     best_quantizer = None
     best_codes = None

@@ -35,10 +35,7 @@ def correct_conditions(X: anndata.AnnData):
     numpy.ndarray
         Corrected condition factors normalized by sequencing depth
     """
-    sgIndex = X.obs["condition_unique_idxs"]
-
-    counts = np.zeros((np.amax(sgIndex.to_numpy()) + 1, 1))
-
+    sgIndex = np.asarray(X.obs["condition_unique_idxs"])
     cond_mean = gmean(X.uns["Pf2_A"], axis=1)
 
     if X.X is None:
@@ -46,10 +43,10 @@ def correct_conditions(X: anndata.AnnData):
     # X.X's declared type is a large union of array-like/backed-storage types
     # from the AnnData stub; at runtime this is always a dense or sparse
     # in-memory array supporting `.sum`.
-    x_count = np.asarray(cast(Any, X.X).sum(axis=1))
+    x_count = np.asarray(cast(Any, X.X).sum(axis=1)).ravel()
 
-    for ii in range(counts.size):
-        counts[ii] = np.sum(x_count[X.obs["condition_unique_idxs"] == ii])
+    n_conds = int(np.amax(sgIndex)) + 1
+    counts = np.bincount(sgIndex, weights=x_count, minlength=n_conds).reshape(-1, 1)
 
     lr = LinearRegression()
     lr.fit(counts, cond_mean.reshape(-1, 1))

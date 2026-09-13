@@ -10,13 +10,25 @@ that must hold for *any* valid input, not just the specific arrays checked
 elsewhere in the suite.
 """
 
+import tempfile
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
+
 import anndata
 import numpy as np
+import pandas as pd
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
+from ..alignment_stats import (
+    compute_auroc_per_cell_type,
+    compute_eta_squared,
+    compute_kruskal_epsilon_squared,
+    compute_tau,
+)
+from ..factor_io import export_factors, load_factors
 from ..factorization import (
     canonical_component_signs,
     correct_conditions,
@@ -207,3 +219,205 @@ def test_opq_reconstruction_r2_nondecreasing_in_num_subquantizers(D):
         # violated by noise near saturation (r2 close to 1).
         assert r2 >= prev_r2 - 0.05
         prev_r2 = r2
+
+
+@given(
+    n_cells=st.integers(min_value=10, max_value=80),
+    n_types=st.integers(min_value=2, max_value=5),
+    seed=st.integers(min_value=0, max_value=2**31 - 1),
+)
+@_slow_settings
+def test_alignment_stats_cell_permutation_invariance_and_negation(
+    n_cells, n_types, seed
+):
+    """Cell ordering should not affect AUROC, tau, eta^2, or Kruskal epsilon^2.
+    Negating loadings must invert AUROC (AUROC(-y) = 1 - AUROC(y))."""
+    rng = np.random.default_rng(seed)
+    y = rng.normal(size=n_cells)
+    codes = rng.integers(0, n_types, size=n_cells)
+
+    # Ensure all types have at least one cell
+    for k in range(min(n_types, n_cells)):
+        codes[k] = k
+
+    # Baseline statistics
+    aurocs = compute_auroc_per_cell_type(y, codes, n_types)
+    tau = compute_tau(aurocs)
+    eta2 = compute_eta_squared(y, codes, n_types)
+    eps2 = compute_kruskal_epsilon_squared(y, codes, n_types)
+
+    # Permute cell order
+    perm = rng.permutation(n_cells)
+    y_perm = y[perm]
+    codes_perm = codes[perm]
+
+    aurocs_perm = compute_auroc_per_cell_type(y_perm, codes_perm, n_types)
+    tau_perm = compute_tau(aurocs_perm)
+    eta2_perm = compute_eta_squared(y_perm, codes_perm, n_types)
+    eps2_perm = compute_kruskal_epsilon_squared(y_perm, codes_perm, n_types)
+
+    np.testing.assert_allclose(aurocs_perm, aurocs, rtol=1e-5, atol=1e-6)
+    assert abs(tau_perm - tau) < 1e-6
+    assert abs(eta2_perm - eta2) < 1e-6
+    assert abs(eps2_perm - eps2) < 1e-6
+
+    # Negation property: AUROC(-y) = 1 - AUROC(y)
+    aurocs_neg = compute_auroc_per_cell_type(-y, codes, n_types)
+    counts = np.bincount(codes, minlength=n_types)
+    valid = (counts > 0) & ((n_cells - counts) > 0)
+    np.testing.assert_allclose(
+        aurocs_neg[valid] + aurocs[valid], 1.0, rtol=1e-5, atol=1e-6
+    )
+
+
+@given(
+    n_cells=st.integers(min_value=5, max_value=50),
+    n_types=st.integers(min_value=2, max_value=4),
+)
+@_slow_settings
+def test_alignment_stats_constant_loading_degeneracy(n_cells, n_types):
+    """Constant loadings carry zero information: AUROC should be 0.5 and all effect
+    sizes should be 0.0."""
+    y = np.full(n_cells, 3.14)
+    codes = np.arange(n_cells) % n_types
+
+    aurocs = compute_auroc_per_cell_type(y, codes, n_types)
+    np.testing.assert_allclose(aurocs, 0.5)
+    assert compute_tau(aurocs) == 0.0
+    assert compute_eta_squared(y, codes, n_types) == 0.0
+    assert compute_kruskal_epsilon_squared(y, codes, n_types) == 0.0
+
+
+@given(
+    n_genes=st.integers(min_value=5, max_value=20),
+    rank_low=st.integers(min_value=2, max_value=4),
+    seed=st.integers(min_value=0, max_value=2**31 - 1),
+)
+@_slow_settings
+def test_match_components_across_ranks_permutation_equivariance(
+    n_genes, rank_low, seed
+):
+    """Permuting the columns of C_high must permute the matched column indices."""
+    rng = np.random.default_rng(seed)
+    C_low = rng.normal(size=(n_genes, rank_low)) + np.eye(n_genes, rank_low) * 10.0
+    C_low = C_low * canonical_component_signs(C_low)
+
+    # Make extra columns orthogonal / distinct so matching has a unique optimum
+    extra_cols = rng.normal(size=(n_genes, 2))
+    Q, _ = np.linalg.qr(C_low)
+    extra_cols = extra_cols - Q @ (Q.T @ extra_cols)
+    extra_cols = extra_cols * canonical_component_signs(extra_cols)
+    C_high = np.concatenate([C_low, extra_cols], axis=1)
+    rank_high = C_high.shape[1]
+
+    pairs_orig, unmatched_orig = match_components_across_ranks(
+        C_low, C_high, threshold=0.5
+    )
+
+    # Permute columns of C_high
+    perm = rng.permutation(rank_high)
+    C_high_perm = C_high[:, perm]
+
+    pairs_perm, unmatched_perm = match_components_across_ranks(
+        C_low, C_high_perm, threshold=0.5
+    )
+
+    # Low rank indices match identically
+    np.testing.assert_array_equal(pairs_perm[:, 0], pairs_orig[:, 0])
+    # Permuted high indices match the original column indices
+    np.testing.assert_array_equal(perm[pairs_perm[:, 1]], pairs_orig[:, 1])
+    np.testing.assert_array_equal(
+        np.sort(perm[unmatched_perm]), np.sort(unmatched_orig)
+    )
+
+
+@given(
+    n_genes=st.integers(min_value=5, max_value=15),
+    rank_low=st.integers(min_value=2, max_value=4),
+    seed=st.integers(min_value=0, max_value=2**31 - 1),
+)
+@_slow_settings
+def test_match_components_across_ranks_threshold_monotonicity(n_genes, rank_low, seed):
+    """Increasing threshold must yield a subset of matched pairs."""
+    rng = np.random.default_rng(seed)
+    C_low = rng.normal(size=(n_genes, rank_low))
+    C_high = np.concatenate(
+        [C_low[:, :2], rng.normal(size=(n_genes, rank_low))], axis=1
+    )
+
+    pairs_low_thresh, _ = match_components_across_ranks(C_low, C_high, threshold=0.3)
+    pairs_high_thresh, _ = match_components_across_ranks(C_low, C_high, threshold=0.8)
+
+    set_low = set(map(tuple, pairs_low_thresh))
+    set_high = set(map(tuple, pairs_high_thresh))
+    assert set_high.issubset(set_low)
+
+
+@given(
+    n_cells=st.integers(min_value=20, max_value=60),
+    n_genes=st.integers(min_value=10, max_value=25),
+    n_conditions=st.integers(min_value=2, max_value=5),
+    rank=st.integers(min_value=2, max_value=4),
+    seed=st.integers(min_value=0, max_value=2**31 - 1),
+)
+@_slow_settings
+def test_export_load_factors_preserves_invariants(
+    n_cells, n_genes, n_conditions, rank, seed
+):
+    """export_factors -> load_factors roundtrip must preserve factor matrices,
+    obs_names, and ensure weighted_projections = projections @ Pf2_B."""
+    rng = np.random.default_rng(seed)
+    P, _ = np.linalg.qr(rng.normal(size=(n_cells, rank)))
+    P = P.astype(np.float32)
+    A = rng.normal(size=(n_conditions, rank)).astype(np.float32)
+    B = rng.normal(size=(rank, rank)).astype(np.float32)
+    C = rng.normal(size=(n_genes, rank)).astype(np.float32)
+    weights = rng.uniform(0.5, 2.0, size=rank).astype(np.float32)
+
+    barcodes = [f"cell_barcode_{seed}_{i}" for i in range(n_cells)]
+    obs = pd.DataFrame(
+        {
+            "condition_unique_idxs": pd.Categorical(
+                [i % n_conditions for i in range(n_cells)]
+            ),
+        },
+        index=pd.Index(barcodes),
+    )
+    var = pd.DataFrame(
+        {"gene_name": [f"gene_{j}" for j in range(n_genes)]},
+        index=[f"gene_{j}" for j in range(n_genes)],
+    )
+
+    orig_adata = anndata.AnnData(
+        X=rng.normal(size=(n_cells, n_genes)).astype(np.float32),
+        obs=obs,
+        var=var,
+        uns={"Pf2_A": A, "Pf2_B": B, "Pf2_weights": weights},
+        varm=cast(Mapping[str, Sequence[Any]], {"Pf2_C": C}),
+        obsm=cast(Mapping[str, Sequence[Any]], {"projections": P}),
+    )
+
+    with tempfile.NamedTemporaryFile(suffix=".h5ad") as tmp:
+        export_factors(orig_adata, tmp.name, fidelity_threshold=0.90, random_state=seed)
+        loaded = load_factors(tmp.name)
+
+        # 1. Barcode names roundtrip preserved exactly
+        assert loaded.obs_names.tolist() == barcodes
+
+        # 2. Factor matrices preserved in float32
+        np.testing.assert_allclose(loaded.uns["Pf2_A"], A, atol=1e-6)
+        np.testing.assert_allclose(loaded.uns["Pf2_B"], B, atol=1e-6)
+        np.testing.assert_allclose(loaded.uns["Pf2_weights"], weights, atol=1e-6)
+        np.testing.assert_allclose(np.asarray(loaded.varm["Pf2_C"]), C, atol=1e-6)
+
+        # 3. Projections shape preserved and reconstructed
+        assert loaded.obsm["projections"].shape == (n_cells, rank)
+        assert loaded.obsm["projections"].dtype == np.float32
+
+        # 4. Weighted projections invariant: WP == P @ B
+        expected_wp = np.asarray(loaded.obsm["projections"]) @ np.asarray(
+            loaded.uns["Pf2_B"]
+        )
+        np.testing.assert_allclose(
+            np.asarray(loaded.obsm["weighted_projections"]), expected_wp, atol=1e-5
+        )

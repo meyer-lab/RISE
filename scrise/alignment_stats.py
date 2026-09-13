@@ -118,7 +118,7 @@ def compute_eta_squared(
 
     y_mean = np.mean(y)
     ss_total = np.sum((y - y_mean) ** 2)
-    if ss_total <= 0.0:
+    if ss_total <= 1e-12:
         return 0.0
 
     counts = np.bincount(cell_type_codes, minlength=n_types).astype(float)
@@ -216,6 +216,10 @@ def _permutation_p_values(
     """Empirical one-sided p-values against a rank-permutation null."""
     ranks = sp.rankdata(y, method="average")
     counts = np.bincount(codes, minlength=n_types).astype(float)
+    n0 = n_cells - counts
+    valid = (counts > 0) & (n0 > 0)
+    denom = np.where(valid, counts * n0, 1.0)
+    u_offset = counts * (counts + 1.0) / 2.0
     null_counts = np.zeros(n_types, dtype=int)
 
     for _ in range(n_permutations):
@@ -223,14 +227,8 @@ def _permutation_p_values(
         perm_sums = np.bincount(codes, weights=perm_ranks, minlength=n_types).astype(
             float
         )
-        for k in range(n_types):
-            n1 = counts[k]
-            n0 = n_cells - n1
-            if n1 > 0 and n0 > 0:
-                u_null = perm_sums[k] - n1 * (n1 + 1.0) / 2.0
-                auc_null = u_null / (n1 * n0)
-                if auc_null >= aurocs[k]:
-                    null_counts[k] += 1
+        auc_null = (perm_sums - u_offset) / denom
+        null_counts += (auc_null >= aurocs) & valid
 
     return (1.0 + null_counts) / (1.0 + n_permutations)
 
