@@ -18,6 +18,8 @@ import anndata
 import numpy as np
 import pandas as pd
 import scipy.sparse as sps
+from parafac2.compress import compress_dataset
+from parafac2.parafac2 import parafac2_nd
 from parafac2.utils import calc_W, condition_slices, project_data, rmatmul
 from tqdm import tqdm
 
@@ -195,9 +197,89 @@ def _test_block_moments(
     return sums[gene_idx], squares[gene_idx]
 
 
+def _fit_at_ranks(
+    X_in: anndata.AnnData,
+    ranks: Sequence[int],
+    tolerance: float,
+    max_iter: int,
+    compress: int | tuple[int, int | None] | str | bool | None,
+    compression_kwarg: dict[str, Any] | None,
+    parafac2_kwarg: dict[str, Any] | None,
+    rng: np.random.Generator,
+) -> list[tuple[tuple, float]]:
+    """Fit PARAFAC2 against ``X_in`` at every rank in ``ranks``.
+
+    When ``compression_kwarg`` is given, ``X_in`` is compressed *once*,
+    explicitly, sized for the *largest* rank in ``ranks`` (CANDELINC
+    compression to ``L`` dimensions is valid for fitting any rank ``<= L``,
+    not just the rank it was sized for -- see
+    :func:`parafac2.compress.compress_dataset`/:class:`~parafac2.compress.CompressedData`),
+    and every rank's fit reuses that same compressed representation. Compression
+    is the expensive, ``O(nnz)`` raw-data pass; the fit itself
+    (:func:`~parafac2.parafac2.parafac2_nd` against an already-compressed
+    ``CompressedData``) only touches the small dense compressed cores, so
+    this turns what used to be one full compression *per rank* into one
+    compression for the whole set.
+
+    Without ``compression_kwarg``, each rank's fit instead goes through
+    :func:`~scrise._pf2_utils.run_parafac2` exactly as before -- unchanged,
+    since ``parafac2_nd``'s own internal per-call compression shortcut
+    doesn't hand back a reusable ``CompressedData`` object to hoist out of
+    the loop.
+
+    Returns a list of ``((weights, (A, B, C), projections), r2x)`` tuples,
+    one per rank, in the same order as ``ranks``.
+    """
+    if not compression_kwarg:
+        return [
+            run_parafac2(
+                X_in,
+                rank=rank,
+                random_state=int(rng.integers(np.iinfo(np.int32).max)),
+                tol=tolerance,
+                n_iter_max=max_iter,
+                compress=compress,
+                compression_kwarg=None,
+                parafac2_kwarg=parafac2_kwarg,
+            )
+            for rank in ranks
+        ]
+
+    if not compress:
+        raise ValueError("compression_kwarg requires compress to be set.")
+
+    parafac2_kwarg = dict(parafac2_kwarg) if parafac2_kwarg else {}
+    normalize_slices = parafac2_kwarg.pop("normalize_slices", False)
+    backend = parafac2_kwarg.pop("backend", None)
+
+    compressed = compress_dataset(
+        X_in,
+        L=compress,
+        rank=max(ranks),
+        random_state=int(rng.integers(np.iinfo(np.int32).max)),
+        normalize_slices=normalize_slices,
+        backend=backend,
+        **compression_kwarg,
+    )
+    return [
+        parafac2_nd(
+            compressed,
+            rank=rank,
+            random_state=int(rng.integers(np.iinfo(np.int32).max)),
+            tol=tolerance,
+            n_iter_max=max_iter,
+            normalize_slices=normalize_slices,
+            backend=backend,
+            compress=None,  # already compressed above
+            **parafac2_kwarg,
+        )
+        for rank in ranks
+    ]
+
+
 def _bicv_trial(
     X: anndata.AnnData,
-    rank: int,
+    ranks: Sequence[int],
     held_out_cell_frac: float,
     held_out_gene_frac: float,
     seed: int,
@@ -206,12 +288,14 @@ def _bicv_trial(
     compress: int | tuple[int, int | None] | str | bool | None = "auto",
     compression_kwarg: dict[str, Any] | None = None,
     parafac2_kwarg: dict[str, Any] | None = None,
-) -> dict[str, float]:
-    """Run a single bi-cross-validation trial and return its scores and shape.
+) -> list[dict[str, float]]:
+    """Run a single bi-cross-validation trial, evaluated at every rank in ``ranks``.
 
-    Splits cells (stratified by condition) and genes into train/test blocks,
-    fits PARAFAC2 on the train-cell x train-gene block, then predicts the
-    held-out test-cell x test-gene block:
+    Splits cells (stratified by condition) and genes into train/test blocks
+    *once*, fits PARAFAC2 on the train-cell x train-gene block at each rank
+    (compressing that train block once, not once per rank -- see
+    :func:`_fit_at_ranks`), then predicts the held-out test-cell x test-gene
+    block from each rank's fit:
 
     - Gene loadings for the held-out genes are estimated by regressing the
       train cells' expression of those genes onto the fitted (train-cell)
@@ -222,12 +306,16 @@ def _bicv_trial(
 
     R2X is then computed by reconstructing the held-out block from these
     estimates and comparing against the (mean-centered) observed values.
+    That reference block (and its moments) depends only on the split, not on
+    the rank, so it too is computed once and reused across every rank below.
 
     Returns
     -------
-    dict[str, float]
-        ``BiCV R2X`` (the held-out block), ``Train Block R2X`` (in-sample, on
-        the block the model was fit to), the four block sizes, and ``Seed``.
+    list[dict[str, float]]
+        One dict per rank (in the same order as ``ranks``), each with
+        ``Rank``, ``BiCV R2X`` (the held-out block), ``Train Block R2X``
+        (in-sample, on the block the model was fit to), the four block
+        sizes, and ``Seed``.
     """
     rng = np.random.default_rng(seed)
     cond_idx = X.obs["condition_unique_idxs"].to_numpy().astype(int)
@@ -239,17 +327,16 @@ def _bicv_trial(
     train_gene_mask, test_gene_mask = _split_genes(X.n_vars, held_out_gene_frac, rng)
 
     X_train = X[train_cell_mask][:, train_gene_mask].copy()
-    (weights, (A, B, C), P_train), train_block_r2x = run_parafac2(
+    fits = _fit_at_ranks(
         X_train,
-        rank=rank,
-        random_state=int(rng.integers(np.iinfo(np.int32).max)),
-        tol=tolerance,
-        n_iter_max=max_iter,
-        compress=compress,
-        compression_kwarg=compression_kwarg,
-        parafac2_kwarg=parafac2_kwarg,
+        ranks,
+        tolerance,
+        max_iter,
+        compress,
+        compression_kwarg,
+        parafac2_kwarg,
+        rng,
     )
-    A = A * weights
 
     # Everything below reaches the raw data through products against the raw
     # matrix rather than materialising a block of it. Cells are restricted by
@@ -267,38 +354,17 @@ def _bicv_trial(
     n_genes = X.n_vars
     test_gene_idx = np.flatnonzero(test_gene_mask)
     means_test_genes = means[test_gene_mask]
-
-    # Estimate gene loadings for the held-out genes from the train cells.
-    #   Z^T (X[train, test] - 1 mu^T) = (Z^T X[train])[:, test] - (Z^T 1) mu^T
     cond_train = cond_idx[train_cell_mask]
-    Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
-    ZtY = np.asarray(
-        rmatmul(np.ascontiguousarray(Z.T), _restrict_rows(X_mat, train_cell_mask)),
-        dtype=np.float64,
-    )[:, test_gene_idx]
-    ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
-    # `lstsq` on the rank x rank system keeps the minimum-norm
-    # behaviour when the fit is rank deficient.
-    C_test = np.linalg.lstsq(Z.T @ Z, ZtY, rcond=None)[0].T
-
-    # Estimate projections for the held-out cells from the train genes.
-    C_full = np.zeros((n_genes, C.shape[1]))
-    C_full[train_gene_mask] = C
     cond_test = cond_idx[test_cell_mask]
-    X_test = _restrict_rows(X_mat, test_cell_mask)
-    W_test = calc_W(X_test, means, C_full)
     cond_slices_test = condition_slices(cond_test, n_cond)
-    P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
+    scale = _holdout_scale(cond_train, cond_test, n_cond)
 
-    # Score the held-out block. `A` carries the training slice's energy, so the
-    # held-out loadings need rescaling for the held-out slice's size.
-    L = _cell_loadings(P_test, B, A, cond_test, n_cond)
-    L *= _holdout_scale(cond_train, cond_test, n_cond)
-    LtY = np.asarray(rmatmul(np.ascontiguousarray(L.T), X_test), dtype=np.float64)[
-        :, test_gene_idx
-    ]
-    LtY -= np.outer(L.sum(axis=0), means_test_genes)
-
+    # These depend only on the (fixed, once-per-trial) split, not on rank, so
+    # -- unlike compression/fitting above -- they were already shared across
+    # ranks even before this change; now made explicit and computed once here
+    # rather than once per rank.
+    X_train_lazy = _restrict_rows(X_mat, train_cell_mask)
+    X_test_lazy = _restrict_rows(X_mat, test_cell_mask)
     col_sums, col_squares = _test_block_moments(X_mat, test_cell_mask, test_gene_idx)
     n_test_cells = int(test_cell_mask.sum())
     ss_tot = float(
@@ -308,19 +374,57 @@ def _bicv_trial(
             + n_test_cells * means_test_genes**2
         )
     )
-    cross = float(np.sum(C_test.T * LtY))
-    ss_fit = float(np.sum((L.T @ L) * (C_test.T @ C_test)))
-    ss_res = ss_tot - 2.0 * cross + ss_fit
 
-    return {
-        "BiCV R2X": 1.0 - ss_res / ss_tot,
-        "Train Block R2X": float(train_block_r2x),
-        "NTrainGenes": int(train_gene_mask.sum()),
-        "NTestGenes": int(test_gene_mask.sum()),
-        "NTrainCells": int(train_cell_mask.sum()),
-        "NTestCells": int(test_cell_mask.sum()),
-        "Seed": int(seed),
-    }
+    results = []
+    for rank, ((weights, (A, B, C), P_train), train_block_r2x) in zip(
+        ranks, fits, strict=True
+    ):
+        A = A * weights
+
+        # Estimate gene loadings for the held-out genes from the train cells.
+        #   Z^T (X[train, test] - 1 mu^T) = (Z^T X[train])[:, test] - (Z^T 1) mu^T
+        Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
+        ZtY = np.asarray(
+            rmatmul(np.ascontiguousarray(Z.T), X_train_lazy), dtype=np.float64
+        )[:, test_gene_idx]
+        ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
+        # `lstsq` on the rank x rank system keeps the minimum-norm
+        # behaviour when the fit is rank deficient.
+        C_test = np.linalg.lstsq(Z.T @ Z, ZtY, rcond=None)[0].T
+
+        # Estimate projections for the held-out cells from the train genes.
+        C_full = np.zeros((n_genes, C.shape[1]))
+        C_full[train_gene_mask] = C
+        W_test = calc_W(X_test_lazy, means, C_full)
+        P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
+
+        # Score the held-out block. `A` carries the training slice's energy,
+        # so the held-out loadings need rescaling for the held-out slice's
+        # size.
+        L = _cell_loadings(P_test, B, A, cond_test, n_cond)
+        L = L * scale
+        LtY = np.asarray(
+            rmatmul(np.ascontiguousarray(L.T), X_test_lazy), dtype=np.float64
+        )[:, test_gene_idx]
+        LtY -= np.outer(L.sum(axis=0), means_test_genes)
+
+        cross = float(np.sum(C_test.T * LtY))
+        ss_fit = float(np.sum((L.T @ L) * (C_test.T @ C_test)))
+        ss_res = ss_tot - 2.0 * cross + ss_fit
+
+        results.append(
+            {
+                "Rank": rank,
+                "BiCV R2X": 1.0 - ss_res / ss_tot,
+                "Train Block R2X": float(train_block_r2x),
+                "NTrainGenes": int(train_gene_mask.sum()),
+                "NTestGenes": int(test_gene_mask.sum()),
+                "NTrainCells": int(train_cell_mask.sum()),
+                "NTestCells": int(test_cell_mask.sum()),
+                "Seed": int(seed),
+            }
+        )
+    return results
 
 
 def _resolve_bicv_inputs(
@@ -394,11 +498,22 @@ def bicv(
 
     For each candidate rank, computes both the ordinary in-sample fit R2X
     (using the full dataset, as in :func:`scrise.factorization.rise_pca_r2x`)
-    and the BiCV R2X (repeated ``n_repeats`` times with independent random
-    cell/gene splits). The fit R2X increases monotonically with rank; the
-    BiCV R2X penalizes overfitting and typically peaks near the rank that
-    best generalizes to held-out data. Plot both with
-    :func:`scrise.plotting.plot_bicv_r2x` to select a rank.
+    and the BiCV R2X (``n_repeats`` independent random cell/gene splits,
+    each evaluated at every rank -- see :func:`_bicv_trial`). The fit R2X
+    increases monotonically with rank; the BiCV R2X penalizes overfitting and
+    typically peaks near the rank that best generalizes to held-out data.
+    Plot both with :func:`scrise.plotting.plot_bicv_r2x` to select a rank.
+
+    Each of the ``n_repeats`` splits (and the full dataset, for the in-sample
+    fit) is compressed once -- sized for the *largest* rank requested -- and
+    every rank's PARAFAC2 fit reuses that same compression, rather than
+    recompressing per rank (see :func:`_fit_at_ranks`). Compression is by far
+    the most expensive, ``O(nnz)`` step against the raw data; fitting a
+    smaller rank from an already-compressed representation only touches the
+    small dense compressed cores. This applies whenever ``compression_kwarg``
+    is given (as it must be to control e.g. ``n_power_iter``); without it,
+    each rank still goes through its own call into ``parafac2_nd``'s internal
+    compression shortcut, unchanged.
 
     Parameters
     ----------
@@ -409,8 +524,9 @@ def bicv(
     ranks : sequence of int
         Candidate rank values to evaluate (e.g., [5, 10, 15, 20, 25, 30]).
     n_repeats : int, optional (default: 3)
-        Number of independent random cell/gene splits per rank. Higher
-        values give a less noisy BiCV estimate but take longer.
+        Number of independent random cell/gene splits, each evaluated at
+        every rank in ``ranks``. Higher values give a less noisy BiCV
+        estimate but take longer.
     held_out_cell_frac : float, optional (default: 0.5)
         Fraction of cells held out per condition in each BiCV trial.
     held_out_gene_frac : float, optional (default: 0.5)
@@ -470,35 +586,38 @@ def bicv(
 
     rng = np.random.default_rng(random_state)
     rows = []
-    for rank in tqdm(ranks, desc="BiCV rank selection"):
-        _, fit_r2x = run_parafac2(
-            X,
-            rank=rank,
-            random_state=int(rng.integers(np.iinfo(np.int32).max)),
-            tol=tolerance,
-            n_iter_max=max_iter,
-            compress=compress,
-            compression_kwarg=compression_kwarg,
-            parafac2_kwarg=parafac2_kwarg,
-        )
+
+    # The full (unsplit) dataset is the same for every rank, so -- like the
+    # per-trial train blocks below -- it's compressed once (sized for the
+    # largest rank) and reused, rather than once per rank.
+    fit_results = _fit_at_ranks(
+        X, ranks, tolerance, max_iter, compress, compression_kwarg, parafac2_kwarg, rng
+    )
+    for rank, (_, fit_r2x) in zip(ranks, fit_results, strict=True):
         # The full-data fit has no split, so the per-trial columns are absent
         # here rather than zero.
         rows.append({"Rank": rank, "Repeat": 0, "Metric": "Fit R2X", "R2X": fit_r2x})
 
-        for repeat in range(n_repeats):
-            trial_seed = int(rng.integers(np.iinfo(np.int32).max))
-            trial = _bicv_trial(
-                X,
-                rank,
-                held_out_cell_frac,
-                held_out_gene_frac,
-                trial_seed,
-                tolerance,
-                max_iter,
-                compress,
-                compression_kwarg,
-                parafac2_kwarg,
-            )
+    # One held-out split per repeat, evaluated at every rank (see
+    # `_bicv_trial`), rather than one independent split per (rank, repeat)
+    # pair -- the split, and the compression of its train block, no longer
+    # need to be redone for each rank.
+    for repeat in tqdm(range(n_repeats), desc="BiCV repeats"):
+        trial_seed = int(rng.integers(np.iinfo(np.int32).max))
+        trial_rows = _bicv_trial(
+            X,
+            ranks,
+            held_out_cell_frac,
+            held_out_gene_frac,
+            trial_seed,
+            tolerance,
+            max_iter,
+            compress,
+            compression_kwarg,
+            parafac2_kwarg,
+        )
+        for trial in trial_rows:
+            rank = trial.pop("Rank")
             rows.append(
                 {
                     "Rank": rank,
