@@ -39,6 +39,14 @@ fbuild = "analysis.figures.common:genFigure"
 requires = ["uv_build>=0.12.0,<0.13"]
 build-backend = "uv_build"
 
+# TEMPORARY: pin vsparse to an unreleased PR branch for select(recalculate=False)
+# (meyer-lab/vsparse#50), needed by rank_selection's BiCV evaluation to stay a
+# lazy view over a large test-cell block instead of eagerly materializing it.
+# Drop this once #50 merges and a release picks it up, reverting to the plain
+# PyPI version constraint above.
+[tool.uv.sources]
+vsparse = { git = "https://github.com/meyer-lab/vsparse", branch = "select-without-recalculate" }
+
 [tool.uv.build-backend]
 module-name = ["scrise"]
 module-root = ""
