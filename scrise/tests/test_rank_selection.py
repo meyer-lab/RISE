@@ -157,6 +157,71 @@ def test_bicv_parafac2_kwarg_and_compression_kwarg():
         )
 
 
+def test_bicv_compresses_once_per_trial_not_once_per_rank(monkeypatch):
+    """The whole point of the redesign: one compression per held-out split
+    (and one for the in-sample fit), reused across every rank -- not one
+    compression per (rank, repeat) pair as before.
+    """
+    import scrise.rank_selection as rs
+
+    X = _make_test_data()
+    ranks = [2, 4, 6]
+    n_repeats = 2
+
+    calls: list[int] = []
+    real_compress_dataset = rs.compress_dataset
+
+    def _counting_compress_dataset(*args, **kwargs):
+        calls.append(kwargs["rank"])
+        return real_compress_dataset(*args, **kwargs)
+
+    monkeypatch.setattr(rs, "compress_dataset", _counting_compress_dataset)
+
+    bicv(
+        X,
+        ranks,
+        n_repeats=n_repeats,
+        random_state=0,
+        max_iter=20,
+        compress="auto",
+        compression_kwarg={"n_power_iter": 1},
+    )
+
+    # One compression for the in-sample fit, plus one per repeat -- not
+    # one per (rank, repeat) pair (which would be len(ranks) * (1 + n_repeats)).
+    assert len(calls) == 1 + n_repeats
+    # Every compression is sized for the *largest* requested rank.
+    assert calls == [max(ranks)] * len(calls)
+
+
+def test_bicv_without_compression_kwarg_still_compresses_per_rank(monkeypatch):
+    """Without compression_kwarg there's no explicit compress_dataset call to
+    hoist -- parafac2_nd's own internal shortcut still runs once per rank,
+    exactly as before this change.
+    """
+    import scrise.rank_selection as rs
+
+    X = _make_test_data()
+    ranks = [2, 4]
+    n_repeats = 1
+
+    calls: list[int] = []
+    real_run_parafac2 = rs.run_parafac2
+
+    def _counting_run_parafac2(*args, **kwargs):
+        calls.append(kwargs["rank"])
+        return real_run_parafac2(*args, **kwargs)
+
+    monkeypatch.setattr(rs, "run_parafac2", _counting_run_parafac2)
+
+    bicv(X, ranks, n_repeats=n_repeats, random_state=0, max_iter=20, compress="auto")
+
+    # One run_parafac2 call per rank for the in-sample fit, plus one per
+    # (rank, repeat) pair for BiCV trials -- unchanged from before.
+    assert len(calls) == len(ranks) + len(ranks) * n_repeats
+    assert sorted(calls) == sorted(ranks * (1 + n_repeats))
+
+
 def test_bicv_adata_alias():
     X = _make_test_data()
     results = bicv(adata=X, ranks=[2], n_repeats=1, random_state=0, max_iter=10)
@@ -325,13 +390,13 @@ def test_reported_seed_reproduces_its_own_trial():
     target = rows.iloc[1]
     replayed = _bicv_trial(
         X,
-        rank=3,
+        ranks=[3],
         held_out_cell_frac=0.5,
         held_out_gene_frac=0.5,
         seed=int(target["Seed"]),
         tolerance=1e-6,
         max_iter=60,
-    )
+    )[0]
     assert replayed["BiCV R2X"] == pytest.approx(target["R2X"], rel=1e-9)
     assert replayed["Train Block R2X"] == pytest.approx(
         target["Train Block R2X"], rel=1e-9
@@ -415,13 +480,13 @@ def test_streamed_scoring_matches_the_dense_formulation(sparse, seed):
 
     got = _bicv_trial(
         X,
-        rank=3,
+        ranks=[3],
         held_out_cell_frac=0.2,
         held_out_gene_frac=0.2,
         seed=seed,
         tolerance=1e-6,
         max_iter=60,
-    )["BiCV R2X"]
+    )[0]["BiCV R2X"]
     want = _dense_reference_trial(X, rank=3, seed=seed)
     assert got == pytest.approx(want, rel=1e-6, abs=1e-9)
 
@@ -436,13 +501,13 @@ def test_streamed_scoring_matches_on_interleaved_conditions():
 
     got = _bicv_trial(
         X,
-        rank=3,
+        ranks=[3],
         held_out_cell_frac=0.2,
         held_out_gene_frac=0.2,
         seed=1,
         tolerance=1e-6,
         max_iter=60,
-    )["BiCV R2X"]
+    )[0]["BiCV R2X"]
     want = _dense_reference_trial(X, rank=3, seed=1)
     assert got == pytest.approx(want, rel=1e-6, abs=1e-9)
 
@@ -705,7 +770,7 @@ def test_exactly_low_rank_data_scores_near_one_at_its_own_rank():
     held-out score still said it was worse than predicting the mean.
     """
     adata = _exact_low_rank(rank_true=4)
-    trial = _bicv_trial(adata, 4, 0.5, 0.5, seed=0, tolerance=1e-8, max_iter=300)
+    trial = _bicv_trial(adata, [4], 0.5, 0.5, seed=0, tolerance=1e-8, max_iter=300)[0]
 
     assert trial["Train Block R2X"] > 0.99
     assert trial["BiCV R2X"] > 0.95
@@ -719,7 +784,7 @@ def test_score_barely_moves_with_the_held_out_fraction(frac):
     same data at the same rank, because the error was sqrt(n_train/n_test).
     """
     adata = _exact_low_rank(rank_true=4)
-    trial = _bicv_trial(adata, 4, frac, frac, seed=0, tolerance=1e-8, max_iter=300)
+    trial = _bicv_trial(adata, [4], frac, frac, seed=0, tolerance=1e-8, max_iter=300)[0]
     assert trial["BiCV R2X"] > 0.9
 
 
@@ -743,7 +808,7 @@ def test_pure_noise_does_not_score_positive():
     adata.obs["condition_unique_idxs"] = cond
     adata.var["means"] = np.zeros(60)
 
-    trial = _bicv_trial(adata, 5, 0.5, 0.5, seed=0, tolerance=1e-8, max_iter=200)
+    trial = _bicv_trial(adata, [5], 0.5, 0.5, seed=0, tolerance=1e-8, max_iter=200)[0]
     assert trial["BiCV R2X"] < 0.02
 
 
