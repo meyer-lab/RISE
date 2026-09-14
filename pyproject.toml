@@ -1,6 +1,6 @@
 [project]
 name = "scrise"
-version = "1.4.0"
+version = "1.5.0"
 description = "Single cell analysis across conditions using PARAFAC2."
 authors = [{name = "Andrew Ramirez"}, {name = "Aaron Meyer", email = "git@asmlab.org" }]
 license = "MIT"

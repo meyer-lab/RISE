@@ -20,7 +20,7 @@ from .factorization import (
 from .opq import OPQQuantizer, find_optimal_opq
 from .rank_selection import bicv
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 __all__ = [
     "CellTypeAlignmentResults",
