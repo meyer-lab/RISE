@@ -105,6 +105,31 @@ def _holdout_scale(
 # temporaries to a few hundred MB regardless of how large the matrix is.
 _MOMENT_CHUNK_NNZ = 50_000_000
 
+# Row-chunk size (in bytes of the dense block materialized per chunk) when
+# streaming a duck-typed backend (e.g. a vsparse normalized view) that has no
+# CSR internals to stream directly, but does support a lazy, stats-preserving
+# `select()`. Keeps a chunk's dense materialization bounded regardless of how
+# large the selected block is.
+_MOMENT_CHUNK_BUDGET_BYTES = 64 << 20
+
+
+def _restrict_rows(X_mat: Any, mask: np.ndarray) -> Any:
+    """Row-restrict ``X_mat`` by a boolean mask, staying lazy where possible.
+
+    For a duck-typed backend that supports ``select()`` (e.g. a vsparse
+    normalized view), keeps the view's *existing* statistics fixed rather
+    than renormalizing the selected rows on their own -- correct here, since
+    the caller is evaluating a model fit against a slice, not treating that
+    slice as its own dataset -- and, unlike bracket indexing on such a view,
+    never eagerly materializes the (potentially huge) selection as a dense
+    array. Plain dense/scipy-sparse ``X_mat`` falls back to ordinary
+    indexing, which is already cheap for those.
+    """
+    select = getattr(X_mat, "select", None)
+    if select is not None:
+        return select(mask, recalculate=False)
+    return X_mat[mask]
+
 
 def _test_block_moments(
     X_mat: Any, cell_mask: np.ndarray, gene_idx: np.ndarray
@@ -116,8 +141,8 @@ def _test_block_moments(
     sums = np.zeros(n_genes)
     squares = np.zeros(n_genes)
 
-    if not sps.issparse(X_mat):
-        block = np.asarray(X_mat)[cell_mask]
+    if isinstance(X_mat, np.ndarray):
+        block = X_mat[cell_mask]
         # Both moments accumulate in float64. A float32 block summed in its own
         # dtype carries ~1e-4 relative error over a few hundred thousand rows,
         # which would reach the reported R2X through `ss_tot`.
@@ -125,6 +150,25 @@ def _test_block_moments(
             block.sum(axis=0, dtype=np.float64)[gene_idx],
             np.sum(block.astype(np.float64) ** 2, axis=0)[gene_idx],
         )
+
+    if not sps.issparse(X_mat):
+        # A duck-typed backend (e.g. a vsparse normalized view): select the
+        # cell subset lazily (keeping the view's existing statistics fixed,
+        # rather than renormalizing this subset on its own -- see
+        # `_restrict_rows`) and stream it in row chunks, rather than ever
+        # materializing the whole (potentially huge) subset as one dense
+        # block.
+        sub = X_mat.select(cell_mask, recalculate=False)
+        n_sub_rows = sub.shape[0]
+        chunk_rows = max(1, _MOMENT_CHUNK_BUDGET_BYTES // (n_genes * 8))
+        start = 0
+        while start < n_sub_rows:
+            stop = min(n_sub_rows, start + chunk_rows)
+            block = np.asarray(sub[start:stop], dtype=np.float64)
+            sums += block.sum(axis=0)
+            squares += np.sum(block**2, axis=0)
+            start = stop
+        return sums[gene_idx], squares[gene_idx]
 
     mat = X_mat.tocsr() if X_mat.format != "csr" else X_mat
     n_rows = mat.shape[0]
@@ -229,7 +273,8 @@ def _bicv_trial(
     cond_train = cond_idx[train_cell_mask]
     Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
     ZtY = np.asarray(
-        rmatmul(np.ascontiguousarray(Z.T), X_mat[train_cell_mask]), dtype=np.float64
+        rmatmul(np.ascontiguousarray(Z.T), _restrict_rows(X_mat, train_cell_mask)),
+        dtype=np.float64,
     )[:, test_gene_idx]
     ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
     # `lstsq` on the rank x rank system keeps the minimum-norm
@@ -240,7 +285,8 @@ def _bicv_trial(
     C_full = np.zeros((n_genes, C.shape[1]))
     C_full[train_gene_mask] = C
     cond_test = cond_idx[test_cell_mask]
-    W_test = calc_W(X_mat[test_cell_mask], means, C_full)
+    X_test = _restrict_rows(X_mat, test_cell_mask)
+    W_test = calc_W(X_test, means, C_full)
     cond_slices_test = condition_slices(cond_test, n_cond)
     P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
@@ -248,9 +294,9 @@ def _bicv_trial(
     # held-out loadings need rescaling for the held-out slice's size.
     L = _cell_loadings(P_test, B, A, cond_test, n_cond)
     L *= _holdout_scale(cond_train, cond_test, n_cond)
-    LtY = np.asarray(
-        rmatmul(np.ascontiguousarray(L.T), X_mat[test_cell_mask]), dtype=np.float64
-    )[:, test_gene_idx]
+    LtY = np.asarray(rmatmul(np.ascontiguousarray(L.T), X_test), dtype=np.float64)[
+        :, test_gene_idx
+    ]
     LtY -= np.outer(L.sum(axis=0), means_test_genes)
 
     col_sums, col_squares = _test_block_moments(X_mat, test_cell_mask, test_gene_idx)

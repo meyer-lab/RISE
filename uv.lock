@@ -2177,7 +2177,7 @@ requires-dist = [
     { name = "tensorly", specifier = ">=0.9.0" },
     { name = "tlviz", specifier = ">=0.1.1" },
     { name = "tqdm", specifier = ">=4.66.1" },
-    { name = "vsparse", specifier = ">=0.2.0" },
+    { name = "vsparse", specifier = ">=0.4.0" },
 ]
 provides-extras = ["gpu"]
 
@@ -2471,7 +2471,7 @@ wheels = [
 
 [[package]]
 name = "vsparse"
-version = "0.2.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anndata" },
@@ -2480,9 +2480,9 @@ dependencies = [
     { name = "numpy" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/a5/78db8f12cb1dfe2e0a2f7d637efef572ffb75578d01e34f2c1d2a4327747/vsparse-0.2.0.tar.gz", hash = "sha256:aba6221ec50ce3cbe6bc149d69216202c66b2361c9b7a7ba09e3f3bc21a52cff", size = 37836, upload-time = "2026-09-04T12:50:17.51Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/36/c4e280f14af925b71c223777389bfa3ad472f4540375880bfe9b50ac6225/vsparse-0.4.0.tar.gz", hash = "sha256:72faa01087fcdd3fd72467638303c53838ff226685b0126cf5c060fc54626742", size = 47657, upload-time = "2026-09-14T17:12:39.176Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/28/14/f2a51a5aa3a3d131429ed7d238d9a13d32dd10493b3019e69e9fd4399420/vsparse-0.2.0-py3-none-any.whl", hash = "sha256:567035afa9a51c5edfc3103a9f98f95568f4ba5e2a9477f73031b703a376d277", size = 45084, upload-time = "2026-09-04T12:50:16.137Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/4e/3a167ca192bcb10623cbf403e76798d600e249c7c26f0bd28f24d0ed15b6/vsparse-0.4.0-py3-none-any.whl", hash = "sha256:a294b647dd8fac06746a8d8ffd1a778a31d60a6387d50f5915a406a37d768f2c", size = 54961, upload-time = "2026-09-14T17:12:38.011Z" },
 ]
 
 [[package]]

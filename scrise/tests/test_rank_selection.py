@@ -507,6 +507,139 @@ def test_block_moments_stream_across_more_than_one_row_block(monkeypatch):
     np.testing.assert_allclose(squares, np.sum(block**2, axis=0), rtol=1e-12)
 
 
+# -- duck-typed backend: a vsparse normalized view ---------------------------
+#
+# `X.X` for a real vsparse-backed dataset (e.g. BAL-Pf2's lazy-normalized-view
+# AnnData) is neither a plain ndarray nor scipy-sparse -- it's a
+# VCSRArrayNormalized/VCSCArrayNormalized. Bracket indexing it with a large
+# boolean mask (the old `X_mat[cell_mask]`) eagerly materializes the whole
+# selection as dense, which is fine at test scale but would be tens of GB at
+# BAL-Pf2's real scale. `_restrict_rows`/`_test_block_moments`'s duck-typed
+# branch exist to avoid that; these tests exercise them directly.
+
+
+def _normalized_view(rng, shape=(120, 30), vsparse_cls=None):
+    import vsparse
+
+    vsparse_cls = vsparse_cls or vsparse.VCSRArray
+    dense = rng.random(shape)
+    dense[dense < 0.6] = 0.0
+    mat = (
+        sps.csr_array(dense)
+        if vsparse_cls is vsparse.VCSRArray
+        else sps.csc_array(dense)
+    )
+    return dense, vsparse_cls.from_scipy(mat).normalized()
+
+
+@pytest.mark.parametrize("fmt", ["csr", "csc"])
+def test_restrict_rows_matches_bracket_indexing_for_a_normalized_view(fmt):
+    import vsparse
+
+    rng = np.random.default_rng(2)
+    vsparse_cls = vsparse.VCSRArray if fmt == "csr" else vsparse.VCSCArray
+    _dense, nv = _normalized_view(rng, vsparse_cls=vsparse_cls)
+    mask = rng.random(nv.shape[0]) < 0.6
+
+    from ..rank_selection import _restrict_rows
+
+    restricted = _restrict_rows(nv, mask)
+    assert isinstance(restricted, type(nv))  # stayed a lazy view, not densified
+    np.testing.assert_allclose(
+        np.asarray(restricted.toarray()), np.asarray(nv[mask, :])
+    )
+
+
+def test_restrict_rows_is_a_no_op_passthrough_for_plain_arrays():
+    from ..rank_selection import _restrict_rows
+
+    rng = np.random.default_rng(3)
+    dense = rng.random((20, 5))
+    mask = rng.random(20) < 0.5
+
+    np.testing.assert_allclose(_restrict_rows(dense, mask), dense[mask])
+    np.testing.assert_allclose(
+        _restrict_rows(sps.csr_array(dense), mask).toarray(), dense[mask]
+    )
+
+
+def test_block_moments_match_a_normalized_view_reference():
+    """`_test_block_moments`'s duck-typed branch matches a dense reference."""
+    import vsparse
+
+    rng = np.random.default_rng(4)
+    dense, nv = _normalized_view(rng, vsparse_cls=vsparse.VCSRArray)
+    mask = rng.random(dense.shape[0]) < 0.7
+    gene_idx = np.sort(rng.choice(dense.shape[1], size=11, replace=False))
+
+    sums, squares = _test_block_moments(nv, mask, gene_idx)
+    block = np.asarray(nv[mask, :])[:, gene_idx]
+    np.testing.assert_allclose(sums, block.sum(axis=0), rtol=1e-10)
+    np.testing.assert_allclose(squares, np.sum(block**2, axis=0), rtol=1e-10)
+
+
+def test_block_moments_stream_a_normalized_view_across_more_than_one_chunk(monkeypatch):
+    """Force several row chunks so the normalized-view streaming path is exercised."""
+    import vsparse
+
+    import scrise.rank_selection as rs
+
+    monkeypatch.setattr(rs, "_MOMENT_CHUNK_BUDGET_BYTES", 64)  # forces 1-row chunks
+    rng = np.random.default_rng(5)
+    dense, nv = _normalized_view(rng, shape=(50, 12), vsparse_cls=vsparse.VCSRArray)
+    mask = rng.random(dense.shape[0]) < 0.8
+    gene_idx = np.arange(12)
+
+    sums, squares = rs._test_block_moments(nv, mask, gene_idx)
+    block = np.asarray(nv[mask, :])
+    np.testing.assert_allclose(sums, block.sum(axis=0), rtol=1e-10)
+    np.testing.assert_allclose(squares, np.sum(block**2, axis=0), rtol=1e-10)
+
+
+def test_block_moments_streaming_peak_is_bounded_by_the_chunk_budget_not_the_block():
+    """The row-chunk streaming loop's own peak tracks the chunk size, not the
+    selected block's total size.
+
+    ``select(recalculate=False)`` on a boolean mask does its own one-time
+    ``O(nnz)`` structural rebuild (the same cost bracket indexing or any
+    other full-array boolean selection pays in vsparse today) -- that part
+    isn't what this streaming code is trying to bound, so it's built once,
+    outside the measurement, isolating the chunk loop itself.
+    """
+    import tracemalloc
+
+    import vsparse
+
+    rng = np.random.default_rng(6)
+    dense, nv = _normalized_view(rng, shape=(4000, 400), vsparse_cls=vsparse.VCSRArray)
+    mask = np.ones(dense.shape[0], dtype=bool)  # select everything
+    sub = nv.select(mask, recalculate=False)
+    n_rows = sub.shape[0]
+
+    def _stream(chunk_rows: int) -> int:
+        tracemalloc.start()
+        try:
+            tracemalloc.reset_peak()
+            start = 0
+            while start < n_rows:
+                stop = min(n_rows, start + chunk_rows)
+                block = np.asarray(sub[start:stop], dtype=np.float64)
+                block.sum(axis=0)
+                start = stop
+            return tracemalloc.get_traced_memory()[1]
+        finally:
+            tracemalloc.stop()
+
+    _stream(50)  # warm up any lazy imports/JIT before measuring
+    small_chunk_peak = _stream(50)
+    large_chunk_peak = _stream(n_rows)  # the whole block in one "chunk"
+
+    # A peak that scaled with the full block regardless of chunk size would
+    # make these roughly equal; bounded streaming keeps the small-chunk peak
+    # well under the whole-block one.
+    assert small_chunk_peak < large_chunk_peak / 4
+
+
 # Held-out slice scaling
 
 
