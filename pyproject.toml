@@ -39,19 +39,6 @@ fbuild = "analysis.figures.common:genFigure"
 requires = ["uv_build>=0.12.0,<0.13"]
 build-backend = "uv_build"
 
-# TEMPORARY: meyer-lab/vsparse#49's matmul kernel and #50's
-# select(recalculate=False) (which rank_selection's BiCV evaluation needs to
-# stay a lazy view over a large test-cell block instead of eagerly
-# materializing it) have both merged to vsparse's main. Pinned to
-# to-scipy-sparse-dtype (main plus vsparse#51's still-open dtype argument
-# for to_scipy_sparse, which RISE itself doesn't need) rather than main
-# directly, so downstream consumers pinning the same branch (e.g. BAL-Pf2,
-# which does need #51) don't hit a conflicting-git-ref resolution error.
-# Drop this once #51 merges and a release picks it up, reverting to the
-# plain PyPI version constraint above.
-[tool.uv.sources]
-vsparse = { git = "https://github.com/meyer-lab/vsparse", branch = "to-scipy-sparse-dtype" }
-
 [tool.uv.build-backend]
 module-name = ["scrise"]
 module-root = ""
