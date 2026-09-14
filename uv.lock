@@ -2177,7 +2177,7 @@ requires-dist = [
     { name = "tensorly", specifier = ">=0.9.0" },
     { name = "tlviz", specifier = ">=0.1.1" },
     { name = "tqdm", specifier = ">=4.66.1" },
-    { name = "vsparse", git = "https://github.com/meyer-lab/vsparse?branch=bal-pf2-gpu-testing" },
+    { name = "vsparse", git = "https://github.com/meyer-lab/vsparse?branch=to-scipy-sparse-dtype" },
 ]
 provides-extras = ["gpu"]
 
@@ -2472,7 +2472,7 @@ wheels = [
 [[package]]
 name = "vsparse"
 version = "0.3.0"
-source = { git = "https://github.com/meyer-lab/vsparse?branch=bal-pf2-gpu-testing#0beb1af8dfd155a2a21fa61feb824b1c11be65a3" }
+source = { git = "https://github.com/meyer-lab/vsparse?branch=to-scipy-sparse-dtype#671273895466be14474b9cc64b87ef0ee650c573" }
 dependencies = [
     { name = "anndata" },
     { name = "hdf5plugin" },
