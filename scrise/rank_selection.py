@@ -427,6 +427,40 @@ def _bicv_trial(
     return results
 
 
+def _resolve_dataset_alias(
+    X: anndata.AnnData | None, adata: anndata.AnnData | None
+) -> anndata.AnnData:
+    """Return whichever of the ``X``/``adata`` aliases was actually passed."""
+    if X is None:
+        X = adata
+    if X is None:
+        raise ValueError("Either X or adata must be provided.")
+    return X
+
+
+def _validate_split_params(
+    n_repeats: int, held_out_cell_frac: float, held_out_gene_frac: float
+) -> None:
+    """Reject repeat counts and held-out fractions that cannot form a split."""
+    if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
+        raise ValueError(
+            "held_out_cell_frac and held_out_gene_frac must both be between 0 and 1."
+        )
+    if n_repeats < 1:
+        raise ValueError("n_repeats must be at least 1.")
+
+
+def _ensure_condition_idxs(X: anndata.AnnData, condition_key: str | None) -> None:
+    """Fill in ``condition_unique_idxs`` from ``condition_key`` when absent."""
+    if "condition_unique_idxs" in X.obs:
+        return
+    if condition_key is None or condition_key not in X.obs:
+        raise KeyError(
+            "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
+        )
+    X.obs["condition_unique_idxs"] = pd.Categorical(X.obs[condition_key]).codes
+
+
 def _resolve_bicv_inputs(
     X: anndata.AnnData | None,
     adata: anndata.AnnData | None,
@@ -443,27 +477,11 @@ def _resolve_bicv_inputs(
     rejects rank requests that cannot yield a well-posed trial at these
     held-out fractions.
     """
-    if X is None and adata is not None:
-        X = adata
-    if X is None:
-        raise ValueError("Either X or adata must be provided.")
+    X = _resolve_dataset_alias(X, adata)
     if ranks is None:
         raise ValueError("ranks must be provided.")
-
-    if not (0 < held_out_cell_frac < 1) or not (0 < held_out_gene_frac < 1):
-        raise ValueError(
-            "held_out_cell_frac and held_out_gene_frac must both be between 0 and 1."
-        )
-    if n_repeats < 1:
-        raise ValueError("n_repeats must be at least 1.")
-
-    if "condition_unique_idxs" not in X.obs:
-        if condition_key is not None and condition_key in X.obs:
-            X.obs["condition_unique_idxs"] = pd.Categorical(X.obs[condition_key]).codes
-        else:
-            raise KeyError(
-                "X.obs must contain 'condition_unique_idxs', or provide 'condition_key' pointing to a valid column in X.obs."
-            )
+    _validate_split_params(n_repeats, held_out_cell_frac, held_out_gene_frac)
+    _ensure_condition_idxs(X, condition_key)
 
     X = X.to_memory() if hasattr(X, "to_memory") else X
 
@@ -553,6 +571,12 @@ def bicv(
         ``n_inner``), for underlying PARAFAC2 options not otherwise exposed
         here. See :func:`scrise.factorization.pf2`'s ``normalize_slices``
         for how it can help with unequal cell counts across conditions.
+
+    condition_key : str, optional (default: None)
+        Column in ``X.obs`` holding the condition labels, used to derive
+        ``condition_unique_idxs`` when that column is not already present.
+    adata : anndata.AnnData, optional (default: None)
+        Alias for ``X``; supply either one, not both.
 
     Returns
     -------

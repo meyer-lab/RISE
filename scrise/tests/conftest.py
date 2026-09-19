@@ -13,7 +13,7 @@ import pytest
 
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 
 @pytest.fixture(autouse=True)

@@ -139,6 +139,17 @@ def avegene_per_status(X: anndata.AnnData, gene: str, cellType="Cell Type"):
     return df
 
 
+def _two_gene_frame(
+    X: anndata.AnnData, hue: str, cellType: str
+) -> tuple[pd.Index, pd.DataFrame]:
+    """Mean-centered expression of exactly two genes, tagged by hue and cell type."""
+    assert X.shape[1] == 2
+    dataDF = X.to_df().subtract(X.var["means"].values)
+    dataDF[hue] = X.obs[hue].values
+    dataDF["Cell Type"] = X.obs[cellType].values
+    return X.var_names, dataDF
+
+
 def gene_plot_cells(
     X: anndata.AnnData,
     hue: str,
@@ -149,12 +160,7 @@ def gene_plot_cells(
     cellType="Cell Type",
 ):
     """Plots two genes on either a per cell or per cell type basis"""
-    assert X.shape[1] == 2
-    genes = X.var_names
-    dataDF = X.to_df()
-    dataDF = dataDF.subtract(X.var["means"].values)
-    dataDF[hue] = X.obs[hue].values
-    dataDF["Cell Type"] = X.obs[cellType].values
+    genes, dataDF = _two_gene_frame(X, hue, cellType)
     alpha = 1
 
     if average:
@@ -189,12 +195,7 @@ def plot_cell_gene_corr(
     cellType="Cell Type",
 ):
     """Plots two genes on either a per cell or per cell type basis"""
-    assert X.shape[1] == 2
-    genes = X.var_names
-    dataDF = X.to_df()
-    dataDF = dataDF.subtract(X.var["means"].values)
-    dataDF[hue] = X.obs[hue].values
-    dataDF["Cell Type"] = X.obs[cellType].values
+    genes, dataDF = _two_gene_frame(X, hue, cellType)
 
     meanDF = dataDF.groupby([hue, "Cell Type"], observed=True).mean().reset_index()
     pivoted = meanDF.pivot(index=hue, columns="Cell Type", values=genes)

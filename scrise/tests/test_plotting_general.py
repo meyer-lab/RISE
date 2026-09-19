@@ -40,7 +40,7 @@ def _two_gene_adata(n_cells=40, seed=0):
 
 
 def test_rotate_xaxis_and_yaxis_set_tick_rotation():
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     rotate_xaxis(ax, rotation=45)
     rotate_yaxis(ax, rotation=30)
     # matplotlib doesn't expose rotation as a simple getter pre-draw; the
@@ -107,13 +107,13 @@ def test_plot_avegene_per_celltype_smoke():
     X = _two_gene_adata(n_cells)
     X.obs["Condition"] = np.random.choice(["cond_0", "cond_1"], size=n_cells)
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_avegene_per_celltype(X, ["gene_a", "gene_b"], ax)
 
 
 def test_gene_plot_cells_smoke_and_shape_assertion():
     X = _two_gene_adata(20)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     gene_plot_cells(X, hue="hue", ax=ax)
 
     # gene_plot_cells asserts exactly 2 genes/columns are present.
@@ -122,7 +122,7 @@ def test_gene_plot_cells_smoke_and_shape_assertion():
         var=pd.DataFrame({"means": [0.0, 0.0, 0.0]}, index=["a", "b", "c"]),
         obs=pd.DataFrame({"hue": ["x"] * 5, "Cell Type": ["t"] * 5}),
     )
-    fig2, ax2 = plt.subplots()
+    _fig2, ax2 = plt.subplots()
     with pytest.raises(AssertionError):
         gene_plot_cells(X_three_genes, hue="hue", ax=ax2)
 
@@ -132,7 +132,7 @@ def test_plot_cell_gene_corr_smoke_with_missing_pivot_columns():
     pivoting, plot_cell_gene_corr should fall back to an empty frame rather
     than raising a KeyError."""
     X = _two_gene_adata(20)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_cell_gene_corr(
         X, hue="hue", cells=["type_0", "type_1"], ax=ax, unique=["grp_0"]
     )
@@ -140,7 +140,7 @@ def test_plot_cell_gene_corr_smoke_with_missing_pivot_columns():
 
 def test_plot_r2x_smoke_and_axes_labels():
     X = make_synthetic_pf2_data(n_cond=4, n_genes=15, rank=2, seed=0)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_r2x(X, np.array([1, 2, 3]), ax, compress=None)
 
     assert ax.get_xlabel() == "Number of Components"

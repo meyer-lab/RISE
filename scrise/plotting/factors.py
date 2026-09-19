@@ -111,6 +111,12 @@ def plot_condition_factors(
         Custom colors for condition group labels. If None, uses default palette.
     group_cond : bool, optional (default: False)
         If True and cond_group_labels provided, sorts conditions by group.
+    control_pattern : str, optional (default: None)
+        Substring identifying the control conditions whose median and spread
+        set the normalization. Overrides ``ThomsonNorm``'s implied 'CTRL'.
+    control_conditions : Sequence[str], optional (default: None)
+        Explicit control condition names, taking precedence over
+        ``control_pattern``. With neither given, every condition contributes.
     """
     yt = pd.Series(np.unique(data.obs[cond]))
     X = np.array(data.uns["Pf2_A"])
@@ -152,6 +158,22 @@ def plot_condition_factors(
     ax.set(xlabel="Component")
 
 
+def _draw_unit_scaled_heatmap(X: np.ndarray, yt, ax: Axes) -> None:
+    """Draw a factor heatmap rescaled so the largest magnitude sits at +/-1."""
+    X = X / np.max(np.abs(np.asarray(X)))
+    sns.heatmap(
+        data=X,
+        xticklabels=np.arange(1, X.shape[1] + 1),
+        yticklabels=yt,
+        ax=ax,
+        center=0,
+        cmap=cmap,
+        vmin=-1,
+        vmax=1,
+    )
+    ax.set(xlabel="Component")
+
+
 def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     """Plot eigen-state factors as a heatmap showing cell state patterns.
 
@@ -168,23 +190,8 @@ def plot_eigenstate_factors(data: anndata.AnnData, ax: Axes):
     ax : matplotlib.axes.Axes
         Matplotlib axes object to plot on.
     """
-    rank = data.uns["Pf2_B"].shape[1]
-    xticks = np.arange(1, rank + 1)
-    X = data.uns["Pf2_B"]
-    X = X / np.max(np.abs(np.array(X)))
-    yt = np.arange(1, rank + 1)
-
-    sns.heatmap(
-        data=X,
-        xticklabels=xticks,
-        yticklabels=yt,
-        ax=ax,
-        center=0,
-        cmap=cmap,
-        vmin=-1,
-        vmax=1,
-    )
-    ax.set(xlabel="Component")
+    X = np.asarray(data.uns["Pf2_B"])
+    _draw_unit_scaled_heatmap(X, np.arange(1, X.shape[1] + 1), ax)
 
 
 def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
@@ -209,7 +216,6 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
     trim : bool, optional (default: True)
         If True, filters genes based on the weight parameter. If False, shows all genes.
     """
-    rank = data.varm["Pf2_C"].shape[1]
     X = np.array(data.varm["Pf2_C"])
     yt = data.var.index.values
 
@@ -224,22 +230,7 @@ def plot_gene_factors(data: anndata.AnnData, ax: Axes, weight=0.08, trim=True):
         yt = yt[kept_idxs]
 
     ind = reorder_table(X)
-    X = X[ind]
-    X = X / np.max(np.abs(X))
-    yt = yt[ind]
-    xticks = np.arange(1, rank + 1)
-
-    sns.heatmap(
-        data=X,
-        xticklabels=xticks,
-        yticklabels=yt,
-        ax=ax,
-        center=0,
-        cmap=cmap,
-        vmin=-1,
-        vmax=1,
-    )
-    ax.set(xlabel="Component")
+    _draw_unit_scaled_heatmap(X[ind], yt[ind], ax)
 
 
 def reorder_table(projs: np.ndarray) -> np.ndarray:

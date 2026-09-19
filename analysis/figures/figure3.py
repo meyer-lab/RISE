@@ -104,20 +104,6 @@ def makeFigure():
     return f
 
 
-def plot_cell_perc_corr(cellDF: pd.DataFrame, pop1: str, pop2: str, ax: Axes):
-    """Plots correlation of cell percentages against each other"""
-    newDF = pd.DataFrame()
-    newDF2 = pd.DataFrame()
-    newDF[[pop1, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop1][
-        ["Cell Type Percentage", "Condition"]
-    ]
-    newDF2[[pop2, "Condition"]] = cellDF.loc[cellDF["Cell Type"] == pop2][
-        ["Cell Type Percentage", "Condition"]
-    ]
-    newDF = newDF.merge(newDF2, on="Condition")
-    sns.scatterplot(newDF, x=pop1, y=pop2, hue="Condition", ax=ax)
-
-
 def plot_cell_perc_comp_corr(
     X: anndata.AnnData, cellDF: pd.DataFrame, pop: str, comp: int, ax: Axes, unique=None
 ):

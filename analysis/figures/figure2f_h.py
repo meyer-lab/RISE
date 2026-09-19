@@ -35,7 +35,7 @@ def makeFigure():
     return f
 
 
-def groupDrugs(X: anndata, label_name: str):
+def groupDrugs(X: anndata.AnnData, label_name: str):
     """Groups drugs of similar category"""
     labels = X.obs[label_name]
     names = np.unique(labels)
