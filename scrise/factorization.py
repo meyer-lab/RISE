@@ -121,8 +121,12 @@ def order_components_by_energy(X: anndata.AnnData) -> anndata.AnnData:
     -------
     anndata.AnnData
         The same AnnData object, with Pf2_A, Pf2_B, Pf2_C, Pf2_weights
-        (and, if present, obsm["weighted_projections"]) reordered/updated
-        in place.
+        (and, if present, obsm["projections"] and
+        obsm["weighted_projections"]) reordered/updated in place. The
+        eigen-state axis of Pf2_B, and the matching columns of
+        obsm["projections"], are permuted alongside the components so that
+        the maximal-diagonal form of B established by
+        ``parafac2.utils.standardize_pf2`` is preserved.
     """
     A = np.array(X.uns["Pf2_A"])
     B = np.array(X.uns["Pf2_B"])
@@ -141,10 +145,19 @@ def order_components_by_energy(X: anndata.AnnData) -> anndata.AnnData:
 
     X.uns["Pf2_A"] = A[:, order]
     X.varm["Pf2_C"] = C[:, order]
-    X.uns["Pf2_B"] = B[:, order]
     X.uns["Pf2_weights"] = weights[order]
 
+    # B is indexed by (eigen-state, component). ``parafac2.utils.standardize_pf2``
+    # permutes B's *rows* so that its diagonal is maximal, pairing eigen-state i
+    # with component i, and permutes the columns of each projection to match.
+    # Permuting only B's columns here would move each diagonal entry off the
+    # diagonal and destroy that pairing, so the eigen-state axis is relabeled by
+    # the same permutation. Since P_k B is left unchanged by this relabeling
+    # (up to the component permutation), the reconstruction is untouched.
+    X.uns["Pf2_B"] = B[np.ix_(order, order)]
+
     if "projections" in X.obsm:
+        X.obsm["projections"] = np.asarray(X.obsm["projections"])[:, order]
         X.obsm["weighted_projections"] = (
             X.obsm["projections"] @ X.uns["Pf2_B"]
         ).astype(np.float32, copy=False)

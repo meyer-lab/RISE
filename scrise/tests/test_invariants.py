@@ -134,6 +134,12 @@ def test_order_components_by_energy_is_a_permutation(
     np.testing.assert_allclose(
         np.array(ordered.obsm["weighted_projections"]), before_wp[:, order], atol=1e-5
     )
+    # Both axes of B, and the projection columns, are relabeled by the same
+    # permutation, which is what keeps B's maximal-diagonal form intact.
+    np.testing.assert_allclose(np.array(ordered.uns["Pf2_B"]), B[np.ix_(order, order)])
+    np.testing.assert_allclose(
+        np.array(ordered.obsm["projections"]), projections[:, order]
+    )
     np.testing.assert_allclose(new_A.shape, A.shape)
 
 
