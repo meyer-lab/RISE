@@ -126,7 +126,67 @@ def test_order_components_by_energy_reorders_weights_and_B():
     ordered = order_components_by_energy(adata)
 
     np.testing.assert_allclose(ordered.uns["Pf2_weights"], weights[order])
-    np.testing.assert_allclose(ordered.uns["Pf2_B"], B[:, order])
+    # Both axes of B are permuted: the component axis by the energy ordering,
+    # and the eigen-state axis by the same permutation (see below).
+    np.testing.assert_allclose(ordered.uns["Pf2_B"], B[np.ix_(order, order)])
+    np.testing.assert_allclose(ordered.obsm["projections"], projections[:, order])
+
+
+def test_order_components_by_energy_preserves_diagonal_B():
+    """``parafac2.utils.standardize_pf2`` leaves B with a maximal diagonal;
+    reordering components must not scramble it. Permuting only B's columns
+    would move entry (i, i) to (i, order^-1(i)) and destroy the pairing."""
+    rng = np.random.default_rng(4)
+    n_cells, n_genes, n_conditions, rank = 30, 20, 5, 4
+
+    A = rng.normal(size=(n_conditions, rank))
+    C = rng.normal(size=(n_genes, rank))
+    # A diagonally dominant B, as standardize_pf2 produces.
+    B = np.eye(rank) + 0.1 * rng.normal(size=(rank, rank))
+    weights = np.array([1.0, 5.0, 2.0, 9.0])
+    projections, _ = np.linalg.qr(rng.normal(size=(n_cells, rank)))
+
+    assert np.array_equal(np.argmax(np.abs(B), axis=0), np.arange(rank))
+
+    adata = make_mock_adata_from_factors(
+        A.copy(), B.copy(), C.copy(), weights.copy(), projections
+    )
+    ordered = order_components_by_energy(adata)
+
+    B_new = np.array(ordered.uns["Pf2_B"])
+    assert np.array_equal(np.argmax(np.abs(B_new), axis=0), np.arange(rank))
+    # The non-negative diagonal convention survives too.
+    assert np.all(np.diag(B_new) > 0)
+
+
+def test_order_components_by_energy_relabels_projection_columns():
+    """Permuting B's eigen-state axis is only valid if the projections are
+    permuted the same way, so that P_k B is unchanged up to the component
+    permutation."""
+    rng = np.random.default_rng(5)
+    n_cells, n_genes, n_conditions, rank = 35, 22, 6, 4
+
+    A = rng.normal(size=(n_conditions, rank))
+    C = rng.normal(size=(n_genes, rank))
+    B = rng.normal(size=(rank, rank))
+    weights = np.array([3.0, 1.0, 7.0, 2.0])
+    projections, _ = np.linalg.qr(rng.normal(size=(n_cells, rank)))
+
+    energy = np.abs(weights) * np.linalg.norm(A, axis=0) * np.linalg.norm(C, axis=0)
+    order = np.argsort(energy)[::-1]
+
+    adata = make_mock_adata_from_factors(
+        A.copy(), B.copy(), C.copy(), weights.copy(), projections
+    )
+    ordered = order_components_by_energy(adata)
+
+    np.testing.assert_allclose(ordered.obsm["projections"], projections[:, order])
+    # P_k B is unchanged, up to the component permutation.
+    np.testing.assert_allclose(
+        np.array(ordered.obsm["weighted_projections"]),
+        (projections @ B)[:, order],
+        atol=1e-5,
+    )
 
 
 def test_match_components_across_ranks_identifies_new_component():
