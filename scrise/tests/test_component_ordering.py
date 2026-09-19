@@ -129,7 +129,9 @@ def test_order_components_by_energy_reorders_weights_and_B():
     # Both axes of B are permuted: the component axis by the energy ordering,
     # and the eigen-state axis by the same permutation (see below).
     np.testing.assert_allclose(ordered.uns["Pf2_B"], B[np.ix_(order, order)])
-    np.testing.assert_allclose(ordered.obsm["projections"], projections[:, order])
+    np.testing.assert_allclose(
+        np.array(ordered.obsm["projections"]), projections[:, order]
+    )
 
 
 def test_order_components_by_energy_preserves_diagonal_B():
@@ -180,7 +182,9 @@ def test_order_components_by_energy_relabels_projection_columns():
     )
     ordered = order_components_by_energy(adata)
 
-    np.testing.assert_allclose(ordered.obsm["projections"], projections[:, order])
+    np.testing.assert_allclose(
+        np.array(ordered.obsm["projections"]), projections[:, order]
+    )
     # P_k B is unchanged, up to the component permutation.
     np.testing.assert_allclose(
         np.array(ordered.obsm["weighted_projections"]),
