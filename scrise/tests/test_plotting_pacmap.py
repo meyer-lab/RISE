@@ -37,7 +37,7 @@ def test_to_hex_returns_hex_strings():
 
 
 def test_assign_labels_sets_pacmap_axis_labels():
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     out = assign_labels(ax)
     assert out is ax
     assert ax.get_xlabel() == "PaCMAP1"
@@ -49,7 +49,7 @@ def test_assign_labels_sets_pacmap_axis_labels():
 def test_plot_gene_pacmap_smoke():
     adata = make_mock_factored_adata(n_cells=50, n_genes=10, with_embedding=True)
     gene = adata.var_names[0]
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_gene_pacmap(gene, adata, ax)
     assert ax.get_title() == gene
 
@@ -57,14 +57,14 @@ def test_plot_gene_pacmap_smoke():
 @pytest.mark.parametrize("cmp", [1, 3])
 def test_plot_wp_pacmap_smoke(cmp):
     adata = make_mock_factored_adata(n_cells=50, rank=3, with_embedding=True)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_wp_pacmap(adata, cmp=cmp, ax=ax)
     assert ax.get_title() == f"Cmp. {cmp}"
 
 
 def test_plot_labels_pacmap_smoke_and_legend_matches_categories():
     adata = make_mock_factored_adata(n_cells=60, with_embedding=True)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_labels_pacmap(adata, labelType="Cell Type", ax=ax)
 
     legend = ax.get_legend()
@@ -78,7 +78,7 @@ def test_plot_labels_pacmap_condition_filter_collapses_to_other():
     present = adata.obs["Cell Type"].unique().tolist()
     keep = [present[0]]
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_labels_pacmap(adata, labelType="Cell Type", ax=ax, condition=keep)
 
     legend = ax.get_legend()

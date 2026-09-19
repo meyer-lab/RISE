@@ -5,7 +5,11 @@ import scanpy as sc
 
 
 def gateThomsonCellsLeiden(X) -> npt.ArrayLike:
-    """Manually gates cell types for Thomson PaCMAP"""
+    """Manually gates cell types for Thomson PaCMAP.
+
+    Run by hand to (re)build ThomsonCellTypes.parquet, which
+    :func:`gateThomsonCells` then reads; deliberately has no in-repo caller.
+    """
     sc.pp.neighbors(X, n_neighbors=15, use_rep="projections", random_state=0)
     sc.tl.leiden(X, resolution=3, random_state=0)
     X.obs["Cell Type"] = X.obs.leiden.replace(thomson_layer1).astype(str)
@@ -26,7 +30,11 @@ def gateThomsonCells(X) -> npt.ArrayLike:
 
 
 def Thomson_Doublet():
-    """Detects doublets in scRNA-seq"""
+    """Detects doublets in scRNA-seq.
+
+    Run by hand to (re)build ThomsonDoublets.csv; deliberately has no in-repo
+    caller.
+    """
     import hdf5plugin  # noqa: F401
     import vsparse
 
@@ -47,38 +55,6 @@ def Thomson_Doublet():
     X.obs["doublet"] = doublets
     X.obs["doublet_score"] = doublet_score
     X.obs["doublet"].to_csv("analysis/data/Thomson/ThomsonDoublets.csv")
-
-
-def getHiResOldLupus(X) -> npt.ArrayLike:
-    """Manually gates cell types for SLE PaCMAP"""
-    X.obs["Cell Type Old2"] = X.obs["Cell Type Old"].astype(str)
-    X.obs.cell_type_lympho = X.obs.cell_type_lympho.astype(str)
-    X.obs.loc[X.obs["cell_type_lympho"] != "nan", "Cell Type Old2"] = X.obs.loc[
-        X.obs["cell_type_lympho"] != "nan"
-    ].cell_type_lympho.values
-    X.obs = X.obs.replace({"Cell Type Old2": cell_type_conv})
-
-    return X
-
-
-cell_type_conv = {
-    "T4_naive": "T4 Naive",
-    "B_naive": "B Naive",
-    "CytoT_GZMH+": "T8 GZMH",
-    "T4_em": "T4 EM",
-    "NK_dim": "NK Dim",
-    "CytoT_GZMK+": "T8 GZMK",
-    "T8_naive": "T8 Naive",
-    "ncM": "nCM",
-    "B_mem": "B mem",
-    "T4_reg": "T4 Reg",
-    "cDC": "cDC2",
-    "T_mait": "T mait",
-    "B_plasma": "B plasma",
-    "NK_bright": "NK Bright",
-    "B_atypical": "B Atypical",
-    "cM": "CM",
-}
 
 
 thomson_layer1 = {
@@ -179,7 +155,8 @@ thomson_layer2 = {
 }
 
 
-# Taken directly from PopAlign and used to annotate level 1
+# Taken directly from PopAlign and used to annotate level 1. Reference data
+# consulted when curating the layer maps above by hand -- no code reads it.
 marker_genes_1 = {
     "Monocytes": [
         "CD14",
@@ -211,7 +188,8 @@ marker_genes_1 = {
 }
 
 
-# Take from various resources to annotate level 2
+# Taken from various resources to annotate level 2. Reference data consulted
+# when curating the layer maps above by hand -- no code reads it.
 marker_genes_2 = {
     "B cells": ["PXK", "MS4A1", "CD19", "CD74", "CD79A", "BANK1", "PTPRC", "CR2"],
     "B Memory": ["NPIB15", "BACH2", "IL7", "NMBR", "MS4A1", "MBL2", "LY86", "CD27"],

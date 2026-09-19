@@ -48,8 +48,8 @@ def makeFigure():
 
 def logreg_weights_scores(
     X: anndata.AnnData, y: pd.Series, prediction: str
-) -> pd.DataFrame:
-    """Fit logistic regression model, return coefficients of that model"""
+) -> tuple[pd.DataFrame, float]:
+    """Fit logistic regression, returning its coefficients and accuracy score."""
     status = y[prediction]
     cond_factors = np.array(X.uns["Pf2_A"])
     lr = logistic_regression("accuracy").fit(cond_factors, status)

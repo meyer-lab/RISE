@@ -269,6 +269,12 @@ def pf2(
         Additional keyword arguments forwarded to ``parafac2_nd`` (e.g.
         ``n_inner``, ``callback``), for options not otherwise exposed here.
 
+    condition_key : str, optional (default: None)
+        Column in ``X.obs`` holding the condition labels, used to derive
+        ``condition_unique_idxs`` when that column is not already present.
+    adata : anndata.AnnData, optional (default: None)
+        Alias for ``X``; supply either one, not both.
+
     Returns
     -------
     anndata.AnnData

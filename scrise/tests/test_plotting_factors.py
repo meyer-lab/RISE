@@ -33,7 +33,7 @@ def test_plot_condition_factors_smoke(rank, n_cond):
     # hit log(negative).
     adata.uns["Pf2_A"] = np.abs(adata.uns["Pf2_A"]) + 0.1
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_condition_factors(adata, ax)
     assert ax.get_xlabel() == "Component"
     assert len(ax.get_yticklabels()) == n_cond
@@ -49,7 +49,7 @@ def test_plot_condition_factors_with_group_labels_and_legend():
         ["groupA" if i % 2 == 0 else "groupB" for i in range(len(yt))]
     )
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_condition_factors(adata, ax, cond_group_labels=group_labels, group_cond=True)
     # A legend patch per unique group should have been added.
     legend = ax.get_legend()
@@ -59,7 +59,7 @@ def test_plot_condition_factors_with_group_labels_and_legend():
 
 def test_plot_eigenstate_factors_smoke():
     adata = make_mock_factored_adata(rank=4)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_eigenstate_factors(adata, ax)
     assert ax.get_xlabel() == "Component"
     assert len(ax.get_xticklabels()) == 4
@@ -68,18 +68,18 @@ def test_plot_eigenstate_factors_smoke():
 @pytest.mark.parametrize("trim", [True, False])
 def test_plot_gene_factors_smoke(trim):
     adata = make_mock_factored_adata(n_genes=30, rank=3)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_gene_factors(adata, ax, trim=trim)
     assert ax.get_xlabel() == "Component"
 
 
 def test_plot_gene_factors_trim_reduces_or_keeps_gene_count():
     adata = make_mock_factored_adata(n_genes=30, rank=3)
-    fig1, ax1 = plt.subplots()
+    _fig1, ax1 = plt.subplots()
     plot_gene_factors(adata, ax1, trim=False, weight=0.08)
     n_all = len(ax1.get_yticklabels())
 
-    fig2, ax2 = plt.subplots()
+    _fig2, ax2 = plt.subplots()
     plot_gene_factors(adata, ax2, trim=True, weight=0.08)
     n_trimmed = len(ax2.get_yticklabels())
 
@@ -106,7 +106,7 @@ def test_plot_bicv_r2x_smoke_and_axis_labels():
     X = make_synthetic_pf2_data(n_cond=4, n_genes=20, rank=2, seed=0)
     results = bicv(X, [2, 4], n_repeats=1, random_state=0, max_iter=30)
 
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     plot_bicv_r2x(results, ax)
 
     assert ax.get_xlabel() == "Rank"
@@ -122,15 +122,15 @@ def test_plot_condition_factors_control_pattern_and_conditions():
     cond_names = [f"CTRL_{c % 2}" if c < 2 else f"TRT_{c}" for c in cond_codes]
     adata.obs["Condition"] = pd.Categorical(cond_names)
 
-    fig1, ax1 = plt.subplots()
+    _fig1, ax1 = plt.subplots()
     plot_condition_factors(adata, ax1, control_pattern="CTRL")
     assert len(ax1.get_yticklabels()) > 0
 
-    fig2, ax2 = plt.subplots()
+    _fig2, ax2 = plt.subplots()
     plot_condition_factors(adata, ax2, control_conditions=["CTRL_0", "CTRL_1"])
     assert len(ax2.get_yticklabels()) > 0
 
-    fig3, ax3 = plt.subplots()
+    _fig3, ax3 = plt.subplots()
     plot_condition_factors(adata, ax3, ThomsonNorm=True)
     assert len(ax3.get_yticklabels()) > 0
 
@@ -138,6 +138,6 @@ def test_plot_condition_factors_control_pattern_and_conditions():
 def test_plot_gene_factors_no_genes_pass_weight_raises():
     adata = make_mock_factored_adata(n_genes=10, rank=2)
     adata.varm["Pf2_C"] = np.full_like(adata.varm["Pf2_C"], 0.01)
-    fig, ax = plt.subplots()
+    _fig, ax = plt.subplots()
     with pytest.raises(ValueError, match="No genes exceeded the weight threshold"):
         plot_gene_factors(adata, ax, weight=0.5, trim=True)

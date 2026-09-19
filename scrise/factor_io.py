@@ -111,28 +111,28 @@ def _read_raw_dataset(raw_path: str) -> anndata.AnnData:
         return anndata.read_h5ad(raw_path)
 
 
-def _attach_raw_data(adata: anndata.AnnData, raw_path: str) -> None:
-    """Match the factors' cells and genes against raw data and attach ``X``."""
-    raw = _read_raw_dataset(raw_path)
-
+def _subset_raw_cells(adata: anndata.AnnData, raw: anndata.AnnData) -> anndata.AnnData:
+    """Align the raw cells to the factors' barcodes, retrying via ``cell_barcode``."""
     if not isinstance(raw.obs, pd.DataFrame):
         raise TypeError("raw.obs must be an in-memory pandas DataFrame.")
 
-    # Match cells by index or cell_barcode column
     if not np.all(adata.obs_names.isin(raw.obs_names)) and "cell_barcode" in raw.obs:
         raw.obs.index = pd.Index(raw.obs["cell_barcode"].astype(str))
 
-    common_cells = adata.obs_names[adata.obs_names.isin(raw.obs_names)]
-    if len(common_cells) == 0:
+    if not adata.obs_names.isin(raw.obs_names).any():
         raise ValueError(
             "No matching cell barcodes found between factors and raw data."
         )
-    raw_sub = raw[adata.obs_names, :].copy()
+    return raw[adata.obs_names, :].copy()
 
+
+def _subset_raw_genes(
+    adata: anndata.AnnData, raw_sub: anndata.AnnData
+) -> anndata.AnnData:
+    """Align the raw genes to the factors' names, retrying via ``gene_ids``."""
     if not isinstance(raw_sub.var, pd.DataFrame):
         raise TypeError("raw_sub.var must be an in-memory pandas DataFrame.")
 
-    # Match genes
     if (
         not np.all(adata.var_names.isin(raw_sub.var_names))
         and "gene_ids" in raw_sub.var
@@ -140,10 +140,16 @@ def _attach_raw_data(adata: anndata.AnnData, raw_path: str) -> None:
     ):
         raw_sub.var.index = pd.Index(raw_sub.var["gene_ids"].astype(str))
 
-    common_genes = adata.var_names[adata.var_names.isin(raw_sub.var_names)]
-    if len(common_genes) == 0:
+    if not adata.var_names.isin(raw_sub.var_names).any():
         raise ValueError("No matching gene names found between factors and raw data.")
-    raw_sub = raw_sub[:, adata.var_names].copy()
+    return raw_sub[:, adata.var_names].copy()
+
+
+def _attach_raw_data(adata: anndata.AnnData, raw_path: str) -> None:
+    """Match the factors' cells and genes against raw data and attach ``X``."""
+    raw_sub = _subset_raw_genes(
+        adata, _subset_raw_cells(adata, _read_raw_dataset(raw_path))
+    )
 
     from parafac2.normalize import prepare_dataset
 

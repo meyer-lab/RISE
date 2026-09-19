@@ -70,6 +70,33 @@ def _render_pacmap(
     return assign_labels(ax)
 
 
+def _plot_continuous_pacmap(
+    points: np.ndarray,
+    values: np.ndarray,
+    ax: Axes,
+    cmap,
+    span: tuple[float, float],
+    title: str,
+) -> None:
+    """Shade the embedding by a continuous per-cell value, with a colorbar."""
+    data = pd.DataFrame(points, columns=["x", "y"])
+    data["val_cat"] = values
+
+    _render_pacmap(
+        points=points,
+        data=data,
+        agg_expr=ds.mean("val_cat"),
+        ax=ax,
+        cmap=cmap,
+        span=span,
+    )
+
+    lo, hi = span
+    psm = plt.pcolormesh([[lo, hi], [lo, hi]], cmap=cmap)
+    plt.colorbar(psm, ax=ax)
+    ax.set(title=title)
+
+
 def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.9995):
     """Plot PaCMAP embedding colored by gene expression levels.
 
@@ -100,21 +127,7 @@ def plot_gene_pacmap(gene: str, X: anndata.AnnData, ax: Axes, clip_outliers=0.99
     values /= np.max(values)
 
     points = np.array(X.obsm["X_pf2_PaCMAP"])
-    data = pd.DataFrame(points, columns=["x", "y"])
-    data["val_cat"] = values
-
-    _render_pacmap(
-        points=points,
-        data=data,
-        agg_expr=ds.mean("val_cat"),
-        ax=ax,
-        cmap=cmap,
-        span=(0, 1),
-    )
-
-    psm = plt.pcolormesh([[0, 1], [0, 1]], cmap=cmap)
-    plt.colorbar(psm, ax=ax)
-    ax.set(title=f"{gene}")
+    _plot_continuous_pacmap(points, values, ax, cmap, (0.0, 1.0), f"{gene}")
 
 
 def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0):
@@ -145,21 +158,9 @@ def plot_wp_pacmap(X: anndata.AnnData, cmp: int, ax: Axes, cbarMax: float = 1.0)
     cmap = sns.diverging_palette(240, 10, as_cmap=True)
 
     values /= np.max(np.abs(values))
-    data = pd.DataFrame(points, columns=["x", "y"])
-    data["val_cat"] = values
-
-    _render_pacmap(
-        points=points,
-        data=data,
-        agg_expr=ds.mean("val_cat"),
-        ax=ax,
-        cmap=cmap,
-        span=(-cbarMax, cbarMax),
+    _plot_continuous_pacmap(
+        points, values, ax, cmap, (-cbarMax, cbarMax), f"Cmp. {cmp}"
     )
-
-    psm = plt.pcolormesh([[-cbarMax, cbarMax], [-cbarMax, cbarMax]], cmap=cmap)
-    plt.colorbar(psm, ax=ax)
-    ax.set(title=f"Cmp. {cmp}")
 
 
 def plot_labels_pacmap(

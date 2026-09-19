@@ -294,6 +294,40 @@ def cell_type_alignment(
     )
 
 
+def _component_metrics(
+    loadings_matrix: np.ndarray,
+    codes: np.ndarray,
+    n_types: int,
+    signed: bool,
+    n_permutations: int,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Per-component AUROCs, permutation p-values, tau, eta^2 and epsilon^2."""
+    n_cells, n_comps = loadings_matrix.shape
+    aurocs_mat = np.zeros((n_comps, n_types), dtype=float)
+    p_vals_mat = np.ones((n_comps, n_types), dtype=float)
+    tau_vec = np.zeros(n_comps, dtype=float)
+    eta2_vec = np.zeros(n_comps, dtype=float)
+    eps2_vec = np.zeros(n_comps, dtype=float)
+
+    for comp_idx in range(n_comps):
+        y = loadings_matrix[:, comp_idx].astype(float)
+        if signed:
+            y = np.abs(y)
+
+        auc = compute_auroc_per_cell_type(y, codes, n_types)
+        aurocs_mat[comp_idx] = auc
+        tau_vec[comp_idx] = compute_tau(auc, baseline=0.0)
+        eta2_vec[comp_idx] = compute_eta_squared(y, codes, n_types)
+        eps2_vec[comp_idx] = compute_kruskal_epsilon_squared(y, codes, n_types)
+
+        p_vals_mat[comp_idx] = _component_p_values(
+            y, codes, n_types, n_cells, auc, n_permutations, rng
+        )
+
+    return aurocs_mat, p_vals_mat, tau_vec, eta2_vec, eps2_vec
+
+
 def score_cell_type_alignment(
     data: anndata.AnnData | np.ndarray | pd.DataFrame,
     cell_types: pd.Series | np.ndarray | str | None = None,
@@ -353,26 +387,9 @@ def score_cell_type_alignment(
     rng = _as_generator(random_state)
 
     component_labels = [i + 1 for i in range(n_comps)]
-    aurocs_mat = np.zeros((n_comps, n_types), dtype=float)
-    p_vals_mat = np.ones((n_comps, n_types), dtype=float)
-    tau_vec = np.zeros(n_comps, dtype=float)
-    eta2_vec = np.zeros(n_comps, dtype=float)
-    eps2_vec = np.zeros(n_comps, dtype=float)
-
-    for comp_idx in range(n_comps):
-        y = loadings_matrix[:, comp_idx].astype(float)
-        if signed:
-            y = np.abs(y)
-
-        auc = compute_auroc_per_cell_type(y, codes, n_types)
-        aurocs_mat[comp_idx] = auc
-        tau_vec[comp_idx] = compute_tau(auc, baseline=0.0)
-        eta2_vec[comp_idx] = compute_eta_squared(y, codes, n_types)
-        eps2_vec[comp_idx] = compute_kruskal_epsilon_squared(y, codes, n_types)
-
-        p_vals_mat[comp_idx] = _component_p_values(
-            y, codes, n_types, n_cells, auc, n_permutations, rng
-        )
+    aurocs_mat, p_vals_mat, tau_vec, eta2_vec, eps2_vec = _component_metrics(
+        loadings_matrix, codes, n_types, signed, n_permutations, rng
+    )
 
     # Joint BH FDR correction across all (component x cell_type) tests
     if aurocs_mat.size > 1:
