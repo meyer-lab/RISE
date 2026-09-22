@@ -19,8 +19,9 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sps
 from parafac2.compress import compress_dataset
+from parafac2.matrix import as_matrix
 from parafac2.parafac2 import parafac2_nd
-from parafac2.utils import calc_W, condition_slices, project_data, rmatmul
+from parafac2.utils import calc_W, condition_slices, project_data
 from tqdm import tqdm
 
 from ._pf2_utils import run_parafac2
@@ -385,7 +386,7 @@ def _bicv_trial(
         #   Z^T (X[train, test] - 1 mu^T) = (Z^T X[train])[:, test] - (Z^T 1) mu^T
         Z = _cell_loadings(P_train, B, A, cond_train, n_cond)
         ZtY = np.asarray(
-            rmatmul(np.ascontiguousarray(Z.T), X_train_lazy), dtype=np.float64
+            np.ascontiguousarray(Z.T) @ as_matrix(X_train_lazy), dtype=np.float64
         )[:, test_gene_idx]
         ZtY -= np.outer(Z.sum(axis=0), means_test_genes)
         # `lstsq` on the rank x rank system keeps the minimum-norm
@@ -395,7 +396,10 @@ def _bicv_trial(
         # Estimate projections for the held-out cells from the train genes.
         C_full = np.zeros((n_genes, C.shape[1]))
         C_full[train_gene_mask] = C
-        W_test = calc_W(X_test_lazy, means, C_full)
+        # `as_matrix` carries no means here: the centering correction is
+        # applied explicitly, since a duck-typed backend is passed through
+        # untouched and cannot be handed a `means` of its own.
+        W_test = calc_W(as_matrix(X_test_lazy), C_full) - means @ C_full
         P_test, _ = project_data(W_test, [A, B, C], cond_slices_test)
 
         # Score the held-out block. `A` carries the training slice's energy,
@@ -404,7 +408,7 @@ def _bicv_trial(
         L = _cell_loadings(P_test, B, A, cond_test, n_cond)
         L = L * scale
         LtY = np.asarray(
-            rmatmul(np.ascontiguousarray(L.T), X_test_lazy), dtype=np.float64
+            np.ascontiguousarray(L.T) @ as_matrix(X_test_lazy), dtype=np.float64
         )[:, test_gene_idx]
         LtY -= np.outer(L.sum(axis=0), means_test_genes)
 

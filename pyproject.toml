@@ -1,6 +1,6 @@
 [project]
 name = "scrise"
-version = "1.5.0"
+version = "1.6.0"
 description = "Single cell analysis across conditions using PARAFAC2."
 authors = [{name = "Andrew Ramirez"}, {name = "Aaron Meyer", email = "git@asmlab.org" }]
 license = "MIT"
@@ -13,7 +13,7 @@ dependencies = [
     "pandas>=3.0.0",
     "pyarrow>=19.0",
     "tensorly>=0.9.0",
-    "parafac2>=1.7.0",
+    "parafac2>=1.8.0",
     "anndata>=0.13",
     "pacmap>=0.9",
     "tqdm>=4.66.1",

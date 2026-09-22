@@ -1482,7 +1482,7 @@ wheels = [
 
 [[package]]
 name = "parafac2"
-version = "1.7.0"
+version = "1.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anndata" },
@@ -1491,9 +1491,9 @@ dependencies = [
     { name = "tensorly" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/40/55/35d771bcd672150a84993ea89764da418d7685df1925c17728e9fc35edfe/parafac2-1.7.0.tar.gz", hash = "sha256:074907a94c64ec0fce4c22cdf73396bb511f7cabd04af353f831302f14e4b1ee", size = 43927, upload-time = "2026-09-14T17:07:34.24Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2f/36/51bd55991a52c35919b0a0ddd67a81b8031dd4e6c21f05c19af720ece7b1/parafac2-1.8.0.tar.gz", hash = "sha256:57abef29c796cebe657739fe1ec81f732c49f0c623cf4eef4164e9d748627ad9", size = 50331, upload-time = "2026-09-20T18:43:58.805Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/72/8e/634f3f244c9cb7f6b277f1240d09710e4f5fe3c62843242a21239d3c0d74/parafac2-1.7.0-py3-none-any.whl", hash = "sha256:c49ecc4eb4d6e971bce65cbb8ae3f9979ae0450a49b492026bce64633661dd74", size = 53172, upload-time = "2026-09-14T17:07:32.935Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/b1/eb191bdc0e9a142e82387e457824d6297d3b6dbec25895599ba47064da2c/parafac2-1.8.0-py3-none-any.whl", hash = "sha256:99af2143033d1daf2c75336831922d30f1de8b868c3c788b5d696fd872feb5b5", size = 60386, upload-time = "2026-09-20T18:43:57.483Z" },
 ]
 
 [package.optional-dependencies]
@@ -2175,7 +2175,7 @@ wheels = [
 
 [[package]]
 name = "scrise"
-version = "1.5.0"
+version = "1.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "anndata" },
@@ -2250,7 +2250,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.2" },
     { name = "pacmap", specifier = ">=0.9" },
     { name = "pandas", specifier = ">=3.0.0" },
-    { name = "parafac2", specifier = ">=1.7.0" },
+    { name = "parafac2", specifier = ">=1.8.0" },
     { name = "parafac2", extras = ["gpu"], marker = "extra == 'gpu'" },
     { name = "pyarrow", specifier = ">=19.0" },
     { name = "scikit-learn", specifier = ">=1.6" },

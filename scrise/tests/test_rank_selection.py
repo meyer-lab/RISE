@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import scipy.sparse as sps
+from parafac2.matrix import as_matrix
 from parafac2.utils import calc_W, condition_slices, project_data
 
 from .._pf2_utils import run_parafac2
@@ -445,7 +446,7 @@ def _dense_reference_trial(X, rank, seed, held_out_frac=0.2, max_iter=60):
 
     cond_test = cond_idx[test_cell_mask]
     X_test_train = dense(X[test_cell_mask][:, train_gene_mask].X)
-    W_test = calc_W(X_test_train, means[train_gene_mask], C)
+    W_test = calc_W(as_matrix(X_test_train, means[train_gene_mask]), C)
     P_test, _ = project_data(W_test, [A, B, C], condition_slices(cond_test, n_cond))
 
     X_test_test = dense(X[test_cell_mask][:, test_gene_mask].X) - means_test_genes
