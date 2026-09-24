@@ -1770,7 +1770,7 @@ wheels = [
 
 [[package]]
 name = "parafac2"
-version = "1.8.0"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anndata" },
@@ -1779,9 +1779,9 @@ dependencies = [
     { name = "tensorly" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2f/36/51bd55991a52c35919b0a0ddd67a81b8031dd4e6c21f05c19af720ece7b1/parafac2-1.8.0.tar.gz", hash = "sha256:57abef29c796cebe657739fe1ec81f732c49f0c623cf4eef4164e9d748627ad9", size = 50331, upload-time = "2026-09-20T18:43:58.805Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/78/ab/73c377c7611cb3a22f22f4de181d4165031b9d97acfb36227153db8dce6c/parafac2-1.9.0.tar.gz", hash = "sha256:b56629cd0f12095ca7799bbf400c28d0d041c45ca2e42ac5de2764b5fac75f85", size = 51597, upload-time = "2026-09-24T05:08:45.536Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/b1/eb191bdc0e9a142e82387e457824d6297d3b6dbec25895599ba47064da2c/parafac2-1.8.0-py3-none-any.whl", hash = "sha256:99af2143033d1daf2c75336831922d30f1de8b868c3c788b5d696fd872feb5b5", size = 60386, upload-time = "2026-09-20T18:43:57.483Z" },
+    { url = "https://files.pythonhosted.org/packages/75/a1/9df2f64a7b3f696e539e3d827ef396f9c4fae33492e69d642751c59d35d9/parafac2-1.9.0-py3-none-any.whl", hash = "sha256:cf4ccdef747f51785dc8ef32a55cd8a4e5981ead816d29a2e8caaf3c14e4072e", size = 61554, upload-time = "2026-09-24T05:08:44.131Z" },
 ]
 
 [package.optional-dependencies]
@@ -2571,7 +2571,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.5" },
     { name = "pacmap", specifier = ">=0.9" },
     { name = "pandas", specifier = ">=3.0.0" },
-    { name = "parafac2", specifier = ">=1.8.0" },
+    { name = "parafac2", specifier = ">=1.9.0" },
     { name = "parafac2", extras = ["gpu"], marker = "extra == 'gpu'" },
     { name = "pyarrow", specifier = ">=25.0" },
     { name = "scikit-learn", specifier = ">=1.9" },
