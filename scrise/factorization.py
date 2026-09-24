@@ -263,8 +263,9 @@ def pf2(
     max_iter : int, optional (default: 100)
         Maximum number of iterations for the optimization algorithm.
     normalize_slices : bool, optional (default: False)
-        If True, normalizes per-condition slices by their Frobenius norm during
-        factor updates to prevent conditions with large cell counts from dominating.
+        If True, weights each condition by the inverse of its Frobenius norm,
+        so conditions count equally regardless of cell count. Factors and R2X
+        stay in data units, comparable to an unweighted fit.
     backend : str | None, optional (default: None)
         Compute backend to run matrix products on: one of ``'mlx'``, ``'cupy'``,
         or ``'cpu'``. If None, the first available accelerator is auto-detected

@@ -777,6 +777,27 @@ def test_exactly_low_rank_data_scores_near_one_at_its_own_rank():
     assert trial["BiCV R2X"] > 0.95
 
 
+@pytest.mark.parametrize("compress", [None, "auto"])
+def test_normalize_slices_scores_near_one_on_exactly_low_rank_data(compress):
+    """Slice weighting changes which residuals count, not what the model can
+    represent, so exactly low-rank data must still fit and predict ~1."""
+    adata = _exact_low_rank(rank_true=4)
+    trial = _bicv_trial(
+        adata,
+        [4],
+        0.5,
+        0.5,
+        seed=0,
+        tolerance=1e-8,
+        max_iter=300,
+        compress=compress,
+        parafac2_kwarg={"normalize_slices": True},
+    )[0]
+
+    assert trial["Train Block R2X"] > 0.99
+    assert trial["BiCV R2X"] > 0.95
+
+
 @pytest.mark.parametrize("frac", [0.2, 0.35, 0.5, 0.7])
 def test_score_barely_moves_with_the_held_out_fraction(frac):
     """`held_out_cell_frac` sets how much is held out, not what the score is.
