@@ -7,19 +7,19 @@ license = "MIT"
 requires-python = ">= 3.13"
 
 dependencies = [
-    "numpy>=2.2",
-    "scipy>=1.16",
-    "scikit-learn>=1.6",
+    "numpy>=2.5",
+    "scipy>=1.18",
+    "scikit-learn>=1.9",
     "pandas>=3.0.0",
-    "pyarrow>=19.0",
+    "pyarrow>=25.0",
     "tensorly>=0.9.0",
-    "parafac2>=1.8.0",
+    "parafac2>=1.9.0",
     "anndata>=0.13",
     "pacmap>=0.9",
-    "tqdm>=4.66.1",
+    "tqdm>=4.70",
     "vsparse>=0.4.0",
-    "hdf5plugin>=7.0.0",
-    "matplotlib>=3.8",
+    "hdf5plugin>=7.1",
+    "matplotlib>=3.11",
     "seaborn>=0.13.2",
     "tlviz>=0.1.1",
 ]
@@ -51,26 +51,26 @@ analysis = [
     "scanpy>=1.12",
     "tlviz>=0.1.1",
     "doubletdetection>=4.3",
-    "statsmodels>=0.14.1",
-    "hdf5plugin>=7.0.0",
+    "statsmodels>=0.15",
+    "hdf5plugin>=7.1",
 ]
 benchmarking = [
     "scanorama>=1.7.4",
-    "harmonypy>=0.0.10",
+    "harmonypy>=2.0",
     "scib>=1.1.5",
 ]
 docs = [
     { include-group = "analysis" },
     "mkdocs>=1.6",
-    "mkdocs-material>=9.5",
-    "mkdocstrings[python]>=0.28",
+    "mkdocs-material>=9.7",
+    "mkdocstrings[python]>=1.0",
 ]
 dev = [
     { include-group = "analysis" },
-    "pytest>=9.0",
-    "pytest-cov>=7.0",
-    "hypothesis>=6.140",
-    "ty",
+    "pytest>=9.1",
+    "pytest-cov>=7.1",
+    "hypothesis>=6.168",
+    "ty>=0.0.83",
     "ruff>=0.16",
 ]
 
