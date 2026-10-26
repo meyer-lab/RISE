@@ -17,6 +17,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
+          python-version: "3.14"
       - name: Install dependencies
         if: runner.os != 'macOS'
         run: uv sync
